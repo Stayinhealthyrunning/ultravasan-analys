@@ -1,0 +1,90 @@
+name: Testa historikimport
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testa-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Hämta projektet
+        uses: actions/checkout@v4
+
+      - name: Installera Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Installera Python-paket
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-browser.txt
+
+      - name: Installera Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Förbered en ren testimport
+        run: |
+          mkdir -p data reports raw/vasanerd docs/data
+          rm -f data/ultravasan.sqlite
+          rm -f reports/vasanerd-import-report.json
+
+      - name: Upptäck och importera VasaNerd-data
+        run: |
+          python tools/vasanerd_import.py all --wait 5
+
+      - name: Visa importresultatet
+        if: always()
+        run: |
+          echo "===== IMPORTREPORT ====="
+          if [ -f reports/vasanerd-import-report.json ]; then
+            cat reports/vasanerd-import-report.json
+          else
+            echo "Ingen importreport skapades."
+          fi
+
+          echo ""
+          echo "===== HÄMTADE FILER ====="
+          find raw/vasanerd -type f 2>/dev/null | head -200 || true
+
+          echo ""
+          echo "===== DATABAS ====="
+          ls -lh data/ultravasan.sqlite 2>/dev/null || true
+
+      - name: Validera databasen
+        if: always()
+        run: |
+          if [ -f data/ultravasan.sqlite ]; then
+            python tools/uvtool.py validate
+          else
+            echo "Ingen databas att validera."
+          fi
+
+      - name: Bygg webbdata
+        if: always()
+        run: |
+          if [ -f data/ultravasan.sqlite ]; then
+            python tools/uvtool.py export
+          else
+            echo "Ingen databas att exportera."
+          fi
+
+      - name: Spara testresultatet
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultravasan-import-test
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            data/ultravasan.sqlite
+            reports/
+            raw/vasanerd/
+            docs/data/
