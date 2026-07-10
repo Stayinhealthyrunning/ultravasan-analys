@@ -1,21 +1,16 @@
 {
-  "installed_at_utc": "2026-07-10T15:56:28.189128+00:00",
-  "name": "Kartduell, banlager, hjälprutor och tydligare statistik",
-  "version": "2026.07.10.3",
-  "description": "Öppnar kartduellen i nytt fönster, använder den bifogade GPX-filen för 2014–2022, ger två tändbara banlager, låter musiken fortsätta efter målgång, lägger till informationsikoner, ersätter uttrycket mitt 50 procent och visar Sälen som startpunkt i hastighetsdiagrammet.",
+  "installed_at_utc": "2026-07-10T16:00:11.861649+00:00",
+  "name": "Positionsexpressen, korrekt DNF-flöde, historikaxel och Hall of Fame-karta",
+  "version": "2026.07.10.4",
+  "description": "Förtydligar positionsspelet med exakt delsträcka, korrigerar DNF-logiken genom att skilja DNS från faktiska startande, lägger till y-axel och tidsspridning i årshistoriken, ger Hall of Fame tydliga definitioner och en riktig kartpopup med färgmarkerade delsträckor, uppdaterar årets fingeravtryck, inför friskrivning och lägger till YouTube-länk.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "data/routes/ultravasan90-routes.json",
     "docs/assets/app.js",
-    "docs/assets/map.css",
-    "docs/assets/map.js",
     "docs/assets/nerdlab.js",
     "docs/assets/styles.css",
     "docs/data/ultravasan-routes.js",
-    "docs/index.html",
-    "docs/karta.html",
-    "source/Ultravasan90-2014-2022.gpx"
+    "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "e69d3c884da9a2f2724d6ef9a110a3c041db7f3e67a7bbb902acc77a6e474f98"
+  "manifest_sha256": "5e9f5f610025735eae2cda0bf5e99ff657ac20c7e179fed82522f32acd50a263"
 }

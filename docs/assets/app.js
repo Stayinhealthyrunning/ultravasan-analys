@@ -29,7 +29,7 @@ function renderPaceChart(){
   const segmentPoints=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([seq,g])=>({seq,name:g.name,value:median(g.vals)}));
   const pts=[{seq:0,name:'Sälen',value:0,isStart:true},...segmentPoints];
   const el=$('#paceChart');
-  if(segmentPoints.length<1){el.innerHTML='<div class="empty">Mellantider saknas i urvalet</div>';return}
+  if(segmentPoints.length<1){el.innerHTML='<div class="empty">Mellantider saknas i det aktuella urvalet.</div>';return}
   const W=650,H=270,p={l:48,r:20,t:15,b:62};
   const max=Math.max(2,Math.ceil(Math.max(...pts.map(x=>x.value))/2)*2);
   const x=i=>p.l+i*(W-p.l-p.r)/(pts.length-1||1),y=v=>p.t+(max-v)*(H-p.t-p.b)/max;
@@ -65,32 +65,97 @@ function renderPlacementScatter(){
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
 function renderDnfFunnel(){
-  const el=$('#dnfFunnel'),rows=state.filtered,splits=activeSplits(),finishers=rows.filter(r=>r.finish_seconds).length;
+  const el=$('#dnfFunnel'),rows=state.filtered;
   if(!rows.length){el.innerHTML='<div class="empty">Inget underlag</div>';return}
-  const cp=new Map();splits.forEach(s=>{if(!cp.has(s.sequence_no))cp.set(s.sequence_no,{name:s.checkpoint_name,ids:new Set()});cp.get(s.sequence_no).ids.add(s.result_id)});
-  const splitCoverage=new Set(splits.map(s=>s.result_id)).size/rows.length;
-  if(splitCoverage<.35){el.innerHTML=`<div class="empty">Mellantider finns ännu bara för ${Math.round(splitCoverage*100)} % av urvalet. Tratten aktiveras när full data importerats.</div>`;return}
-  const stages=[{name:'Start',count:rows.length},...[...cp.entries()].sort((a,b)=>a[0]-b[0]).map(([,v])=>({name:v.name.replace('Mora mål','Mål'),count:v.ids.size}))];
-  if(!stages.some(x=>/mål/i.test(x.name)))stages.push({name:'Mål',count:finishers});const max=stages[0].count||1;
-  el.innerHTML=stages.map(s=>`<div class="funnel-row"><span title="${esc(s.name)}">${esc(s.name)}</span><div class="funnel-bar"><i style="width:${Math.max(2,s.count/max*100)}%"></i></div><strong>${s.count}</strong></div>`).join('');
+  const dns=rows.filter(r=>String(r.status||'').toUpperCase()==='DNS');
+  const starters=rows.filter(r=>String(r.status||'').toUpperCase()!=='DNS');
+  const dnf=starters.filter(r=>String(r.status||'').toUpperCase()==='DNF');
+  if(!dnf.length){el.innerHTML=`<div class="dnf-summary"><strong>Inga registrerade DNF</strong><span>${starters.length.toLocaleString('sv-SE')} startande · ${dns.length.toLocaleString('sv-SE')} DNS räknas inte som startande.</span></div>`;return}
+  const dnfIds=new Set(dnf.map(r=>r.id));
+  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no);
+  const byResult=new Map();
+  state.data.splits.filter(s=>dnfIds.has(s.result_id)&&Number.isFinite(Number(s.sequence_no))).forEach(s=>{
+    if(!byResult.has(s.result_id))byResult.set(s.result_id,[]);
+    byResult.get(s.result_id).push(s);
+  });
+  const segments=new Map();
+  dnf.forEach(r=>{
+    const arr=(byResult.get(r.id)||[]).sort((a,b)=>a.sequence_no-b.sequence_no);
+    const last=arr.at(-1);
+    let key='unknown',label='Plats saknas i källdatan',order=999;
+    if(last){
+      const from=cps.find(c=>c.sequence_no===last.sequence_no);
+      const next=cps.find(c=>c.sequence_no>last.sequence_no);
+      const fromName=(from?.name||last.checkpoint_name||'Senaste kontroll').replace('Mora mål','Mora');
+      const toName=(next?.name||'Mora').replace('Mora mål','Mora');
+      key=`${last.sequence_no}-${next?.sequence_no??999}`;label=`${fromName} → ${toName}`;order=Number(last.sequence_no);
+    }
+    if(!segments.has(key))segments.set(key,{label,order,count:0});
+    segments.get(key).count++;
+  });
+  const data=[...segments.values()].sort((a,b)=>a.order-b.order),max=Math.max(...data.map(x=>x.count),1);
+  el.innerHTML=`<div class="dnf-summary"><strong>${dnf.length.toLocaleString('sv-SE')} DNF av ${starters.length.toLocaleString('sv-SE')} startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS visas separat och räknas inte som avhopp under loppet.</span></div><div class="dnf-segments">${data.map(x=>`<div class="dnf-segment-row"><span>${esc(x.label)}</span><div><i style="width:${Math.max(4,x.count/max*100)}%"></i></div><strong>${x.count}</strong><small>${Math.round(x.count/dnf.length*100)} % av DNF</small></div>`).join('')}</div>`;
 }
 function renderSegmentHeatmap(){
   const el=$('#segmentHeatmap'),groups=new Map();activeSplits().filter(s=>s.pace_seconds_per_km&&s.sequence_no>0).forEach(s=>{if(!groups.has(s.sequence_no))groups.set(s.sequence_no,{name:s.checkpoint_name,vals:[]});groups.get(s.sequence_no).vals.push(s.pace_seconds_per_km)});
   const cells=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([,g])=>({name:g.name,med:median(g.vals),p25:quantile(g.vals,.25),p75:quantile(g.vals,.75),n:g.vals.length}));
-  if(!cells.length){el.innerHTML='<div class="empty">Delsträcksfarter visas när mellantider importerats</div>';return}
+  if(!cells.length){el.innerHTML='<div class="empty">Mellantider saknas i det aktuella urvalet</div>';return}
   const lo=Math.min(...cells.map(x=>x.med)),hi=Math.max(...cells.map(x=>x.med));
   el.innerHTML=cells.map(c=>{const t=(c.med-lo)/(hi-lo||1),h=Math.round(150-110*t),l=Math.round(31+7*(1-t));return `<div class="segment-cell" style="background:hsl(${h} 55% ${l}%)"><span>${esc(c.name.replace('Mora mål','Mora'))}</span><strong>${fmtPace(c.med).replace(' /km','')}</strong><small>Hälften av löparna: ${fmtPace(c.p25).replace(' /km','')}–${fmtPace(c.p75).replace(' /km','')} · ${c.n} tider</small></div>`}).join('');
 }
 function renderOvertakes(){
-  const el=$('#overtakeTable'),by=new Map();activeSplits().filter(s=>s.place_overall).forEach(s=>{if(!by.has(s.result_id))by.set(s.result_id,[]);by.get(s.result_id).push(s)});
-  const rows=[];by.forEach((arr,id)=>{arr.sort((a,b)=>a.sequence_no-b.sequence_no);if(arr.length<2)return;const gain=arr[0].place_overall-arr[arr.length-1].place_overall,r=state.data.results.find(x=>x.id===id);if(r&&gain>0)rows.push({r,gain,from:arr[0].checkpoint_name,to:arr[arr.length-1].checkpoint_name})});rows.sort((a,b)=>b.gain-a.gain);
-  el.innerHTML=rows.length?rows.slice(0,6).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><span title="${esc(x.r.name_as_published)}">${esc(x.r.name_as_published)}</span><strong>+${x.gain} platser</strong></div>`).join(''):'<div class="empty">Kontrollplaceringar saknas ännu</div>';
+  const el=$('#overtakeTable'),by=new Map();
+  activeSplits().filter(s=>Number.isFinite(Number(s.place_overall))&&Number(s.place_overall)>0).forEach(s=>{
+    if(!by.has(s.result_id))by.set(s.result_id,[]);
+    by.get(s.result_id).push(s);
+  });
+  const rows=[];
+  by.forEach((arr,id)=>{
+    arr.sort((a,b)=>a.sequence_no-b.sequence_no);
+    const clean=arr.filter((x,i)=>i===0||x.sequence_no!==arr[i-1].sequence_no);
+    if(clean.length<2)return;
+    const first=clean[0],last=clean.at(-1),totalGain=Number(first.place_overall)-Number(last.place_overall);
+    let best=null;
+    for(let i=1;i<clean.length;i++){
+      const a=clean[i-1],b=clean[i],gain=Number(a.place_overall)-Number(b.place_overall);
+      if(gain>0&&(!best||gain>best.gain))best={gain,from:a,to:b};
+    }
+    const r=state.data.results.find(x=>x.id===id);
+    if(r&&totalGain>0&&best)rows.push({r,totalGain,first,last,best});
+  });
+  rows.sort((a,b)=>b.totalGain-a.totalGain||b.best.gain-a.best.gain);
+  el.innerHTML=rows.length?rows.slice(0,7).map((x,i)=>{
+    const from=(x.best.from.checkpoint_name||'Kontroll').replace('Mora mål','Mora'),to=(x.best.to.checkpoint_name||'Kontroll').replace('Mora mål','Mora');
+    return `<button class="overtake-row" data-id="${x.r.id}"><b>${i+1}</b><span class="overtake-person"><strong>${esc(x.r.name_as_published)}</strong><small>Totalt: plats ${x.first.place_overall} → ${x.last.place_overall} · +${x.totalGain}</small></span><span class="overtake-burst"><small>Starkaste rycket</small><strong>${esc(from)} → ${esc(to)}</strong><em>+${x.best.gain} platser · ${x.best.from.place_overall} → ${x.best.to.place_overall}</em></span></button>`;
+  }).join(''):'<div class="empty">Kontrollplaceringar saknas i det aktuella urvalet.</div>';
+  $$('.overtake-row').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
 }
 function renderYearTrend(){
-  const el=$('#yearTrend'),groups=new Map();state.data.races.forEach(r=>groups.set(r.id,{year:r.year,times:[]}));state.data.results.forEach(r=>{if(r.finish_seconds&&groups.has(r.race_id))groups.get(r.race_id).times.push(r.finish_seconds)});const rows=[...groups.values()].filter(g=>g.times.length).sort((a,b)=>a.year-b.year).map(g=>({year:g.year,med:median(g.times),n:g.times.length}));
-  if(rows.length<2){el.innerHTML='<div class="empty">Här visas median, spridning och deltagarantal när fler loppår har importerats.</div>';return}
-  const W=760,H=235,p={l:55,r:20,t:15,b:36},lo=Math.min(...rows.map(x=>x.med))*.97,hi=Math.max(...rows.map(x=>x.med))*1.03,x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1),y=v=>p.t+(hi-v)*(H-p.t-p.b)/(hi-lo||1),path=rows.map((r,i)=>`${i?'L':'M'}${x(i)} ${y(r.med)}`).join(' ');let out=`<path class="trend-line" d="${path}"/>`;
-  rows.forEach((r,i)=>{out+=`<circle class="trend-point" cx="${x(i)}" cy="${y(r.med)}" r="6"><title>${r.year}: median ${fmtTime(r.med)}, ${r.n} löpare</title></circle>`+svg('text',{x:x(i),y:H-12,'text-anchor':'middle'},String(r.year))});el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
+  const el=$('#yearTrend'),groups=new Map();
+  state.data.races.forEach(r=>groups.set(r.id,{year:r.year,times:[]}));
+  state.data.results.forEach(r=>{if(Number.isFinite(Number(r.finish_seconds))&&groups.has(r.race_id))groups.get(r.race_id).times.push(Number(r.finish_seconds))});
+  const rows=[...groups.values()].filter(g=>g.times.length).sort((a,b)=>a.year-b.year).map(g=>({year:g.year,med:median(g.times),n:g.times.length,p25:quantile(g.times,.25),p75:quantile(g.times,.75)}));
+  if(!rows.length){el.innerHTML='<div class="empty">Ingen årsdata finns i databasen.</div>';return}
+  const W=760,H=250,p={l:72,r:22,t:18,b:42};
+  let lo=Math.floor(Math.min(...rows.map(x=>x.p25)) / 1800)*1800,hi=Math.ceil(Math.max(...rows.map(x=>x.p75)) / 1800)*1800;
+  if(hi<=lo)hi=lo+3600;
+  const x=i=>rows.length===1?(p.l+W-p.r)/2:p.l+i*(W-p.l-p.r)/(rows.length-1),y=v=>p.t+(hi-v)*(H-p.t-p.b)/(hi-lo||1);
+  let out='';
+  for(let i=0;i<=4;i++){
+    const v=hi-(hi-lo)*i/4,yy=y(v);
+    out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:p.l-10,y:yy+4,'text-anchor':'end'},fmtTime(v).slice(0,-3));
+  }
+  out+=svg('line',{x1:p.l,y1:p.t,x2:p.l,y2:H-p.b,class:'axis'})+svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});
+  out+=svg('text',{x:16,y:(p.t+H-p.b)/2,'text-anchor':'middle',transform:`rotate(-90 16 ${(p.t+H-p.b)/2})`},'Median sluttid');
+  if(rows.length>1){
+    const path=rows.map((r,i)=>`${i?'L':'M'}${x(i)} ${y(r.med)}`).join(' ');
+    out+=`<path class="trend-line" d="${path}"/>`;
+  }
+  rows.forEach((r,i)=>{
+    out+=`<line class="trend-range" x1="${x(i)}" y1="${y(r.p25)}" x2="${x(i)}" y2="${y(r.p75)}"><title>${r.year}: hälften av sluttiderna ${fmtTime(r.p25)}–${fmtTime(r.p75)}</title></line>`;
+    out+=`<circle class="trend-point" cx="${x(i)}" cy="${y(r.med)}" r="6"><title>${r.year}: median ${fmtTime(r.med)} · ${r.n} fullföljande</title></circle>`+svg('text',{x:x(i),y:H-14,'text-anchor':'middle'},String(r.year));
+  });
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
 function renderPacingDNA(){
   const el=$('#pacingCards'),times=state.filtered.map(r=>r.finish_seconds).filter(Boolean),men=state.filtered.filter(r=>r.sex==='M'&&r.finish_seconds).map(r=>r.finish_seconds),women=state.filtered.filter(r=>r.sex==='F'&&r.finish_seconds).map(r=>r.finish_seconds),clubs=state.filtered.filter(r=>r.club).reduce((m,r)=>(m.set(r.club,(m.get(r.club)||0)+1),m),new Map()),topClub=[...clubs.entries()].sort((a,b)=>b[1]-a[1])[0];
@@ -169,19 +234,19 @@ const INFO_HELP=[
   ['#paceChart','Visar medianhastigheten på varje delsträcka i km/h. Sälen är startpunkten och visas därför som 0 km/h.'],
   ['#placementScatter','Varje punkt är en löpare. Diagrammet visar sambandet mellan sluttid och slutplacering.'],
   ['.target-card','Dra reglaget för att se vilken ungefärlig placering en viss sluttid motsvarar i det valda urvalet.'],
-  ['#dnfFunnel','Visar hur många deltagare som fortfarande har en registrerad passage vid respektive kontroll.'],
+  ['#dnfFunnel','Visar var registrerade DNF-löpare senast passerade en kontroll. DNS räknas inte som startande och blandas därför inte ihop med DNF.'],
   ['#segmentHeatmap','Sammanfattar medianfart och spridning för varje delsträcka.'],
-  ['#overtakeTable','Rangordnar löpare som förbättrat sin placering mest mellan registrerade kontrollpassager.'],
-  ['#yearTrend','Jämför loppårens mediana sluttid och deltagarantal.'],
+  ['#overtakeTable','Visar både den totala klättringen i resultatfältet och den enskilda delsträcka där löparen vann flest placeringar.'],
+  ['#yearTrend','Jämför median sluttid mellan alla importerade loppår. Den lodräta linjen vid varje år visar intervallet där hälften av sluttiderna ligger.'],
   ['#pacingCards','En snabb sammanfattning av det aktuella urvalets tider, kön och klubbar.'],
   ['#segmentRanking','Välj två kontroller och jämför vilka löpare som var snabbast eller avancerade mest just där.'],
   ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika delar av resultatfältet.'],
   ['#runnerHistory','Sök en löpare och jämför personens genomförda lopp över flera år.'],
-  ['#fieldFlow','Visar hur många registrerade deltagare som når varje kontroll från Sälen till Mora.'],
-  ['#hallOfFame','Topplistor för lång erfarenhet, förbättring, jämnhet och stark avslutning.'],
+  ['#fieldFlow','Visar faktiska startande som når varje kontroll. DNS räknas bort och saknade enstaka passager fylls försiktigt ut när en senare kontroll eller målgång finns registrerad.'],
+  ['#hallOfFame','Fyra tydligt definierade topplistor. Klicka på en löpare för att se loppåret på en riktig karta med alla delsträckor markerade.'],
   ['#raceFingerprint','Jämför det valda loppåret med den historiska normalnivån.'],
   ['.results-panel','Den sök- och sorterbara resultattabellen. Klicka på en rad för löparens kontrolltider.'],
-  ['.source-panel','Information om datakälla, uppdateringstid och hur många poster databasen innehåller.']
+  ['.source-panel','Friskrivning från ansvar samt uppgifter om när databasen byggdes och hur många resultat och mellantider den innehåller.']
 ];
 function installInfoTooltips(){
   INFO_HELP.forEach(([selector,text])=>{

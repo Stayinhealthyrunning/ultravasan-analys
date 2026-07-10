@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Analys av Ultravasan 90: resultat, mellantider, fartprofiler och utveckling över tid.">
   <title>Ultravasan 90 – resultat & analys</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260710-3">
+  <link rel="stylesheet" href="assets/styles.css?v=20260710-4">
 </head>
 <body>
   <header class="hero">
@@ -99,11 +99,11 @@
           <div id="segmentHeatmap" class="segment-grid"></div>
         </article>
         <article class="panel insight-card">
-          <div class="panel-head"><div><p class="eyebrow">POSITIONSSPEL</p><h3>Största avancemangen</h3></div></div>
+          <div class="panel-head"><div><p class="eyebrow">POSITIONSSPEL</p><h3>Placeringsexpressen</h3><p class="panel-subtitle">Vem klättrade mest – och på vilken delsträcka kom det starkaste rycket?</p></div></div>
           <div id="overtakeTable" class="mini-ranking"></div>
         </article>
         <article class="panel insight-card wide">
-          <div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><span class="pill">aktiveras när fler år importerats</span></div>
+          <div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><span class="pill">median och tidsspridning</span></div>
           <div id="yearTrend" class="chart compact-chart"></div>
         </article>
         <article class="panel insight-card">
@@ -120,7 +120,7 @@
           <h2>Historien bakom siffrorna</h2>
           <p>Bygg en delsträcka, hitta loppets hjältar, följ en löpare över flera år och se vilka tider som krävs för olika percentiler.</p>
         </div>
-        <div class="live-chip"><i></i><span id="intelligenceCoverage">Väntar på historikimport</span></div>
+        <div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
       </div>
 
       <div class="story-strip" id="raceStories"></div>
@@ -157,12 +157,13 @@
 
         <article class="panel lab-card hall-card">
           <div class="panel-head"><div><p class="eyebrow">HALL OF FAME</p><h3>Prestationer som sticker ut</h3></div><span class="pill">alla importerade år</span></div>
+          <p id="hallExplanation" class="hall-explanation">Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.</p>
           <div class="hall-tabs" id="hallTabs"><button class="active" data-hall="veterans">Flest lopp</button><button data-hall="improved">Mest förbättrad</button><button data-hall="consistent">Jämnast</button><button data-hall="chargers">Starkast avslutning</button></div>
           <div id="hallOfFame" class="hall-list"></div>
         </article>
 
         <article class="panel lab-card fingerprint-card">
-          <div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
+          <div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet från andra år</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
           <div id="raceFingerprint" class="fingerprint"></div>
         </article>
       </div>
@@ -186,21 +187,38 @@
       <div class="pagination"><button id="prevPage" class="secondary">Föregående</button><span id="pageLabel"></span><button id="nextPage" class="secondary">Nästa</button></div>
     </section>
 
-    <section class="panel source-panel">
-      <div><p class="eyebrow">DATA & KVALITET</p><h2>Spårbar databas</h2></div>
-      <p>Varje resultat behåller källa, externt resultat-ID och råpost. Historik från VasaNerd ska publiceras med tillstånd och attribution; kommande lopp kan hämtas från Vasaloppets officiella resultattjänst. Personer kopplas försiktigt mellan år och osäkra matchningar ska granskas manuellt.</p>
-      <dl><div><dt>Senast byggd</dt><dd id="generatedAt">–</dd></div><div><dt>Resultat</dt><dd id="databaseSize">–</dd></div><div><dt>Mellantider</dt><dd id="splitCount">–</dd></div></dl>
+    <section class="panel source-panel disclaimer-panel">
+      <div><p class="eyebrow">FRISKRIVNING</p><h2>Friskrivning från allt ansvar</h2></div>
+      <p>Sajten är skapad som ett privat projekt helt utan att utgivaren tar ansvar för varken innehåll eller dess korrekthet. Om du inte tycker den är bra, ta en kopp kaffe och tänk på något annat</p>
+      <dl><div><dt>Senast uppdaterad</dt><dd id="generatedAt">–</dd></div><div><dt>Resultat</dt><dd id="databaseSize">–</dd></div><div><dt>Mellantider</dt><dd id="splitCount">–</dd></div></dl>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <a href="https://youtube.com/playlist?list=PLuI3oCc13p7emHXZeI3Dum0tSQpSmesyL&si=HbBmOAVBI3o_olDB" target="_blank" rel="noopener noreferrer" aria-label="Öppna Stayinhealthyrunning på Youtube">
+      <span class="youtube-icon" aria-hidden="true">▶</span><strong>Stayinhealthyrunning på Youtube</strong>
+    </a>
+  </footer>
 
   <dialog id="runnerDialog">
     <button class="dialog-close" aria-label="Stäng">×</button>
     <div id="runnerDetail"></div>
   </dialog>
 
+  <dialog id="hallMapDialog" class="hall-map-dialog">
+    <button class="dialog-close" aria-label="Stäng kartan">×</button>
+    <div class="hall-map-shell">
+      <header><p class="eyebrow">HALL OF FAME · LOPPSKARTA</p><h2 id="hallMapTitle">Löparens lopp</h2><p id="hallMapSubtitle"></p></header>
+      <div id="hallMapCanvas" class="hall-map-canvas" aria-label="Karta över loppet med färgmarkerade delsträckor"></div>
+      <div id="hallSegmentLegend" class="hall-segment-legend"></div>
+      <p class="hall-map-note">Varje färg visar en delsträcka mellan två officiella kontroller. Kartan använder banversionen som gällde det valda året.</p>
+    </div>
+  </dialog>
+
   <div id="loading" class="loading"><div></div><p>Läser resultatdatabasen…</p></div>
   <script src="data/ultravasan-data.js"></script>
-  <script src="assets/app.js?v=20260710-3"></script>
-  <script src="assets/nerdlab.js?v=20260710-3"></script>
+  <script src="data/ultravasan-routes.js?v=20260710-3"></script>
+  <script src="assets/app.js?v=20260710-4"></script>
+  <script src="assets/nerdlab.js?v=20260710-4"></script>
 </body>
 </html>
