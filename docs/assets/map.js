@@ -66,24 +66,101 @@ function buildCheckpointJump(){
   $('#checkpointJump').innerHTML='<option value="">Kontroll…</option>'+names.map(k=>`<option value="${k}">${labels[k]}</option>`).join('')
 }
 
+function validLatLng(value){
+  return Array.isArray(value)&&value.length>=2&&Number.isFinite(Number(value[0]))&&Number.isFinite(Number(value[1]));
+}
+function switchToFallback(reason){
+  app.leafletReady=false;app.routeOnly=true;
+  try{if(app.map){app.map.remove();app.map=null}}catch(e){console.warn('Kunde inte stänga kartlagret',e)}
+  const mapEl=$('#map'),fallback=$('#fallbackMap'),btn=$('#mapModeBtn');
+  if(mapEl)mapEl.style.display='none';
+  if(fallback)fallback.classList.add('visible');
+  if(btn){btn.disabled=true;btn.title='Den förenklade banvyn används'}
+  setEvent(reason||'Förenklad banvy används.');
+}
 function initMap(){
-  if(window.L){
-    app.leafletReady=true;app.map=L.map('map',{zoomControl:true,preferCanvas:true,attributionControl:true});let tileErrors=0;
-    app.tileLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'&copy; OpenStreetMap-bidragsgivare'}).on('tileerror',()=>{tileErrors++;if(tileErrors===4)setEvent('Kartbakgrunden kunde inte läsas, men banlager och löpare fungerar.')}).addTo(app.map);
+  // Fallback-vyn byggs alltid först. Då fungerar kartduellen även om Leaflet,
+  // kartplattor eller webbläsarens säkerhetsinställningar skulle strula.
+  initFallback();
+  if(!window.L){
+    switchToFallback('Interaktiv kartbakgrund saknas. Förenklad banvy används.');
+    return;
+  }
+  try{
+    const validCoords=app.allCoords.filter(validLatLng).map(c=>[Number(c[0]),Number(c[1])]);
+    if(validCoords.length<2)throw new Error('Banan saknar giltiga GPS-koordinater.');
+
+    app.map=L.map('map',{zoomControl:true,preferCanvas:true,attributionControl:true});
+
+    // VIKTIGT: kartan måste få en vy innan ett GridLayer/tileLayer läggs till.
+    // Annars kan Leaflet 1.9 kasta "Cannot read properties of undefined (reading min)".
+    const initialBounds=L.latLngBounds(validCoords);
+    if(initialBounds&&typeof initialBounds.isValid==='function'&&initialBounds.isValid()){
+      app.map.fitBounds(initialBounds,{padding:[50,50],animate:false});
+    }else{
+      app.map.setView(validCoords[0],8);
+    }
+
+    app.leafletReady=true;
+    let tileErrors=0;
+    app.tileLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:17,
+      attribution:'&copy; OpenStreetMap-bidragsgivare'
+    }).on('tileerror',()=>{
+      tileErrors++;
+      if(tileErrors===4)setEvent('Kartbakgrunden kunde inte läsas, men banlager och löpare fungerar.');
+    }).addTo(app.map);
+
     const overlays={};
     for(const route of app.usedRoutes){
-      const coords=route.points.map(p=>[p[0],p[1]]),group=L.layerGroup().addTo(app.map),color=route.style.color;
-      L.polyline(coords,{color:'#fff',weight:10,opacity:.78,lineCap:'round',dashArray:route.style.dashArray}).addTo(group);
-      L.polyline(coords,{color,weight:5,opacity:.96,lineCap:'round',dashArray:route.style.dashArray}).addTo(group);
-      for(const cp of route.checkpoints){const c=L.circleMarker(cp.coord,{radius:cp.key==='finish'?8:5,color,weight:2,fillColor:cp.key==='finish'?'#ff7a3d':'#f7f2dc',fillOpacity:1}).addTo(group);c.bindTooltip(`${route.style.label} · ${cp.name} · ${cp.distance_km.toFixed(1)} km`,{direction:'top',className:'checkpoint-label',offset:[0,-5]})}
-      overlays[`${route.style.label} (${route.official_distance_km.toFixed(1)} km)`]=group;
+      const coords=(route.points||[]).filter(validLatLng).map(p=>[Number(p[0]),Number(p[1])]);
+      if(coords.length<2)continue;
+      const style=route.style||{};
+      const color=style.color||'#176d53';
+      const label=style.label||route.name||'Bana';
+      const group=L.layerGroup().addTo(app.map);
+      L.polyline(coords,{color:'#fff',weight:10,opacity:.78,lineCap:'round',dashArray:style.dashArray||null}).addTo(group);
+      L.polyline(coords,{color,weight:5,opacity:.96,lineCap:'round',dashArray:style.dashArray||null}).addTo(group);
+      for(const cp of (route.checkpoints||[])){
+        if(!validLatLng(cp.coord))continue;
+        const c=L.circleMarker([Number(cp.coord[0]),Number(cp.coord[1])],{
+          radius:cp.key==='finish'?8:5,color,weight:2,
+          fillColor:cp.key==='finish'?'#ff7a3d':'#f7f2dc',fillOpacity:1
+        }).addTo(group);
+        const km=Number.isFinite(Number(cp.distance_km))?Number(cp.distance_km).toFixed(1):'–';
+        c.bindTooltip(`${label} · ${cp.name||cp.key} · ${km} km`,{direction:'top',className:'checkpoint-label',offset:[0,-5]});
+      }
+      overlays[`${label} (${Number(route.official_distance_km||0).toFixed(1)} km)`]=group;
     }
-    if(app.usedRoutes.length>1)L.control.layers(null,overlays,{collapsed:false,position:'bottomleft'}).addTo(app.map);
-    for(const m of app.models){const icon=L.divIcon({className:'',html:`<div class="runner-marker" style="background:${m.color};color:${m.color}"><span style="color:white">${markerText(m)}</span><b>${m.race.year}</b></div>`,iconSize:[38,38],iconAnchor:[19,19]});m.marker=L.marker(routePosition(m.route,0),{icon,zIndexOffset:500-m.index}).addTo(app.map).bindTooltip(`${esc(m.result.name_as_published)} · ${m.race.year} · ${m.quality}`,{direction:'top',offset:[0,-18]});m.tail=L.polyline([],{color:m.color,weight:6,opacity:.72,lineCap:'round'}).addTo(app.map);m.marker.on('click',()=>focusRunner(m))}
-    app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]});
-  }else{app.routeOnly=true;$('#map').style.display='none';$('#fallbackMap').classList.add('visible');$('#mapModeBtn').disabled=true;setEvent('Interaktiv kartbakgrund saknas. Förenklad banvy används.')}
-  initFallback();
+    if(app.usedRoutes.length>1&&Object.keys(overlays).length>1){
+      L.control.layers(null,overlays,{collapsed:false,position:'bottomleft'}).addTo(app.map);
+    }
+    for(const m of app.models){
+      const pos=routePosition(m.route,0);
+      if(!validLatLng(pos))continue;
+      const icon=L.divIcon({
+        className:'',
+        html:`<div class="runner-marker" style="background:${m.color};color:${m.color}"><span style="color:white">${markerText(m)}</span><b>${m.race.year}</b></div>`,
+        iconSize:[38,38],iconAnchor:[19,19]
+      });
+      m.marker=L.marker(pos,{icon,zIndexOffset:500-m.index}).addTo(app.map)
+        .bindTooltip(`${esc(m.result.name_as_published)} · ${m.race.year} · ${m.quality}`,{direction:'top',offset:[0,-18]});
+      m.tail=L.polyline([],{color:m.color,weight:6,opacity:.72,lineCap:'round'}).addTo(app.map);
+      m.marker.on('click',()=>focusRunner(m));
+    }
+    // Säkerställ rätt storlek efter att alla paneler och banlager byggts.
+    setTimeout(()=>{
+      try{
+        app.map.invalidateSize(false);
+        if(initialBounds.isValid())app.map.fitBounds(initialBounds,{padding:[50,50],animate:false});
+      }catch(e){console.warn('Kunde inte anpassa kartvyn',e)}
+    },50);
+  }catch(error){
+    console.error('Leaflet-kartan kunde inte starta',error);
+    switchToFallback(`Kartbakgrunden kunde inte starta (${error?.message||error}). Förenklad banvy används.`);
+  }
 }
+
 function markerText(m){return m.result.bib?String(m.result.bib).slice(-3):m.result.name_as_published.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
 
 function initFallback(){
@@ -118,11 +195,11 @@ function focusRunner(model){app.focused=model;const s=statusAt(model,app.time),p
 
 function bindControls(){
   $('#playBtn').onclick=togglePlay;$('#restartBtn').onclick=restartRace;$('#backBtn').onclick=()=>seek(app.time-600);$('#forwardBtn').onclick=()=>seek(app.time+600);$('#timeline').oninput=e=>seek(Number(e.target.value),true);$('#speedSelect').onchange=e=>app.speed=Number(e.target.value);
-  $('#musicBtn').onclick=toggleMusic;$('#musicVolume').oninput=e=>setMusicVolume(Number(e.target.value));
+  const musicBtn=$('#musicBtn'),musicVolume=$('#musicVolume');if(musicBtn)musicBtn.onclick=toggleMusic;if(musicVolume)musicVolume.oninput=e=>setMusicVolume(Number(e.target.value));
   $('#checkpointJump').onchange=e=>{const key=e.target.value;if(!key)return;const times=app.models.map(m=>{const cp=m.route.checkpoints.find(c=>c.key===key);return cp?timeAtDistance(m,cp.distance_km):null}).filter(Number.isFinite);seek(median(times)||0);e.target.value=''};
   $('#cameraMode').onchange=()=>{if($('#cameraMode').value==='overview'&&app.leafletReady)app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]})};$('#collapseBoard').onclick=()=>{const p=$('#leaderboardPanel');p.classList.toggle('collapsed');$('#collapseBoard').textContent=p.classList.contains('collapsed')?'+':'−'};$('#mapModeBtn').onclick=toggleMapMode;$('#shareBtn').onclick=shareView;$('#fullscreenBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay()}else if(e.key==='ArrowLeft')seek(app.time-600);else if(e.key==='ArrowRight')seek(app.time+600);else if(/^[1-5]$/.test(e.key)&&app.models[Number(e.key)-1])focusRunner(app.models[Number(e.key)-1])})
 }
-function initAudio(){app.audio=$('#raceSoundtrack');if(!app.audio)return;let volume=.65;try{const saved=Number(localStorage.getItem('ultravasan-music-volume'));if(Number.isFinite(saved))volume=clamp(saved,0,1);app.musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false'}catch{}app.audio.volume=volume;$('#musicVolume').value=String(volume);updateMusicButton();app.audio.addEventListener('error',()=>{app.musicEnabled=false;updateMusicButton();setEvent('Musikfilen kunde inte spelas, men kartduellen fungerar ändå.')})}
+function initAudio(){app.audio=$('#raceSoundtrack');if(!app.audio)return;let volume=.65;try{const saved=Number(localStorage.getItem('ultravasan-music-volume'));if(Number.isFinite(saved))volume=clamp(saved,0,1);app.musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false'}catch{}app.audio.volume=volume;const slider=$('#musicVolume');if(slider)slider.value=String(volume);updateMusicButton();app.audio.addEventListener('error',()=>{app.musicEnabled=false;updateMusicButton();setEvent('Musikfilen kunde inte spelas, men kartduellen fungerar ändå.')})}
 function updateMusicButton(){const btn=$('#musicBtn');if(!btn)return;btn.classList.toggle('active',app.musicEnabled);btn.innerHTML=app.musicEnabled?'♫ <span>Musik</span>':'♪ <span>Musik av</span>';btn.setAttribute('aria-pressed',String(app.musicEnabled))}
 function setMusicVolume(value){if(app.audio)app.audio.volume=clamp(value,0,1);try{localStorage.setItem('ultravasan-music-volume',String(clamp(value,0,1)))}catch{}}
 function toggleMusic(){app.musicEnabled=!app.musicEnabled;try{localStorage.setItem('ultravasan-music-enabled',String(app.musicEnabled))}catch{}updateMusicButton();if(!app.audio)return;if(app.musicEnabled&&app.playing){app.audio.play().catch(()=>setEvent('Tryck på start en gång till om webbläsaren blockerade musiken.'))}else app.audio.pause()}
