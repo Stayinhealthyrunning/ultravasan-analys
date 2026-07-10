@@ -113,7 +113,7 @@ function renderRunnerHistory(g){
   const timeline=rows.map(r=>{const race=state.data.races.find(x=>x.id===r.race_id);return `<button class="history-year ${r.id===best?.id?'best':''}" data-id="${r.id}"><b>${race?.year||'–'}</b><strong>${nTime(r.finish_seconds)}</strong><span>plats ${r.overall_place??'–'} · ${nEsc(r.age_class||'')}</span></button>`}).join('');
   const improvement=finish.length>1?finish[0].finish_seconds-finish.at(-1).finish_seconds:null;
   el.innerHTML=`<div class="history-head"><div><span>${rows.length} starter</span><strong>${nEsc(rows.at(-1).name_as_published)}</strong></div><div><span>Bästa tid</span><strong>${nTime(best?.finish_seconds)}</strong></div><div><span>Utveckling</span><strong>${improvement==null?'–':`${improvement>=0?'−':'+'}${Math.abs(Math.round(improvement/60))} min`}</strong></div></div><div class="history-timeline">${timeline}</div><button id="historyMap" class="compare-map-button">Spela upp åren på karta →</button>`;
-  n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>location.href=`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`;
+  n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(rows.slice(-5)):location.href=`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`;
 }
 
 const nerdTimer=setInterval(()=>{try{initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);

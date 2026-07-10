@@ -73,6 +73,24 @@ function renderTargetSimulator(){
 
 
 const compareState={raceId:null,selected:[]};
+const MAP_SESSION_KEY='ultravasan-map-data-v2';
+function createMapPayload(selected){
+  const ids=new Set(selected.map(r=>r.id)),raceIds=new Set(selected.map(r=>r.race_id));
+  return {
+    meta:{generated_at:state.data.meta?.generated_at||new Date().toISOString(),map_payload:true},
+    races:state.data.races.filter(r=>raceIds.has(r.id)),
+    results:selected,
+    checkpoints:state.data.checkpoints.filter(c=>raceIds.has(c.race_id)),
+    splits:state.data.splits.filter(s=>ids.has(s.result_id))
+  };
+}
+function openMapWithRunners(selected){
+  const runners=(selected||[]).filter(Boolean).slice(0,5);if(!runners.length)return;
+  const ids=runners.map(r=>r.id).join(',');
+  try{sessionStorage.setItem(MAP_SESSION_KEY,JSON.stringify(createMapPayload(runners)))}catch(e){console.warn('Kunde inte spara kartdata i sessionen',e)}
+  location.href=`karta.html?runners=${ids}`;
+}
+window.openUltravasanMap=openMapWithRunners;
 function setupMapCompare(){
   const year=$('#compareYear'),races=state.data.races.slice().sort((a,b)=>b.year-a.year);
   year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');
@@ -81,7 +99,7 @@ function setupMapCompare(){
   const search=$('#compareRunnerSearch');search.addEventListener('input',renderCompareSuggestions);search.addEventListener('focus',renderCompareSuggestions);
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
-  $('#compareMapButton').onclick=()=>{if(!compareState.selected.length)return;const ids=compareState.selected.map(r=>r.id).join(',');location.href=`karta.html?runners=${ids}`};
+  $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?state.data.results:state.data.results.filter(r=>r.race_id===compareState.raceId)}

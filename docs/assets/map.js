@@ -1,7 +1,8 @@
 'use strict';
 
 const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
-const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:600,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[]};
+const MAP_SESSION_KEY='ultravasan-map-data-v2';
+const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:600,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true};
 const $=s=>document.querySelector(s);
 const fmtTime=s=>{if(s==null||!Number.isFinite(s))return '–';s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fmtPace=s=>!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
@@ -9,7 +10,13 @@ const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
-const hydrateData=d=>{const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});return d};
+const hydrateData=d=>{d=d||{};d.races=Array.isArray(d.races)?d.races:[];d.results=Array.isArray(d.results)?d.results:[];d.checkpoints=Array.isArray(d.checkpoints)?d.checkpoints:[];d.splits=Array.isArray(d.splits)?d.splits:[];const rr=new Map(d.results.map(r=>[Number(r.id),Number(r.race_id)])),cp=new Map(d.checkpoints.map(c=>[`${Number(c.race_id)}|${c.checkpoint_key}`,c]));d.results.forEach(r=>{r.id=Number(r.id);r.race_id=Number(r.race_id);if(r.finish_seconds!=null)r.finish_seconds=Number(r.finish_seconds)});d.splits.forEach(s=>{s.result_id=Number(s.result_id);if(s.elapsed_seconds!=null)s.elapsed_seconds=Number(s.elapsed_seconds);const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=Number(c.sequence_no);s.distance_km=Number(c.distance_km)}else{if(s.sequence_no!=null)s.sequence_no=Number(s.sequence_no);if(s.distance_km!=null)s.distance_km=Number(s.distance_km)}if(s.is_estimated==null)s.is_estimated=0});return d};
+function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
+function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
+function loadScript(src,timeout=90000){return new Promise((resolve,reject)=>{const el=document.createElement('script');let done=false;const finish=(err)=>{if(done)return;done=true;clearTimeout(timer);err?reject(err):resolve()};el.src=src;el.async=true;el.onload=()=>finish();el.onerror=()=>finish(new Error(`Kunde inte läsa ${src}`));document.head.appendChild(el);const timer=setTimeout(()=>finish(new Error(`Tidsgränsen överskreds för ${src}`)),timeout)})}
+async function ensureRaceData(){const quick=readSessionData();if(quick){setLoading('Läser de valda löparna…');return quick}if(window.ULTRAVASAN_DATA)return window.ULTRAVASAN_DATA;setLoading('Läser historikdatabasen för den delade kartlänken…');await loadScript('data/ultravasan-data.js');if(!window.ULTRAVASAN_DATA)throw new Error('Historikdatabasen laddades inte.');return window.ULTRAVASAN_DATA}
+function ensureLeaflet(){if(window.L)return Promise.resolve();setLoading('Förbereder karta och banlager…');return new Promise(resolve=>{const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);const script=document.createElement('script');let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=finish;script.onerror=finish;document.head.appendChild(script);const timer=setTimeout(finish,2200)})}
+
 
 function routeForYear(year){
   const rule=app.registry.route_for_year.find(r=>year>=r.from&&year<=r.to);
@@ -18,8 +25,7 @@ function routeForYear(year){
 function raceForResult(result){return app.data.races.find(r=>r.id===result.race_id)}
 
 function boot(){
-  if(!window.ULTRAVASAN_DATA||!window.ULTRAVASAN_ROUTES){showFatal('Datafilerna kunde inte läsas. Kontrollera data/ultravasan-data.js och data/ultravasan-routes.js.');return}
-  app.data=hydrateData(window.ULTRAVASAN_DATA);app.registry=window.ULTRAVASAN_ROUTES;
+  if(!app.data||!app.registry)throw new Error('Datafilerna kunde inte läsas.');
   const params=new URLSearchParams(location.search),requestedIds=(params.get('runners')||'').split(',').map(Number).filter(Boolean);
   let selected=app.data.results.filter(r=>requestedIds.includes(r.id));
   if(!selected.length){const requested=Number(params.get('year'));const race=app.data.races.find(r=>r.id===requested||r.year===requested)||app.data.races.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
@@ -33,12 +39,12 @@ function boot(){
   $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km${r.geometry_quality==='reference-reconstruction'?' · referenslager':''}</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
   $('#stripLeader').textContent='Start';$('#stripFinishDistance').textContent=app.usedRoutes.length>1?'90/92 km · Mora':`${app.usedRoutes[0].official_distance_km.toFixed(0)} km · Mora`;
-  buildCheckpointJump();buildRaceStrip();initMap();bindControls();update(true);$('#mapLoading').classList.add('hidden');
+  buildCheckpointJump();buildRaceStrip();initMap();bindControls();initAudio();update(true);$('#mapLoading').classList.add('hidden');
 }
 function showFatal(message){$('#mapLoading').innerHTML=`<p><strong>Kartjämförelsen kunde inte starta.</strong><br>${esc(message)}</p>`}
 
 function buildModel(result,color,index){
-  const race=raceForResult(result),route=routeForYear(race.year),routeCp=new Map(route.checkpoints.map(c=>[c.key,c]));
+  const race=raceForResult(result);if(!race)throw new Error(`Loppår saknas för ${result.name_as_published||result.id}.`);const route=routeForYear(race.year);if(!route||!Array.isArray(route.points)||route.points.length<2)throw new Error(`Banlager saknas för ${race.year}.`);const routeCp=new Map((route.checkpoints||[]).map(c=>[c.key,c]));
   const raw=app.data.splits.filter(s=>s.result_id===result.id&&Number.isFinite(s.elapsed_seconds)).sort((a,b)=>a.elapsed_seconds-b.elapsed_seconds);
   let anchors=[{time:0,distance:0,name:'Start Sälen',exact:true,kind:'start'}];
   for(const s of raw){
@@ -111,12 +117,20 @@ function updateCamera(states,leader){const mode=$('#cameraMode').value;if(mode==
 function focusRunner(model){app.focused=model;const s=statusAt(model,app.time),pos=routePosition(model.route,s.distance);if(app.leafletReady&&!app.routeOnly)app.map.flyTo(pos,14,{duration:.7});setEvent(`${model.result.name_as_published} ${model.race.year}: ${s.distance.toFixed(1)} km · ${s.finished?'i mål':fmtPace(s.pace)} · ${model.quality}`);update(true)}
 
 function bindControls(){
-  $('#playBtn').onclick=togglePlay;$('#restartBtn').onclick=()=>seek(0);$('#backBtn').onclick=()=>seek(app.time-600);$('#forwardBtn').onclick=()=>seek(app.time+600);$('#timeline').oninput=e=>seek(Number(e.target.value),true);$('#speedSelect').onchange=e=>app.speed=Number(e.target.value);
+  $('#playBtn').onclick=togglePlay;$('#restartBtn').onclick=restartRace;$('#backBtn').onclick=()=>seek(app.time-600);$('#forwardBtn').onclick=()=>seek(app.time+600);$('#timeline').oninput=e=>seek(Number(e.target.value),true);$('#speedSelect').onchange=e=>app.speed=Number(e.target.value);
+  $('#musicBtn').onclick=toggleMusic;$('#musicVolume').oninput=e=>setMusicVolume(Number(e.target.value));
   $('#checkpointJump').onchange=e=>{const key=e.target.value;if(!key)return;const times=app.models.map(m=>{const cp=m.route.checkpoints.find(c=>c.key===key);return cp?timeAtDistance(m,cp.distance_km):null}).filter(Number.isFinite);seek(median(times)||0);e.target.value=''};
   $('#cameraMode').onchange=()=>{if($('#cameraMode').value==='overview'&&app.leafletReady)app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]})};$('#collapseBoard').onclick=()=>{const p=$('#leaderboardPanel');p.classList.toggle('collapsed');$('#collapseBoard').textContent=p.classList.contains('collapsed')?'+':'−'};$('#mapModeBtn').onclick=toggleMapMode;$('#shareBtn').onclick=shareView;$('#fullscreenBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay()}else if(e.key==='ArrowLeft')seek(app.time-600);else if(e.key==='ArrowRight')seek(app.time+600);else if(/^[1-5]$/.test(e.key)&&app.models[Number(e.key)-1])focusRunner(app.models[Number(e.key)-1])})
 }
-function togglePlay(){app.playing=!app.playing;$('#playBtn').textContent=app.playing?'❚❚':'▶';if(app.playing){app.lastFrame=performance.now();requestAnimationFrame(frame)}}
-function frame(now){if(!app.playing)return;const dt=Math.min(.1,(now-app.lastFrame)/1000);app.lastFrame=now;const next=Math.min(app.maxTime,app.time+dt*app.speed);checkEvents(app.time,next);app.prevTime=app.time;app.time=next;update();if(app.time>=app.maxTime){app.playing=false;$('#playBtn').textContent='▶';setEvent('Alla valda löpare har nått sin sista registrerade position.')}else requestAnimationFrame(frame)}
+function initAudio(){app.audio=$('#raceSoundtrack');if(!app.audio)return;let volume=.65;try{const saved=Number(localStorage.getItem('ultravasan-music-volume'));if(Number.isFinite(saved))volume=clamp(saved,0,1);app.musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false'}catch{}app.audio.volume=volume;$('#musicVolume').value=String(volume);updateMusicButton();app.audio.addEventListener('error',()=>{app.musicEnabled=false;updateMusicButton();setEvent('Musikfilen kunde inte spelas, men kartduellen fungerar ändå.')})}
+function updateMusicButton(){const btn=$('#musicBtn');if(!btn)return;btn.classList.toggle('active',app.musicEnabled);btn.innerHTML=app.musicEnabled?'♫ <span>Musik</span>':'♪ <span>Musik av</span>';btn.setAttribute('aria-pressed',String(app.musicEnabled))}
+function setMusicVolume(value){if(app.audio)app.audio.volume=clamp(value,0,1);try{localStorage.setItem('ultravasan-music-volume',String(clamp(value,0,1)))}catch{}}
+function toggleMusic(){app.musicEnabled=!app.musicEnabled;try{localStorage.setItem('ultravasan-music-enabled',String(app.musicEnabled))}catch{}updateMusicButton();if(!app.audio)return;if(app.musicEnabled&&app.playing){app.audio.play().catch(()=>setEvent('Tryck på start en gång till om webbläsaren blockerade musiken.'))}else app.audio.pause()}
+function startMusic(){if(!app.audio||!app.musicEnabled)return;app.audio.play().catch(()=>setEvent('Kartduellen startade. Webbläsaren väntar med musiken tills du trycker på start igen.'))}
+function pauseMusic(){if(app.audio)app.audio.pause()}
+function restartRace(){seek(0);if(app.audio){app.audio.pause();app.audio.currentTime=0}if(app.playing)startMusic()}
+function togglePlay(){app.playing=!app.playing;$('#playBtn').textContent=app.playing?'❚❚':'▶';if(app.playing){startMusic();app.lastFrame=performance.now();requestAnimationFrame(frame)}else pauseMusic()}
+function frame(now){if(!app.playing)return;const dt=Math.min(.1,(now-app.lastFrame)/1000);app.lastFrame=now;const next=Math.min(app.maxTime,app.time+dt*app.speed);checkEvents(app.time,next);app.prevTime=app.time;app.time=next;update();if(app.time>=app.maxTime){app.playing=false;$('#playBtn').textContent='▶';pauseMusic();setEvent('Alla valda löpare har nått sin sista registrerade position.')}else requestAnimationFrame(frame)}
 function seek(value,scrubbing=false){app.time=clamp(value,0,app.maxTime);app.prevTime=app.time;update(true);if(!scrubbing)setEvent(`Uppspelningen flyttades till ${fmtTime(app.time)}.`)}
 function checkEvents(from,to){if(to<=from)return;const events=[];for(const m of app.models)for(const a of m.anchors)if(a.time>from&&a.time<=to&&a.kind!=='start')events.push({m,a});events.sort((x,y)=>x.a.time-y.a.time);if(events.length){const e=events.at(-1);setEvent(`${e.m.result.name_as_published} (${e.m.race.year}) passerar ${e.a.name} efter ${fmtTime(e.a.time)}.`);if(e.a.kind==='finish'&&!e.m.lastFinished){e.m.lastFinished=true;finishBurst(e.m.color)}}if(to-app.lastBattle>120){const ss=app.models.map(m=>({m,...statusAt(m,to)})).sort((a,b)=>b.progress-a.progress);if(ss.length>1&&ss[0].progress<.995){const gap=(ss[0].progress-ss[1].progress)*100;if(gap<.15)setEvent(`Tät duell! ${ss[0].m.result.name_as_published} och ${ss[1].m.result.name_as_published} skiljs åt av ${gap.toFixed(2)} procentenheter.`)}app.lastBattle=to}}
 function setEvent(text){$('#eventText').textContent=text}
@@ -124,6 +138,7 @@ function finishBurst(color){const root=$('#finishBurst'),palette=[color,'#dbe75a
 function toggleMapMode(){if(!app.leafletReady)return;app.routeOnly=!app.routeOnly;$('#map').style.display=app.routeOnly?'none':'block';$('#fallbackMap').classList.toggle('visible',app.routeOnly);$('#mapModeBtn').innerHTML=app.routeOnly?'⌖ <span>Karta</span>':'◫ <span>Banvy</span>';if(!app.routeOnly)setTimeout(()=>{app.map.invalidateSize();app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]})},50)}
 async function shareView(){const url=new URL(location.href);url.searchParams.delete('year');url.searchParams.set('runners',app.models.map(m=>m.result.id).join(','));url.searchParams.set('t',Math.round(app.time));try{await navigator.clipboard.writeText(url.href);setEvent('Länken till kartvyn och tidpunkten har kopierats.')}catch{prompt('Kopiera länken:',url.href)}}
 
-let booted=false;function startApplication(){if(booted)return;booted=true;boot()}
-function loadLeafletOrFallback(){const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);const script=document.createElement('script');script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=startApplication;script.onerror=startApplication;document.head.appendChild(script);setTimeout(startApplication,2500)}
-loadLeafletOrFallback();
+let booted=false;
+async function startApplication(){if(booted)return;booted=true;try{if(!window.ULTRAVASAN_ROUTES)throw new Error('Banlagret ultravasan-routes.js saknas.');app.registry=window.ULTRAVASAN_ROUTES;const [data]=await Promise.all([ensureRaceData(),ensureLeaflet()]);app.data=hydrateData(data);setLoading('Bygger löparnas positioner…');boot()}catch(e){console.error(e);showFatal(e?.message||String(e))}}
+window.addEventListener('unhandledrejection',e=>{console.error(e.reason);showFatal(e.reason?.message||String(e.reason||'Okänt fel'))});
+startApplication();
