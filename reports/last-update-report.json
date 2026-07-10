@@ -1,16 +1,16 @@
 {
-  "installed_at_utc": "2026-07-10T16:00:11.861649+00:00",
-  "name": "Positionsexpressen, korrekt DNF-flöde, historikaxel och Hall of Fame-karta",
-  "version": "2026.07.10.4",
-  "description": "Förtydligar positionsspelet med exakt delsträcka, korrigerar DNF-logiken genom att skilja DNS från faktiska startande, lägger till y-axel och tidsspridning i årshistoriken, ger Hall of Fame tydliga definitioner och en riktig kartpopup med färgmarkerade delsträckor, uppdaterar årets fingeravtryck, inför friskrivning och lägger till YouTube-länk.",
+  "installed_at_utc": "2026-07-10T16:10:09.465127+00:00",
+  "name": "Sälen-Mora splits hero och logotyp",
+  "version": "2026.07.10.hero2",
+  "description": "Byter namn och toppsektion till Sälen-Mora splits, lägger in ny fullbredds-hero med trailinspirerad logotyp och tar bort banprofilrutan till höger.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/app.js",
-    "docs/assets/nerdlab.js",
+    "OPPNA_ANALYSSIDAN.html",
+    "docs/assets/hero-trail-scene.svg",
+    "docs/assets/salen-mora-logo.svg",
     "docs/assets/styles.css",
-    "docs/data/ultravasan-routes.js",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "5e9f5f610025735eae2cda0bf5e99ff657ac20c7e179fed82522f32acd50a263"
+  "manifest_sha256": "226d70e4417bbf45e800b75e84253503bed690c58618caf676757aec16b9ae6e"
 }

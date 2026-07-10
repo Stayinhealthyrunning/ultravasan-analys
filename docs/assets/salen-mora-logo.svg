@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 240" role="img" aria-labelledby="title desc">
+  <title id="title">Sälen-Mora Splits logotyp</title>
+  <desc id="desc">Stiliserad logotyp med löpare, tallar, brobåge och slingrande stig.</desc>
+  <defs>
+    <linearGradient id="pathGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d8e35d"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46 130c35-52 93-88 164-95 55-5 108 9 160 43" stroke-width="10" opacity=".92"/>
+    <path d="M40 127c34-49 86-84 152-99" stroke-width="4" opacity=".75"/>
+    <path d="M378 124c-55-49-118-73-189-70" stroke-width="4" opacity=".75"/>
+  </g>
+  <g fill="#fff" opacity=".95">
+    <path d="M23 188l33-91 33 91h-24l-9-24H56l-9 24H23zm41-43-8-22-8 22h16z"/>
+    <path d="M356 188l18-85 18 37 18-37 18 85h-20l-8-41-8 16h-1l-8-16-8 41h-19z"/>
+  </g>
+  <path d="M44 196c51-17 96-20 136-9 23 6 49 5 79-1 31-7 62-5 94 8 13 5 24 11 33 18H31c3-6 7-11 13-16z" fill="url(#pathGrad)" opacity=".95"/>
+  <path d="M92 210c34-36 69-58 104-65 16-4 31-4 47 0 18 4 38 17 60 38 8 8 17 17 26 27H77c4-8 9-15 15-21z" fill="#fff" opacity=".23"/>
+  <g fill="#fff">
+    <path d="M77 172l19-50 18 50h-13l-5-13H84l-5 13H77zm17-24-4-10-4 10h8z"/>
+    <path d="M305 177l16-43 16 43h-11l-4-11h-12l-4 11h-11zm18-21-4-10-4 10h8z"/>
+  </g>
+  <g transform="translate(182 67)" fill="#fff">
+    <circle cx="20" cy="15" r="12"/>
+    <path d="M17 29c12 2 21 7 30 16 12 10 29 15 43 12l4 12c-20 6-40 2-56-11l-9 35H15l10-42-16 18-12-9 21-26c4-4 8-5 9-5z"/>
+    <path d="M23 38l-25 11-5-11 26-12z"/>
+    <path d="M33 43l14-24 11 6-16 28z"/>
+    <path d="M31 90l26 20-9 10-31-22z"/>
+  </g>
+</svg>
