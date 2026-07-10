@@ -1,0 +1,16 @@
+{
+  "installed_at_utc": "2026-07-10T14:40:20.017971+00:00",
+  "name": "Kartduell V2 med Eldspår till Mora",
+  "version": "2026.07.10.2",
+  "description": "Korrigerar kartstarten, minskar datamängden i kartvyn och lägger till musikstyrning.",
+  "source_package": "uppdatering.zip",
+  "installed_files": [
+    "docs/assets/Eldspar-till-Mora.mp3",
+    "docs/assets/app.js",
+    "docs/assets/map.css",
+    "docs/assets/map.js",
+    "docs/karta.html"
+  ],
+  "deleted_paths": [],
+  "manifest_sha256": "bcf003a587fc0c7fb4cdfbb66eb5e6983aa7346d441e9f0a61cd686ebb333885"
+}
