@@ -1,0 +1,286 @@
+{
+  "generated_at": "2026-07-10T13:37:01+00:00",
+  "input": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z",
+  "payload_files": 13,
+  "collections": 10,
+  "inserted": 13188,
+  "updated": 0,
+  "skipped": 0,
+  "warnings": 0,
+  "years": {
+    "2014": 914,
+    "2015": 1240,
+    "2016": 986,
+    "2017": 1019,
+    "2018": 1166,
+    "2019": 1350,
+    "2022": 1654,
+    "2023": 1355,
+    "2024": 1592,
+    "2025": 1912
+  },
+  "database_results_by_year": {
+    "2014": 914,
+    "2015": 1240,
+    "2016": 986,
+    "2017": 1019,
+    "2018": 1166,
+    "2019": 1350,
+    "2022": 1654,
+    "2023": 1355,
+    "2024": 1592,
+    "2025": 1912
+  },
+  "database_splits_by_year": {
+    "2014": 5877,
+    "2015": 6883,
+    "2017": 6762,
+    "2018": 8086,
+    "2019": 9360,
+    "2022": 9298,
+    "2023": 10303,
+    "2024": 12195,
+    "2025": 14521
+  },
+  "database_statuses": {
+    "2014:DNF": 52,
+    "2014:DNS": 153,
+    "2014:FINISHED": 709,
+    "2015:DNF": 72,
+    "2015:DNS": 347,
+    "2015:FINISHED": 821,
+    "2016:DNF": 60,
+    "2016:DNS": 181,
+    "2016:FINISHED": 745,
+    "2017:DNF": 103,
+    "2017:DNS": 120,
+    "2017:FINISHED": 796,
+    "2018:DNF": 64,
+    "2018:DNS": 124,
+    "2018:FINISHED": 978,
+    "2019:DNF": 101,
+    "2019:DNS": 131,
+    "2019:FINISHED": 1118,
+    "2022:DNF": 134,
+    "2022:DNS": 430,
+    "2022:FINISHED": 1090,
+    "2023:DNF": 114,
+    "2023:DNS": 162,
+    "2023:FINISHED": 1079,
+    "2024:DNF": 102,
+    "2024:DNS": 192,
+    "2024:FINISHED": 1298,
+    "2025:DNF": 159,
+    "2025:DNS": 231,
+    "2025:FINISHED": 1522
+  },
+  "diagnostics": [
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2018.json",
+      "path": "$",
+      "score": 7.91,
+      "rows": 1166,
+      "accepted": 1166
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2025.json",
+      "path": "$",
+      "score": 7.64,
+      "rows": 1912,
+      "accepted": 1912
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2017.json",
+      "path": "$",
+      "score": 7.64,
+      "rows": 1019,
+      "accepted": 1019
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2019.json",
+      "path": "$",
+      "score": 7.61,
+      "rows": 1350,
+      "accepted": 1350
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2023.json",
+      "path": "$",
+      "score": 7.55,
+      "rows": 1355,
+      "accepted": 1355
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2022.json",
+      "path": "$",
+      "score": 7.46,
+      "rows": 1654,
+      "accepted": 1654
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2014.json",
+      "path": "$",
+      "score": 7.46,
+      "rows": 914,
+      "accepted": 914
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2024.json",
+      "path": "$",
+      "score": 7.37,
+      "rows": 1592,
+      "accepted": 1592
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2016.json",
+      "path": "$",
+      "score": 7.37,
+      "rows": 986,
+      "accepted": 986
+    },
+    {
+      "file": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z/2015.json",
+      "path": "$",
+      "score": 7.34,
+      "rows": 1240,
+      "accepted": 1240
+    }
+  ],
+  "capture": {
+    "captured_at": "2026-07-10T13:36:23+00:00",
+    "method": "direct-public-json",
+    "base_url": "https://vasanerd.se/data/ultravasan",
+    "directory": "/home/runner/work/ultravasan-analys/ultravasan-analys/raw/vasanerd/20260710T133618Z",
+    "years": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "responses": [
+      {
+        "url": "https://vasanerd.se/data/ultravasan/_keymap.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "_keymap.json",
+        "sha256": "94c39cad19bd812aae20d8d53cb7d92c79f963e9d97106586a25b273cf5eeba1",
+        "bytes": 1767
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/year_stats.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "year_stats.json",
+        "sha256": "eedd4f1d0cc28ba2b34cfa5d0525516fca26a62497c1dc1889f94a4262def6f1",
+        "bytes": 30358
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/persons.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "persons.json",
+        "sha256": "e9285818b942b80f279b5ead422185cb4cd1b04ee97456120f2227d428923976",
+        "bytes": 722290
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2014.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2014.json",
+        "sha256": "cc59f1a1e2a80f9f1a24c434ce4645407d09694854b3cfbed52f3db8dfe9c1c6",
+        "bytes": 705410
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2015.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2015.json",
+        "sha256": "975060e327f5e685e81f63eb500c96e8441ca23ace1fe8d48873609dc2b20d32",
+        "bytes": 864661
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2016.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2016.json",
+        "sha256": "a6055eeddbb4a2180763beca003b6e698f6f56e6914a233f7577fe683773a033",
+        "bytes": 225425
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2017.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2017.json",
+        "sha256": "5327d7a1de2f4234fac2e617402cb2794d2e9b997a3cf937329f812667a4e99b",
+        "bytes": 818842
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2018.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2018.json",
+        "sha256": "9ebba5fafe7fce83997c550fcfe6cc5853fd17c3ba3be516f78ea4ebc5898b2e",
+        "bytes": 951866
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2019.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2019.json",
+        "sha256": "a5905cf6783c8e918572c2a41be9552f93b7e3ecdd95c5e3663039d2a4fdef04",
+        "bytes": 1114949
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2022.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2022.json",
+        "sha256": "a15a668b6304185ab43621d905db049e541ae24082f933ea55757f0d4994ad81",
+        "bytes": 1158868
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2023.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2023.json",
+        "sha256": "93b88c54cd59a14834cd5f640c006f2f0a24d0ebf8cb896698da8b970b31b048",
+        "bytes": 1167757
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2024.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2024.json",
+        "sha256": "fb13cf3606961af729b55efff58038b3d094a2017bbced3936e0448756138136",
+        "bytes": 1385229
+      },
+      {
+        "url": "https://vasanerd.se/data/ultravasan/2025.json?v=20260710133618",
+        "status": 200,
+        "content_type": "application/json",
+        "resource_type": "direct",
+        "file": "2025.json",
+        "sha256": "f69b98bc0e0369897cb48c52b44b377beaa037e92d4ebf52a95259cfa3451214",
+        "bytes": 1672294
+      }
+    ]
+  }
+}
