@@ -1,0 +1,95 @@
+name: Hämta hela Ultravasan-historiken
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_permission_confirmed:
+        description: "Bekräfta att VasaNerd anges som källa och att datan får användas"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-history-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-history:
+    if: inputs.source_permission_confirmed == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Hämta projektet
+        uses: actions/checkout@v4
+
+      - name: Installera Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installera importpaket
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bygg en ren historikdatabas
+        run: |
+          rm -f data/ultravasan.sqlite
+          rm -rf raw/vasanerd
+          python tools/vasanerd_import.py sync
+
+      - name: Validera datan och bygg webbfilen
+        run: |
+          python tools/uvtool.py validate
+          python tools/uvtool.py export
+          python tests/test_vasanerd_import.py
+
+      - name: Kvalitetskontrollera omfattningen
+        run: |
+          python - <<'PY'
+          import json, sqlite3, sys
+          db = sqlite3.connect('data/ultravasan.sqlite')
+          results = db.execute('SELECT COUNT(*) FROM results').fetchone()[0]
+          splits = db.execute('SELECT COUNT(*) FROM splits').fetchone()[0]
+          years = db.execute('SELECT COUNT(DISTINCT year) FROM races WHERE year BETWEEN 2014 AND 2030').fetchone()[0]
+          integrity = db.execute('PRAGMA integrity_check').fetchone()[0]
+          db.execute('VACUUM')
+          db.close()
+          manifest = json.load(open('docs/data/manifest.json', encoding='utf-8'))
+          print({'results': results, 'splits': splits, 'years': years, 'integrity': integrity, 'web': manifest})
+          if integrity != 'ok' or results < 13000 or splits < 80000 or years < 10:
+              sys.exit('Historikimporten verkar ofullständig och publiceras därför inte.')
+          PY
+
+      - name: Spara historiken och uppdatera webbplatsen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f \
+            data/ultravasan.sqlite \
+            docs/data/ultravasan.json \
+            docs/data/ultravasan-data.js \
+            docs/data/manifest.json \
+            reports/vasanerd-import-report.json
+          if git diff --cached --quiet; then
+            echo "Historiken var redan aktuell."
+          else
+            git commit -m "Importera komplett Ultravasan-historik"
+            git push
+          fi
+
+      - name: Spara kontrollrapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultravasan-historikrapport
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            reports/vasanerd-import-report.json
+            docs/data/manifest.json
