@@ -1,0 +1,370 @@
+name: Installera uppdateringspaket
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_path:
+        description: "Sökväg till ZIP-paketet i repositoryt"
+        required: true
+        default: "uppdatering.zip"
+        type: string
+      confirm:
+        description: "Jag vill installera paketet, validera filerna och publicera ändringen"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-update-installer
+  cancel-in-progress: false
+
+jobs:
+  installera:
+    if: ${{ inputs.confirm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      PACKAGE_PATH: ${{ inputs.package_path }}
+
+    steps:
+      - name: Hämta repositoryt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Kontrollera och installera uppdateringspaketet
+        id: install
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import shutil
+          import stat
+          import sys
+          import tempfile
+          import zipfile
+          from datetime import datetime, timezone
+          from pathlib import Path, PurePosixPath
+
+          repo = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          raw_package = os.environ.get("PACKAGE_PATH", "uppdatering.zip").strip()
+          package = (repo / raw_package).resolve()
+          output_file = Path(os.environ["GITHUB_OUTPUT"])
+
+          def fail(message: str) -> None:
+              print(f"::error::{message}")
+              raise SystemExit(message)
+
+          try:
+              package.relative_to(repo)
+          except ValueError:
+              fail("Paketfilen måste ligga i repositoryt.")
+
+          if package.suffix.lower() != ".zip":
+              fail("Paketfilen måste vara en ZIP-fil.")
+          if not package.is_file():
+              fail(f"Paketfilen hittades inte: {raw_package}")
+          if package.stat().st_size > 95 * 1024 * 1024:
+              fail("Paketfilen är större än 95 MiB.")
+
+          temp_root = Path(tempfile.mkdtemp(prefix="uv-update-"))
+          extract_root = temp_root / "extracted"
+          extract_root.mkdir(parents=True)
+
+          with zipfile.ZipFile(package) as archive:
+              infos = archive.infolist()
+              if not infos:
+                  fail("ZIP-paketet är tomt.")
+
+              total_uncompressed = 0
+              for info in infos:
+                  total_uncompressed += info.file_size
+                  if total_uncompressed > 250 * 1024 * 1024:
+                      fail("Paketets uppackade storlek överstiger 250 MiB.")
+
+                  path = PurePosixPath(info.filename)
+                  if path.is_absolute() or ".." in path.parts:
+                      fail(f"Otillåten sökväg i ZIP-paketet: {info.filename}")
+
+                  unix_mode = info.external_attr >> 16
+                  if stat.S_ISLNK(unix_mode):
+                      fail(f"Symboliska länkar är inte tillåtna: {info.filename}")
+
+              archive.extractall(extract_root)
+
+          manifest_path = extract_root / "update-manifest.json"
+          payload_root = extract_root / "payload"
+          if not manifest_path.is_file():
+              fail("update-manifest.json saknas i paketets rot.")
+          if not payload_root.is_dir():
+              fail("Mappen payload saknas i paketets rot.")
+
+          try:
+              manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          except Exception as exc:
+              fail(f"Manifestet kunde inte läsas: {exc}")
+
+          if manifest.get("format_version") != 1:
+              fail("Paketets format_version måste vara 1.")
+
+          name = str(manifest.get("name") or "Namnlös uppdatering").strip()
+          version = str(manifest.get("version") or "utan versionsnummer").strip()
+          description = str(manifest.get("description") or "").strip()
+          required_repo_paths = manifest.get("required_repo_paths") or []
+          expected_hashes = manifest.get("files") or {}
+          delete_paths = manifest.get("delete") or []
+
+          if not isinstance(required_repo_paths, list):
+              fail("required_repo_paths måste vara en lista.")
+          if not isinstance(expected_hashes, dict) or not expected_hashes:
+              fail("Manifestet måste innehålla checksummor under files.")
+          if not isinstance(delete_paths, list):
+              fail("delete måste vara en lista.")
+
+          for rel in required_repo_paths:
+              target = (repo / str(rel)).resolve()
+              try:
+                  target.relative_to(repo)
+              except ValueError:
+                  fail(f"Otillåten required_repo_paths-sökväg: {rel}")
+              if not target.exists():
+                  fail(f"Repositoryt saknar en fil som paketet kräver: {rel}")
+
+          payload_files = {
+              p.relative_to(payload_root).as_posix(): p
+              for p in payload_root.rglob("*")
+              if p.is_file()
+          }
+
+          if set(payload_files) != set(expected_hashes):
+              missing = sorted(set(expected_hashes) - set(payload_files))
+              extra = sorted(set(payload_files) - set(expected_hashes))
+              fail(f"Payload och manifest stämmer inte. Saknas: {missing}. Extra: {extra}.")
+
+          for rel, source in payload_files.items():
+              rel_path = PurePosixPath(rel)
+              if rel_path.is_absolute() or ".." in rel_path.parts or not rel_path.parts:
+                  fail(f"Otillåten payload-sökväg: {rel}")
+              if rel_path.parts[0] == ".git":
+                  fail("Paket får inte skriva till .git.")
+
+              digest = hashlib.sha256(source.read_bytes()).hexdigest()
+              expected = str(expected_hashes[rel]).lower().removeprefix("sha256:")
+              if digest != expected:
+                  fail(f"Fel checksumma för {rel}.")
+
+          installed: list[str] = []
+          deleted: list[str] = []
+
+          for rel, source in sorted(payload_files.items()):
+              target = (repo / rel).resolve()
+              try:
+                  target.relative_to(repo)
+              except ValueError:
+                  fail(f"Otillåten målsökväg: {rel}")
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source, target)
+              installed.append(rel)
+
+          for rel in delete_paths:
+              rel = str(rel).replace("\\", "/").strip("/")
+              if not rel or rel.startswith(".git") or rel in {".", ".."}:
+                  fail(f"Otillåten delete-sökväg: {rel}")
+              target = (repo / rel).resolve()
+              try:
+                  target.relative_to(repo)
+              except ValueError:
+                  fail(f"Otillåten delete-sökväg: {rel}")
+              if target.is_dir():
+                  shutil.rmtree(target)
+                  deleted.append(rel + "/")
+              elif target.exists():
+                  target.unlink()
+                  deleted.append(rel)
+
+          # Paketet tas bort efter installation så repositoryts rot hålls ren.
+          package.unlink()
+
+          report_dir = repo / "reports"
+          report_dir.mkdir(exist_ok=True)
+          report = {
+              "installed_at_utc": datetime.now(timezone.utc).isoformat(),
+              "name": name,
+              "version": version,
+              "description": description,
+              "source_package": raw_package,
+              "installed_files": installed,
+              "deleted_paths": deleted,
+              "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+          }
+          (report_dir / "last-update-report.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          def write_output(key: str, value: str) -> None:
+              safe = value.replace("\r", " ").replace("\n", " ")
+              with output_file.open("a", encoding="utf-8") as fh:
+                  fh.write(f"{key}={safe}\n")
+
+          write_output("update_name", name)
+          write_output("update_version", version)
+          write_output("file_count", str(len(installed)))
+          write_output("delete_count", str(len(deleted)))
+          write_output("report_path", "reports/last-update-report.json")
+
+          print(f"Installerade {len(installed)} filer från {name} {version}.")
+          PY
+
+      - name: Validera JavaScript, JSON, HTML och SQLite
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import sqlite3
+          import subprocess
+          import sys
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          repo = Path.cwd()
+          report = json.loads((repo / "reports/last-update-report.json").read_text(encoding="utf-8"))
+          changed = [repo / p for p in report.get("installed_files", [])]
+
+          errors: list[str] = []
+
+          class LocalRefs(HTMLParser):
+              def __init__(self) -> None:
+                  super().__init__()
+                  self.refs: list[str] = []
+
+              def handle_starttag(self, tag: str, attrs):
+                  attrs = dict(attrs)
+                  for key in ("src", "href"):
+                      if key in attrs:
+                          self.refs.append(attrs[key])
+
+          for path in changed:
+              if not path.exists():
+                  errors.append(f"Installerad fil saknas: {path.relative_to(repo)}")
+                  continue
+
+              suffix = path.suffix.lower()
+              if suffix == ".js":
+                  proc = subprocess.run(
+                      ["node", "--check", str(path)],
+                      text=True,
+                      capture_output=True,
+                  )
+                  if proc.returncode:
+                      errors.append(f"JavaScript-fel i {path.relative_to(repo)}: {proc.stderr.strip()}")
+
+              elif suffix == ".json":
+                  try:
+                      json.loads(path.read_text(encoding="utf-8"))
+                  except Exception as exc:
+                      errors.append(f"JSON-fel i {path.relative_to(repo)}: {exc}")
+
+              elif suffix in {".sqlite", ".db"}:
+                  try:
+                      with sqlite3.connect(path) as conn:
+                          result = conn.execute("PRAGMA integrity_check").fetchone()[0]
+                      if result != "ok":
+                          errors.append(f"SQLite integrity_check för {path.relative_to(repo)}: {result}")
+                  except Exception as exc:
+                      errors.append(f"SQLite-fel i {path.relative_to(repo)}: {exc}")
+
+              elif suffix in {".html", ".htm"}:
+                  try:
+                      parser = LocalRefs()
+                      parser.feed(path.read_text(encoding="utf-8"))
+                      for ref in parser.refs:
+                          ref = str(ref).strip()
+                          if not ref or ref.startswith(("#", "data:", "mailto:", "tel:", "javascript:")):
+                              continue
+                          parsed = urlsplit(ref)
+                          if parsed.scheme or parsed.netloc or ref.startswith("//"):
+                              continue
+                          local = (path.parent / parsed.path).resolve()
+                          try:
+                              local.relative_to(repo)
+                          except ValueError:
+                              errors.append(f"HTML-referens lämnar repositoryt i {path.relative_to(repo)}: {ref}")
+                              continue
+                          if parsed.path and not local.exists():
+                              errors.append(f"Saknad lokal resurs i {path.relative_to(repo)}: {ref}")
+                  except Exception as exc:
+                      errors.append(f"HTML-fel i {path.relative_to(repo)}: {exc}")
+
+          for required in (repo / "docs/index.html", repo / "docs/karta.html"):
+              if not required.is_file():
+                  errors.append(f"Obligatorisk webbsida saknas: {required.relative_to(repo)}")
+
+          if errors:
+              for error in errors:
+                  print(f"::error::{error}")
+              raise SystemExit(f"Valideringen misslyckades med {len(errors)} fel.")
+
+          print(f"Valideringen lyckades för {len(changed)} installerade filer.")
+          PY
+
+      - name: Skapa återställningspunkt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BACKUP_TAG="backup-before-update-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git tag -a "$BACKUP_TAG" "$GITHUB_SHA" -m "Automatisk återställningspunkt före uppdatering"
+          git push origin "$BACKUP_TAG"
+          echo "BACKUP_TAG=$BACKUP_TAG" >> "$GITHUB_ENV"
+
+      - name: Spara och publicera uppdateringen
+        shell: bash
+        env:
+          UPDATE_NAME: ${{ steps.install.outputs.update_name }}
+          UPDATE_VERSION: ${{ steps.install.outputs.update_version }}
+        run: |
+          set -euo pipefail
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Inga filändringar att spara." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git commit -m "Installera ${UPDATE_NAME} ${UPDATE_VERSION}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Sammanfattning
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Uppdateringssystem"
+            echo ""
+            echo "- **Paket:** ${{ steps.install.outputs.update_name }}"
+            echo "- **Version:** ${{ steps.install.outputs.update_version }}"
+            echo "- **Installerade filer:** ${{ steps.install.outputs.file_count }}"
+            echo "- **Borttagna sökvägar:** ${{ steps.install.outputs.delete_count }}"
+            if [ -n "${BACKUP_TAG:-}" ]; then
+              echo "- **Återställningspunkt:** \`${BACKUP_TAG}\`"
+            fi
+            echo ""
+            echo "GitHub Pages publicerar automatiskt ändringar i mappen \`docs\`."
+          } >> "$GITHUB_STEP_SUMMARY"
