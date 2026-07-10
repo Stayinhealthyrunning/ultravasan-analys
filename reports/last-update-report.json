@@ -1,16 +1,21 @@
 {
-  "installed_at_utc": "2026-07-10T14:40:20.017971+00:00",
-  "name": "Kartduell V2 med Eldspår till Mora",
-  "version": "2026.07.10.2",
-  "description": "Korrigerar kartstarten, minskar datamängden i kartvyn och lägger till musikstyrning.",
+  "installed_at_utc": "2026-07-10T15:49:55.615885+00:00",
+  "name": "Kartduell, banlager, hjälprutor och tydligare statistik",
+  "version": "2026.07.10.3",
+  "description": "Öppnar kartduellen i nytt fönster, använder den bifogade GPX-filen för 2014–2022, ger två tändbara banlager, låter musiken fortsätta efter målgång, lägger till informationsikoner, ersätter uttrycket mitt 50 procent och visar Sälen som startpunkt i hastighetsdiagrammet.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/Eldspar-till-Mora.mp3",
+    "data/routes/ultravasan90-routes.json",
     "docs/assets/app.js",
     "docs/assets/map.css",
     "docs/assets/map.js",
-    "docs/karta.html"
+    "docs/assets/nerdlab.js",
+    "docs/assets/styles.css",
+    "docs/data/ultravasan-routes.js",
+    "docs/index.html",
+    "docs/karta.html",
+    "source/Ultravasan90-2014-2022.gpx"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "bcf003a587fc0c7fb4cdfbb66eb5e6983aa7346d441e9f0a61cd686ebb333885"
+  "manifest_sha256": "e69d3c884da9a2f2724d6ef9a110a3c041db7f3e67a7bbb902acc77a6e474f98"
 }

@@ -9,3 +9,14 @@
 .soundtrack-credit{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-weight:800}
 @media(max-width:920px){.volume-option{min-width:105px}.volume-option input[type="range"]{width:100px}}
 @media(max-width:600px){.volume-option{min-width:96px}.volume-option input[type="range"]{width:90px}}
+
+
+/* Tydliga, alltid synliga knappar för de två banversionerna */
+.route-layer-toggles{display:flex;align-items:center;gap:7px;margin-left:auto}
+.route-toggle{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.78);font-size:.67rem;font-weight:850;white-space:nowrap;cursor:pointer;user-select:none}
+.route-toggle input{position:absolute;opacity:0;pointer-events:none}
+.route-toggle i{width:23px;height:0;border-top:4px var(--route-dash,solid) var(--route-color);border-radius:4px;opacity:1}
+.route-toggle input:not(:checked)+i{opacity:.25}.route-toggle input:not(:checked)~span{opacity:.55;text-decoration:line-through}
+.route-toggle:has(input:focus-visible){outline:3px solid rgba(23,109,83,.28);outline-offset:2px}
+@media(max-width:1000px){.route-layer-toggles{position:absolute;top:74px;left:0;margin:0}.route-toggle{padding:6px 8px;background:var(--glass)}.map-topbar{overflow:visible}}
+@media(max-width:680px){.route-layer-toggles{top:70px;gap:4px}.route-toggle span{font-size:.58rem}.route-toggle i{width:16px}.top-actions .icon-button span{display:none}}
