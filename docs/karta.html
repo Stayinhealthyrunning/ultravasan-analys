@@ -20,6 +20,7 @@
     </div>
     <div class="top-actions">
       <button id="mapModeBtn" class="icon-button" title="Växla mellan karta och förenklad banvy">◫ <span>Banvy</span></button>
+      <button id="musicBtn" class="icon-button music-button active" title="Slå av eller på Eldspår till Mora">♫ <span>Musik</span></button>
       <button id="shareBtn" class="icon-button" title="Kopiera länk till denna tidpunkt">↗ <span>Dela</span></button>
       <button id="fullscreenBtn" class="icon-button" title="Helskärm">⛶</button>
     </div>
@@ -67,13 +68,14 @@
         <option value="overview">Hela banan</option><option value="group" selected>Löpargruppen</option><option value="leader">Ledaren</option>
       </select></label>
       <label>Hoppa<select id="checkpointJump"><option value="">Kontroll…</option></select></label>
+      <label class="volume-option">Volym<input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.65" aria-label="Musikvolym"></label>
     </div>
   </footer>
 
   <div id="finishBurst" class="finish-burst" aria-hidden="true"></div>
   <div id="mapLoading" class="map-loading"><div></div><p>Förbereder kartduellen…</p></div>
+  <audio id="raceSoundtrack" preload="metadata" loop src="assets/Eldspar-till-Mora.mp3"></audio>
 
-  <script src="data/ultravasan-data.js"></script>
   <script src="data/ultravasan-routes.js"></script>
   <script src="assets/map.js"></script>
 </body>
