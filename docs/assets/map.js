@@ -9,6 +9,7 @@ const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
+const hydrateData=d=>{const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});return d};
 
 function routeForYear(year){
   const rule=app.registry.route_for_year.find(r=>year>=r.from&&year<=r.to);
@@ -18,7 +19,7 @@ function raceForResult(result){return app.data.races.find(r=>r.id===result.race_
 
 function boot(){
   if(!window.ULTRAVASAN_DATA||!window.ULTRAVASAN_ROUTES){showFatal('Datafilerna kunde inte läsas. Kontrollera data/ultravasan-data.js och data/ultravasan-routes.js.');return}
-  app.data=window.ULTRAVASAN_DATA;app.registry=window.ULTRAVASAN_ROUTES;
+  app.data=hydrateData(window.ULTRAVASAN_DATA);app.registry=window.ULTRAVASAN_ROUTES;
   const params=new URLSearchParams(location.search),requestedIds=(params.get('runners')||'').split(',').map(Number).filter(Boolean);
   let selected=app.data.results.filter(r=>requestedIds.includes(r.id));
   if(!selected.length){const requested=Number(params.get('year'));const race=app.data.races.find(r=>r.id===requested||r.year===requested)||app.data.races.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
