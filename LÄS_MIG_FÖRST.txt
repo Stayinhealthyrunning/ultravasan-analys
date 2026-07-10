@@ -1,0 +1,57 @@
+ULTRAVASAN ANALYSVERKTYG – DENNA VERSION
+
+ÖPPNA DIREKT
+1. Packa upp ZIP-filen.
+2. Dubbelklicka på OPPNA_ANALYSSIDAN.html.
+3. Kartdemo: dubbelklicka på OPPNA_KARTDEMO.html.
+
+HÄMTA HELA HISTORIKEN UTAN PROGRAM PÅ DIN DATOR
+1. Ladda upp hela projektmappen till ett GitHub-repository.
+2. Välj Settings > Pages > Source: GitHub Actions.
+3. Öppna Actions > Importera historik från VasaNerd.
+4. Bekräfta att du har tillstånd att importera/återpublicera och att källa anges.
+5. Kör arbetsflödet. Det upptäcker sajtens JSON-anrop, importerar historiken,
+   validerar databasen och publicerar analyssidan.
+6. Hämta importdiagnostiken från körningen om någon datatyp inte kändes igen.
+
+HÄMTA KOMMANDE RESULTAT FRÅN VASALOPPET
+1. Ladda upp hela projektmappen till ett GitHub-repository.
+2. Välj Settings > Pages > Source: GitHub Actions.
+3. Öppna Actions > Uppdatera resultatdatabasen.
+4. Kör först import_method = probe_official.
+5. Kontrollera den nedladdningsbara rapporten.
+6. Kör därefter import_method = scrape_official.
+
+VASANERD-IMPORTEN
+- upptäcker JSON/XHR-resurser i den publika Ultravasan-vyn,
+- sparar samtliga råfält i SQLite med URL och kontrollsumma,
+- känner igen inbäddade splits, breda tabeller och rad-per-kontroll,
+- skapar automatiskt loppår och rätt banversion,
+- skapar en tydlig diagnostikrapport vid schemaförändringar.
+
+MIKA-IMPORTEN FÖR KOMMANDE LOPP
+- delar upp deltagarlistan på M/W när loppet är konfigurerat så,
+- begär 100 resultat per sida,
+- upptäcker upprepade sidor,
+- följer varje deltagares idp-länk,
+- läser mellantid, tempo, km/h, differens och placering,
+- använder Playwright som reserv när vanlig HTTP blockeras,
+- sparar råsidor och kan återuppta en avbruten körning.
+
+ÄLDRE BANA
+Kartlagret för 2014–2022 är tills vidare en tydligt märkt referensrekonstruktion
+baserad på den publika 2022-ruttens längd 90,173 km. När en verifierad gammal GPX
+har laddats ned, döp den exakt till:
+source/Ultravasan90-2014-2022.gpx
+Ladda upp den till GitHub. Arbetsflödet Bygg om kartans banlager använder den
+automatiskt och ersätter reservgeometrin.
+
+VIKTIGT
+Den levererade databasen innehåller fortfarande bara förhandsdata (20 resultat,
+4 mellantider), eftersom historikimporten måste köras mot den levande webbplatsen.
+Använd GitHub-arbetsflödet efter att tillstånd och attribution är ordnade.
+
+NYA ANALYSER
+Race Intelligence Lab innehåller delsträckelabb, automatiska loppberättelser,
+percentiltrappa, fältflöde, flerårigt löpararkiv, Hall of Fame och årsvisa
+fingeravtryck. Funktionerna fylls automatiskt när historiken importerats.

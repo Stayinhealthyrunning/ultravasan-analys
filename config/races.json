@@ -1,0 +1,80 @@
+{
+  "races": [
+    {
+      "race_key": "ultravasan90-2025",
+      "name": "Ultravasan 90",
+      "year": 2025,
+      "race_date": "2025-08-16",
+      "distance_km": 92.0,
+      "event_code": "UL90_HCH8NDMR2501",
+      "result_year_path": 2026,
+      "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL90_HCH8NDMR2501",
+      "page_url_template": "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2026/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_HCH8NDMR2501",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 9.2
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.7
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 35.0
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 47.1
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 62.2
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 71.4
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 82.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 92.0
+        }
+      ],
+      "course_version": "post2023",
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=list"
+      ],
+      "partition_by_sex": true
+    }
+  ]
+}

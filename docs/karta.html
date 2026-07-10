@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Animerad kartjämförelse av 1–5 löpare i Ultravasan 90.">
+  <title>Jämför på karta – Ultravasan 90</title>
+  <link rel="stylesheet" href="assets/map.css">
+</head>
+<body class="map-page">
+  <div id="map" aria-label="Karta över Ultravasan 90"></div>
+  <svg id="fallbackMap" class="fallback-map" viewBox="0 0 1200 650" preserveAspectRatio="xMidYMid meet" aria-label="Förenklad banvy"></svg>
+
+  <header class="map-topbar glass">
+    <a class="back-link" href="index.html" aria-label="Tillbaka till analysen">←</a>
+    <div class="race-heading">
+      <span class="mini-label">KARTDUELL</span>
+      <strong id="raceTitle">Ultravasan 90</strong>
+      <small id="courseNote">Läser banan…</small>
+    </div>
+    <div class="top-actions">
+      <button id="mapModeBtn" class="icon-button" title="Växla mellan karta och förenklad banvy">◫ <span>Banvy</span></button>
+      <button id="shareBtn" class="icon-button" title="Kopiera länk till denna tidpunkt">↗ <span>Dela</span></button>
+      <button id="fullscreenBtn" class="icon-button" title="Helskärm">⛶</button>
+    </div>
+  </header>
+
+  <aside class="leaderboard glass" id="leaderboardPanel">
+    <div class="board-head">
+      <div><span class="mini-label">LIVE STÄLLNING</span><strong id="raceClock">0:00:00</strong></div>
+      <button id="collapseBoard" class="tiny-button" aria-label="Minimera deltagarlista">−</button>
+    </div>
+    <div id="runnerBoard" class="runner-board"></div>
+    <div class="race-insights">
+      <div><span>Ledare</span><strong id="leaderName">–</strong></div>
+      <div><span>Spridning</span><strong id="fieldSpread">–</strong></div>
+      <div><span>Aktuell sträcka</span><strong id="currentSection">–</strong></div>
+    </div>
+  </aside>
+
+  <section class="event-feed glass" aria-live="polite">
+    <span class="event-dot"></span><div id="eventText">Tryck på start för att spela upp loppet.</div>
+  </section>
+
+  <section class="race-strip glass" id="raceStrip" aria-label="Löparnas position längs banan">
+    <div class="strip-title"><span>0 km · Sälen</span><strong id="stripLeader">Start</strong><span id="stripFinishDistance">92 km · Mora</span></div>
+    <div class="strip-track" id="stripTrack"></div>
+  </section>
+
+  <footer class="playback glass">
+    <div class="transport">
+      <button id="restartBtn" class="round-button" title="Till start">↺</button>
+      <button id="backBtn" class="round-button" title="10 minuter bakåt">−10</button>
+      <button id="playBtn" class="play-button" aria-label="Starta uppspelning">▶</button>
+      <button id="forwardBtn" class="round-button" title="10 minuter framåt">+10</button>
+    </div>
+    <div class="timeline-wrap">
+      <div class="time-labels"><span id="elapsedLabel">0:00:00</span><span id="finishLabel">–</span></div>
+      <input id="timeline" type="range" min="0" max="1" step="1" value="0" aria-label="Tid i loppet">
+    </div>
+    <div class="play-options">
+      <label>Hastighet<select id="speedSelect">
+        <option value="60">60×</option><option value="120">120×</option><option value="300">300×</option>
+        <option value="600" selected>600×</option><option value="1200">1200×</option><option value="2400">2400×</option>
+      </select></label>
+      <label>Följ<select id="cameraMode">
+        <option value="overview">Hela banan</option><option value="group" selected>Löpargruppen</option><option value="leader">Ledaren</option>
+      </select></label>
+      <label>Hoppa<select id="checkpointJump"><option value="">Kontroll…</option></select></label>
+    </div>
+  </footer>
+
+  <div id="finishBurst" class="finish-burst" aria-hidden="true"></div>
+  <div id="mapLoading" class="map-loading"><div></div><p>Förbereder kartduellen…</p></div>
+
+  <script src="data/ultravasan-data.js"></script>
+  <script src="data/ultravasan-routes.js"></script>
+  <script src="assets/map.js"></script>
+</body>
+</html>

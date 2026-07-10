@@ -1,0 +1,41 @@
+{
+  "python_files_compiled": 7,
+  "javascript_files_checked": [
+    "app.js",
+    "map.js",
+    "nerdlab.js"
+  ],
+  "html": {
+    "index.html": {
+      "ids": 57,
+      "duplicate_ids": [],
+      "missing_resources": []
+    },
+    "karta.html": {
+      "ids": 31,
+      "duplicate_ids": [],
+      "missing_resources": []
+    }
+  },
+  "sqlite_integrity": "ok",
+  "database_counts": {
+    "races": 1,
+    "results": 20,
+    "splits": 4,
+    "sources": 7
+  },
+  "source_codes": [
+    "duv",
+    "itra",
+    "manual",
+    "vasaloppet_media",
+    "vasaloppet_mika",
+    "vasaloppet_pdf",
+    "vasanerd"
+  ],
+  "tests": "passed",
+  "notes": [
+    "Live VasaNerd network import could not be executed in the build environment; browser discovery is provided as a GitHub Action.",
+    "Bundled database remains a clearly marked 2025 preview until the online history import runs."
+  ]
+}
