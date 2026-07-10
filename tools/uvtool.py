@@ -522,16 +522,23 @@ def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, sourc
         return ext[0]
     name = parsed.name or f"Okänd {parsed.source_result_id}"
     norm = normalize(name)
-    # Conservative auto-link: exact normalized name + compatible sex + birth year if known.
-    candidates = conn.execute("SELECT * FROM athletes WHERE normalized_name=?", (norm,)).fetchall()
-    compatible = [c for c in candidates if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"]) and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])]
+    source_code_row = conn.execute("SELECT code FROM sources WHERE id=?", (source_id,)).fetchone()
+    source_code = source_code_row[0] if source_code_row else None
+    # VasaNerd's idpe is a stable person identifier across race years. When it
+    # is new, create a distinct athlete even if another runner has the same
+    # published name. Subsequent years link through athlete_external_ids.
+    if source_code == "vasanerd":
+        compatible = []
+    else:
+        candidates = conn.execute("SELECT * FROM athletes WHERE normalized_name=?", (norm,)).fetchall()
+        compatible = [c for c in candidates if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"]) and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])]
     if len(compatible) == 1:
         athlete_id = compatible[0]["id"]
     else:
         cur = conn.execute("""
           INSERT INTO athletes(canonical_name,normalized_name,sex,birth_year,nationality,city,athlete_match_status)
           VALUES(?,?,?,?,?,?,?)
-        """, (name, norm, parsed.sex, parsed.birth_year, parsed.nationality, parsed.city, "auto-exact" if len(compatible) == 1 else "unverified"))
+        """, (name, norm, parsed.sex, parsed.birth_year, parsed.nationality, parsed.city, "source-id" if source_code == "vasanerd" else "unverified"))
         athlete_id = cur.lastrowid
     conn.execute("""
       INSERT OR IGNORE INTO athlete_external_ids(athlete_id,source_id,external_id,profile_url,confidence)
@@ -540,7 +547,7 @@ def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, sourc
     return athlete_id
 
 
-def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance_km: float | None, checkpoints: list[dict[str, Any]], parsed: ParsedResult) -> tuple[int, bool]:
+def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance_km: float | None, checkpoints: list[dict[str, Any]], parsed: ParsedResult, store_raw: bool = True) -> tuple[int, bool]:
     athlete_id = find_or_create_athlete(conn, parsed, source_id)
     existing = conn.execute("SELECT id FROM results WHERE race_id=? AND source_id=? AND source_result_id=?", (race_id, source_id, parsed.source_result_id)).fetchone()
     pace = parsed.finish_seconds / distance_km if parsed.finish_seconds and distance_km else None
@@ -553,7 +560,7 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         "start_group": parsed.start_group, "status": parsed.status, "finish_seconds": parsed.finish_seconds,
         "gun_seconds": parsed.gun_seconds, "net_seconds": parsed.net_seconds, "overall_place": parsed.overall_place,
         "gender_place": parsed.gender_place, "class_place": parsed.class_place, "pace_seconds_per_km": pace,
-        "raw_json": json.dumps(parsed.raw or {}, ensure_ascii=False)
+        "raw_json": json.dumps(parsed.raw or {}, ensure_ascii=False) if store_raw else None
     }
     conn.execute("""
       INSERT INTO results(race_id,athlete_id,source_id,source_result_id,source_url,bib,name_as_published,sex,age,birth_year,
@@ -577,7 +584,10 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         cp = cp_by_key.get(split["checkpoint_key"])
         if not cp:
             continue
-        cp_row = conn.execute("SELECT id,distance_km FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, split["checkpoint_key"])).fetchone()
+        if cp.get("id") is not None:
+            cp_row = cp
+        else:
+            cp_row = conn.execute("SELECT id,distance_km FROM checkpoints WHERE race_id=? AND checkpoint_key=?", (race_id, split["checkpoint_key"])).fetchone()
         elapsed = split.get("elapsed_seconds")
         segment = elapsed - last_elapsed if elapsed is not None and elapsed >= last_elapsed else None
         dist = cp_row["distance_km"]
@@ -595,7 +605,7 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         """, (result_id, cp_row["id"], elapsed, segment, split.get("place_overall"), split.get("place_gender"),
               split.get("place_class"), segment_pace, split.get("reported_pace_seconds_per_km"), split.get("speed_kmh"),
               split.get("time_of_day"), split.get("diff_seconds"), split.get("status"), int(bool(split.get("is_estimated", False))),
-              json.dumps(split, ensure_ascii=False)))
+              json.dumps(split, ensure_ascii=False) if store_raw else None))
         if elapsed is not None:
             last_elapsed = elapsed
         if dist is not None:
@@ -862,9 +872,31 @@ def export_web(args: argparse.Namespace) -> None:
     incomplete_years = [str(r["year"]) for r in races if stats.get(str(r["id"]), {}).get("count", 0) < 100]
     if incomplete_years:
         meta["coverage_note"] = "Ofullständig datatäckning för loppår: " + ", ".join(incomplete_years) + ". Kör onlineimporten eller ladda upp en officiell CSV-fil."
+    # Keep the public static bundle below GitHub's 25 MiB browser-upload limit.
+    # Repeated checkpoint metadata is hydrated in the browser from checkpoints.
+    result_fields = {
+        "id", "race_id", "athlete_id", "bib", "name_as_published", "canonical_name",
+        "sex", "age_class", "nationality", "club", "city", "start_group", "status",
+        "finish_seconds", "overall_place", "gender_place", "class_place",
+        "pace_seconds_per_km", "source_code", "source_result_id", "athlete_match_status"
+    }
+    split_fields = {
+        "result_id", "checkpoint_key", "elapsed_seconds", "segment_seconds",
+        "place_overall", "pace_seconds_per_km", "reported_pace_seconds_per_km",
+        "speed_kmh", "time_of_day", "is_estimated"
+    }
+    public_results = [
+        {k: v for k, v in row.items() if k in result_fields and v is not None}
+        for row in results
+    ]
+    public_splits = [
+        {k: v for k, v in row.items() if k in split_fields and v is not None and not (k == "is_estimated" and not v)}
+        for row in splits
+    ]
     payload = {
         "meta": meta,
-        "races": races, "checkpoints": checkpoints, "results": results, "splits": splits, "stats": stats, "sources": sources
+        "races": races, "checkpoints": checkpoints, "results": public_results, "splits": public_splits,
+        "stats": stats, "sources": sources
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     compact_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
