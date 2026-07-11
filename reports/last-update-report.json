@@ -1,15 +1,13 @@
 {
-  "installed_at_utc": "2026-07-11T16:02:05.040181+00:00",
-  "name": "Klubb/ort-val, informationsikoner och topplista",
-  "version": "2026.07.11.final4",
-  "description": "Återställer stabila informationsikoner som inbäddad SVG, tar bort förvalda klubb/ort-val, döljer den interna dropdown-listan och gör Snabbaste i urvalet till en scrollbar lista med upp till 20 löpare.",
+  "installed_at_utc": "2026-07-11T16:08:49.926270+00:00",
+  "name": "Korrigerad rubrikbild",
+  "version": "2026.07.11.final5b",
+  "description": "Byter rubrikbilden till den korrigerade versionen och uppdaterar cacheversionen för headerbilden.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/app.js",
-    "docs/assets/audience-analytics.js",
-    "docs/assets/styles.css",
+    "docs/assets/salen-mora-header.png",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "d42ca6e919c10744477a5f6c6fd338416ca8a8627356e2f6e701c821067583ad"
+  "manifest_sha256": "db901ee8d5d38ce4ea37a318da00e17e251b6fc276f3fdc6ce2d43f8388beb88"
 }
