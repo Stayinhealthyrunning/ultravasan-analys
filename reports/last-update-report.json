@@ -1,5 +1,5 @@
 {
-  "installed_at_utc": "2026-07-11T14:48:31.701868+00:00",
+  "installed_at_utc": "2026-07-11T15:22:07.070230+00:00",
   "name": "Tydligare delsträckor, individuell sökning, ny toppbild och korrigerad kartmålgång",
   "version": "2026.07.11.layout1",
   "description": "Visar varje delsträcka som från–till, tar bort CSV-nedladdningen, separerar individuell analys från lopp- och fältstatistik, byter till den nya toppbilden, inför löparsökning med år/Alla år, varnar vid jämförelse över banändringen 2023 och rättar kartduellen så målgång visas som Mål medan Brutet bara används före Mora.",
