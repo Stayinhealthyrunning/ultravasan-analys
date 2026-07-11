@@ -1,15 +1,18 @@
 {
-  "installed_at_utc": "2026-07-11T14:18:08.836166+00:00",
-  "name": "Korrigerad fartkarta och individuella klubbjämförelser",
-  "version": "2026.07.11.heatmap2",
-  "description": "Korrigerar fartkartan så att varje klass ligger på en egen rad och medianfarten hamnar under rätt delsträcka. Kartan håller sig inom statistikrutans bredd och blir horisontellt rullbar endast på små skärmar. Tar samtidigt bort samtliga lagfunktioner och lagtexter eftersom Ultravasan är en individuell tävling.",
+  "installed_at_utc": "2026-07-11T14:48:31.701868+00:00",
+  "name": "Tydligare delsträckor, individuell sökning, ny toppbild och korrigerad kartmålgång",
+  "version": "2026.07.11.layout1",
+  "description": "Visar varje delsträcka som från–till, tar bort CSV-nedladdningen, separerar individuell analys från lopp- och fältstatistik, byter till den nya toppbilden, inför löparsökning med år/Alla år, varnar vid jämförelse över banändringen 2023 och rättar kartduellen så målgång visas som Mål medan Brutet bara används före Mora.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
+    "docs/assets/map.js",
+    "docs/assets/salen-mora-header.png",
     "docs/assets/styles.css",
-    "docs/index.html"
+    "docs/index.html",
+    "docs/karta.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "606a0e61e59aca900213c874dd5b70fffff7a26d9f0de2773ae0041048b7a1e9"
+  "manifest_sha256": "462db05c7c7403ef9e9329e71e7645d523e81c833774ad420902082d36143dbc"
 }

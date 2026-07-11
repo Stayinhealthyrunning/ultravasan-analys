@@ -182,3 +182,58 @@ main{margin-top:-64px}
   .class-map-corner,.class-map-head{font-size:.58rem;padding:7px 4px}
   .class-map-class,.class-map-cell{font-size:.68rem;padding:9px 7px}
 }
+
+/* 2026-07-11: ny toppbild, tydligare analysnivåer och kompaktare delsträckor */
+.hero.hero-image-header{padding:0;min-height:0;background:#0a2d24;overflow:hidden}
+.hero-header-image{display:block;width:100%;height:auto;max-height:690px;object-fit:cover;object-position:center center}
+main{margin-top:-54px}
+.analysis-scope{margin-top:16px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.analysis-scope h2{margin:0;font-size:1.55rem;letter-spacing:-.025em}
+.analysis-scope p:last-child{margin:7px 0 0;max-width:870px;color:var(--muted);line-height:1.55}
+.individual-scope{background:linear-gradient(120deg,rgba(237,243,255,.97),rgba(255,249,253,.97));border-left:6px solid #6b73d9}
+.field-scope{background:linear-gradient(120deg,rgba(235,247,240,.98),rgba(255,253,247,.98));border-left:6px solid var(--green)}
+.scope-chip{display:inline-flex;align-items:center;width:max-content;border-radius:99px;padding:6px 10px;font-size:.66rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
+.scope-chip.individual{background:#eceefe;color:#4d4fa8;border:1px solid #cfd3f7}
+.scope-chip.field{background:#e4f1e9;color:var(--forest);border:1px solid #c9dfd2}
+.runner-lookup-panel{margin-top:12px;padding:20px 24px;display:grid;grid-template-columns:minmax(250px,.8fr) minmax(420px,1.5fr);gap:24px;align-items:end}
+.lookup-copy h3{margin:6px 0 4px;font-size:1.32rem}.lookup-copy p{margin:0;color:var(--muted);line-height:1.5;font-size:.82rem}
+.lookup-controls{display:grid;grid-template-columns:150px minmax(260px,1fr);gap:12px;align-items:end}
+.lookup-controls>label,.main-runner-picker>label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--muted)}
+.toolbar{grid-template-columns:120px 130px 150px minmax(190px,1fr) 150px auto}
+.course-comparison-warning{grid-column:1/3;margin:0;padding:10px 12px;border-radius:10px;background:#fff4dc;border:1px solid #efcf88;color:#73520d;font-size:.74rem;line-height:1.45}
+.compare-builder .course-comparison-warning[hidden]{display:none}
+.table-actions{justify-content:flex-end}
+.segment-range-head{display:flex!important;flex-direction:column;gap:1px;line-height:1.12;text-transform:none!important;letter-spacing:0!important}
+.segment-range-head span{display:block;white-space:normal}
+.segment-range-head span+span{font-weight:900;color:var(--ink)}
+.segment-range-head span+span:before{content:"– ";color:var(--muted)}
+.class-map-grid{min-width:0!important;grid-template-columns:82px repeat(var(--segment-count),minmax(76px,1fr))!important}
+.class-map-head{min-height:58px!important}
+
+@media(max-width:980px){
+  .hero-header-image{height:360px;object-fit:cover;object-position:47% center}
+  main{margin-top:-38px}
+  .runner-lookup-panel{grid-template-columns:1fr}
+  .lookup-controls{grid-template-columns:150px 1fr}
+  .toolbar{grid-template-columns:repeat(3,1fr)}
+  .course-comparison-warning{grid-column:1/-1}
+  .class-map-grid{min-width:760px!important}
+}
+@media(max-width:760px){
+  .hero.hero-image-header{padding:0!important;min-height:0!important}
+  .hero-header-image{height:270px;object-fit:cover;object-position:40% center}
+  main{margin-top:-24px!important}
+  .analysis-scope{padding:16px;align-items:flex-start;flex-direction:column;gap:8px}
+  .analysis-scope h2{font-size:1.3rem}.analysis-scope p:last-child{font-size:.78rem}
+  .runner-lookup-panel{padding:14px;gap:13px}
+  .lookup-controls{grid-template-columns:1fr}
+  .lookup-controls select,.lookup-controls input{font-size:16px;min-height:46px}
+  .course-comparison-warning{grid-column:1!important;font-size:.72rem}
+  .class-map-grid{min-width:720px!important;grid-template-columns:72px repeat(var(--segment-count),minmax(72px,1fr))!important}
+  .class-map-head{min-height:62px!important;font-size:.56rem!important;padding:7px 3px!important}
+  .segment-range-head span{line-height:1.1}
+}
+@media(max-width:430px){
+  .hero-header-image{height:225px;object-position:39% center}
+  .analysis-scope{border-radius:14px}.runner-lookup-panel{border-radius:14px}
+}

@@ -1,278 +1,244 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="sv">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora.">
-  <title>Sälen-Mora splits</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260711-heatmap2">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
+<title>Sälen-Mora splits</title>
+<link href="assets/styles.css?v=20260711-layout1" rel="stylesheet"/>
 </head>
 <body>
-  <header class="hero hero-salenmora">
-    <div class="hero-visual" aria-hidden="true"></div>
-    <div class="hero-inner hero-banner">
-      <div class="hero-brand">
-        <img src="assets/salen-mora-logo.svg?v=20260710-hero1" class="hero-logo" alt="Sälen-Mora Splits logotyp">
-        <div class="hero-copy">
-          <p class="eyebrow">ULTRAVASAN ANALYSVERKTYG</p>
-          <h1>Sälen-Mora splits</h1>
-          <p class="lead">Analysera din resa i Ultravasan från Sälen till Mora</p>
-        </div>
-      </div>
-    </div>
-  </header>
+<header class="hero hero-image-header"><img alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260711-layout1"/></header>
+<main>
+<nav aria-label="Analysområden" class="analysis-nav panel">
+<div class="analysis-nav-scroll">
+<button class="analysis-nav-button active" data-target="overview">Översikt</button>
+<button class="analysis-nav-button" data-target="kon">Genusperspektiv</button>
+<button class="analysis-nav-button" data-target="klasser">Klasslabbet</button>
+<button class="analysis-nav-button" data-target="klubbar">Klubbarenan</button>
+<button class="analysis-nav-button" data-target="lopare">Löpare</button>
+<button class="analysis-nav-button" data-target="kartduell">Kartduell</button>
+</div>
+<div class="analysis-nav-actions">
+<button class="nav-action" id="playYears" title="Spela loppåren i följd">▶ Spela år</button>
+<button class="nav-action" id="shareView" title="Kopiera en länk till aktuell vy">Dela vy</button>
+</div>
+</nav><section class="analysis-scope individual-scope panel" id="individual-analysis"><div><p class="eyebrow">INDIVIDUELL ANALYS</p><h2>Sök en löpare eller bygg en kartduell</h2><p>Valen här öppnar en individuell löparprofil eller jämför högst fem utvalda löpare. De påverkar inte diagrammen för hela startfältet längre ned.</p></div></section><section class="runner-lookup-panel panel"><div class="lookup-copy"><span class="scope-chip individual">Individuell profil</span><h3>Hitta en löpare</h3><p>Välj år eller sök i hela historiken. Klicka på ett namn för att öppna löparens resultat och mellantider.</p></div><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
+<label>Sök löpare<input autocomplete="off" id="nameFilter" placeholder="Namn eller startnummer" type="search"/></label>
+<div class="main-runner-suggestions" hidden="" id="mainRunnerSuggestions"></div>
+</div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
+<div class="compare-copy"><span class="scope-chip individual">Individuell jämförelse</span>
+<p class="eyebrow">ANIMERAD KARTDUELL</p>
+<h2>Se loppet utvecklas på kartan</h2>
+<p>Välj 1–5 löpare med namn eller startnummer. Uppspelningen använder officiella mellantider när de finns och beräknar positionen mellan kontrollerna.</p>
+</div>
+<div class="compare-builder">
+<label>År<select id="compareYear"></select></label>
+<div class="runner-picker">
+<label>Sök löpare<input autocomplete="off" id="compareRunnerSearch" placeholder="Skriv namn eller startnummer" type="search"/></label>
+<div class="runner-suggestions" hidden="" id="runnerSuggestions"></div>
+</div>
+<div class="selected-runners" id="selectedCompareRunners"><span class="selection-empty">Inga löpare valda ännu</span></div><p class="course-comparison-warning" hidden="" id="courseComparisonWarning">Från 2023 förändrades bansträckningen så exakta jämförelser är inte möjliga.</p>
+<button class="compare-map-button" disabled="" id="compareMapButton">Jämför på karta <span>→</span></button>
+</div>
+</section><section class="analysis-scope field-scope panel" id="overview"><div><p class="eyebrow">LOPP- OCH FÄLTSTATISTIK</p><h2>Hela loppet och det valda startfältet</h2><p>Filtren nedan påverkar alla efterföljande diagram, klassanalyser, klubbanalyser och resultatlistan. De påverkas inte av löparna som valts till kartduellen.</p></div><span class="scope-chip field">Hela urvalet</span></section><section aria-label="Filter" class="toolbar panel">
+<label>År<select id="yearFilter"></select></label>
 
-  <main>
-    <nav class="analysis-nav panel" aria-label="Analysområden">
-      <div class="analysis-nav-scroll">
-        <button class="analysis-nav-button active" data-target="overview">Översikt</button>
-        <button class="analysis-nav-button" data-target="kon">Genusperspektiv</button>
-        <button class="analysis-nav-button" data-target="klasser">Klasslabbet</button>
-        <button class="analysis-nav-button" data-target="klubbar">Klubbarenan</button>
-        <button class="analysis-nav-button" data-target="lopare">Löpare</button>
-        <button class="analysis-nav-button" data-target="kartduell">Kartduell</button>
-      </div>
-      <div class="analysis-nav-actions">
-        <button id="playYears" class="nav-action" title="Spela loppåren i följd">▶ Spela år</button>
-        <button id="shareView" class="nav-action" title="Kopiera en länk till aktuell vy">Dela vy</button>
-      </div>
-    </nav>
-    <div id="dataNotice" class="data-notice" hidden></div>
-    <section id="overview" class="toolbar panel" aria-label="Filter">
-      <label>År<select id="yearFilter"></select></label>
-      <div class="main-runner-picker">
-        <label>Sök löpare<input id="nameFilter" type="search" autocomplete="off" placeholder="Namn, klubb eller startnummer"></label>
-        <div id="mainRunnerSuggestions" class="main-runner-suggestions" hidden></div>
-      </div>
-      <label>Kön<select id="sexFilter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
-      <label>Åldersklass<select id="classFilter"><option value="">Alla klasser</option></select></label>
-      <label>Klubb<select id="clubFilter"><option value="">Alla klubbar</option></select></label>
-      <label>Status<select id="statusFilter"><option value="">Alla</option></select></label>
-      <button id="resetFilters" class="secondary">Återställ</button>
-    </section>
+<label>Kön<select id="sexFilter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
+<label>Åldersklass<select id="classFilter"><option value="">Alla klasser</option></select></label>
+<label>Klubb<select id="clubFilter"><option value="">Alla klubbar</option></select></label>
+<label>Status<select id="statusFilter"><option value="">Alla</option></select></label>
+<button class="secondary" id="resetFilters">Återställ</button>
+</section>
+<div class="data-notice" hidden="" id="dataNotice"></div>
 
-    <section id="kartduell" class="compare-panel panel" aria-label="Jämför löpare på karta">
-      <div class="compare-copy">
-        <p class="eyebrow">ANIMERAD KARTDUELL</p>
-        <h2>Se loppet utvecklas på kartan</h2>
-        <p>Välj 1–5 löpare med namn eller startnummer. Uppspelningen använder officiella mellantider när de finns och beräknar positionen mellan kontrollerna.</p>
-      </div>
-      <div class="compare-builder">
-        <label>År<select id="compareYear"></select></label>
-        <div class="runner-picker">
-          <label>Sök löpare<input id="compareRunnerSearch" type="search" autocomplete="off" placeholder="Skriv namn eller startnummer"></label>
-          <div id="runnerSuggestions" class="runner-suggestions" hidden></div>
-        </div>
-        <div id="selectedCompareRunners" class="selected-runners"><span class="selection-empty">Inga löpare valda ännu</span></div>
-        <button id="compareMapButton" class="compare-map-button" disabled>Jämför på karta <span>→</span></button>
-      </div>
-    </section>
 
-    <section class="kpis" aria-label="Nyckeltal">
-      <article><span>Visade löpare</span><strong id="kpiCount">–</strong><small id="kpiTotal">av –</small></article>
-      <article><span>Median sluttid</span><strong id="kpiMedian">–</strong><small>för aktuellt urval</small></article>
-      <article><span>Snabbaste tid</span><strong id="kpiFastest">–</strong><small id="kpiWinner">–</small></article>
-      <article><span>Fullföljande</span><strong id="kpiFinishRate">–</strong><small>andel med registrerad sluttid</small></article>
-    </section>
-
-    <section class="grid two">
-      <article class="panel chart-panel">
-        <div class="panel-head"><div><p class="eyebrow">FÖRDELNING</p><h2>Sluttider</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span id="distributionLabel" class="pill"></span></div></div>
-        <div id="histogram" class="chart" role="img" aria-label="Histogram över sluttider"></div>
-      </article>
-      <article class="panel chart-panel">
-        <div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span class="pill">km/h</span></div></div>
-        <div id="paceChart" class="chart" role="img" aria-label="Medianhastighet per delsträcka, inklusive start i Sälen"></div>
-      </article>
-    </section>
-
-    <section class="stats-studio" aria-label="Avancerad loppstatistik">
-      <div class="studio-head">
-        <div><p class="eyebrow">STATISTIKSTUDIO</p><h2>Loppets puls</h2><p>Fördjupad analys av placeringar, avhopp, fartmönster och vad en viss sluttid brukar räcka till.</p></div>
-        <div class="studio-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
-      </div>
-
-      <div class="insight-grid">
-        <article class="panel insight-card wide">
-          <div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><span class="pill">håll över punkterna</span></div>
-          <div id="placementScatter" class="chart compact-chart"></div>
-        </article>
-        <article class="panel insight-card target-card">
-          <p class="eyebrow">MÅLTIDSSIMULATOR</p><h3>Vad räcker tiden till?</h3>
-          <div class="target-time" id="targetTimeLabel">–</div>
-          <input id="targetTimeSlider" type="range" min="0" max="100" value="50" aria-label="Välj måltid">
-          <div id="targetTimeResult" class="target-result"></div>
-        </article>
-        <article class="panel insight-card">
-          <div class="panel-head"><div><p class="eyebrow">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div>
-          <div id="dnfFunnel" class="funnel-chart"></div>
-        </article>
-        <article class="panel insight-card wide">
-          <div class="panel-head"><div><p class="eyebrow">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div><span class="pill">median · spridning</span></div>
-          <div id="segmentHeatmap" class="segment-grid"></div>
-        </article>
-        <article class="panel insight-card">
-          <div class="panel-head"><div><p class="eyebrow">POSITIONSSPEL</p><h3>Placeringsexpressen</h3><p class="panel-subtitle">Vem klättrade mest – och på vilken delsträcka kom det starkaste rycket?</p></div></div>
-          <div id="overtakeTable" class="mini-ranking"></div>
-        </article>
-        <article class="panel insight-card wide">
-          <div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><span class="pill">median och tidsspridning</span></div>
-          <div id="yearTrend" class="chart compact-chart"></div>
-        </article>
-        <article class="panel insight-card">
-          <div class="panel-head"><div><p class="eyebrow">SNABBBILD</p><h3>Urvalets DNA</h3></div></div>
-          <div id="pacingCards" class="dna-grid"></div>
-        </article>
-      </div>
-    </section>
-
-    <section id="kon" class="audience-world gender-world" aria-label="Statistik ur ett genusperspektiv">
-      <div class="world-hero gender-hero">
-        <div><p class="eyebrow">GENUSPERSPEKTIV</p><h2>Två lopp i samma spår</h2><p>Jämför deltagande, sluttider, fartfördelning och avhopp för män och kvinnor.</p></div>
-        <div class="world-legend"><span><i class="male"></i>Män</span><span><i class="female"></i>Kvinnor</span></div>
-      </div>
-      <div id="genderKpis" class="gender-kpis"></div>
-      <div class="world-grid">
-        <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><span class="pill">km/h</span></div><div id="genderPaceChart" class="chart world-chart"></div></article>
-        <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><span class="pill">100 = första segmentet</span></div><div id="genderRetentionChart" class="chart world-chart"></div></article>
-        <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><span class="pill">alla loppår</span></div><div id="genderHistoryChart" class="chart world-chart"></div></article>
-        <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div id="genderInsights" class="insight-stack"></div></article>
-      </div>
-    </section>
-
-    <section id="klasser" class="audience-world class-world" aria-label="Analys av åldersklasser">
-      <div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass från Sälen till Mora</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och använd Sälen–Mora-index för rättvisare jämförelser.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
-      <div id="classCards" class="class-cards"></div>
-      <div class="world-grid">
-        <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><span class="pill">median km/h</span></div><div id="classHeatmap" class="class-heatmap-wrap"></div></article>
-        <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div id="classChips" class="selector-chips"></div><div id="classCompareChart" class="chart world-chart"></div></article>
-        <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Prestation relativt den egna klassen</h3></div><span class="pill">50 = mitten</span></div><div id="classIndexTable" class="index-ranking"></div></article>
-        <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div id="classHistoryChart" class="chart world-chart"></div></article>
-      </div>
-    </section>
-
-    <section id="klubbar" class="audience-world club-world" aria-label="Klubbstatistik">
-      <div class="world-hero club-hero"><div><p class="eyebrow">KLUBBARENAN</p><h2>Klubbkänsla, bredd och fart</h2><p>Utforska klubbprofiler, deltagande, fullföljandegrad, individuella prestationer, starka avslutningar och utveckling över flera år.</p></div><div class="world-badge">Små underlag märks tydligt</div></div>
-      <div class="club-controls panel">
-        <label>Klubbprofil<select id="clubProfileSelect"></select></label>
-        <div><span>Jämför klubbar</span><div id="clubCompareChips" class="selector-chips compact"></div></div>
-      </div>
-      <div id="clubProfile" class="club-profile"></div>
-      <div class="world-grid">
-        <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBBTOPPEN</p><h3>Välj vad som ska premieras</h3></div></div><div id="clubRankingTabs" class="metric-tabs"></div><div id="clubRankings" class="club-rankings"></div></article>
-        <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBB-DNA</p><h3>Fem sidor av klubben</h3></div><span class="pill">relativt fältet</span></div><div id="clubDna" class="club-dna"></div></article>
-        <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBBDUELL</p><h3>Medianfart genom loppet</h3></div><span class="pill">upp till fyra klubbar</span></div><div id="clubCompareChart" class="chart world-chart"></div></article>
-        <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBBHISTORIK</p><h3>Starter, målgångar och median</h3></div></div><div id="clubHistoryChart" class="chart world-chart"></div></article>
-      </div>
-    </section>
-
-    <section class="nerd-lab" aria-label="Race Intelligence Lab">
-      <div class="nerd-hero">
-        <div>
-          <p class="eyebrow">RACE INTELLIGENCE LAB</p>
-          <h2>Historien bakom siffrorna</h2>
-          <p>Bygg en delsträcka, hitta loppets hjältar, följ en löpare över flera år och se vilka tider som krävs för olika percentiler.</p>
-        </div>
-        <div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
-      </div>
-
-      <div class="story-strip" id="raceStories"></div>
-
-      <div class="intelligence-grid">
-        <article class="panel lab-card segment-lab">
-          <div class="panel-head"><div><p class="eyebrow">DELSTRÄCKELABBET</p><h3>Vem var bäst just här?</h3></div><span class="pill">valfri kontroll → kontroll</span></div>
-          <div class="lab-controls">
-            <label>Från<select id="segmentFrom"></select></label>
-            <label>Till<select id="segmentTo"></select></label>
-            <label>Sortera<select id="segmentMetric"><option value="time">Snabbast tid</option><option value="gain">Flest vunna platser</option><option value="speed">Högst fart</option></select></label>
-          </div>
-          <div id="segmentPodium" class="podium"></div>
-          <div id="segmentRanking" class="segment-ranking"></div>
-        </article>
-
-        <article class="panel lab-card percentile-card">
-          <div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><span class="pill">aktuellt urval</span></div>
-          <div id="percentileLadder" class="percentile-ladder"></div>
-          <p class="microcopy">Läs uppifrån: tiden som senast räcker till respektive nivå bland fullföljande löpare.</p>
-        </article>
-
-        <article class="panel lab-card history-lab">
-          <div class="panel-head"><div><p class="eyebrow">LÖPARARKIVET</p><h3>En person genom åren</h3></div><span class="pill">namn eller startnummer</span></div>
-          <label class="archive-search">Sök i alla loppår<input id="historySearch" type="search" placeholder="Exempel: Anna Andersson"></label>
-          <div id="historySuggestions" class="history-suggestions" hidden></div>
-          <div id="runnerHistory" class="runner-history"><div class="empty">Sök fram en löpare för att se utveckling, bästa lopp och pacingprofil.</div></div>
-        </article>
-
-        <article class="panel lab-card field-flow-card">
-          <div class="panel-head"><div><p class="eyebrow">FÄLTETS FLÖDE</p><h3>Från start till Mora</h3></div><span class="pill">DNF syns som läckage</span></div>
-          <div id="fieldFlow" class="field-flow"></div>
-        </article>
-
-        <article class="panel lab-card hall-card">
-          <div class="panel-head"><div><p class="eyebrow">HALL OF FAME</p><h3>Prestationer som sticker ut</h3></div><span class="pill">alla importerade år</span></div>
-          <p id="hallExplanation" class="hall-explanation">Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.</p>
-          <div class="hall-tabs" id="hallTabs"><button class="active" data-hall="veterans">Flest lopp</button><button data-hall="improved">Mest förbättrad</button><button data-hall="consistent">Jämnast</button><button data-hall="chargers">Starkast avslutning</button></div>
-          <div id="hallOfFame" class="hall-list"></div>
-        </article>
-
-        <article class="panel lab-card fingerprint-card">
-          <div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet från andra år</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
-          <div id="raceFingerprint" class="fingerprint"></div>
-        </article>
-      </div>
-    </section>
-
-    <section id="lopare" class="panel results-panel">
-      <div class="panel-head wrap">
-        <div><p class="eyebrow">RESULTATDATABAS</p><h2>Löpare</h2></div>
-        <div class="table-actions"><span id="resultCountLabel"></span><button id="downloadCsv" class="secondary">Ladda ned urval som CSV</button></div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th data-sort="overall_place">Plats</th><th data-sort="name_as_published">Löpare</th><th data-sort="sex">Kön</th>
-            <th data-sort="age_class">Klass</th><th data-sort="club">Klubb</th><th data-sort="nationality">Nation</th>
-            <th data-sort="finish_seconds">Sluttid</th><th data-sort="pace_seconds_per_km">Snittfart</th><th>Status</th>
-          </tr></thead>
-          <tbody id="resultsBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination"><button id="prevPage" class="secondary">Föregående</button><span id="pageLabel"></span><button id="nextPage" class="secondary">Nästa</button></div>
-    </section>
-
-    <section class="panel source-panel disclaimer-panel">
-      <div><p class="eyebrow">FRISKRIVNING</p><h2>Friskrivning från allt ansvar</h2></div>
-      <p>Sajten är skapad som ett privat projekt helt utan att utgivaren tar ansvar för varken innehåll eller dess korrekthet. Om du inte tycker den är bra, ta en kopp kaffe och tänk på något annat</p>
-      <dl><div><dt>Senast uppdaterad</dt><dd id="generatedAt">–</dd></div><div><dt>Resultat</dt><dd id="databaseSize">–</dd></div><div><dt>Mellantider</dt><dd id="splitCount">–</dd></div></dl>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <a href="https://youtube.com/playlist?list=PLuI3oCc13p7emHXZeI3Dum0tSQpSmesyL&si=HbBmOAVBI3o_olDB" target="_blank" rel="noopener noreferrer" aria-label="Öppna Stayinhealthyrunning på Youtube">
-      <span class="youtube-icon" aria-hidden="true">▶</span><strong>Stayinhealthyrunning på Youtube</strong>
-    </a>
-  </footer>
-
-  <dialog id="runnerDialog">
-    <button class="dialog-close" aria-label="Stäng">×</button>
-    <div id="runnerDetail"></div>
-  </dialog>
-
-  <dialog id="hallMapDialog" class="hall-map-dialog">
-    <button class="dialog-close" aria-label="Stäng kartan">×</button>
-    <div class="hall-map-shell">
-      <header><p class="eyebrow">HALL OF FAME · LOPPSKARTA</p><h2 id="hallMapTitle">Löparens lopp</h2><p id="hallMapSubtitle"></p></header>
-      <div id="hallMapCanvas" class="hall-map-canvas" aria-label="Karta över loppet med färgmarkerade delsträckor"></div>
-      <div id="hallSegmentLegend" class="hall-segment-legend"></div>
-      <p class="hall-map-note">Varje färg visar en delsträcka mellan två officiella kontroller. Kartan använder banversionen som gällde det valda året.</p>
-    </div>
-  </dialog>
-
-  <div id="loading" class="loading"><div></div><p>Läser resultatdatabasen…</p></div>
-  <script src="data/ultravasan-data.js"></script>
-  <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-  <script src="assets/app.js?v=20260711-heatmap2"></script>
-  <script src="assets/nerdlab.js?v=20260710-4"></script>
-  <script src="assets/audience-analytics.js?v=20260711-heatmap2"></script>
+<section aria-label="Nyckeltal" class="kpis">
+<article><span>Visade löpare</span><strong id="kpiCount">–</strong><small id="kpiTotal">av –</small></article>
+<article><span>Median sluttid</span><strong id="kpiMedian">–</strong><small>för aktuellt urval</small></article>
+<article><span>Snabbaste tid</span><strong id="kpiFastest">–</strong><small id="kpiWinner">–</small></article>
+<article><span>Fullföljande</span><strong id="kpiFinishRate">–</strong><small>andel med registrerad sluttid</small></article>
+</section>
+<section class="grid two">
+<article class="panel chart-panel">
+<div class="panel-head"><div><p class="eyebrow">FÖRDELNING</p><h2>Sluttider</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span class="pill" id="distributionLabel"></span></div></div>
+<div aria-label="Histogram över sluttider" class="chart" id="histogram" role="img"></div>
+</article>
+<article class="panel chart-panel">
+<div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span class="pill">km/h</span></div></div>
+<div aria-label="Medianhastighet per delsträcka, inklusive start i Sälen" class="chart" id="paceChart" role="img"></div>
+</article>
+</section>
+<section aria-label="Avancerad loppstatistik" class="stats-studio">
+<div class="studio-head">
+<div><p class="eyebrow">STATISTIKSTUDIO</p><h2>Loppets puls</h2><p>Fördjupad analys av placeringar, avhopp, fartmönster och vad en viss sluttid brukar räcka till.</p></div>
+<div aria-hidden="true" class="studio-orbit"><span></span><span></span><span></span></div>
+</div>
+<div class="insight-grid">
+<article class="panel insight-card wide">
+<div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><span class="pill">håll över punkterna</span></div>
+<div class="chart compact-chart" id="placementScatter"></div>
+</article>
+<article class="panel insight-card target-card">
+<p class="eyebrow">MÅLTIDSSIMULATOR</p><h3>Vad räcker tiden till?</h3>
+<div class="target-time" id="targetTimeLabel">–</div>
+<input aria-label="Välj måltid" id="targetTimeSlider" max="100" min="0" type="range" value="50"/>
+<div class="target-result" id="targetTimeResult"></div>
+</article>
+<article class="panel insight-card">
+<div class="panel-head"><div><p class="eyebrow">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div>
+<div class="funnel-chart" id="dnfFunnel"></div>
+</article>
+<article class="panel insight-card wide">
+<div class="panel-head"><div><p class="eyebrow">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div><span class="pill">median · spridning</span></div>
+<div class="segment-grid" id="segmentHeatmap"></div>
+</article>
+<article class="panel insight-card">
+<div class="panel-head"><div><p class="eyebrow">POSITIONSSPEL</p><h3>Placeringsexpressen</h3><p class="panel-subtitle">Vem klättrade mest – och på vilken delsträcka kom det starkaste rycket?</p></div></div>
+<div class="mini-ranking" id="overtakeTable"></div>
+</article>
+<article class="panel insight-card wide">
+<div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><span class="pill">median och tidsspridning</span></div>
+<div class="chart compact-chart" id="yearTrend"></div>
+</article>
+<article class="panel insight-card">
+<div class="panel-head"><div><p class="eyebrow">SNABBBILD</p><h3>Urvalets DNA</h3></div></div>
+<div class="dna-grid" id="pacingCards"></div>
+</article>
+</div>
+</section>
+<section aria-label="Statistik ur ett genusperspektiv" class="audience-world gender-world" id="kon">
+<div class="world-hero gender-hero">
+<div><p class="eyebrow">GENUSPERSPEKTIV</p><h2>Två lopp i samma spår</h2><p>Jämför deltagande, sluttider, fartfördelning och avhopp för män och kvinnor.</p></div>
+<div class="world-legend"><span><i class="male"></i>Män</span><span><i class="female"></i>Kvinnor</span></div>
+</div>
+<div class="gender-kpis" id="genderKpis"></div>
+<div class="world-grid">
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><span class="pill">km/h</span></div><div class="chart world-chart" id="genderPaceChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><span class="pill">100 = första segmentet</span></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><span class="pill">alla loppår</span></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
+</div>
+</section>
+<section aria-label="Analys av åldersklasser" class="audience-world class-world" id="klasser">
+<div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass från Sälen till Mora</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och använd Sälen–Mora-index för rättvisare jämförelser.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
+<div class="class-cards" id="classCards"></div>
+<div class="world-grid">
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><span class="pill">median km/h</span></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Prestation relativt den egna klassen</h3></div><span class="pill">50 = mitten</span></div><div class="index-ranking" id="classIndexTable"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart" id="classHistoryChart"></div></article>
+</div>
+</section>
+<section aria-label="Klubbstatistik" class="audience-world club-world" id="klubbar">
+<div class="world-hero club-hero"><div><p class="eyebrow">KLUBBARENAN</p><h2>Klubbkänsla, bredd och fart</h2><p>Utforska klubbprofiler, deltagande, fullföljandegrad, individuella prestationer, starka avslutningar och utveckling över flera år.</p></div><div class="world-badge">Små underlag märks tydligt</div></div>
+<div class="club-controls panel">
+<label>Klubbprofil<select id="clubProfileSelect"></select></label>
+<div><span>Jämför klubbar</span><div class="selector-chips compact" id="clubCompareChips"></div></div>
+</div>
+<div class="club-profile" id="clubProfile"></div>
+<div class="world-grid">
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBBTOPPEN</p><h3>Välj vad som ska premieras</h3></div></div><div class="metric-tabs" id="clubRankingTabs"></div><div class="club-rankings" id="clubRankings"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBB-DNA</p><h3>Fem sidor av klubben</h3></div><span class="pill">relativt fältet</span></div><div class="club-dna" id="clubDna"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBBDUELL</p><h3>Medianfart genom loppet</h3></div><span class="pill">upp till fyra klubbar</span></div><div class="chart world-chart" id="clubCompareChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBBHISTORIK</p><h3>Starter, målgångar och median</h3></div></div><div class="chart world-chart" id="clubHistoryChart"></div></article>
+</div>
+</section>
+<section aria-label="Race Intelligence Lab" class="nerd-lab">
+<div class="nerd-hero">
+<div>
+<p class="eyebrow">RACE INTELLIGENCE LAB</p>
+<h2>Historien bakom siffrorna</h2>
+<p>Bygg en delsträcka, hitta loppets hjältar, följ en löpare över flera år och se vilka tider som krävs för olika percentiler.</p>
+</div>
+<div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
+</div>
+<div class="story-strip" id="raceStories"></div>
+<div class="intelligence-grid">
+<article class="panel lab-card segment-lab">
+<div class="panel-head"><div><p class="eyebrow">DELSTRÄCKELABBET</p><h3>Vem var bäst just här?</h3></div><span class="pill">valfri kontroll → kontroll</span></div>
+<div class="lab-controls">
+<label>Från<select id="segmentFrom"></select></label>
+<label>Till<select id="segmentTo"></select></label>
+<label>Sortera<select id="segmentMetric"><option value="time">Snabbast tid</option><option value="gain">Flest vunna platser</option><option value="speed">Högst fart</option></select></label>
+</div>
+<div class="podium" id="segmentPodium"></div>
+<div class="segment-ranking" id="segmentRanking"></div>
+</article>
+<article class="panel lab-card percentile-card">
+<div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><span class="pill">aktuellt urval</span></div>
+<div class="percentile-ladder" id="percentileLadder"></div>
+<p class="microcopy">Läs uppifrån: tiden som senast räcker till respektive nivå bland fullföljande löpare.</p>
+</article>
+<article class="panel lab-card history-lab">
+<div class="panel-head"><div><p class="eyebrow">LÖPARARKIVET</p><h3>En person genom åren</h3></div><span class="pill">namn eller startnummer</span></div>
+<label class="archive-search">Sök i alla loppår<input id="historySearch" placeholder="Exempel: Anna Andersson" type="search"/></label>
+<div class="history-suggestions" hidden="" id="historySuggestions"></div>
+<div class="runner-history" id="runnerHistory"><div class="empty">Sök fram en löpare för att se utveckling, bästa lopp och pacingprofil.</div></div>
+</article>
+<article class="panel lab-card field-flow-card">
+<div class="panel-head"><div><p class="eyebrow">FÄLTETS FLÖDE</p><h3>Från start till Mora</h3></div><span class="pill">DNF syns som läckage</span></div>
+<div class="field-flow" id="fieldFlow"></div>
+</article>
+<article class="panel lab-card hall-card">
+<div class="panel-head"><div><p class="eyebrow">HALL OF FAME</p><h3>Prestationer som sticker ut</h3></div><span class="pill">alla importerade år</span></div>
+<p class="hall-explanation" id="hallExplanation">Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.</p>
+<div class="hall-tabs" id="hallTabs"><button class="active" data-hall="veterans">Flest lopp</button><button data-hall="improved">Mest förbättrad</button><button data-hall="consistent">Jämnast</button><button data-hall="chargers">Starkast avslutning</button></div>
+<div class="hall-list" id="hallOfFame"></div>
+</article>
+<article class="panel lab-card fingerprint-card">
+<div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet från andra år</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
+<div class="fingerprint" id="raceFingerprint"></div>
+</article>
+</div>
+</section>
+<section class="panel results-panel" id="lopare">
+<div class="panel-head wrap">
+<div><p class="eyebrow">RESULTATDATABAS</p><h2>Löpare</h2></div>
+<div class="table-actions"><span id="resultCountLabel"></span></div>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th data-sort="overall_place">Plats</th><th data-sort="name_as_published">Löpare</th><th data-sort="sex">Kön</th>
+<th data-sort="age_class">Klass</th><th data-sort="club">Klubb</th><th data-sort="nationality">Nation</th>
+<th data-sort="finish_seconds">Sluttid</th><th data-sort="pace_seconds_per_km">Snittfart</th><th>Status</th>
+</tr></thead>
+<tbody id="resultsBody"></tbody>
+</table>
+</div>
+<div class="pagination"><button class="secondary" id="prevPage">Föregående</button><span id="pageLabel"></span><button class="secondary" id="nextPage">Nästa</button></div>
+</section>
+<section class="panel source-panel disclaimer-panel">
+<div><p class="eyebrow">FRISKRIVNING</p><h2>Friskrivning från allt ansvar</h2></div>
+<p>Sajten är skapad som ett privat projekt helt utan att utgivaren tar ansvar för varken innehåll eller dess korrekthet. Om du inte tycker den är bra, ta en kopp kaffe och tänk på något annat</p>
+<dl><div><dt>Senast uppdaterad</dt><dd id="generatedAt">–</dd></div><div><dt>Resultat</dt><dd id="databaseSize">–</dd></div><div><dt>Mellantider</dt><dd id="splitCount">–</dd></div></dl>
+</section>
+</main>
+<footer class="site-footer">
+<a aria-label="Öppna Stayinhealthyrunning på Youtube" href="https://youtube.com/playlist?list=PLuI3oCc13p7emHXZeI3Dum0tSQpSmesyL&amp;si=HbBmOAVBI3o_olDB" rel="noopener noreferrer" target="_blank">
+<span aria-hidden="true" class="youtube-icon">▶</span><strong>Stayinhealthyrunning på Youtube</strong>
+</a>
+</footer>
+<dialog id="runnerDialog">
+<button aria-label="Stäng" class="dialog-close">×</button>
+<div id="runnerDetail"></div>
+</dialog>
+<dialog class="hall-map-dialog" id="hallMapDialog">
+<button aria-label="Stäng kartan" class="dialog-close">×</button>
+<div class="hall-map-shell">
+<header><p class="eyebrow">HALL OF FAME · LOPPSKARTA</p><h2 id="hallMapTitle">Löparens lopp</h2><p id="hallMapSubtitle"></p></header>
+<div aria-label="Karta över loppet med färgmarkerade delsträckor" class="hall-map-canvas" id="hallMapCanvas"></div>
+<div class="hall-segment-legend" id="hallSegmentLegend"></div>
+<p class="hall-map-note">Varje färg visar en delsträcka mellan två officiella kontroller. Kartan använder banversionen som gällde det valda året.</p>
+</div>
+</dialog>
+<div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
+<script src="data/ultravasan-data.js"></script>
+<script src="data/ultravasan-routes.js?v=20260710-3"></script>
+<script src="assets/app.js?v=20260711-layout1"></script>
+<script src="assets/nerdlab.js?v=20260710-4"></script>
+<script src="assets/audience-analytics.js?v=20260711-layout1"></script>
 </body>
 </html>
