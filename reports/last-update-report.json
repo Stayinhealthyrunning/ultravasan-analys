@@ -1,18 +1,20 @@
 {
-  "installed_at_utc": "2026-07-11T15:22:07.070230+00:00",
-  "name": "Tydligare delsträckor, individuell sökning, ny toppbild och korrigerad kartmålgång",
-  "version": "2026.07.11.layout1",
-  "description": "Visar varje delsträcka som från–till, tar bort CSV-nedladdningen, separerar individuell analys från lopp- och fältstatistik, byter till den nya toppbilden, inför löparsökning med år/Alla år, varnar vid jämförelse över banändringen 2023 och rättar kartduellen så målgång visas som Mål medan Brutet bara används före Mora.",
+  "installed_at_utc": "2026-07-11T15:48:12.128598+00:00",
+  "name": "Slutjustering: rubrikbild, placeringsmotor, måltidssimulator, kartduell och layout",
+  "version": "2026.07.11.final2",
+  "description": "Korrekt installationspaket för GitHub Actions. Byter rubrikbild, lägger till könsval i placeringsmotorn, begränsar måltidssimulatorn till jämna minuter, ändrar rubriken i genusperspektivet, startar kartduellen på 300x, förbättrar Banvy, tar bort Urvalets DNA samt jämnar ut diagramrutorna och klubb/ort-sökningarna.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
+    "docs/assets/map.css",
     "docs/assets/map.js",
+    "docs/assets/nerdlab.js",
     "docs/assets/salen-mora-header.png",
     "docs/assets/styles.css",
     "docs/index.html",
     "docs/karta.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "462db05c7c7403ef9e9329e71e7645d523e81c833774ad420902082d36143dbc"
+  "manifest_sha256": "bf24bffa59c5c4df6b94a4388eebae393945e159cbb0149fc906888119416e19"
 }

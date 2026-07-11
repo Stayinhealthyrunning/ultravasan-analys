@@ -20,3 +20,9 @@
 .route-toggle:has(input:focus-visible){outline:3px solid rgba(23,109,83,.28);outline-offset:2px}
 @media(max-width:1000px){.route-layer-toggles{position:absolute;top:74px;left:0;margin:0}.route-toggle{padding:6px 8px;background:var(--glass)}.map-topbar{overflow:visible}}
 @media(max-width:680px){.route-layer-toggles{top:70px;gap:4px}.route-toggle span{font-size:.58rem}.route-toggle i{width:16px}.top-actions .icon-button span{display:none}}
+
+
+/* --- 2026-07-11 banvy polish --- */
+.fallback-map{background:radial-gradient(circle at 22% 18%,#f2f7ef,#d4e0d4 55%,#bfd1c2)}
+.fallback-cp-label{font-size:13px;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.fallback-runner{r:12}

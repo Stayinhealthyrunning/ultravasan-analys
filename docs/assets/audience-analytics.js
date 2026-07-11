@@ -3,7 +3,7 @@
 (() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),yearTimer:null};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),yearTimer:null,currentClubStats:[],clubSearchReady:false};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const statusKey=r=>String(r?.status||'').toUpperCase();
@@ -15,6 +15,7 @@
   const classInfo=v=>{const s=normClass(v),sex=s.startsWith('W')?0:s.startsWith('M')?1:2,m=s.match(/(\d{1,3})/),age=m?Number(m[1]):999,tail=s.replace(/^[A-Z]?\d{1,3}/,'');return {s,sex,age,tail}};
   const compareClasses=(a,b)=>{const A=classInfo(a),B=classInfo(b);return A.sex-B.sex||A.age-B.age||A.tail.localeCompare(B.tail,'sv')||A.s.localeCompare(B.s,'sv')};
   const clubKey=name=>normText(name)||'';
+  const clubValue=r=>String(r?.club||r?.city||'').trim();
   const raceYear=id=>state.data.races.find(r=>r.id===id)?.year||'';
   const qValue=()=>document.querySelector('#nameFilter')?.value.trim().toLowerCase()||'';
   const filterValues=()=>({sex:document.querySelector('#sexFilter')?.value||'',cls:document.querySelector('#classFilter')?.value||'',club:document.querySelector('#clubFilter')?.value||'',status:document.querySelector('#statusFilter')?.value||'',q:''});
@@ -48,7 +49,7 @@
     state.data.splits.forEach(s=>{if(!advanced.splitsByResult.has(s.result_id))advanced.splitsByResult.set(s.result_id,[]);advanced.splitsByResult.get(s.result_id).push(s)});
     advanced.splitsByResult.forEach(a=>a.sort((x,y)=>(x.sequence_no??0)-(y.sequence_no??0)));
     const variants=new Map();
-    state.data.results.forEach(r=>{const k=clubKey(r.club);advanced.clubKeyByResult.set(r.id,k);if(!k)return;if(!variants.has(k))variants.set(k,new Map());const m=variants.get(k);const raw=String(r.club).trim();m.set(raw,(m.get(raw)||0)+1)});
+    state.data.results.forEach(r=>{const raw=clubValue(r),k=clubKey(raw);advanced.clubKeyByResult.set(r.id,k);if(!k)return;if(!variants.has(k))variants.set(k,new Map());const m=variants.get(k);m.set(raw,(m.get(raw)||0)+1)});
     variants.forEach((m,k)=>advanced.clubDisplay.set(k,[...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sv'))[0][0]));
     buildSmIndex();
   }
@@ -58,12 +59,32 @@
     groups.forEach(rows=>{rows.sort((a,b)=>a.finish_seconds-b.finish_seconds);rows.forEach((r,i)=>advanced.smIndex.set(r.id,rows.length===1?100:100*(rows.length-1-i)/(rows.length-1)))})
   }
 
-  function populateClubFilter(){
-    const el=document.querySelector('#clubFilter');if(!el)return;const old=el.value;
+  function currentClubOptions(){
     const counts=new Map();raceResults().forEach(r=>{const k=advanced.clubKeyByResult.get(r.id);if(k)counts.set(k,(counts.get(k)||0)+1)});
-    const rows=[...counts].sort((a,b)=>advanced.clubDisplay.get(a[0]).localeCompare(advanced.clubDisplay.get(b[0]),'sv'));
-    el.innerHTML='<option value="">Alla klubbar</option>'+rows.map(([k,n])=>`<option value="${esc(k)}">${esc(advanced.clubDisplay.get(k))} (${n})</option>`).join('');
-    if(rows.some(([k])=>k===old))el.value=old;
+    return [...counts].map(([key,count])=>({key,name:advanced.clubDisplay.get(key)||key,count})).sort((a,b)=>a.name.localeCompare(b.name,'sv'));
+  }
+  function clubSearchMarkup(items){return items.map(x=>`<button type="button" class="club-search-option" data-key="${esc(x.key)}"><strong>${esc(x.name)}</strong><small>${x.count!=null?`${x.count} resultat`:''}</small></button>`).join('')||'<div class="club-search-empty">Ingen klubb eller ort hittades</div>'}
+  function wireClubSearch(input,box,provider,onSelect,{clearAction=null}={}){
+    if(!input||!box||input.dataset.clubSearchReady)return;input.dataset.clubSearchReady='1';
+    const show=()=>{const q=normText(input.value);const options=provider();const matches=(q?options.filter(x=>normText(x.name).includes(q)):options).slice(0,15);box.innerHTML=clubSearchMarkup(matches);box.hidden=false};
+    input.addEventListener('focus',show);input.addEventListener('input',()=>{if(!input.value.trim()&&clearAction)clearAction();show()});
+    input.addEventListener('keydown',e=>{if(e.key==='Escape'){box.hidden=true;return}if(e.key==='Enter'){const first=box.querySelector('.club-search-option');if(first){e.preventDefault();first.click()}}});
+    box.addEventListener('click',e=>{const b=e.target.closest('.club-search-option');if(!b)return;const item=provider().find(x=>x.key===b.dataset.key);if(item){input.value=item.name;box.hidden=true;onSelect(item)}});
+  }
+  function setupClubSearches(){
+    if(advanced.clubSearchReady)return;advanced.clubSearchReady=true;
+    const filterInput=document.querySelector('#clubFilterSearch'),filterHidden=document.querySelector('#clubFilter');
+    wireClubSearch(filterInput,document.querySelector('#clubFilterSuggestions'),currentClubOptions,item=>{filterHidden.value=item.key;state.page=1;applyFilters()},{clearAction:()=>{if(filterHidden.value){filterHidden.value='';state.page=1;applyFilters()}}});
+    filterInput?.addEventListener('input',()=>{if(!filterHidden.value)return;const selectedName=advanced.clubDisplay.get(filterHidden.value)||'';if(filterInput.value.trim()!==selectedName){const typed=filterInput.value;filterHidden.value='';state.page=1;applyFilters();filterInput.value=typed}});
+    wireClubSearch(document.querySelector('#clubProfileSearch'),document.querySelector('#clubProfileSuggestions'),()=>advanced.currentClubStats.map(x=>({key:x.key,name:x.name,count:x.starters})),item=>{document.querySelector('#clubProfileSelect').value=item.key;renderClubWorld()});
+    wireClubSearch(document.querySelector('#clubCompareSearch'),document.querySelector('#clubCompareSuggestions'),()=>advanced.currentClubStats.filter(x=>!advanced.clubSelection.includes(x.key)).map(x=>({key:x.key,name:x.name,count:x.starters})),item=>{if(advanced.clubSelection.length<4)advanced.clubSelection.push(item.key);document.querySelector('#clubCompareSearch').value='';renderClubWorld()},{clearAction:()=>{}});
+    document.addEventListener('click',e=>{if(!e.target.closest('.club-search-label'))document.querySelectorAll('.club-search-suggestions').forEach(x=>x.hidden=true)});
+  }
+  function populateClubFilter(){
+    const el=document.querySelector('#clubFilter');if(!el)return;const old=el.value,rows=currentClubOptions();
+    el.innerHTML='<option value="">Alla klubbar/orter</option>'+rows.map(x=>`<option value="${esc(x.key)}">${esc(x.name)} (${x.count})</option>`).join('');
+    el.value=rows.some(x=>x.key===old)?old:'';
+    const input=document.querySelector('#clubFilterSearch');if(input){input.value=el.value?(rows.find(x=>x.key===el.value)?.name||''):''}
   }
 
   function patchFilters(){
@@ -71,11 +92,11 @@
     refreshFilters=function(){const oldClass=document.querySelector('#classFilter')?.value||'',oldStatus=document.querySelector('#statusFilter')?.value||'';legacyRefresh();if(oldClass&&[...document.querySelector('#classFilter').options].some(o=>o.value===oldClass))document.querySelector('#classFilter').value=oldClass;if(oldStatus&&[...document.querySelector('#statusFilter').options].some(o=>o.value===oldStatus))document.querySelector('#statusFilter').value=oldStatus;populateClubFilter()};
     applyFilters=function(){
       const f=filterValues();state.filtered=raceResults().filter(r=>(!f.sex||sexKey(r)===f.sex)&&(!f.cls||r.age_class===f.cls)&&(!f.club||advanced.clubKeyByResult.get(r.id)===f.club)&&(!f.status||r.status===f.status));
-      const key=state.sortKey,dir=state.sortDir;state.filtered.sort((a,b)=>{let av=a[key],bv=b[key];if(av==null)av=typeof bv==='string'?'\uffff':Infinity;if(bv==null)bv=typeof av==='string'?'\uffff':Infinity;return typeof av==='string'?av.localeCompare(bv,'sv')*dir:(av-bv)*dir});
+      state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));
       syncUrl();renderAll();renderAudienceWorlds();
     };
     const club=document.querySelector('#clubFilter');club?.addEventListener('change',()=>{state.page=1;applyFilters()});
-    const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';applyFilters()};
+    const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';const ci=document.querySelector('#clubFilterSearch');if(ci)ci.value='';applyFilters()};
   }
 
   function syncUrl(){
@@ -83,7 +104,7 @@
   }
   function restoreUrl(){
     const p=new URLSearchParams(location.search),year=Number(p.get('year')),race=state.data.races.find(r=>r.year===year);if(race){document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
-    const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};Object.entries(map).forEach(([k,id])=>{const v=p.get(k),el=document.querySelector('#'+id);if(v&&el&&([...el.options||[]].length===0||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT'))el.value=v});
+    const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};Object.entries(map).forEach(([k,id])=>{const v=p.get(k),el=document.querySelector('#'+id);if(v&&el&&([...el.options||[]].length===0||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT'))el.value=v});const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');if(clubInput&&club?.value)clubInput.value=advanced.clubDisplay.get(club.value)||'';
   }
 
   function patchOverviewCharts(){
@@ -99,12 +120,18 @@
     };
     renderPaceChart=function(){renderSexPaceChart(document.querySelector('#paceChart'),state.filtered,true)};
     renderPlacementScatter=function(){
-      const el=document.querySelector('#placementScatter'),rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place);if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs</div>';return}
+      const el=document.querySelector('#placementScatter');
+      const showM=document.querySelector('#placementSexM')?.checked!==false;
+      const showF=document.querySelector('#placementSexF')?.checked!==false;
+      if(!showM&&!showF){el.innerHTML='<div class="empty">Välj minst ett kön i placeringsmotorn</div>';return}
+      const rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place).filter(r=>(showM&&sexKey(r)==='M')||(showF&&sexKey(r)==='F'));
+      if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs</div>';return}
       const W=780,H=255,p={l:54,r:20,t:18,b:42},minT=Math.min(...rows.map(r=>r.finish_seconds)),maxT=Math.max(...rows.map(r=>r.finish_seconds)),maxP=Math.max(...rows.map(r=>r.overall_place)),x=t=>p.l+(t-minT)*(W-p.l-p.r)/(maxT-minT||1),y=v=>p.t+(v-1)*(H-p.t-p.b)/(maxP-1||1);let out='';
       for(let i=0;i<=4;i++){const yy=p.t+(H-p.t-p.b)*i/4,place=Math.round(1+(maxP-1)*i/4);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},String(place))}
       for(let i=0;i<=4;i++){const t=minT+(maxT-minT)*i/4,xx=x(t);out+=svg('text',{x:xx,y:H-12,'text-anchor':'middle'},fmtTime(t).slice(0,-3))}
       rows.forEach(r=>{const sx=sexKey(r),color=sx==='M'?COLORS.male:sx==='F'?COLORS.female:COLORS.unknown,cx=x(r.finish_seconds),cy=y(r.overall_place),title=`${r.name_as_published} · ${sexLabel(sx)} · ${fmtTime(r.finish_seconds)} · plats ${r.overall_place}`;out+=sx==='F'?`<path d="M${cx} ${cy-5} L${cx+5} ${cy} L${cx} ${cy+5} L${cx-5} ${cy} Z" fill="${color}" opacity=".72"><title>${esc(title)}</title></path>`:`<circle cx="${cx}" cy="${cy}" r="4.2" fill="${color}" opacity=".68"><title>${esc(title)}</title></circle>`});
-      el.innerHTML=`<div class="chart-inline-legend">${chartLegend()}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
+      const legend=[showM?'<span class="inline-sex-legend"><i class="male"></i>Män</span>':'',showF?'<span class="inline-sex-legend"><i class="female"></i>Kvinnor</span>':''].filter(Boolean).join('');
+      el.innerHTML=`<div class="chart-inline-legend">${legend}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
     };
     renderDnfFunnel=renderGenderDnf;
     renderSegmentHeatmap=function(){
@@ -197,14 +224,25 @@
   function makeClubStats(key,rows){const st=rows.filter(r=>!isDns(r)),fin=rows.filter(isFinished),indices=fin.map(r=>advanced.smIndex.get(r.id)).filter(Number.isFinite),gains=fin.map(closingGain).filter(Number.isFinite),classes=new Set(st.map(r=>normClass(r.age_class))),balance=st.length?100-Math.abs(st.filter(r=>sexKey(r)==='M').length-st.filter(r=>sexKey(r)==='F').length)/st.length*100:0;return{key,name:advanced.clubDisplay.get(key)||key,rows,starters:st.length,finishers:fin.length,rate:pct(fin.length,st.length),median:safeMed(fin.map(r=>r.finish_seconds)),medianIndex:safeMed(indices),breadth:safeMed(indices),closing:safeMed(gains),classes:classes.size,balance,top:fin.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,5)}}
   function clubHistoryImprovement(key){const rows=state.data.results.filter(r=>advanced.clubKeyByResult.get(r.id)===key&&isFinished(r)),byYear=new Map();rows.forEach(r=>{const y=raceYear(r.race_id);if(!byYear.has(y))byYear.set(y,[]);byYear.get(y).push(advanced.smIndex.get(r.id))});const pts=[...byYear].filter(([,v])=>v.filter(Number.isFinite).length>=3).sort((a,b)=>a[0]-b[0]).map(([y,v])=>({y,med:safeMed(v.filter(Number.isFinite))}));return pts.length>1?pts.at(-1).med-pts[0].med:null}
   function renderClubWorld(){
-    const stats=clubStatsCurrent();if(!stats.length){document.querySelector('#clubProfile').innerHTML='<div class="empty panel">Inga klubbar i urvalet.</div>';return}const select=document.querySelector('#clubProfileSelect'),old=select.value;select.innerHTML=stats.map(x=>`<option value="${esc(x.key)}">${esc(x.name)} (${x.starters})</option>`).join('');select.value=stats.some(x=>x.key===old)?old:stats[0].key;select.onchange=()=>renderClubWorld();const keys=stats.map(x=>x.key);advanced.clubSelection=advanced.clubSelection.filter(k=>keys.includes(k));if(!advanced.clubSelection.length)advanced.clubSelection=stats.slice(0,4).map(x=>x.key);renderClubCompareChips(stats);renderClubProfile(stats.find(x=>x.key===select.value)||stats[0],stats);renderClubRankingTabs();renderClubRankings(stats);renderClubCompare(stats);renderClubHistory(select.value);
+    const stats=clubStatsCurrent();advanced.currentClubStats=stats;
+    const profile=document.querySelector('#clubProfile'),select=document.querySelector('#clubProfileSelect'),search=document.querySelector('#clubProfileSearch');
+    if(!stats.length){if(profile)profile.innerHTML='<div class="empty panel">Inga klubbar eller orter i urvalet.</div>';if(search)search.value='';return}
+    const old=select.value;select.innerHTML=stats.map(x=>`<option value="${esc(x.key)}">${esc(x.name)} (${x.starters})</option>`).join('');select.value=stats.some(x=>x.key===old)?old:stats[0].key;
+    if(search)search.value=stats.find(x=>x.key===select.value)?.name||'';
+    const keys=stats.map(x=>x.key);advanced.clubSelection=advanced.clubSelection.filter(k=>keys.includes(k));if(!advanced.clubSelection.length)advanced.clubSelection=stats.slice(0,Math.min(4,stats.length)).map(x=>x.key);
+    renderClubCompareChips(stats);renderClubProfile(stats.find(x=>x.key===select.value)||stats[0],stats);renderClubRankingTabs();renderClubRankings(stats);renderClubCompare(stats);renderClubHistory(select.value);
   }
-  function renderClubCompareChips(stats){const el=document.querySelector('#clubCompareChips');el.innerHTML=stats.slice(0,16).map(x=>`<button class="selector-chip ${advanced.clubSelection.includes(x.key)?'active':''}" data-club="${esc(x.key)}">${esc(x.name)} <small>${x.starters}</small></button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=b.dataset.club;if(advanced.clubSelection.includes(k))advanced.clubSelection=advanced.clubSelection.filter(x=>x!==k);else if(advanced.clubSelection.length<4)advanced.clubSelection.push(k);renderClubWorld()})}
-  function renderClubProfile(c,all){const el=document.querySelector('#clubProfile'),small=c.starters<5;el.innerHTML=`<article class="club-profile-hero panel"><div><p class="eyebrow">KLUBBPROFIL</p><h3>${esc(c.name)}</h3><p>${small?'<span class="small-sample">Litet underlag</span>':''} ${c.starters} startande · ${c.finishers} fullföljande</p></div><div class="club-profile-kpis"><span>Median<strong>${fmtTime(c.median)}</strong></span><span>I mål<strong>${c.rate} %</strong></span><span>SM-index<strong>${c.medianIndex?.toFixed(0)||'–'}</strong></span><span>Klasser<strong>${c.classes}</strong></span></div><div class="club-top-runners"><small>Snabbaste i urvalet</small>${c.top.map((r,i)=>`<button data-id="${r.id}"><b>${i+1}</b>${esc(r.name_as_published)} <em>${fmtTime(r.finish_seconds)}</em></button>`).join('')}</div></article>`;el.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));renderClubDna(c,all)}
+  function renderClubCompareChips(stats){
+    const el=document.querySelector('#clubCompareChips');if(!el)return;
+    const selected=advanced.clubSelection.map(k=>stats.find(x=>x.key===k)).filter(Boolean);
+    el.innerHTML=selected.length?selected.map(x=>`<button type="button" class="selector-chip active removable" data-club="${esc(x.key)}"><span>${esc(x.name)}</span><b aria-hidden="true">×</b></button>`).join(''):'<span class="selection-empty">Sök och lägg till upp till fyra klubbar/orter</span>';
+    el.querySelectorAll('button').forEach(b=>b.onclick=()=>{advanced.clubSelection=advanced.clubSelection.filter(x=>x!==b.dataset.club);renderClubWorld()});
+  }
+  function renderClubProfile(c,all){const el=document.querySelector('#clubProfile'),small=c.starters<5;el.innerHTML=`<article class="club-profile-hero panel"><div><p class="eyebrow">KLUBB/ORT-PROFIL</p><h3>${esc(c.name)}</h3><p>${small?'<span class="small-sample">Litet underlag</span>':''} ${c.starters} startande · ${c.finishers} fullföljande</p></div><div class="club-profile-kpis"><span>Median<strong>${fmtTime(c.median)}</strong></span><span>I mål<strong>${c.rate} %</strong></span><span>SM-index<strong>${c.medianIndex?.toFixed(0)||'–'}</strong></span><span>Klasser<strong>${c.classes}</strong></span></div><div class="club-top-runners"><small>Snabbaste i urvalet</small>${c.top.map((r,i)=>`<button data-id="${r.id}"><b>${i+1}</b>${esc(r.name_as_published)} <em>${fmtTime(r.finish_seconds)}</em></button>`).join('')}</div></article>`;el.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));renderClubDna(c,all)}
   function renderClubRankingTabs(){const el=document.querySelector('#clubRankingTabs'),tabs=[['largest','Flest startande'],['finishers','Flest i mål'],['median','Snabbast median'],['breadth','Bäst bredd'],['rate','Fullföljandegrad'],['closing','Starkast avslutning'],['improved','Mest förbättrad'],['widest','Bredaste klubben']];if(!tabs.some(([k])=>k===advanced.clubMetric))advanced.clubMetric='largest';el.innerHTML=tabs.map(([k,l])=>`<button class="${advanced.clubMetric===k?'active':''}" data-metric="${k}">${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{advanced.clubMetric=b.dataset.metric;renderClubWorld()})}
   function renderClubRankings(stats){const el=document.querySelector('#clubRankings'),metric=advanced.clubMetric,rows=stats.map(c=>({...c,improved:clubHistoryImprovement(c.key),widest:c.classes+c.balance/100}));const valid=rows.filter(c=>metric==='largest'||metric==='finishers'||metric==='widest'||(c[metric]!=null&&(metric!=='rate'&&metric!=='breadth'&&metric!=='median'||c.starters>=5)));valid.sort((a,b)=>metric==='median'?a.median-b.median:b[metric]-a[metric]);const format=c=>metric==='largest'?`${c.starters} startande`:metric==='finishers'?`${c.finishers} i mål`:metric==='median'?fmtTime(c.median):metric==='breadth'?`index ${c.medianIndex?.toFixed(0)}`:metric==='rate'?`${c.rate} %`:metric==='closing'?`${c.closing>0?'+':''}${c.closing?.toFixed(0)} platser`:metric==='improved'?`${c.improved>0?'+':''}${c.improved?.toFixed(0)} index`:`${c.classes} klasser · balans ${c.balance.toFixed(0)}`;el.innerHTML=valid.slice(0,12).map((c,i)=>`<button data-club="${esc(c.key)}"><b>${i+1}</b><span><strong>${esc(c.name)}</strong><small>${c.starters<5?'Litet underlag · ':''}${c.finishers} fullföljande</small></span><em>${format(c)}</em></button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{document.querySelector('#clubProfileSelect').value=b.dataset.club;renderClubWorld();document.querySelector('#clubProfile').scrollIntoView({behavior:'smooth',block:'center'})})}
   function renderClubDna(c,all){const maxStarts=Math.max(...all.map(x=>x.starters),1),maxClosing=Math.max(...all.map(x=>Math.max(0,x.closing||0)),1),metrics=[['Fart',c.medianIndex||0],['Bredd',Math.min(100,c.finishers/20*100)],['Uthållighet',c.rate],['Avslutning',Math.max(0,c.closing||0)/maxClosing*100],['Deltagande',c.starters/maxStarts*100]];document.querySelector('#clubDna').innerHTML=metrics.map(([n,v])=>`<div><span>${n}</span><i><b style="width:${Math.max(2,Math.min(100,v))}%"></b></i><strong>${Math.round(v)}</strong></div>`).join('')}
-  function renderClubCompare(stats){const el=document.querySelector('#clubCompareChart'),selected=stats.filter(x=>advanced.clubSelection.includes(x.key)),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps);if(!selected.length){el.innerHTML='<div class="empty">Välj klubbar ovan.</div>';return}const W=800,H=280,p={l:52,r:20,t:22,b:64},series=selected.map((c,i)=>{const ids=new Set(c.rows.map(r=>r.id));return{name:c.name,color:CLASS_COLORS[i%CLASS_COLORS.length],pts:cps.map(cp=>safeMed(segmentSpeeds(c.rows,cp.sequence_no)))}}),all=series.flatMap(s=>s.pts.filter(Number.isFinite));if(!all.length){el.innerHTML='<div class="empty">Mellantider saknas för valda klubbar.</div>';return}const lo=Math.max(0,Math.floor(Math.min(...all)-1)),hi=Math.ceil(Math.max(...all)+1),x=i=>p.l+i*(W-p.l-p.r)/(cps.length-1||1),y=v=>p.t+(hi-v)*(H-p.t-p.b)/(hi-lo||1);let out='';for(let i=0;i<=4;i++){const v=hi-(hi-lo)*i/4,yy=y(v);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},v.toFixed(1))}series.forEach(s=>{const v=s.pts.map((v,i)=>({v,i})).filter(x=>x.v);out+=`<path d="${v.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${y(d.v)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3"/>`});pairs.forEach((p,i)=>out+=svg('text',{x:x(i),y:H-27,'text-anchor':'middle',transform:`rotate(-28 ${x(i)} ${H-27})`},p.label));el.innerHTML=`<div class="class-chart-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`}
+  function renderClubCompare(stats){const el=document.querySelector('#clubCompareChart'),selected=stats.filter(x=>advanced.clubSelection.includes(x.key)),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps);if(!selected.length){el.innerHTML='<div class="empty">Sök och välj klubbar eller orter ovan.</div>';return}const W=800,H=280,p={l:52,r:20,t:22,b:64},series=selected.map((c,i)=>{const ids=new Set(c.rows.map(r=>r.id));return{name:c.name,color:CLASS_COLORS[i%CLASS_COLORS.length],pts:cps.map(cp=>safeMed(segmentSpeeds(c.rows,cp.sequence_no)))}}),all=series.flatMap(s=>s.pts.filter(Number.isFinite));if(!all.length){el.innerHTML='<div class="empty">Mellantider saknas för valda klubbar.</div>';return}const lo=Math.max(0,Math.floor(Math.min(...all)-1)),hi=Math.ceil(Math.max(...all)+1),x=i=>p.l+i*(W-p.l-p.r)/(cps.length-1||1),y=v=>p.t+(hi-v)*(H-p.t-p.b)/(hi-lo||1);let out='';for(let i=0;i<=4;i++){const v=hi-(hi-lo)*i/4,yy=y(v);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},v.toFixed(1))}series.forEach(s=>{const v=s.pts.map((v,i)=>({v,i})).filter(x=>x.v);out+=`<path d="${v.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${y(d.v)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3"/>`});pairs.forEach((p,i)=>out+=svg('text',{x:x(i),y:H-27,'text-anchor':'middle',transform:`rotate(-28 ${x(i)} ${H-27})`},p.label));el.innerHTML=`<div class="class-chart-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`}
   function renderClubHistory(key){const el=document.querySelector('#clubHistoryChart'),rows=state.data.results.filter(r=>advanced.clubKeyByResult.get(r.id)===key),years=state.data.races.slice().sort((a,b)=>a.year-b.year),data=years.map(r=>{const rr=rows.filter(x=>x.race_id===r.id),st=rr.filter(x=>!isDns(x)),fin=rr.filter(isFinished);return{year:r.year,st:st.length,fin:fin.length,med:safeMed(fin.map(x=>x.finish_seconds))}}),W=600,H=280,p={l:45,r:48,t:22,b:42},maxN=Math.max(...data.map(d=>d.st),1),meds=data.map(d=>d.med).filter(Number.isFinite),lo=meds.length?Math.floor(Math.min(...meds)/1800)*1800:0,hi=meds.length?Math.ceil(Math.max(...meds)/1800)*1800:1,x=i=>p.l+i*(W-p.l-p.r)/(data.length-1||1),yN=v=>p.t+(maxN-v)*(H-p.t-p.b)/maxN,yT=v=>p.t+(hi-v)*(H-p.t-p.b)/(hi-lo||1);let out='';data.forEach((d,i)=>{const bw=12;out+=`<rect x="${x(i)-bw}" y="${yN(d.st)}" width="${bw}" height="${H-p.b-yN(d.st)}" fill="${COLORS.green}" opacity=".7"/><rect x="${x(i)}" y="${yN(d.fin)}" width="${bw}" height="${H-p.b-yN(d.fin)}" fill="${COLORS.lime}" opacity=".9"/>`+svg('text',{x:x(i),y:H-14,'text-anchor':'middle'},String(d.year))});const valid=data.map((d,i)=>({...d,i})).filter(d=>d.med);if(valid.length)out+=`<path d="${valid.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${yT(d.med)}`).join(' ')}" fill="none" stroke="${COLORS.orange}" stroke-width="3"/>`;el.innerHTML=`<div class="club-history-legend"><span><i class="starts"></i>Startande</span><span><i class="finish"></i>I mål</span><span><i class="median"></i>Median</span></div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`}
 
   function setupNavigation(){
@@ -216,7 +254,7 @@
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupNavigation();refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupNavigation();setupClubSearches();refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();

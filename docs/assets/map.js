@@ -2,7 +2,7 @@
 
 const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
-const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:600,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true};
+const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:300,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true};
 const $=s=>document.querySelector(s);
 const fmtTime=s=>{if(s==null||!Number.isFinite(s))return '–';s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fmtPace=s=>!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
@@ -164,11 +164,28 @@ function initMap(){
 function markerText(m){return m.result.bib?String(m.result.bib).slice(-3):m.result.name_as_published.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
 
 function initFallback(){
-  const svg=$('#fallbackMap'),W=1200,H=650,pad=70,lons=app.usedRoutes.flatMap(r=>r.points.map(p=>p[1])),lats=app.usedRoutes.flatMap(r=>r.points.map(p=>p[0])),minX=Math.min(...lons),maxX=Math.max(...lons),merc=l=>Math.log(Math.tan(Math.PI/4+l*Math.PI/360)),ys=lats.map(merc),minY=Math.min(...ys),maxY=Math.max(...ys),sx=(W-pad*2)/(maxX-minX),sy=(H-pad*2)/(maxY-minY),scale=Math.min(sx,sy),ox=(W-(maxX-minX)*scale)/2,oy=(H-(maxY-minY)*scale)/2;
-  app.project=coord=>[ox+(coord[1]-minX)*scale,H-(oy+(merc(coord[0])-minY)*scale)];let html='';
-  for(let x=100;x<W;x+=100)html+=`<line class="fallback-grid" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;for(let y=100;y<H;y+=100)html+=`<line class="fallback-grid" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
-  for(const route of app.usedRoutes){const path=route.points.map((p,i)=>{const q=app.project(p);return `${i?'L':'M'}${q[0].toFixed(1)} ${q[1].toFixed(1)}`}).join(' ');html+=`<path class="fallback-route-shadow" d="${path}"/><path class="fallback-route" style="stroke:${route.style.color};stroke-dasharray:${route.style.dashArray||'none'}" d="${path}"/>`}
-  for(const m of app.models){const q=app.project(routePosition(m.route,0));html+=`<circle id="fallbackRunner${m.result.id}" class="fallback-runner" cx="${q[0]}" cy="${q[1]}" r="12" fill="${m.color}"/>`}svg.innerHTML=html;
+  const svg=$('#fallbackMap'),W=1200,H=650,pad=70,lons=app.usedRoutes.flatMap(r=>r.points.map(p=>p[1])),lats=app.usedRoutes.flatMap(r=>r.points.map(p=>p[0])),minX=Math.min(...lons),maxX=Math.max(...lons),merc=l=>Math.log(Math.tan(Math.PI/4+l*Math.PI/360)),ys=lats.map(merc),minY=Math.min(...ys),maxY=Math.max(...ys),sx=(W-pad*2)/(maxX-minX||1),sy=(H-pad*2)/(maxY-minY||1),scale=Math.min(sx,sy),ox=(W-(maxX-minX)*scale)/2,oy=(H-(maxY-minY)*scale)/2;
+  app.project=coord=>[ox+(coord[1]-minX)*scale,H-(oy+(merc(coord[0])-minY)*scale)];
+  const ref=app.registry.routes?.[app.registry.default_route_id]||app.usedRoutes[0];
+  let html=`<defs><linearGradient id="banvyBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4eb"/><stop offset="1" stop-color="#cfddd1"/></linearGradient><linearGradient id="banvyForest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8dbc8"/><stop offset="1" stop-color="#aec8b2"/></linearGradient><linearGradient id="banvyLake" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9eef7"/><stop offset="1" stop-color="#a8d4e8"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#banvyBg)" rx="22"/>`;
+  html+=`<path d="M0 ${H*0.73} C${W*0.17} ${H*0.58} ${W*0.34} ${H*0.83} ${W*0.52} ${H*0.7} S${W*0.86} ${H*0.54} ${W} ${H*0.67} V${H} H0Z" fill="url(#banvyForest)" opacity=".8"/>`;
+  html+=`<ellipse cx="${W*0.18}" cy="${H*0.23}" rx="120" ry="55" fill="url(#banvyLake)" opacity=".5"/><ellipse cx="${W*0.82}" cy="${H*0.2}" rx="95" ry="42" fill="url(#banvyLake)" opacity=".4"/>`;
+  for(let i=0;i<8;i++){
+    const y=105+i*58,amp=14+(i%3)*6;
+    html+=`<path d="M-40 ${y} Q ${W*0.18} ${y-amp} ${W*0.36} ${y} T ${W*0.72} ${y+amp*0.35} T ${W+40} ${y}" fill="none" stroke="rgba(25,72,58,.08)" stroke-width="2"/>`;
+  }
+  for(const route of app.usedRoutes){
+    const path=route.points.map((p,i)=>{const q=app.project(p);return `${i?'L':'M'}${q[0].toFixed(1)} ${q[1].toFixed(1)}`}).join(' ');
+    html+=`<path class="fallback-route-shadow ${route.style.dashArray?'old-course':'new-course'}" d="${path}"/><path class="fallback-route ${route.style.dashArray?'old-course':'new-course'}" style="stroke:${route.style.color};stroke-dasharray:${route.style.dashArray||'none'}" d="${path}"/>`;
+  }
+  if(ref?.checkpoints){
+    for(const cp of ref.checkpoints){
+      const q=app.project(cp.coord); const anchor=(cp.distance_km/ref.official_distance_km)<0.55?'start':'end'; const dx=anchor==='start'?12:-12;
+      html+=`<circle class="fallback-cp" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="7"/><text class="fallback-cp-label" x="${(q[0]+dx).toFixed(1)}" y="${(q[1]-10).toFixed(1)}" text-anchor="${anchor}">${esc((cp.short||cp.name).replace('Mora mål','Mora'))}</text>`;
+    }
+  }
+  for(const m of app.models){const q=app.project(routePosition(m.route,0));html+=`<circle id="fallbackRunner${m.result.id}" class="fallback-runner" cx="${q[0]}" cy="${q[1]}" r="12" fill="${m.color}"/>`}
+  svg.innerHTML=html;
 }
 
 function buildRaceStrip(){

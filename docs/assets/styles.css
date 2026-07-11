@@ -237,3 +237,115 @@ main{margin-top:-54px}
   .hero-header-image{height:225px;object-position:39% center}
   .analysis-scope{border-radius:14px}.runner-lookup-panel{border-radius:14px}
 }
+
+/* ===== Total översyn 2026-07-11 ===== */
+/* Stabil informationsikon som bild – påverkar inte rubrikernas radbrytning */
+.info-tip{width:24px!important;height:24px!important;flex:0 0 24px!important;padding:2px!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.info-tip:hover,.info-tip:focus,.info-tip.open{background:rgba(255,255,255,.72)!important;box-shadow:0 2px 10px rgba(16,36,29,.12)!important}
+.info-glyph{display:block!important;width:20px!important;height:20px!important;object-fit:contain}
+.panel-head{position:relative;padding-right:30px}
+.panel-head>.info-tip,.chart-head-tools>.info-tip{position:absolute!important;right:0;top:0;margin:0!important}
+.chart-head-tools{padding-right:28px}
+.world-hero>.info-tip,.nerd-hero>.info-tip,.studio-head>.info-tip{right:14px;top:14px}
+
+/* Sökbara fält för klubb/ort */
+.club-search-label{position:relative;min-width:0}
+.club-search-suggestions{position:absolute;z-index:80;left:0;right:0;top:calc(100% + 5px);max-height:300px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 18px 45px rgba(16,36,29,.22)}
+.club-search-option{display:grid;width:100%;grid-template-columns:1fr auto;gap:8px;padding:10px 11px;text-align:left;color:var(--ink);background:transparent;border-radius:9px}
+.club-search-option:hover,.club-search-option:focus{background:#edf3ec;filter:none}
+.club-search-option strong,.club-search-option small{display:block}.club-search-option strong{font-size:.78rem}.club-search-option small{color:var(--muted);font-size:.62rem;align-self:center}
+.club-search-empty{padding:16px;color:var(--muted);font-size:.72rem;text-align:center}
+.compact-search{margin-top:7px}.club-compare-control{min-width:0}.club-compare-control>span{display:block;font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.selector-chip.removable{display:inline-flex;align-items:center;gap:7px}.selector-chip.removable b{font-size:1rem;line-height:1;font-weight:500}
+
+/* Mer balanserade statistikytor på bred skärm */
+.insight-grid{grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:dense;align-items:stretch}
+.insight-grid>.insight-card{grid-column:span 4;height:100%;display:flex;flex-direction:column}
+.insight-grid>.insight-card:nth-child(1),.insight-grid>.insight-card:nth-child(4),.insight-grid>.insight-card:nth-child(6){grid-column:span 8}
+.insight-grid .chart,.insight-grid .compact-chart,.insight-grid .segment-grid,.insight-grid .mini-ranking{flex:1}
+.world-grid{grid-template-columns:repeat(12,minmax(0,1fr));align-items:stretch}
+.world-card{grid-column:span 4;height:100%;display:flex;flex-direction:column}
+.world-card.wide{grid-column:span 8}.world-card.full{grid-column:1/-1}.world-card .chart,.world-card .world-chart{flex:1}
+.intelligence-grid{grid-template-columns:repeat(12,minmax(0,1fr));align-items:stretch}
+.intelligence-grid>.lab-card{height:100%;display:flex;flex-direction:column}
+.segment-lab{grid-column:span 8}.percentile-card{grid-column:span 4}.history-lab,.field-flow-card{grid-column:span 6}.hall-card{grid-column:span 8}.fingerprint-card{grid-column:span 4}
+.segment-ranking,.hall-list{flex:1}
+
+/* Delsträckelabbets prispall */
+.podium-place.p1{background:linear-gradient(150deg,#f8d866,#c99918);border:1px solid #b8860b;box-shadow:0 9px 24px rgba(184,134,11,.2)}
+.podium-place.p2{background:linear-gradient(150deg,#f4f6f7,#aab2b8);border:1px solid #9aa3aa;box-shadow:0 8px 20px rgba(100,110,118,.15)}
+.podium-place.p3{background:linear-gradient(150deg,#e5aa75,#9c5a2d);border:1px solid #8f4d23;box-shadow:0 8px 20px rgba(120,70,35,.16)}
+.podium-place.p1 b,.podium-place.p2 b,.podium-place.p3 b{background:rgba(16,36,29,.84)}
+.podium-place.p1 span,.podium-place.p1 strong,.podium-place.p2 span,.podium-place.p2 strong,.podium-place.p3 span,.podium-place.p3 strong{color:#10241d}
+
+/* Kompakt och informationsrik percentiltrappa */
+.percentile-card{background:linear-gradient(155deg,#fffdf7,#edf5e9)}
+.percentile-ladder{display:block;margin-top:14px}
+.percentile-overview{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:center;margin-bottom:12px;padding:11px;border-radius:12px;background:#eef3ec}
+.percentile-overview>div{display:flex;flex-direction:column}.percentile-overview strong{font-size:1.55rem;color:var(--forest)}.percentile-overview span,.percentile-overview p{font-size:.62rem;color:var(--muted)}.percentile-overview p{margin:0;line-height:1.4}
+.percentile-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.percentile-tile{padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.percentile-tile>span{display:block;margin-bottom:7px;font-size:.65rem;font-weight:850;color:var(--ink)}
+.percentile-sex-values{display:grid;grid-template-columns:1fr 1fr;gap:5px}.percentile-sex-values>div{padding:7px 8px;border-radius:8px;color:#fff}.percentile-sex-values .male{background:var(--male)}.percentile-sex-values .female{background:var(--female)}
+.percentile-sex-values small,.percentile-sex-values strong{display:block}.percentile-sex-values small{font-size:.52rem;opacity:.8}.percentile-sex-values strong{font-size:.72rem;margin-top:2px}
+
+/* Hall of Fame: fem kvinnor och fem män */
+.hall-card{min-height:520px}.hall-list{max-height:none;overflow:visible}.hall-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hall-sex-group{min-width:0}.hall-sex-group h4{margin:3px 0 9px;padding:7px 10px;border-radius:9px;font-size:.78rem}.hall-sex-group.women h4{background:rgba(219,39,119,.11);color:var(--female)}.hall-sex-group.men h4{background:rgba(37,99,235,.11);color:var(--male)}
+.hall-row{grid-template-columns:26px minmax(0,1fr) auto;align-items:start;padding:9px}.hall-row span em{display:block;margin-top:4px;font-size:.59rem;font-style:normal;font-weight:500;line-height:1.35;color:var(--muted);white-space:normal}.hall-row>i{font-size:.62rem;font-style:normal;font-weight:900;color:var(--green);white-space:nowrap}.hall-row>u{grid-column:2/4;text-decoration:none;font-size:.56rem;color:var(--orange);text-align:right}.compact-empty{padding:20px!important;font-size:.68rem}
+
+/* Resultatdatabas */
+.results-panel .table-actions{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.results-panel .table-actions small{font-size:.62rem;color:var(--muted)}
+
+/* Ny löparpopup med riktig GPS-rutt och delsträckor */
+#runnerDialog{width:min(1120px,calc(100% - 28px))}.runner-detail{padding:30px}.runner-map-section{margin:20px 0}.runner-map-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}.runner-map-heading h3{margin:0;font-size:1.35rem}.runner-route-map{height:min(50vh,470px);min-height:360px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#dfe9df}.runner-route-map svg{display:block;width:100%;height:100%}.runner-map-label{font:800 12px/1 Inter,ui-sans-serif,system-ui;fill:#10241d;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}.runner-segment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.runner-segment-card{display:flex;gap:8px;align-items:center;padding:9px;border-radius:11px;background:#eef3ec}.runner-segment-card>i{width:7px;height:34px;border-radius:99px;flex:none}.runner-segment-card strong,.runner-segment-card small{display:block}.runner-segment-card strong{font-size:.65rem}.runner-segment-card small{font-size:.57rem;color:var(--muted);margin-top:3px}.runner-split-details{margin-top:18px}.runner-split-details summary{cursor:pointer;padding:11px 13px;border-radius:11px;background:#eef3ec;font-weight:800;color:var(--forest)}.runner-split-details[open] summary{margin-bottom:10px}.runner-map-empty{padding:45px;text-align:center;color:var(--muted);background:#eef3ec;border-radius:14px}
+
+/* Kartan och övriga tabeller får inte spränga sidbredden */
+.class-map-scroll,.class-heatmap-wrap{max-width:100%;overflow:auto}.class-map-grid{width:100%;min-width:760px}
+
+@media(max-width:1100px){
+  .insight-grid,.world-grid,.intelligence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insight-grid>.insight-card,.insight-grid>.insight-card:nth-child(n),.world-card,.world-card.wide,.world-card.full,.segment-lab,.percentile-card,.history-lab,.field-flow-card,.hall-card,.fingerprint-card{grid-column:span 1}
+  .world-card.full{grid-column:1/-1}.hall-card{grid-column:1/-1}
+  .runner-segment-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .insight-grid,.world-grid,.intelligence-grid{grid-template-columns:1fr!important}
+  .insight-grid>.insight-card,.insight-grid>.insight-card:nth-child(n),.world-card,.world-card.wide,.world-card.full,.segment-lab,.percentile-card,.history-lab,.field-flow-card,.hall-card,.fingerprint-card{grid-column:1!important}
+  .toolbar{grid-template-columns:1fr!important}.toolbar label,.toolbar button{grid-column:1!important}
+  .club-controls{grid-template-columns:1fr!important}.club-search-suggestions{position:fixed;left:10px;right:10px;top:18vh;max-height:62vh}
+  .percentile-grid{grid-template-columns:1fr}.hall-columns{grid-template-columns:1fr}.hall-card{min-height:0}.runner-map-heading{align-items:flex-start;flex-direction:column}.runner-route-map{min-height:300px;height:42vh}.runner-segment-grid{grid-template-columns:1fr}.runner-detail{padding:21px 12px}.detail-kpis{grid-template-columns:1fr 1fr}.results-panel .table-actions{align-items:flex-start}
+}
+
+/* Förhindra att breda analyskort pressar ut mobilvyn */
+.insight-grid,.world-grid,.intelligence-grid{min-width:0;max-width:100%}
+.insight-card,.world-card,.lab-card{min-width:0;max-width:100%}
+.lab-controls,.podium,.segment-ranking,.percentile-ladder,.runner-history,.field-flow,.hall-list,.fingerprint{min-width:0;max-width:100%}
+select,input{min-width:0}
+@media(max-width:720px){
+  .intelligence-grid{width:100%;min-width:0}
+  .lab-card{width:100%;min-width:0;overflow:hidden}
+  .lab-controls{display:grid;grid-template-columns:minmax(0,1fr)!important}
+  .lab-controls label,.lab-controls select{width:100%;min-width:0}
+}
+
+/* Resultattabellen får rulla inne i sitt kort på små skärmar utan att göra hela sidan bred */
+.results-panel{min-width:0;overflow:hidden}
+.results-panel .table-wrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+@media(max-width:720px){
+  .results-panel table{min-width:620px}
+}
+
+/* Sidan hålls inom mobilens viewport; avsedda listor och tabeller rullar i sina egna behållare */
+html,body{max-width:100%;overflow-x:hidden}
+
+
+/* --- 2026-07-11 final review adjustments --- */
+.placement-head-tools{margin-left:auto}
+.placement-sex-toggles{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sex-toggle{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:.68rem;font-weight:850;cursor:pointer;user-select:none}
+.sex-toggle input{accent-color:var(--green);margin:0}.sex-toggle.male{box-shadow:inset 0 0 0 1px rgba(37,99,235,.12)}.sex-toggle.female{box-shadow:inset 0 0 0 1px rgba(219,39,119,.12)}
+.target-select-wrap{display:block;margin-top:8px}.target-select-wrap span{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-bottom:6px}.target-select-wrap select{margin-top:0}
+.gender-world .world-grid>.world-card{grid-column:span 6!important}.class-world .world-grid>.world-card{grid-column:span 6!important}
+.class-world .class-heatmap-wrap,.class-world #classHeatmap{flex:1}.class-world .class-heatmap-wrap{min-height:300px}
+.hall-card{min-height:560px}.hall-row{min-height:98px}.hall-row span strong{display:block;line-height:1.25}.hall-row span small{display:block;margin-top:2px}
+@media(max-width:980px){.gender-world .world-grid>.world-card,.class-world .world-grid>.world-card{grid-column:span 1!important}.placement-head-tools{width:100%;margin-left:0}}

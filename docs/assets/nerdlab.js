@@ -9,6 +9,7 @@ const nTime=s=>typeof fmtTime==='function'?fmtTime(s):(s==null?'–':new Date(s*
 const activeRace=()=>state.data.races.find(r=>r.id===state.raceId);
 const splitMap=id=>new Map(state.data.splits.filter(s=>s.result_id===id).map(s=>[s.sequence_no,s]));
 const resultNameKey=r=>String(r.canonical_name||r.name_as_published||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const nSex=r=>{const x=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(x)?'F':['M','H'].includes(x)?'M':'U'};
 
 function initNerdLab(){
   if(nerd.ready||!window.ULTRAVASAN_DATA||typeof state==='undefined'||!state.data)return;
@@ -72,10 +73,12 @@ function renderSegmentLab(){
   n$$('.segment-row').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
 }
 function renderPercentiles(){
-  const el=n$('#percentileLadder');if(!el)return;const times=state.filtered.map(r=>r.finish_seconds).filter(Number.isFinite);if(times.length<2){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
-  const levels=[[1,.01,'Elit'],[5,.05,'Topp 5 %'],[10,.10,'Topp 10 %'],[25,.25,'Övre kvartilen'],[50,.50,'Median'],[75,.75,'Tre fjärdedelar']];
-  el.innerHTML=levels.map(([p,q,label],i)=>`<div class="percentile-step" style="--w:${100-p*.72}%"><span>${label}</span><strong>${nTime(nQuantile(times,q))}</strong><em>${Math.max(1,Math.round(times.length*q))} av ${times.length}</em></div>`).join('');
+  const el=n$('#percentileLadder');if(!el)return;const rows=state.filtered.filter(r=>Number.isFinite(Number(r.finish_seconds))),men=rows.filter(r=>nSex(r)==='M').map(r=>Number(r.finish_seconds)),women=rows.filter(r=>nSex(r)==='F').map(r=>Number(r.finish_seconds));
+  if(men.length<2&&women.length<2){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
+  const levels=[[.01,'Topp 1 %'],[.05,'Topp 5 %'],[.10,'Topp 10 %'],[.25,'Topp 25 %'],[.50,'Median'],[.75,'75-percentilen']];
+  el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i urvalet</span></div><p>Tiden visar gränsen för respektive nivå. Lägre tid är bättre.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile"><span>${label}</span><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
 }
+
 function renderFieldFlow(){
   const el=n$('#fieldFlow');if(!el)return;
   const rows=state.filtered,dns=rows.filter(r=>String(r.status||'').toUpperCase()==='DNS'),starters=rows.filter(r=>String(r.status||'').toUpperCase()!=='DNS');
@@ -107,19 +110,17 @@ function renderHall(){
     consistent:'Minst tidsspridning mellan snabbaste och långsammaste lopp för löpare med minst tre målgångar.',
     chargers:'Flest vunna totalplaceringar från Evertsberg till Mora i ett och samma lopp.'
   };
-  if(explain)explain.textContent=copy[nerd.hall];
+  if(explain)explain.textContent=copy[nerd.hall]+' Fem kvinnor och fem män visas när underlaget räcker.';
   let rows=[];
-  if(nerd.hall==='veterans')rows=histories.map(x=>({...x,completed:x.rows.filter(r=>r.finish_seconds)})).filter(x=>x.completed.length>1).map(x=>({...x,rows:x.completed,score:x.completed.length,label:`${x.completed.length} fullföljda lopp`})).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='improved')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>1).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${state.data.races.find(q=>q.id===first.race_id)?.year} → ${state.data.races.find(q=>q.id===last.race_id)?.year}`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='consistent')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>2).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`bara ${Math.round(range/60)} min mellan bäst och sämst`,detail:`${f.length} målgångar`}}).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='chargers')rows=state.data.results.map(r=>{
-    const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);
-    if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);
-    return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`plats ${mid.place_overall} i Evertsberg → ${finish.place_overall} i Mora`}:null;
-  }).filter(Boolean).sort((a,b)=>b.score-a.score);
-  el.innerHTML=rows.length?rows.slice(0,10).map((x,i)=>{const r=x.rows.at(-1),years=x.rows.map(a=>state.data.races.find(q=>q.id===a.race_id)?.year).filter(Boolean),detail=x.detail||(years.length>1?`${Math.min(...years)}–${Math.max(...years)}`:String(years[0]||''));return `<button class="hall-row" data-id="${r.id}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(detail)}</small></span><em>${nEsc(x.label)}</em><i aria-hidden="true">Karta ↗</i></button>`}).join(''):'<div class="empty">Underlaget räcker inte för denna utmärkelse.</div>';
+  if(nerd.hall==='veterans')rows=histories.map(x=>({...x,completed:x.rows.filter(r=>r.finish_seconds)})).filter(x=>x.completed.length>1).map(x=>{const years=x.completed.map(r=>state.data.races.find(q=>q.id===r.race_id)?.year).filter(Boolean);return{...x,rows:x.completed,score:x.completed.length,label:`${x.completed.length} fullföljda lopp`,detail:`${Math.min(...years)}–${Math.max(...years)}`,reason:`Har fullföljt ${x.completed.length} Ultravasan under ${years.length} registrerade loppår.`}}).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='improved')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>1).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds,fy=state.data.races.find(q=>q.id===first.race_id)?.year,ly=state.data.races.find(q=>q.id===last.race_id)?.year;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${fy} → ${ly}`,reason:`Förbättrade sluttiden från ${nTime(first.finish_seconds)} till ${nTime(last.finish_seconds)}.`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='consistent')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>2).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`${Math.round(range/60)} min spridning`,detail:`${f.length} målgångar`,reason:`Skillnaden mellan snabbaste och långsammaste lopp är bara ${Math.round(range/60)} minuter över ${f.length} målgångar.`}}).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='chargers')rows=state.data.results.map(r=>{const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`${mid.place_overall} → ${finish.place_overall}`,reason:`Avancerade från plats ${mid.place_overall} i Evertsberg till plats ${finish.place_overall} i Mora.`}:null}).filter(Boolean).sort((a,b)=>b.score-a.score);
+  const renderGroup=(sex,title)=>{const list=rows.filter(x=>nSex(x.rows.at(-1))===sex).slice(0,5);return `<section class="hall-sex-group ${sex==='F'?'women':'men'}"><h4>${title}</h4>${list.length?list.map((x,i)=>{const r=x.rows.at(-1);return `<button class="hall-row" data-id="${r.id}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(x.detail||'')}</small><em>${nEsc(x.reason||x.label)}</em></span><i>${nEsc(x.label)}</i><u aria-hidden="true">Karta ↗</u></button>`}).join(''):'<div class="empty compact-empty">Underlaget räcker inte till fem placeringar.</div>'}</section>`};
+  el.innerHTML=`<div class="hall-columns">${renderGroup('F','Kvinnor')}${renderGroup('M','Män')}</div>`;
   n$$('.hall-row').forEach(b=>b.onclick=()=>openHallMap(Number(b.dataset.id)));
 }
+
 
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];
 function hallRouteForYear(year){
