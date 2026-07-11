@@ -166,3 +166,19 @@ main{margin-top:-64px}
   .class-heatmap-table td{font-size:.72rem;padding:12px 6px;min-width:84px}
   .class-heatmap-table .heat-class{font-size:.72rem;padding:12px 10px}
 }
+
+/* Korrigerad fartkarta: klasser i vänsterkolumnen och delsträckor i rätt kolumner */
+#classHeatmap.class-heatmap-wrap{width:100%;max-width:100%;overflow:hidden;border:0;background:transparent}
+.class-map-scroll{width:100%;max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:#fff}
+.class-map-grid{display:grid;grid-template-columns:88px repeat(var(--segment-count),minmax(64px,1fr));width:100%;min-width:720px;max-width:100%;overflow:hidden}
+.class-map-corner,.class-map-head,.class-map-class,.class-map-cell{min-height:46px;border-right:1px solid rgba(16,36,29,.08);border-bottom:1px solid rgba(16,36,29,.08);display:grid;place-items:center}
+.class-map-corner,.class-map-head{background:#edf2e9;color:var(--muted);font-size:.64rem;font-weight:850;text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:8px 5px}
+.class-map-corner{justify-items:start;padding-left:12px}
+.class-map-class{border-radius:0;background:#fff;font-size:.74rem;font-weight:900;text-align:left;justify-items:start;padding:10px 12px;color:var(--ink)}
+.class-map-class:hover{background:#f5f7f4;filter:none}
+.class-map-cell{font-size:.74rem;font-weight:850;color:#10241d;padding:10px 5px;text-align:center}
+@media(max-width:760px){
+  .class-map-grid{min-width:690px;grid-template-columns:74px repeat(var(--segment-count),minmax(66px,1fr))}
+  .class-map-corner,.class-map-head{font-size:.58rem;padding:7px 4px}
+  .class-map-class,.class-map-cell{font-size:.68rem;padding:9px 7px}
+}

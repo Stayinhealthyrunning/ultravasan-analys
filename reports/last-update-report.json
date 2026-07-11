@@ -1,16 +1,15 @@
 {
-  "installed_at_utc": "2026-07-11T13:58:11.286119+00:00",
-  "name": "Klassordning och tydligare fartkarta",
-  "version": "2026.07.11.classsort1",
-  "description": "Sorterar klasser konsekvent kvinnor efter ålder följt av män efter ålder i klassfilter, Klasslabbet och historik. Bygger om fartkartan för klasser till en tydligare tabell där varje klass ligger rakt under varandra i vänsterkolumnen.",
+  "installed_at_utc": "2026-07-11T14:18:08.836166+00:00",
+  "name": "Korrigerad fartkarta och individuella klubbjämförelser",
+  "version": "2026.07.11.heatmap2",
+  "description": "Korrigerar fartkartan så att varje klass ligger på en egen rad och medianfarten hamnar under rätt delsträcka. Kartan håller sig inom statistikrutans bredd och blir horisontellt rullbar endast på små skärmar. Tar samtidigt bort samtliga lagfunktioner och lagtexter eftersom Ultravasan är en individuell tävling.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/Eldspar-till-Mora.mp3",
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
     "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "456c0f334489d0164d1bc0279dfdd5f3f3f63dd0510f9e2c053d6d142e69c55b"
+  "manifest_sha256": "606a0e61e59aca900213c874dd5b70fffff7a26d9f0de2773ae0041048b7a1e9"
 }
