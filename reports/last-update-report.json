@@ -1,8 +1,8 @@
 {
-  "installed_at_utc": "2026-07-11T13:46:19.490226+00:00",
-  "name": "Ny kartmusik, förklaringar, sökförslag och mobilförbättring",
-  "version": "2026.07.11.mobile2",
-  "description": "Ersätter kartduellens musik med Ultravasan 90, inför enhetliga klickbara informationsikoner med förklaringar i hela verktyget, återställer namnförslag i löparsökningen, byter Könslinsen till Genusperspektiv, förbättrar mobilvy och anpassar statistikrutornas höjd till innehållet.",
+  "installed_at_utc": "2026-07-11T13:58:11.286119+00:00",
+  "name": "Klassordning och tydligare fartkarta",
+  "version": "2026.07.11.classsort1",
+  "description": "Sorterar klasser konsekvent kvinnor efter ålder följt av män efter ålder i klassfilter, Klasslabbet och historik. Bygger om fartkartan för klasser till en tydligare tabell där varje klass ligger rakt under varandra i vänsterkolumnen.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/Eldspar-till-Mora.mp3",
@@ -12,5 +12,5 @@
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "1769fd3f8549c7f5cf4c8727b3e4c28d76c254640dee5d8e9b98984d227b6bcc"
+  "manifest_sha256": "456c0f334489d0164d1bc0279dfdd5f3f3f63dd0510f9e2c053d6d142e69c55b"
 }

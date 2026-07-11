@@ -148,3 +148,21 @@ main{margin-top:-64px}
 @media(max-width:430px){
   .kpis{grid-template-columns:1fr 1fr}.kpis article{padding:11px}.kpis strong{font-size:1.25rem}.gender-kpis article>div,.club-profile-kpis,.target-result{grid-template-columns:1fr}.chart,.compact-chart,.world-chart{height:220px!important}.percentile-sex-step{grid-template-columns:70px 1fr}.percentile-dual{grid-template-columns:1fr}.hero-logo{width:96px}.hero-copy h1{font-size:2.25rem}.world-card h3,.insight-card h3,.lab-card h3{font-size:1.08rem}.info-popup{font-size:13px}.main-runner-suggestions{top:105px}}
 .world-hero.has-info-tip,.nerd-hero.has-info-tip,.studio-head.has-info-tip{overflow:visible}
+
+/* Klassordning och tydligare fartkarta */
+.class-heatmap-wrap{overflow:auto;margin-top:14px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.class-heatmap-table{width:100%;min-width:880px;border-collapse:separate;border-spacing:0}
+.class-heatmap-table thead th{position:sticky;top:0;z-index:2;background:#edf2e9;color:var(--muted);font-size:.68rem;font-weight:800;text-align:center;padding:14px 8px;border-right:1px solid rgba(16,36,29,.08);border-bottom:1px solid rgba(16,36,29,.08)}
+.class-heatmap-table thead th:first-child{left:0;z-index:3;text-align:left;padding-left:14px}
+.class-heatmap-table tbody th{position:sticky;left:0;z-index:1;background:#fff;border-right:1px solid rgba(16,36,29,.08);border-bottom:1px solid rgba(16,36,29,.08);padding:0;min-width:84px}
+.class-heatmap-table td{min-width:92px;min-height:46px;text-align:center;font-size:.76rem;font-weight:850;color:#10241d;border-right:1px solid rgba(16,36,29,.08);border-bottom:1px solid rgba(16,36,29,.08);padding:14px 8px}
+.class-heatmap-table tr:last-child td,.class-heatmap-table tr:last-child th{border-bottom:none}
+.class-heatmap-table tr td:last-child,.class-heatmap-table tr th:last-child{border-right:none}
+.class-heatmap-table .heat-class{display:block;width:100%;height:100%;padding:14px 12px;text-align:left;background:#fff;font-size:.78rem;font-weight:900}
+.class-heatmap-table .heat-class:hover{background:#f5f7f4}
+@media (max-width:720px){
+  .class-heatmap-table{min-width:780px}
+  .class-heatmap-table thead th{font-size:.64rem;padding:12px 6px}
+  .class-heatmap-table td{font-size:.72rem;padding:12px 6px;min-width:84px}
+  .class-heatmap-table .heat-class{font-size:.72rem;padding:12px 10px}
+}
