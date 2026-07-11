@@ -1,16 +1,14 @@
 {
-  "installed_at_utc": "2026-07-10T16:10:09.465127+00:00",
-  "name": "Sälen-Mora splits hero och logotyp",
-  "version": "2026.07.10.hero2",
-  "description": "Byter namn och toppsektion till Sälen-Mora splits, lägger in ny fullbredds-hero med trailinspirerad logotyp och tar bort banprofilrutan till höger.",
+  "installed_at_utc": "2026-07-11T08:36:14.237066+00:00",
+  "name": "Könslinsen, Klasslabbet, Klubbarenan och mobilvy",
+  "version": "2026.07.11.1",
+  "description": "Könsuppdelar befintliga diagram i blått och rosa, lägger till Könslinsen, Klasslabbet, Klubbarenan, Sälen-Mora-index, klubbtopplistor, klubbdueller, delbara filter, årsspelare och omfattande mobilanpassning.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "OPPNA_ANALYSSIDAN.html",
-    "docs/assets/hero-trail-scene.svg",
-    "docs/assets/salen-mora-logo.svg",
+    "docs/assets/audience-analytics.js",
     "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "226d70e4417bbf45e800b75e84253503bed690c58618caf676757aec16b9ae6e"
+  "manifest_sha256": "e2b14cdcd5c2df585818f31f77484e5f832a6331c6535563504192f135583750"
 }
