@@ -1,15 +1,15 @@
 {
-  "installed_at_utc": "2026-07-11T15:55:03.605533+00:00",
-  "name": "Fix för könsval i Placeringsmotor",
-  "version": "2026.07.11.final3",
-  "description": "Korrigerar Tid mot placering så att kryssrutorna Män och Kvinnor verkligen filtrerar diagrammet. Båda är fortsatt valda som standard. Paketet återställer även den lokala informationsikonen och uppdaterar cacheversionerna.",
+  "installed_at_utc": "2026-07-11T16:02:05.040181+00:00",
+  "name": "Klubb/ort-val, informationsikoner och topplista",
+  "version": "2026.07.11.final4",
+  "description": "Återställer stabila informationsikoner som inbäddad SVG, tar bort förvalda klubb/ort-val, döljer den interna dropdown-listan och gör Snabbaste i urvalet till en scrollbar lista med upp till 20 löpare.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
-    "docs/assets/info-icon.svg",
+    "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "7d85a530ac861be406a1aa18d97be4c8ee8f8d4288229d8161146291f3cd5ef6"
+  "manifest_sha256": "d42ca6e919c10744477a5f6c6fd338416ca8a8627356e2f6e701c821067583ad"
 }

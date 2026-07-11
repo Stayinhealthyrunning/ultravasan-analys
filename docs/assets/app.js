@@ -371,12 +371,12 @@ function setupInfoInteractions(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.info-tip.open').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')})});
 }
 function addCardInfo(card,text){
-  if(!card||card.dataset.infoInstalled==='v3')return;
-  card.dataset.infoInstalled='v3';
+  if(!card||card.dataset.infoInstalled==='v4')return;
+  card.dataset.infoInstalled='v4';
   card.classList.add('has-info-tip');
   const tip=document.createElement('button');
   tip.type='button';tip.className='info-tip';tip.setAttribute('aria-label','Visa förklaring');tip.setAttribute('aria-expanded','false');
-  tip.innerHTML=`<img class="info-glyph" src="assets/info-icon.svg?v=20260711-final3" alt=""><span class="info-popup" role="tooltip">${esc(text)}</span>`;
+  tip.innerHTML=`<svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#1b7659" stroke-width="1.8"/><circle cx="12" cy="7.2" r="1.25" fill="#1b7659"/><path d="M10.8 10.3h1.8v6.1h1.3" fill="none" stroke="#1b7659" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="info-popup" role="tooltip">${esc(text)}</span>`;
   const head=[...card.children].find(x=>x.classList?.contains('panel-head'));
   if(head){
     const tools=[...head.children].find(x=>x.classList?.contains('chart-head-tools'));
@@ -398,7 +398,7 @@ function installInfoTooltips(){
   }));
   const generic=[...document.querySelectorAll('article.panel,section.panel,.world-hero,.nerd-hero,.studio-head,.kpis article')];
   generic.forEach(card=>{
-    if(card.dataset.infoInstalled==='v3')return;
+    if(card.dataset.infoInstalled==='v4')return;
     const heading=card.querySelector('h2,h3')?.textContent?.trim()||card.getAttribute('aria-label')||'den här delen';
     addCardInfo(card,`Visar ${heading.toLowerCase()} för det aktuella urvalet. Använd filtren högst upp för att ändra vilka resultat som ingår.`);
   });

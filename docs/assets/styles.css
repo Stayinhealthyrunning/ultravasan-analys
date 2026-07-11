@@ -349,3 +349,15 @@ html,body{max-width:100%;overflow-x:hidden}
 .class-world .class-heatmap-wrap,.class-world #classHeatmap{flex:1}.class-world .class-heatmap-wrap{min-height:300px}
 .hall-card{min-height:560px}.hall-row{min-height:98px}.hall-row span strong{display:block;line-height:1.25}.hall-row span small{display:block;margin-top:2px}
 @media(max-width:980px){.gender-world .world-grid>.world-card,.class-world .world-grid>.world-card{grid-column:span 1!important}.placement-head-tools{width:100%;margin-left:0}}
+
+
+/* 2026-07-11 final4: klubbval och stabila informationsikoner */
+[hidden]{display:none!important}
+#clubProfileSelect{display:none!important}
+.info-glyph{display:block!important;width:20px!important;height:20px!important;overflow:visible}
+.club-profile-placeholder{display:flex;flex-direction:column;gap:6px;padding:24px!important;text-align:left!important}
+.club-profile-placeholder strong{color:var(--forest);font-size:1rem}.club-profile-placeholder span{color:var(--muted);font-size:.76rem}
+.club-top-runners-list{max-height:330px;overflow-y:auto;overscroll-behavior:contain;padding-right:4px;scrollbar-gutter:stable}
+.club-top-runners-list::-webkit-scrollbar{width:8px}.club-top-runners-list::-webkit-scrollbar-thumb{background:#c7d2c9;border-radius:99px}.club-top-runners-list::-webkit-scrollbar-track{background:#edf1eb;border-radius:99px}
+.club-top-runners button{min-height:30px}
+@media(max-width:620px){.club-top-runners-list{max-height:280px}}
