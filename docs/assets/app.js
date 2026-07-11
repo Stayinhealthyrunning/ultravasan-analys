@@ -9,7 +9,7 @@ const quantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),
 const hydrateData=d=>{const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});return d};
 
 async function load(){try{if(window.ULTRAVASAN_DATA){state.data=hydrateData(window.ULTRAVASAN_DATA);setup();return}const r=await fetch('data/ultravasan.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);state.data=hydrateData(await r.json());setup();}catch(e){console.error(e);$('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera att filen <code>data/ultravasan-data.js</code> finns bredvid webbplatsen.<br><small>${esc(e.message)}</small></p>`;}}
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}const races=state.data.races;const year=$('#yearFilter');year.innerHTML=races.slice().sort((a,b)=>b.year-a.year).map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value);year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['nameFilter','sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener(id==='nameFilter'?'input':'change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['nameFilter','sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$('#downloadCsv').onclick=downloadCsv;$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});$('#runnerDialog .dialog-close').onclick=()=>$('#runnerDialog').close();refreshFilters();applyFilters();setupMapCompare();setupStatsControls();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}const races=state.data.races;const year=$('#yearFilter');year.innerHTML=races.slice().sort((a,b)=>b.year-a.year).map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value);year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['nameFilter','sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener(id==='nameFilter'?'input':'change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['nameFilter','sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$('#downloadCsv').onclick=downloadCsv;$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});$('#runnerDialog .dialog-close').onclick=()=>$('#runnerDialog').close();refreshFilters();applyFilters();setupMapCompare();setupMainRunnerSearch();setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
 function raceResults(){return state.data.results.filter(r=>r.race_id===state.raceId)}
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const q=$('#nameFilter').value.trim().toLowerCase(),sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!q||`${r.name_as_published} ${r.club||''} ${r.bib||''}`.toLowerCase().includes(q))&&(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));const key=state.sortKey,dir=state.sortDir;state.filtered.sort((a,b)=>{let av=a[key],bv=b[key];if(av==null)av=typeof bv==='string'?'\uffff':Infinity;if(bv==null)bv=typeof av==='string'?'\uffff':Infinity;return typeof av==='string'?av.localeCompare(bv,'sv')*dir:(av-bv)*dir});renderAll()}
@@ -224,49 +224,143 @@ function renderCompareSelection(){
   $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
 }
 
-const INFO_HELP=[
-  ['.compare-panel','Välj en till fem löpare och öppna en separat kartvy där deras beräknade positioner spelas upp. Officiella mellantider används som fasta hållpunkter.'],
+const MAIN_SEARCH_LIMIT=14;
+function setupMainRunnerSearch(){
+  const input=$('#nameFilter'),box=$('#mainRunnerSuggestions');
+  if(!input||!box||input.dataset.suggestionsReady)return;
+  input.dataset.suggestionsReady='1';
+  const show=()=>{
+    const q=input.value.trim().toLowerCase();
+    if(q.length<1){box.hidden=true;box.innerHTML='';return}
+    const rows=raceResults().filter(r=>`${r.name_as_published||''} ${r.club||''} ${r.bib||''}`.toLowerCase().includes(q));
+    rows.sort((a,b)=>{
+      const an=String(a.name_as_published||'').toLowerCase(),bn=String(b.name_as_published||'').toLowerCase();
+      const ap=an.startsWith(q)?0:1,bp=bn.startsWith(q)?0:1;
+      return ap-bp||(a.overall_place??Infinity)-(b.overall_place??Infinity)||an.localeCompare(bn,'sv');
+    });
+    const seen=new Set(),matches=[];
+    for(const r of rows){
+      const key=`${r.name_as_published}|${r.bib||''}|${r.race_id}`;
+      if(seen.has(key))continue;seen.add(key);matches.push(r);if(matches.length>=MAIN_SEARCH_LIMIT)break;
+    }
+    box.innerHTML=matches.length?matches.map(r=>`<button type="button" class="main-runner-suggestion" data-id="${r.id}"><span><strong>${esc(r.name_as_published)}</strong><small>${r.bib?'#'+esc(r.bib)+' · ':''}${esc(r.age_class||'Ingen klass')}${r.club?' · '+esc(r.club):''}</small></span><em>${r.finish_seconds?fmtTime(r.finish_seconds):esc(r.status||'–')}</em></button>`).join(''):'<div class="search-no-hit">Ingen löpare hittades</div>';
+    box.hidden=false;
+  };
+  input.addEventListener('input',show);
+  input.addEventListener('focus',show);
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){box.hidden=true;return}
+    if(e.key==='Enter'){
+      const first=box.querySelector('.main-runner-suggestion');
+      if(first){e.preventDefault();first.click()}
+    }
+  });
+  box.addEventListener('click',e=>{
+    const b=e.target.closest('.main-runner-suggestion');if(!b)return;
+    const r=state.data.results.find(x=>x.id===Number(b.dataset.id));if(!r)return;
+    input.value=r.name_as_published;box.hidden=true;state.page=1;applyFilters();
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.main-runner-picker'))box.hidden=true});
+}
+
+const INFO_HELP_EXTENDED=[
+  ['.analysis-nav','Navigera direkt till översikt, genusperspektiv, klassanalys, klubbstatistik, löparlista eller kartduell. Den aktuella vyn kan delas med länken Dela vy.'],
+  ['#overview','Filtrera hela analysen efter år, löpare, kön, åldersklass, klubb och status. Sökfältet visar namnförslag medan du skriver.'],
+  ['.compare-panel','Välj en till fem löpare och öppna en separat kartvy. Officiella mellantider används som fasta hållpunkter och positionen beräknas mellan kontrollerna.'],
   ['.kpis article:nth-child(1)','Antalet resultat som återstår efter de filter du har valt.'],
   ['.kpis article:nth-child(2)','Medianen är den mittersta sluttiden: hälften är snabbare och hälften långsammare.'],
   ['.kpis article:nth-child(3)','Den snabbaste registrerade sluttiden i det aktuella urvalet.'],
-  ['.kpis article:nth-child(4)','Andelen i urvalet som har en registrerad måltid.'],
-  ['#histogram','Visar hur sluttiderna fördelar sig. Varje stapel samlar löpare inom ett tidsintervall.'],
-  ['#paceChart','Visar medianhastigheten på varje delsträcka i km/h. Sälen är startpunkten och visas därför som 0 km/h.'],
-  ['#placementScatter','Varje punkt är en löpare. Diagrammet visar sambandet mellan sluttid och slutplacering.'],
+  ['.kpis article:nth-child(4)','Andelen i urvalet som har en registrerad måltid. DNS och DNF saknar normalt sluttid.'],
+  ['#histogram','Visar hur sluttiderna fördelar sig. Varje stapel samlar löpare inom ett tidsintervall och delas upp efter kön när båda grupperna finns i urvalet.'],
+  ['#paceChart','Visar medianhastigheten på varje delsträcka. Sälen är startpunkten och visas därför som 0 km/h.'],
+  ['.stats-studio .studio-head','Statistikstudion sammanfattar sambandet mellan tid, placering, avhopp, delsträckor och historisk utveckling för det aktuella urvalet.'],
+  ['#placementScatter','Varje punkt är en löpare. Diagrammet visar sambandet mellan sluttid och slutplacering. Håll över en punkt för detaljer.'],
   ['.target-card','Dra reglaget för att se vilken ungefärlig placering en viss sluttid motsvarar i det valda urvalet.'],
-  ['#dnfFunnel','Visar var registrerade DNF-löpare senast passerade en kontroll. DNS räknas inte som startande och blandas därför inte ihop med DNF.'],
-  ['#segmentHeatmap','Sammanfattar medianfart och spridning för varje delsträcka.'],
-  ['#overtakeTable','Visar både den totala klättringen i resultatfältet och den enskilda delsträcka där löparen vann flest placeringar.'],
-  ['#yearTrend','Jämför median sluttid mellan alla importerade loppår. Den lodräta linjen vid varje år visar intervallet där hälften av sluttiderna ligger.'],
-  ['#pacingCards','En snabb sammanfattning av det aktuella urvalets tider, kön och klubbar.'],
+  ['#dnfFunnel','Visar var registrerade DNF-löpare senast passerade en kontroll. DNS räknas inte som startande.'],
+  ['#segmentHeatmap','Sammanfattar medianfart och spridning på varje delsträcka. Uppdelningen gör det lättare att se var tempot förändras.'],
+  ['#overtakeTable','Visar både den totala klättringen i resultatfältet och den delsträcka där löparen vann flest placeringar.'],
+  ['#yearTrend','Jämför median sluttid mellan importerade loppår. Spridningen visar intervallet där den mittersta hälften av sluttiderna ligger.'],
+  ['#pacingCards','En snabb sammanfattning av det aktuella urvalets tider, deltagare och prestationsmönster.'],
+  ['#kon .world-hero','Genusperspektivet jämför deltagande, fart, fullföljande och historisk utveckling för män och kvinnor med samma övriga filter.'],
+  ['#genderPaceChart','Jämför männens och kvinnornas medianfart på varje delsträcka.'],
+  ['#genderRetentionChart','Visar hur mycket fart respektive grupp behåller jämfört med sin egen öppning. 100 betyder samma nivå som första segmentet.'],
+  ['#genderHistoryChart','Visar hur deltagande och fullföljande för män och kvinnor har förändrats mellan loppåren.'],
+  ['#genderInsights','Automatiska textinsikter som lyfter fram skillnader och mönster i det valda urvalet.'],
+  ['#klasser .world-hero','Klasslabbet jämför åldersklasser, delsträckor, historik och prestation relativt den egna klassen.'],
+  ['#classCards','Klicka på en klass för att välja eller avmarkera den i Klassduellen. Korten visar klassens storlek och centrala resultatmått.'],
+  ['#classHeatmap','Raderna är åldersklasser och kolumnerna delsträckor. Färgen visar klassens medianfart.'],
+  ['#classCompareChart','Jämför fartkurvor för upp till fyra valda åldersklasser.'],
+  ['#classIndexTable','Sälen–Mora-index jämför en löpare med andra i samma år, kön och åldersklass. 50 är mitt i gruppen och 90 är bättre än 90 procent.'],
+  ['#classHistoryChart','Visar hur valda klassers mediantider och DNF-andelar utvecklats över åren.'],
+  ['#klubbar .world-hero','Klubbarenan jämför deltagande, lagresultat, bredd, fullföljande och utveckling för klubbar. Små underlag märks tydligt.'],
+  ['.club-controls','Välj en klubbprofil och upp till fyra klubbar att jämföra.'],
+  ['#clubProfile','Klubbprofilen visar deltagande, fullföljande, median, klassbredd och de snabbaste löparna i urvalet.'],
+  ['#clubRankings','Byt mått för att rangordna klubbar efter exempelvis antal startande, tremannalag, bredd eller stark avslutning.'],
+  ['#clubDna','Fem relativa klubbmått: fart, bredd, uthållighet, avslutning och deltagande.'],
+  ['#clubCompareChart','Jämför medianfarten genom loppet för upp till fyra klubbar.'],
+  ['#clubHistoryChart','Visar klubbens starter, målgångar och mediantid över åren.'],
+  ['.nerd-hero','Race Intelligence Lab samlar delsträckejämförelser, percentiler, flerårshistorik, fältflöde och topplistor.'],
+  ['#raceStories','Automatiska berättelser som sammanfattar det valda loppårets mest framträdande resultat och mönster.'],
   ['#segmentRanking','Välj två kontroller och jämför vilka löpare som var snabbast eller avancerade mest just där.'],
-  ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika delar av resultatfältet.'],
-  ['#runnerHistory','Sök en löpare och jämför personens genomförda lopp över flera år.'],
-  ['#fieldFlow','Visar faktiska startande som når varje kontroll. DNS räknas bort och saknade enstaka passager fylls försiktigt ut när en senare kontroll eller målgång finns registrerad.'],
-  ['#hallOfFame','Fyra tydligt definierade topplistor. Klicka på en löpare för att se loppåret på en riktig karta med alla delsträckor markerade.'],
-  ['#raceFingerprint','Jämför det valda loppåret med den historiska normalnivån.'],
-  ['.results-panel','Den sök- och sorterbara resultattabellen. Klicka på en rad för löparens kontrolltider.'],
+  ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika nivåer bland fullföljande löpare.'],
+  ['#runnerHistory','Sök en löpare och jämför personens genomförda lopp, tider och utveckling över flera år.'],
+  ['#fieldFlow','Visar hur många faktiska startande som når varje kontroll. DNF syns efter den senast registrerade passagen och DNS räknas bort.'],
+  ['#hallOfFame','Fyra definierade topplistor. Klicka på ett namn för en karta över det aktuella loppåret och löparens delsträckor.'],
+  ['#raceFingerprint','Jämför det valda loppåret med den historiska normalnivån inom flera egenskaper.'],
+  ['.results-panel','Den sök- och sorterbara resultattabellen. Klicka på en rad för löparens kontrolltider och fartprofil.'],
   ['.source-panel','Friskrivning från ansvar samt uppgifter om när databasen byggdes och hur många resultat och mellantider den innehåller.']
 ];
+
+let infoInteractionsReady=false,infoTipsUpgraded=false;
+function setupInfoInteractions(){
+  if(infoInteractionsReady)return;infoInteractionsReady=true;
+  document.addEventListener('click',e=>{
+    const tip=e.target.closest('.info-tip');
+    if(tip){
+      e.preventDefault();e.stopPropagation();
+      const opening=!tip.classList.contains('open');
+      document.querySelectorAll('.info-tip.open').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')});
+      if(opening){tip.classList.add('open');tip.setAttribute('aria-expanded','true')}
+      return;
+    }
+    document.querySelectorAll('.info-tip.open').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')});
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.info-tip.open').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')})});
+}
+function addCardInfo(card,text){
+  if(!card||card.dataset.infoInstalled==='v3')return;
+  card.dataset.infoInstalled='v3';
+  card.classList.add('has-info-tip');
+  const tip=document.createElement('button');
+  tip.type='button';tip.className='info-tip';tip.setAttribute('aria-label','Visa förklaring');tip.setAttribute('aria-expanded','false');
+  tip.innerHTML=`<span class="info-glyph" aria-hidden="true">i</span><span class="info-popup" role="tooltip">${esc(text)}</span>`;
+  const head=[...card.children].find(x=>x.classList?.contains('panel-head'));
+  if(head){
+    const tools=[...head.children].find(x=>x.classList?.contains('chart-head-tools'));
+    (tools||head).appendChild(tip);
+  }else{
+    tip.classList.add('card-info');card.appendChild(tip);
+  }
+}
+window.addCardInfo=addCardInfo;
 function installInfoTooltips(){
-  INFO_HELP.forEach(([selector,text])=>{
-    const seed=document.querySelector(selector);if(!seed)return;
-    const card=seed.matches('article,.panel')?seed:seed.closest('article,.panel');if(!card||card.dataset.infoInstalled)return;
-    card.dataset.infoInstalled='1';
-    const tip=document.createElement('span');tip.className='info-tip';tip.tabIndex=0;tip.setAttribute('role','button');tip.setAttribute('aria-label','Mer information');
-    tip.innerHTML=`i<span class="info-popup">${esc(text)}</span>`;
-    const head=card.querySelector('.panel-head');
-    if(head){
-      // Hitta endast direkta barn. querySelector('.pill') kan hitta en pill inuti
-      // .chart-head-tools; då får insertBefore inte använda pillen som referensbarn
-      // till panel-head och webbläsaren kastar NotFoundError.
-      const tools=[...head.children].find(child=>child.classList?.contains('chart-head-tools'));
-      const directPill=[...head.children].find(child=>child.classList?.contains('pill'));
-      if(tools)tools.prepend(tip);
-      else if(directPill)head.insertBefore(tip,directPill);
-      else head.appendChild(tip);
-    }else{tip.classList.add('card-info');card.appendChild(tip)}
+  if(!infoTipsUpgraded){
+    document.querySelectorAll('.info-tip').forEach(x=>x.remove());
+    document.querySelectorAll('[data-info-installed]').forEach(x=>delete x.dataset.infoInstalled);
+    infoTipsUpgraded=true;
+  }
+  INFO_HELP_EXTENDED.forEach(([selector,text])=>document.querySelectorAll(selector).forEach(seed=>{
+    const card=seed.matches('article,.panel,.world-hero,.nerd-hero,.studio-head')?seed:seed.closest('article,.panel,.world-hero,.nerd-hero,.studio-head');
+    if(card)addCardInfo(card,text);
+  }));
+  const generic=[...document.querySelectorAll('article.panel,section.panel,.world-hero,.nerd-hero,.studio-head,.kpis article')];
+  generic.forEach(card=>{
+    if(card.dataset.infoInstalled==='v3')return;
+    const heading=card.querySelector('h2,h3')?.textContent?.trim()||card.getAttribute('aria-label')||'den här delen';
+    addCardInfo(card,`Visar ${heading.toLowerCase()} för det aktuella urvalet. Använd filtren högst upp för att ändra vilka resultat som ingår.`);
   });
 }
+window.refreshInfoTips=installInfoTooltips;
+
 
 load();

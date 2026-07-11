@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora.">
   <title>Sälen-Mora splits</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260710-hero1">
+  <link rel="stylesheet" href="assets/styles.css?v=20260711-mobile2">
 </head>
 <body>
   <header class="hero hero-salenmora">
@@ -26,7 +26,7 @@
     <nav class="analysis-nav panel" aria-label="Analysområden">
       <div class="analysis-nav-scroll">
         <button class="analysis-nav-button active" data-target="overview">Översikt</button>
-        <button class="analysis-nav-button" data-target="kon">Könslinsen</button>
+        <button class="analysis-nav-button" data-target="kon">Genusperspektiv</button>
         <button class="analysis-nav-button" data-target="klasser">Klasslabbet</button>
         <button class="analysis-nav-button" data-target="klubbar">Klubbarenan</button>
         <button class="analysis-nav-button" data-target="lopare">Löpare</button>
@@ -40,7 +40,10 @@
     <div id="dataNotice" class="data-notice" hidden></div>
     <section id="overview" class="toolbar panel" aria-label="Filter">
       <label>År<select id="yearFilter"></select></label>
-      <label>Sök löpare<input id="nameFilter" type="search" placeholder="Namn, klubb eller startnummer"></label>
+      <div class="main-runner-picker">
+        <label>Sök löpare<input id="nameFilter" type="search" autocomplete="off" placeholder="Namn, klubb eller startnummer"></label>
+        <div id="mainRunnerSuggestions" class="main-runner-suggestions" hidden></div>
+      </div>
       <label>Kön<select id="sexFilter"><option value="">Alla</option><option value="M">Män</option><option value="F">Kvinnor</option></select></label>
       <label>Åldersklass<select id="classFilter"><option value="">Alla klasser</option></select></label>
       <label>Klubb<select id="clubFilter"><option value="">Alla klubbar</option></select></label>
@@ -123,9 +126,9 @@
       </div>
     </section>
 
-    <section id="kon" class="audience-world gender-world" aria-label="Könsuppdelad statistik">
+    <section id="kon" class="audience-world gender-world" aria-label="Statistik ur ett genusperspektiv">
       <div class="world-hero gender-hero">
-        <div><p class="eyebrow">KÖNSLINSEN</p><h2>Två lopp i samma spår</h2><p>Jämför deltagande, sluttider, fartfördelning och avhopp för män och kvinnor. Blått visar män och rosa visar kvinnor.</p></div>
+        <div><p class="eyebrow">GENUSPERSPEKTIV</p><h2>Två lopp i samma spår</h2><p>Jämför deltagande, sluttider, fartfördelning och avhopp för män och kvinnor.</p></div>
         <div class="world-legend"><span><i class="male"></i>Män</span><span><i class="female"></i>Kvinnor</span></div>
       </div>
       <div id="genderKpis" class="gender-kpis"></div>
@@ -268,8 +271,8 @@
   <div id="loading" class="loading"><div></div><p>Läser resultatdatabasen…</p></div>
   <script src="data/ultravasan-data.js"></script>
   <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-  <script src="assets/app.js?v=20260711-fix1"></script>
+  <script src="assets/app.js?v=20260711-mobile2"></script>
   <script src="assets/nerdlab.js?v=20260710-4"></script>
-  <script src="assets/audience-analytics.js?v=20260711-1"></script>
+  <script src="assets/audience-analytics.js?v=20260711-mobile2"></script>
 </body>
 </html>

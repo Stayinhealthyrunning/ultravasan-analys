@@ -1,5 +1,5 @@
 'use strict';
-/* Sälen–Mora Splits: kön, klasser, klubbar och mobil interaktion. */
+/* Sälen–Mora Splits: genusperspektiv, klasser, klubbar och mobil interaktion. */
 (() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
@@ -144,7 +144,7 @@
     };
   }
 
-  function renderAudienceWorlds(){renderGenderWorld();renderClassWorld();renderClubWorld()}
+  function renderAudienceWorlds(){renderGenderWorld();renderClassWorld();renderClubWorld();requestAnimationFrame(()=>window.refreshInfoTips?.())}
 
   function genderBase(){return filteredCurrent({ignoreSex:true})}
   function renderGenderWorld(){
@@ -196,7 +196,7 @@
     document.querySelector('#playYears').onclick=()=>{const btn=document.querySelector('#playYears'),races=state.data.races.slice().sort((a,b)=>a.year-b.year);if(advanced.yearTimer){clearInterval(advanced.yearTimer);advanced.yearTimer=null;btn.textContent='▶ Spela år';return}let i=Math.max(0,races.findIndex(r=>r.id===state.raceId));btn.textContent='■ Stoppa';advanced.yearTimer=setInterval(()=>{i=(i+1)%races.length;document.querySelector('#yearFilter').value=String(races[i].id);state.raceId=races[i].id;state.page=1;refreshFilters();applyFilters()},1400)};
   }
 
-  function installWorldInfo(){const tips=[['#kon','Alla könsjämförelser använder samma urval av klass, klubb och status. Könsfiltret påverkar övriga diagram men Könslinsen visar båda grupperna sida vid sida.'],['#klasser','Historiska H-klasser räknas som M och D-klasser som W i Klasslabbet. Sälen–Mora-index jämför bara inom samma år, kön och klass.'],['#klubbar','Klubbnamn normaliseras för skillnader i versaler, skiljetecken och vissa organisationsord. Topplistor med andelar kräver minst fem startande.']];tips.forEach(([sel,text])=>{const card=document.querySelector(sel+' .world-hero');if(!card||card.querySelector('.info-tip'))return;const tip=document.createElement('span');tip.className='info-tip world-info';tip.tabIndex=0;tip.innerHTML=`i<span class="info-popup">${esc(text)}</span>`;card.appendChild(tip)})}
+  function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
     if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupNavigation();refreshFilters();restoreUrl();installWorldInfo();applyFilters();

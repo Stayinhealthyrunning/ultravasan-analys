@@ -1,13 +1,16 @@
 {
-  "installed_at_utc": "2026-07-11T08:45:35.047248+00:00",
-  "name": "Felkorrigering för köns-, klass- och klubbstatistiken",
-  "version": "2026.07.11.2",
-  "description": "Rättar NotFoundError i informationsikonerna när en panel har grupperade verktyg i rubriken. Sidan kan därefter läsa databasen och starta den nya köns-, klass-, klubb- och mobilstatistiken.",
+  "installed_at_utc": "2026-07-11T13:46:19.490226+00:00",
+  "name": "Ny kartmusik, förklaringar, sökförslag och mobilförbättring",
+  "version": "2026.07.11.mobile2",
+  "description": "Ersätter kartduellens musik med Ultravasan 90, inför enhetliga klickbara informationsikoner med förklaringar i hela verktyget, återställer namnförslag i löparsökningen, byter Könslinsen till Genusperspektiv, förbättrar mobilvy och anpassar statistikrutornas höjd till innehållet.",
   "source_package": "uppdatering.zip",
   "installed_files": [
+    "docs/assets/Eldspar-till-Mora.mp3",
     "docs/assets/app.js",
+    "docs/assets/audience-analytics.js",
+    "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "425a0600d4baa40141267bf99e12f59ed644e1401c15aa3234df7395fcf5de99"
+  "manifest_sha256": "1769fd3f8549c7f5cf4c8727b3e4c28d76c254640dee5d8e9b98984d227b6bcc"
 }
