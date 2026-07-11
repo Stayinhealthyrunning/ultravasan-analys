@@ -77,14 +77,19 @@ function setupStatsControls(){const targetSelect=$('#targetTimeSelect');if(targe
 function activeSplits(){const ids=new Set(state.filtered.map(r=>r.id));return state.data.splits.filter(s=>ids.has(s.result_id))}
 function renderStatistics(){renderPlacementScatter();renderDnfFunnel();renderSegmentHeatmap();renderOvertakes();renderYearTrend();renderPacingDNA();renderTargetSimulator()}
 function renderPlacementScatter(){
-  const el=$('#placementScatter'),rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place);
-  if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs</div>';return}
+  const el=$('#placementScatter');if(!el)return;
+  const showM=$('#placementSexM')?.checked!==false,showF=$('#placementSexF')?.checked!==false;
+  if(!showM&&!showF){el.innerHTML='<div class="empty">Välj minst män eller kvinnor</div>';return}
+  const sexOf=r=>{const s=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(s)?'F':['M','H'].includes(s)?'M':'U'};
+  const rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place).filter(r=>(showM&&sexOf(r)==='M')||(showF&&sexOf(r)==='F'));
+  if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs för valt kön</div>';return}
   const W=760,H=245,p={l:52,r:18,t:14,b:40},minT=Math.min(...rows.map(r=>r.finish_seconds)),maxT=Math.max(...rows.map(r=>r.finish_seconds)),maxP=Math.max(...rows.map(r=>r.overall_place));
   const x=t=>p.l+(t-minT)*(W-p.l-p.r)/(maxT-minT||1),y=v=>p.t+(v-1)*(H-p.t-p.b)/(maxP-1||1);let out='';
   for(let i=0;i<=4;i++){const yy=p.t+(H-p.t-p.b)*i/4,place=Math.round(1+(maxP-1)*i/4);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},String(place))}
   for(let i=0;i<=4;i++){const t=minT+(maxT-minT)*i/4,xx=x(t);out+=svg('text',{x:xx,y:H-12,'text-anchor':'middle'},fmtTime(t).slice(0,-3))}
-  out+=rows.map(r=>`<circle class="scatter-point" cx="${x(r.finish_seconds)}" cy="${y(r.overall_place)}" r="4.5"><title>${esc(r.name_as_published)} · ${fmtTime(r.finish_seconds)} · plats ${r.overall_place}</title></circle>`).join('');
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
+  rows.forEach(r=>{const sex=sexOf(r),color=sex==='M'?'#2563eb':'#db2777',cx=x(r.finish_seconds),cy=y(r.overall_place),title=`${r.name_as_published} · ${sex==='M'?'Man':'Kvinna'} · ${fmtTime(r.finish_seconds)} · plats ${r.overall_place}`;out+=sex==='F'?`<path d="M${cx} ${cy-5} L${cx+5} ${cy} L${cx} ${cy+5} L${cx-5} ${cy} Z" fill="${color}" opacity=".75"><title>${esc(title)}</title></path>`:`<circle cx="${cx}" cy="${cy}" r="4.3" fill="${color}" opacity=".72"><title>${esc(title)}</title></circle>`});
+  const legend=[showM?'<span class="inline-sex-legend"><i class="male"></i>Män</span>':'',showF?'<span class="inline-sex-legend"><i class="female"></i>Kvinnor</span>':''].filter(Boolean).join('');
+  el.innerHTML=`<div class="chart-inline-legend">${legend}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
 function renderDnfFunnel(){
   const el=$('#dnfFunnel'),rows=state.filtered;
@@ -371,7 +376,7 @@ function addCardInfo(card,text){
   card.classList.add('has-info-tip');
   const tip=document.createElement('button');
   tip.type='button';tip.className='info-tip';tip.setAttribute('aria-label','Visa förklaring');tip.setAttribute('aria-expanded','false');
-  tip.innerHTML=`<img class="info-glyph" src="assets/info-icon.svg?v=20260711-totalreview1" alt=""><span class="info-popup" role="tooltip">${esc(text)}</span>`;
+  tip.innerHTML=`<img class="info-glyph" src="assets/info-icon.svg?v=20260711-final3" alt=""><span class="info-popup" role="tooltip">${esc(text)}</span>`;
   const head=[...card.children].find(x=>x.classList?.contains('panel-head'));
   if(head){
     const tools=[...head.children].find(x=>x.classList?.contains('chart-head-tools'));

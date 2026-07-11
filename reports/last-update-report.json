@@ -1,20 +1,15 @@
 {
-  "installed_at_utc": "2026-07-11T15:48:12.128598+00:00",
-  "name": "Slutjustering: rubrikbild, placeringsmotor, måltidssimulator, kartduell och layout",
-  "version": "2026.07.11.final2",
-  "description": "Korrekt installationspaket för GitHub Actions. Byter rubrikbild, lägger till könsval i placeringsmotorn, begränsar måltidssimulatorn till jämna minuter, ändrar rubriken i genusperspektivet, startar kartduellen på 300x, förbättrar Banvy, tar bort Urvalets DNA samt jämnar ut diagramrutorna och klubb/ort-sökningarna.",
+  "installed_at_utc": "2026-07-11T15:55:03.605533+00:00",
+  "name": "Fix för könsval i Placeringsmotor",
+  "version": "2026.07.11.final3",
+  "description": "Korrigerar Tid mot placering så att kryssrutorna Män och Kvinnor verkligen filtrerar diagrammet. Båda är fortsatt valda som standard. Paketet återställer även den lokala informationsikonen och uppdaterar cacheversionerna.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
-    "docs/assets/map.css",
-    "docs/assets/map.js",
-    "docs/assets/nerdlab.js",
-    "docs/assets/salen-mora-header.png",
-    "docs/assets/styles.css",
-    "docs/index.html",
-    "docs/karta.html"
+    "docs/assets/info-icon.svg",
+    "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "bf24bffa59c5c4df6b94a4388eebae393945e159cbb0149fc906888119416e19"
+  "manifest_sha256": "7d85a530ac861be406a1aa18d97be4c8ee8f8d4288229d8161146291f3cd5ef6"
 }
