@@ -256,7 +256,16 @@ function installInfoTooltips(){
     const tip=document.createElement('span');tip.className='info-tip';tip.tabIndex=0;tip.setAttribute('role','button');tip.setAttribute('aria-label','Mer information');
     tip.innerHTML=`i<span class="info-popup">${esc(text)}</span>`;
     const head=card.querySelector('.panel-head');
-    if(head){const pill=head.querySelector('.pill');pill?head.insertBefore(tip,pill):head.appendChild(tip)}else{tip.classList.add('card-info');card.appendChild(tip)}
+    if(head){
+      // Hitta endast direkta barn. querySelector('.pill') kan hitta en pill inuti
+      // .chart-head-tools; då får insertBefore inte använda pillen som referensbarn
+      // till panel-head och webbläsaren kastar NotFoundError.
+      const tools=[...head.children].find(child=>child.classList?.contains('chart-head-tools'));
+      const directPill=[...head.children].find(child=>child.classList?.contains('pill'));
+      if(tools)tools.prepend(tip);
+      else if(directPill)head.insertBefore(tip,directPill);
+      else head.appendChild(tip);
+    }else{tip.classList.add('card-info');card.appendChild(tip)}
   });
 }
 
