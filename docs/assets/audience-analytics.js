@@ -1,6 +1,15 @@
 'use strict';
 /* Sälen–Mora Splits: genusperspektiv, klasser, klubbar och mobil interaktion. */
-(() => {
+const audienceRaceFamily=r=>String(r?.race_key||'').startsWith('ultravasan45-')?'uv45':String(r?.race_key||'').startsWith('ultravasan90-')?'uv90':null;
+function selectAudienceRace(races,family,year){
+  const sameFamily=(races||[]).filter(r=>audienceRaceFamily(r)===family).sort((a,b)=>Number(b.year)-Number(a.year));
+  if(!sameFamily.length)return null;
+  const requestedYear=Number(year);
+  return sameFamily.find(r=>Number(r.year)===requestedYear)||sameFamily[0];
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamily,selectAudienceRace};
+
+if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
   const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',yearTimer:null,currentClubStats:[],clubSearchReady:false};
@@ -104,10 +113,10 @@
   }
 
   function syncUrl(){
-    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));history.replaceState(null,'',u);
+    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['race',state.raceFamily],['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));history.replaceState(null,'',u);
   }
   function restoreUrl(){
-    const p=new URLSearchParams(location.search),year=Number(p.get('year')),race=state.data.races.find(r=>r.year===year);if(race){document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
+    const p=new URLSearchParams(location.search),requestedFamily=['uv90','uv45'].includes(p.get('race'))?p.get('race'):state.raceFamily,race=selectAudienceRace(state.data.races,requestedFamily,p.get('year'));if(race){if(state.raceFamily!==requestedFamily)switchRaceFamily(requestedFamily,true);document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
     const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};Object.entries(map).forEach(([k,id])=>{const v=p.get(k),el=document.querySelector('#'+id);if(v&&el&&([...el.options||[]].length===0||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT'))el.value=v});const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');if(clubInput&&club?.value)clubInput.value=advanced.clubDisplay.get(club.value)||'';
   }
 

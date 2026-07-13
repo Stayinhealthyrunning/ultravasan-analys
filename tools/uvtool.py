@@ -193,27 +193,102 @@ def upsert_catalogue(conn: sqlite3.Connection, config: dict[str, Any]) -> None:
         ("manual", "Manuell import", None, "csv", "Manuellt granskad fil."),
         ("vasanerd", "VasaNerd", "https://vasanerd.se/", "json", "Sammanställd publik resultatdata; säkerställ tillstånd och attribution före full vidarepublicering.")
     ]
-    conn.executemany("""
-      INSERT INTO sources(code,name,base_url,source_type,terms_note) VALUES(?,?,?,?,?)
-      ON CONFLICT(code) DO UPDATE SET name=excluded.name,base_url=excluded.base_url,source_type=excluded.source_type,terms_note=excluded.terms_note
-    """, sources)
-    for race in config.get("races", []):
-        conn.execute("""
-          INSERT INTO races(race_key,name,year,race_date,distance_km,event_code,result_year_path,official_url,course_version,notes)
-          VALUES(:race_key,:name,:year,:race_date,:distance_km,:event_code,:result_year_path,:official_url,:course_version,:notes)
-          ON CONFLICT(race_key) DO UPDATE SET name=excluded.name,year=excluded.year,race_date=excluded.race_date,
-          distance_km=excluded.distance_km,event_code=excluded.event_code,result_year_path=excluded.result_year_path,
-          official_url=excluded.official_url,course_version=excluded.course_version,notes=excluded.notes,updated_at=CURRENT_TIMESTAMP
-        """, {**{"course_version": None, "notes": None}, **race})
-        race_id = conn.execute("SELECT id FROM races WHERE race_key=?", (race["race_key"],)).fetchone()[0]
-        for cp in race.get("checkpoints", []):
-            conn.execute("""
-              INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,distance_km,elevation_m)
-              VALUES(?,?,?,?,?,?)
-              ON CONFLICT(race_id,checkpoint_key) DO UPDATE SET name=excluded.name,sequence_no=excluded.sequence_no,
-              distance_km=excluded.distance_km,elevation_m=excluded.elevation_m
-            """, (race_id, cp["checkpoint_key"], cp["name"], cp["sequence_no"], cp.get("distance_km"), cp.get("elevation_m")))
-    conn.commit()
+    # One catalogue update is one transaction. A failed race/checkpoint update
+    # must never leave half-applied metadata behind.
+    with conn:
+        conn.executemany("""
+          INSERT INTO sources(code,name,base_url,source_type,terms_note) VALUES(?,?,?,?,?)
+          ON CONFLICT(code) DO UPDATE SET name=excluded.name,base_url=excluded.base_url,source_type=excluded.source_type,terms_note=excluded.terms_note
+        """, sources)
+        for race in config.get("races", []):
+            values = {**{"race_date": None, "distance_km": None, "event_code": None,
+                         "result_year_path": None, "official_url": None,
+                         "course_version": None, "notes": None}, **race}
+            existing = conn.execute("SELECT * FROM races WHERE race_key=?", (race["race_key"],)).fetchone()
+            if existing is None:
+                conn.execute("""
+                  INSERT INTO races(race_key,name,year,race_date,distance_km,event_code,result_year_path,official_url,course_version,notes)
+                  VALUES(:race_key,:name,:year,:race_date,:distance_km,:event_code,:result_year_path,:official_url,:course_version,:notes)
+                """, values)
+            else:
+                has_results = bool(conn.execute("SELECT 1 FROM results WHERE race_id=? LIMIT 1", (existing["id"],)).fetchone())
+                # Imported race geometry owns distance/course metadata once the
+                # race contains performances. Config may still refresh safe,
+                # non-geometric catalogue fields without blanking discovered data.
+                if has_results:
+                    conn.execute("""
+                      UPDATE races SET name=:name,year=:year,
+                        race_date=COALESCE(:race_date,race_date),
+                        event_code=COALESCE(:event_code,event_code),
+                        result_year_path=COALESCE(:result_year_path,result_year_path),
+                        official_url=COALESCE(:official_url,official_url),
+                        notes=COALESCE(:notes,notes),updated_at=CURRENT_TIMESTAMP
+                      WHERE race_key=:race_key
+                    """, values)
+                else:
+                    conn.execute("""
+                      UPDATE races SET name=:name,year=:year,
+                        race_date=COALESCE(:race_date,race_date),
+                        distance_km=COALESCE(:distance_km,distance_km),
+                        event_code=COALESCE(:event_code,event_code),
+                        result_year_path=COALESCE(:result_year_path,result_year_path),
+                        official_url=COALESCE(:official_url,official_url),
+                        course_version=COALESCE(:course_version,course_version),
+                        notes=COALESCE(:notes,notes),updated_at=CURRENT_TIMESTAMP
+                      WHERE race_key=:race_key
+                    """, values)
+
+            race_id = conn.execute("SELECT id FROM races WHERE race_key=?", (race["race_key"],)).fetchone()[0]
+            has_results = bool(conn.execute("SELECT 1 FROM results WHERE race_id=? LIMIT 1", (race_id,)).fetchone())
+            configured = race.get("checkpoints", [])
+            existing_checkpoints = conn.execute(
+                "SELECT * FROM checkpoints WHERE race_id=? ORDER BY sequence_no,id", (race_id,)
+            ).fetchall()
+
+            if not has_results and existing_checkpoints:
+                # Reordering unused catalogue rows is safe, but it must be done
+                # in two phases to avoid the UNIQUE(race_id, sequence_no) index.
+                for row in existing_checkpoints:
+                    conn.execute("UPDATE checkpoints SET sequence_no=? WHERE id=?", (-1000000 - row["id"], row["id"]))
+                configured_keys = {cp["checkpoint_key"] for cp in configured}
+                for cp in configured:
+                    row = conn.execute(
+                        "SELECT id FROM checkpoints WHERE race_id=? AND checkpoint_key=?",
+                        (race_id, cp["checkpoint_key"]),
+                    ).fetchone()
+                    if row:
+                        conn.execute("""
+                          UPDATE checkpoints SET name=?,sequence_no=?,distance_km=?,elevation_m=? WHERE id=?
+                        """, (cp["name"], cp["sequence_no"], cp.get("distance_km"), cp.get("elevation_m"), row["id"]))
+                    else:
+                        conn.execute("""
+                          INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,distance_km,elevation_m)
+                          VALUES(?,?,?,?,?,?)
+                        """, (race_id, cp["checkpoint_key"], cp["name"], cp["sequence_no"], cp.get("distance_km"), cp.get("elevation_m")))
+                next_sequence = max((cp["sequence_no"] for cp in configured), default=-1) + 1
+                for row in existing_checkpoints:
+                    if row["checkpoint_key"] not in configured_keys:
+                        conn.execute("UPDATE checkpoints SET sequence_no=? WHERE id=?", (next_sequence, row["id"]))
+                        next_sequence += 1
+                continue
+
+            occupied = {row["sequence_no"] for row in existing_checkpoints}
+            existing_keys = {row["checkpoint_key"] for row in existing_checkpoints}
+            next_sequence = max(occupied, default=-1) + 1
+            for cp in configured:
+                if cp["checkpoint_key"] in existing_keys:
+                    # Checkpoint identity, order and distance belong to imported
+                    # data as soon as results exist. Do not rewrite them.
+                    continue
+                sequence = cp["sequence_no"]
+                if sequence in occupied:
+                    sequence = next_sequence
+                    next_sequence += 1
+                conn.execute("""
+                  INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,distance_km,elevation_m)
+                  VALUES(?,?,?,?,?,?)
+                """, (race_id, cp["checkpoint_key"], cp["name"], sequence, cp.get("distance_km"), cp.get("elevation_m")))
+                occupied.add(sequence)
 
 
 def ensure_schema_migrations(conn: sqlite3.Connection) -> None:
@@ -234,10 +309,12 @@ def ensure_schema_migrations(conn: sqlite3.Connection) -> None:
 
 def init_db(db_path: Path, config_path: Path) -> None:
     conn = connect(db_path)
-    conn.executescript((ROOT / "tools" / "schema.sql").read_text(encoding="utf-8"))
-    ensure_schema_migrations(conn)
-    upsert_catalogue(conn, load_config(config_path))
-    conn.close()
+    try:
+        conn.executescript((ROOT / "tools" / "schema.sql").read_text(encoding="utf-8"))
+        ensure_schema_migrations(conn)
+        upsert_catalogue(conn, load_config(config_path))
+    finally:
+        conn.close()
     print(f"Databas klar: {db_path}")
 
 
@@ -913,14 +990,37 @@ def export_web(args: argparse.Namespace) -> None:
     conn.close()
     print(f"Webbdata exporterad: {args.output} och {js_output} ({len(results)} resultat, {len(splits)} mellantider)")
 
-def validate(args: argparse.Namespace) -> None:
-    conn = connect(args.db)
+def validation_rule_for_race(config: dict[str, Any], race: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
+    """Resolve validation rules by configured race key/family, never by distance."""
+    race_key = str(race["race_key"])
+    configured_race = next((r for r in config.get("races", []) if r.get("race_key") == race_key), None)
+    if configured_race and configured_race.get("validation"):
+        return configured_race["validation"]
+    family_key = configured_race.get("race_family") if configured_race else None
+    families = config.get("race_families", {})
+    if family_key and family_key in families:
+        return families[family_key].get("validation", {})
+    for family in families.values():
+        if race_key.startswith(str(family.get("race_key_prefix") or "\0")):
+            return family.get("validation", {})
+    return {}
+
+
+def collect_validation_issues(conn: sqlite3.Connection, config: dict[str, Any]) -> list[str]:
     issues: list[str] = []
-    for r in conn.execute("SELECT id,name_as_published,status,finish_seconds,overall_place FROM results"):
+    races = {r["id"]: r for r in conn.execute("SELECT id,race_key,name,year FROM races")}
+    for r in conn.execute("SELECT id,race_id,name_as_published,status,finish_seconds,overall_place FROM results"):
         if r["status"] == "FINISHED" and not r["finish_seconds"]:
             issues.append(f"Resultat {r['id']} {r['name_as_published']}: FINISHED utan sluttid")
-        if r["finish_seconds"] and r["finish_seconds"] < 4 * 3600:
-            issues.append(f"Resultat {r['id']} {r['name_as_published']}: orimligt låg tid")
+        if r["finish_seconds"] and r["race_id"] in races:
+            race = races[r["race_id"]]
+            rule = validation_rule_for_race(config, race)
+            minimum = rule.get("finish_seconds_min")
+            maximum = rule.get("finish_seconds_max")
+            if minimum is not None and r["finish_seconds"] < int(minimum):
+                issues.append(f"Resultat {r['id']} {r['name_as_published']}: orimligt låg tid för {race['race_key']}")
+            if maximum is not None and r["finish_seconds"] > int(maximum):
+                issues.append(f"Resultat {r['id']} {r['name_as_published']}: orimligt hög tid för {race['race_key']}")
     for row in conn.execute("""
       SELECT sp.result_id,cp.sequence_no,sp.elapsed_seconds,
              LAG(sp.elapsed_seconds) OVER(PARTITION BY sp.result_id ORDER BY cp.sequence_no) prev
@@ -932,6 +1032,20 @@ def validate(args: argparse.Namespace) -> None:
       SELECT race_id,source_id,source_result_id,COUNT(*) n FROM results GROUP BY 1,2,3 HAVING n>1
     """).fetchall()
     issues += [f"Duplicerat källresultat: {dict(d)}" for d in duplicates]
+    cross_race_splits = conn.execute("""
+      SELECT sp.result_id,r.race_id result_race_id,cp.race_id checkpoint_race_id
+      FROM splits sp
+      JOIN results r ON r.id=sp.result_id
+      JOIN checkpoints cp ON cp.id=sp.checkpoint_id
+      WHERE r.race_id<>cp.race_id
+    """).fetchall()
+    issues += [f"Resultat {r['result_id']}: mellantid kopplad till kontroll från annat lopp" for r in cross_race_splits]
+    return issues
+
+
+def validate(args: argparse.Namespace) -> None:
+    conn = connect(args.db)
+    issues = collect_validation_issues(conn, load_config(args.config))
     print(f"Validering: {len(issues)} problem")
     for issue in issues[:200]:
         print("-", issue)

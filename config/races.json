@@ -1,7 +1,24 @@
 {
+  "race_families": {
+    "uv90": {
+      "race_key_prefix": "ultravasan90-",
+      "validation": {
+        "finish_seconds_min": 14400,
+        "finish_seconds_max": 86400
+      }
+    },
+    "uv45": {
+      "race_key_prefix": "ultravasan45-",
+      "validation": {
+        "finish_seconds_min": 5400,
+        "finish_seconds_max": 54000
+      }
+    }
+  },
   "races": [
     {
       "race_key": "ultravasan90-2025",
+      "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2025,
       "race_date": "2025-08-16",
@@ -78,6 +95,7 @@
     },
     {
       "race_key": "ultravasan45-2025",
+      "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2025,
       "race_date": "2025-08-16",

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Build the browser route registry for both Ultravasan 90 course eras.
+"""Build one browser route registry for configured Ultravasan 90/45 races.
+
+The indented JSON file is the canonical generated registry. The JavaScript
+file is a browser wrapper containing the same parsed payload.
 
 Preferred old-course source
 ---------------------------
@@ -21,16 +24,19 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_JS = ROOT / "docs/data/ultravasan-route.js"
+CURRENT_ROUTE_JSON = ROOT / "data/routes/ultravasan90-2026.json"
 OUT_JS = ROOT / "docs/data/ultravasan-routes.js"
 OUT_JSON = ROOT / "data/routes/ultravasan90-routes.json"
 EXACT_OLD_GPX = ROOT / "source/Ultravasan90-2014-2022.gpx"
 REFERENCE_OLD_GPX = ROOT / "source/Ultravasan90-2014-2022-reference.gpx"
+UV45_KMZ = ROOT / "source/UV45_20260610.kmz"
+RACE_CONFIG = ROOT / "config/races.json"
 OLD_TOTAL = 90.173
 OLD_SOURCE = "https://www.plotaroute.com/route/1942022"
 
@@ -114,6 +120,65 @@ def read_gpx(path):
     return coords
 
 
+def read_kmz(path):
+    """Read the longest KML coordinate sequence from a KMZ archive."""
+    with zipfile.ZipFile(path) as archive:
+        kml_name = next((name for name in archive.namelist() if name.lower().endswith(".kml")), None)
+        if not kml_name:
+            raise ValueError(f"{path.name} saknar KML-fil")
+        root = ET.fromstring(archive.read(kml_name))
+    sequences = []
+    for element in root.iter():
+        if element.tag.rsplit("}", 1)[-1].lower() != "coordinates" or not element.text:
+            continue
+        coords = []
+        for value in element.text.split():
+            parts = value.split(",")
+            if len(parts) >= 2:
+                coords.append([float(parts[1]), float(parts[0])])
+        if len(coords) >= 2:
+            sequences.append(coords)
+    if not sequences:
+        raise ValueError(f"{path.name} saknar användbara koordinater")
+    return max(sequences, key=len)
+
+
+def build_uv45_route(config):
+    race = next((r for r in config.get("races", []) if str(r.get("race_key", "")).startswith("ultravasan45-")), None)
+    if not race:
+        return None
+    coords = read_kmz(UV45_KMZ)
+    points, raw_total = cumulative(coords)
+    official_distance = float(race.get("distance_km") or 45.0)
+    points = normalize_distance(points, official_distance)
+    checkpoints = []
+    for cp in sorted(race.get("checkpoints", []), key=lambda item: item["sequence_no"]):
+        distance = float(cp.get("distance_km") or 0.0)
+        key = "finish" if cp["checkpoint_key"] == "mora" else cp["checkpoint_key"]
+        checkpoints.append({
+            "key": key,
+            "name": cp["name"],
+            "short": cp["name"].replace("Start ", "").replace(" mål", ""),
+            "distance_km": distance,
+            "coord": point_at_distance(points, distance),
+        })
+    return {
+        "id": "ultravasan45-current",
+        "name": "Ultravasan 45 – Oxberg till Mora",
+        "years": {"from": min(r["year"] for r in config["races"] if str(r.get("race_key", "")).startswith("ultravasan45-")), "to": 2099},
+        "official_distance_km": official_distance,
+        "gps_distance_km": round(raw_total, 3),
+        "point_count": len(points),
+        "source_file": UV45_KMZ.name,
+        "geometry_quality": "uploaded-gps",
+        "geometry_note": "GPS-geometri från den uppladdade UV45-KMZ-filen. Distansaxeln är normaliserad till officiell distans.",
+        "style": {"color": "#d28b22", "dashArray": None, "label": "Ultravasan 45"},
+        "bounds": bounds(points),
+        "checkpoints": checkpoints,
+        "points": points,
+    }
+
+
 def orient_like_current(coords, current_points):
     """Reverse historical GPX when its endpoint is closer to Sälen than its start."""
     current_start = current_points[0]
@@ -182,10 +247,13 @@ def main():
         action="store_true",
         help="Avbryt om source/Ultravasan90-2014-2022.gpx saknas",
     )
+    parser.add_argument("--config", type=Path, default=RACE_CONFIG)
+    parser.add_argument("--out-json", type=Path, default=OUT_JSON)
+    parser.add_argument("--out-js", type=Path, default=OUT_JS)
     args = parser.parse_args()
+    config = json.loads(args.config.read_text(encoding="utf-8"))
 
-    text = CURRENT_JS.read_text(encoding="utf-8")
-    current = json.loads(text.split("=", 1)[1].strip().rstrip(";"))
+    current = json.loads(CURRENT_ROUTE_JSON.read_text(encoding="utf-8"))
 
     if EXACT_OLD_GPX.exists():
         coords = orient_like_current(read_gpx(EXACT_OLD_GPX), current["points"])
@@ -246,24 +314,35 @@ def main():
         "style": {"color": "#176d53", "dashArray": None, "label": "2023–"},
         "historical_note": "Från 2023 lades en längre inledande sträckning och loppet blev cirka 92 km.",
     }
+    uv45 = build_uv45_route(config)
+    routes = {old["id"]: old, post["id"]: post}
+    route_for_race = [
+        {"race_key_prefix": "ultravasan90-", "year_from": 2014, "year_to": 2022, "route_id": old["id"]},
+        {"race_key_prefix": "ultravasan90-", "year_from": 2023, "year_to": 2099, "route_id": post["id"]},
+    ]
+    if uv45:
+        routes[uv45["id"]] = uv45
+        route_for_race.insert(0, {"race_key_prefix": "ultravasan45-", "route_id": uv45["id"]})
     registry = {
         "default_route_id": post["id"],
         "route_for_year": [
             {"from": 2014, "to": 2022, "route_id": old["id"]},
             {"from": 2023, "to": 2099, "route_id": post["id"]},
         ],
-        "routes": {old["id"]: old, post["id"]: post},
+        "route_for_race": route_for_race,
+        "routes": routes,
     }
 
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    OUT_JSON.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
-    OUT_JS.write_text(
+    args.out_json.parent.mkdir(parents=True, exist_ok=True)
+    args.out_js.parent.mkdir(parents=True, exist_ok=True)
+    args.out_json.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
+    args.out_js.write_text(
         "window.ULTRAVASAN_ROUTES = "
         + json.dumps(registry, ensure_ascii=False, separators=(",", ":"))
         + ";\nwindow.ULTRAVASAN_ROUTE = window.ULTRAVASAN_ROUTES.routes[window.ULTRAVASAN_ROUTES.default_route_id];\n",
         encoding="utf-8",
     )
-    print(f"Skrev {OUT_JSON.relative_to(ROOT)} och {OUT_JS.relative_to(ROOT)}")
+    print(f"Skrev {args.out_json} och {args.out_js}: {', '.join(routes)}")
 
 
 if __name__ == "__main__":

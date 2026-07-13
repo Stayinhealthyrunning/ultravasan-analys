@@ -10,6 +10,10 @@ const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
+const mapRaceFamily=r=>String(r?.race_key||'').startsWith('ultravasan45-')?'uv45':String(r?.race_key||'').startsWith('ultravasan90-')?'uv90':null;
+function mixedRaceFamilyError(results,races){const families=[...new Set((results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id))).filter(Boolean))];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
+function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||registry?.routes?.[registry?.default_route_id]||null}
+if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute};
 const hydrateData=d=>{d=d||{};d.races=Array.isArray(d.races)?d.races:[];d.results=Array.isArray(d.results)?d.results:[];d.checkpoints=Array.isArray(d.checkpoints)?d.checkpoints:[];d.splits=Array.isArray(d.splits)?d.splits:[];const rr=new Map(d.results.map(r=>[Number(r.id),Number(r.race_id)])),cp=new Map(d.checkpoints.map(c=>[`${Number(c.race_id)}|${c.checkpoint_key}`,c]));d.results.forEach(r=>{r.id=Number(r.id);r.race_id=Number(r.race_id);if(r.finish_seconds!=null)r.finish_seconds=Number(r.finish_seconds)});d.splits.forEach(s=>{s.result_id=Number(s.result_id);if(s.elapsed_seconds!=null)s.elapsed_seconds=Number(s.elapsed_seconds);const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=Number(c.sequence_no);s.distance_km=Number(c.distance_km)}else{if(s.sequence_no!=null)s.sequence_no=Number(s.sequence_no);if(s.distance_km!=null)s.distance_km=Number(s.distance_km)}if(s.is_estimated==null)s.is_estimated=0});return d};
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
@@ -25,7 +29,8 @@ function boot(){
   if(!app.data||!app.registry)throw new Error('Datafilerna kunde inte läsas.');
   const params=new URLSearchParams(location.search),requestedIds=(params.get('runners')||'').split(',').map(Number).filter(Boolean);
   let selected=app.data.results.filter(r=>requestedIds.includes(r.id));
-  if(!selected.length){const requested=Number(params.get('year'));const race=app.data.races.find(r=>r.id===requested||r.year===requested)||app.data.races.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
+  const familyError=mixedRaceFamilyError(selected,app.data.races);if(familyError){showFatal(familyError);return}
+  if(!selected.length){const requested=Number(params.get('year')),requestedFamily=['uv90','uv45'].includes(params.get('race'))?params.get('race'):'uv90',familyRaces=app.data.races.filter(r=>mapRaceFamily(r)===requestedFamily),race=familyRaces.find(r=>r.id===requested||r.year===requested)||familyRaces.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
   selected=selected.slice(0,5);if(!selected.length){showFatal('Det finns inga löpare att visa.');return}
   app.models=selected.map((r,i)=>buildModel(r,COLORS[i],i));
   const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=is45?'assets/Ultravasan-45.mp3?v=20260713-multirace1':'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1';document.body.classList.toggle('race-uv45',is45);
@@ -36,7 +41,7 @@ function boot(){
   const families=[...new Set(app.models.map(m=>String(m.race?.race_key||'').startsWith('ultravasan45-')?'45':'90'))];const label=families.length===1?`Ultravasan ${families[0]}`:'Ultravasan';$('#raceTitle').textContent=years.length===1?`${label} ${years[0]}`:`${label} · ${years.join(', ')}`;
   $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km${r.geometry_quality==='reference-reconstruction'?' · referenslager':''}</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
-  $('#stripLeader').textContent='Start';$('#stripFinishDistance').textContent=app.usedRoutes.length>1?'90/92 km · Mora':`${app.usedRoutes[0].official_distance_km.toFixed(0)} km · Mora`;
+  $('#stripLeader').textContent='Start';const distances=[...new Set(app.usedRoutes.map(r=>Number(r.official_distance_km).toFixed(0)))];$('#stripFinishDistance').textContent=`${distances.join('/')} km · Mora`;
   buildCheckpointJump();buildRaceStrip();initMap();bindControls();initAudio();update(true);$('#mapLoading').classList.add('hidden');
 }
 function showFatal(message){$('#mapLoading').innerHTML=`<p><strong>Kartjämförelsen kunde inte starta.</strong><br>${esc(message)}</p>`}
@@ -163,7 +168,7 @@ function markerText(m){return m.result.bib?String(m.result.bib).slice(-3):m.resu
 function initFallback(){
   const svg=$('#fallbackMap'),W=1200,H=650,pad=70,lons=app.usedRoutes.flatMap(r=>r.points.map(p=>p[1])),lats=app.usedRoutes.flatMap(r=>r.points.map(p=>p[0])),minX=Math.min(...lons),maxX=Math.max(...lons),merc=l=>Math.log(Math.tan(Math.PI/4+l*Math.PI/360)),ys=lats.map(merc),minY=Math.min(...ys),maxY=Math.max(...ys),sx=(W-pad*2)/(maxX-minX||1),sy=(H-pad*2)/(maxY-minY||1),scale=Math.min(sx,sy),ox=(W-(maxX-minX)*scale)/2,oy=(H-(maxY-minY)*scale)/2;
   app.project=coord=>[ox+(coord[1]-minX)*scale,H-(oy+(merc(coord[0])-minY)*scale)];
-  const ref=app.registry.routes?.[app.registry.default_route_id]||app.usedRoutes[0];
+  const ref=activeReferenceRoute(app.models,app.usedRoutes,app.registry);
   let html=`<defs><linearGradient id="banvyBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4eb"/><stop offset="1" stop-color="#cfddd1"/></linearGradient><linearGradient id="banvyForest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8dbc8"/><stop offset="1" stop-color="#aec8b2"/></linearGradient><linearGradient id="banvyLake" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9eef7"/><stop offset="1" stop-color="#a8d4e8"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#banvyBg)" rx="22"/>`;
   html+=`<path d="M0 ${H*0.73} C${W*0.17} ${H*0.58} ${W*0.34} ${H*0.83} ${W*0.52} ${H*0.7} S${W*0.86} ${H*0.54} ${W} ${H*0.67} V${H} H0Z" fill="url(#banvyForest)" opacity=".8"/>`;
   html+=`<ellipse cx="${W*0.18}" cy="${H*0.23}" rx="120" ry="55" fill="url(#banvyLake)" opacity=".5"/><ellipse cx="${W*0.82}" cy="${H*0.2}" rx="95" ry="42" fill="url(#banvyLake)" opacity=".4"/>`;
@@ -186,7 +191,7 @@ function initFallback(){
 }
 
 function buildRaceStrip(){
-  const track=$('#stripTrack');let html='<div class="strip-base"></div>';const ref=app.registry.routes[app.registry.default_route_id];
+  const track=$('#stripTrack');let html='<div class="strip-base"></div>';const ref=activeReferenceRoute(app.models,app.usedRoutes,app.registry);
   for(const cp of ref.checkpoints.slice(1,-1))html+=`<span class="strip-cp" style="left:${cp.distance_km/ref.official_distance_km*100}%" data-label="${esc(cp.short)}"></span>`;
   for(const m of app.models)html+=`<button class="strip-runner" id="stripRunner${m.result.id}" style="left:0%;background:${m.color}" title="${esc(m.result.name_as_published)} ${m.race.year}">${markerText(m)}</button>`;
   track.innerHTML=html;for(const m of app.models){m.strip=$(`#stripRunner${m.result.id}`);m.strip.onclick=()=>focusRunner(m)}
@@ -231,5 +236,7 @@ async function shareView(){const url=new URL(location.href);url.searchParams.del
 
 let booted=false;
 async function startApplication(){if(booted)return;booted=true;try{if(!window.ULTRAVASAN_ROUTES)throw new Error('Banlagret ultravasan-routes.js saknas.');app.registry=window.ULTRAVASAN_ROUTES;const [data]=await Promise.all([ensureRaceData(),ensureLeaflet()]);app.data=hydrateData(data);setLoading('Bygger löparnas positioner…');boot()}catch(e){console.error(e);showFatal(e?.message||String(e))}}
-window.addEventListener('unhandledrejection',e=>{console.error(e.reason);showFatal(e.reason?.message||String(e.reason||'Okänt fel'))});
-startApplication();
+if(typeof window!=='undefined'&&typeof document!=='undefined'){
+  window.addEventListener('unhandledrejection',e=>{console.error(e.reason);showFatal(e.reason?.message||String(e.reason||'Okänt fel'))});
+  startApplication();
+}
