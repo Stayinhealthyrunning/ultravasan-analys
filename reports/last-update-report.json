@@ -1,14 +1,14 @@
 {
-  "installed_at_utc": "2026-07-13T07:54:32.423313+00:00",
-  "name": "Detaljjustering källhänvisning och kartduellrubrik",
-  "version": "2026.07.13.detail1",
-  "description": "Tar bort synlig källhänvisning i löparprofilen och ökar avståndet mellan raderna i kartduellens introduktion.",
+  "installed_at_utc": "2026-07-13T08:14:40.391944+00:00",
+  "name": "Valbara könsserier i diagram",
+  "version": "2026.07.13.sexcontrols1",
+  "description": "Lägger till separata kryssrutor för män och kvinnor i alla relevanta könsuppdelade diagram. Båda är markerade som standard. Justerar även avstånd och placering för diagramförklaringar och reglage.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/app.js",
+    "docs/assets/audience-analytics.js",
     "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "2a8dc87ed0afd69e556624c9567ae11e3476f73cc65815afef35cfe198ca876a"
+  "manifest_sha256": "46331721e72724b66827ff408bd7ba9d414c1905ae77d43704ac512855cb8991"
 }

@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260713-detail1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260713-sexcontrols1" rel="stylesheet"/>
 </head>
 <body>
 <header class="hero hero-image-header"><img alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260711-final5"/></header>
@@ -66,11 +66,11 @@
 </section>
 <section class="grid two">
 <article class="panel chart-panel">
-<div class="panel-head"><div><p class="eyebrow">FÖRDELNING</p><h2>Sluttider</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span class="pill" id="distributionLabel"></span></div></div>
+<div class="panel-head"><div><p class="eyebrow">FÖRDELNING</p><h2>Sluttider</h2></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="histogram" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="histogramSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="histogramSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill" id="distributionLabel"></span></div></div>
 <div aria-label="Histogram över sluttider" class="chart" id="histogram" role="img"></div>
 </article>
 <article class="panel chart-panel">
-<div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><span class="sex-legend"><i class="male"></i>Män <i class="female"></i>Kvinnor</span><span class="pill">km/h</span></div></div>
+<div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="pace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="paceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="paceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">km/h</span></div></div>
 <div aria-label="Medianhastighet per delsträcka, inklusive start i Sälen" class="chart" id="paceChart" role="img"></div>
 </article>
 </section>
@@ -81,7 +81,7 @@
 </div>
 <div class="insight-grid">
 <article class="panel insight-card wide placement-card">
-<div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div class="chart-head-tools placement-head-tools"><div class="placement-sex-toggles" aria-label="Visa kön i placeringsmotorn"><label class="sex-toggle male"><input id="placementSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="placementSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">håll över punkterna</span></div></div>
+<div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div class="chart-head-tools placement-head-tools"><div class="sex-toggle-group" data-sex-control="placement" aria-label="Visa kön i placeringsmotorn"><label class="sex-toggle male"><input id="placementSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="placementSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">håll över punkterna</span></div></div>
 <div class="chart compact-chart" id="placementScatter"></div>
 </article>
 <article class="panel insight-card target-card target-time-card">
@@ -91,11 +91,11 @@
 <div class="target-result" id="targetTimeResult"></div>
 </article>
 <article class="panel insight-card dnf-card">
-<div class="panel-head"><div><p class="eyebrow">REPET DRAS</p><h3>Avhopp genom loppet</h3></div></div>
+<div class="panel-head"><div><p class="eyebrow">REPET DRAS</p><h3>Avhopp genom loppet</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="dnf" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="dnfSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="dnfSexF" type="checkbox" checked> Kvinnor</label></div></div></div>
 <div class="funnel-chart" id="dnfFunnel"></div>
 </article>
 <article class="panel insight-card wide segment-card">
-<div class="panel-head"><div><p class="eyebrow">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div><span class="pill">median · spridning</span></div>
+<div class="panel-head"><div><p class="eyebrow">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="segment" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="segmentSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="segmentSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">median · spridning</span></div></div>
 <div class="segment-grid" id="segmentHeatmap"></div>
 </article>
 <article class="panel insight-card position-card">
@@ -103,7 +103,7 @@
 <div class="mini-ranking" id="overtakeTable"></div>
 </article>
 <article class="panel insight-card wide history-card">
-<div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><span class="pill">median och tidsspridning</span></div>
+<div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="year" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="yearSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="yearSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">median och tidsspridning</span></div></div>
 <div class="chart compact-chart" id="yearTrend"></div>
 </article>
 </div>
@@ -115,9 +115,9 @@
 </div>
 <div class="gender-kpis" id="genderKpis"></div>
 <div class="world-grid">
-<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><span class="pill">km/h</span></div><div class="chart world-chart" id="genderPaceChart"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><span class="pill">100 = första segmentet</span></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
-<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><span class="pill">alla loppår</span></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderPace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderPaceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderPaceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">km/h</span></div></div><div class="chart world-chart" id="genderPaceChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = första segmentet</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderHistory" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderHistorySexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderHistorySexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">alla loppår</span></div></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
 </div>
 </section>
@@ -177,7 +177,7 @@
 <div class="segment-ranking" id="segmentRanking"></div>
 </article>
 <article class="panel lab-card percentile-card">
-<div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><span class="pill">aktuellt urval</span></div>
+<div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="percentile" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="percentileSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="percentileSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">aktuellt urval</span></div></div>
 <div class="percentile-ladder" id="percentileLadder"></div>
 <p class="microcopy">Läs uppifrån: tiden som senast räcker till respektive nivå bland fullföljande löpare.</p>
 </article>
@@ -247,8 +247,8 @@
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
 <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-<script src="assets/app.js?v=20260713-detail1"></script>
-<script src="assets/nerdlab.js?v=20260711-final4"></script>
-<script src="assets/audience-analytics.js?v=20260711-final4"></script>
+<script src="assets/app.js?v=20260713-sexcontrols1"></script>
+<script src="assets/nerdlab.js?v=20260713-sexcontrols1"></script>
+<script src="assets/audience-analytics.js?v=20260713-sexcontrols1"></script>
 </body>
 </html>
