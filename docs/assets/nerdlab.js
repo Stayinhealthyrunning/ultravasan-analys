@@ -8,8 +8,23 @@ const nQuantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y)
 const nTime=s=>typeof fmtTime==='function'?fmtTime(s):(s==null?'–':new Date(s*1000).toISOString().slice(11,19));
 const activeRace=()=>state.data.races.find(r=>r.id===state.raceId);
 const splitMap=id=>new Map(state.data.splits.filter(s=>s.result_id===id).map(s=>[s.sequence_no,s]));
-const resultNameKey=r=>String(r.canonical_name||r.name_as_published||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 const nSex=r=>{const x=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(x)?'F':['M','H'].includes(x)?'M':'U'};
+
+function athleteIdentityKey(r){
+  for(const [field,prefix] of [['athlete_id','athlete'],['person_id','person'],['canonical_athlete_key','canonical']]){
+    const value=r?.[field];if(value!==null&&value!==undefined&&String(value).trim()!=='')return `${prefix}:${value}`;
+  }
+  // Never infer identity from a name. Without a stable person key, keep results separate.
+  if(r?.id!==null&&r?.id!==undefined)return `result:${r.id}`;
+  if(r?.source_result_id)return `result:${r.race_id??'race'}:${r.source_code??'source'}:${r.source_result_id}`;
+  if(r?.bib)return `result:${r.race_id??'race'}:bib:${r.bib}`;
+  return null;
+}
+function groupAthleteHistories(results,races=[]){
+  const years=new Map((races||[]).map(r=>[r.id,Number(r.year)||0])),groups=new Map();
+  (results||[]).forEach((r,index)=>{const key=athleteIdentityKey(r)||`result-index:${index}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
+  return [...groups.entries()].map(([key,rows])=>({key,rows:rows.sort((a,b)=>(years.get(a.race_id)||0)-(years.get(b.race_id)||0)||(Number(a.id)||0)-(Number(b.id)||0))}));
+}
 
 function initNerdLab(){
   if(nerd.ready||!window.ULTRAVASAN_DATA||typeof state==='undefined'||!state.data)return;
@@ -100,7 +115,7 @@ function renderFieldFlow(){
   }).join('')}</div>`;
 }
 function allHistories(){
-  const groups=new Map();familyResults().forEach(r=>{const k=resultNameKey(r);if(!k)return;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});return [...groups.entries()].map(([key,rows])=>({key,rows:rows.sort((a,b)=>(state.data.races.find(x=>x.id===a.race_id)?.year||0)-(state.data.races.find(x=>x.id===b.race_id)?.year||0))}));
+  return groupAthleteHistories(familyResults(),state.data.races);
 }
 function renderHall(){
   const el=n$('#hallOfFame'),explain=n$('#hallExplanation');if(!el)return;
@@ -178,7 +193,7 @@ function renderFingerprint(){
 function renderHistorySuggestions(){
   const input=n$('#historySearch'),box=n$('#historySuggestions');if(!input||!box)return;const q=input.value.trim().toLowerCase();if(q.length<2){box.hidden=true;return}
   const groups=allHistories().filter(g=>{const r=g.rows[0];return `${r.name_as_published} ${g.rows.map(x=>x.bib||'').join(' ')}`.toLowerCase().includes(q)}).sort((a,b)=>b.rows.length-a.rows.length).slice(0,10);
-  box.innerHTML=groups.length?groups.map((g,i)=>{const r=g.rows.at(-1),years=g.rows.map(x=>state.data.races.find(y=>y.id===x.race_id)?.year).filter(Boolean);return `<button data-key="${nEsc(g.key)}"><strong>${nEsc(r.name_as_published)}</strong><small>${g.rows.length} lopp · ${years.join(', ')}</small></button>`}).join(''):'<div class="empty">Ingen löpare hittades</div>';box.hidden=false;
+  box.innerHTML=groups.length?groups.map(g=>{const r=g.rows.at(-1),years=g.rows.map(x=>state.data.races.find(y=>y.id===x.race_id)?.year).filter(Boolean),identity=[r.bib?'#'+r.bib:'',r.age_class||'',r.club||r.city||''].filter(Boolean).join(' · ');return `<button data-key="${nEsc(g.key)}"><strong>${nEsc(r.name_as_published)}</strong><small>${g.rows.length} lopp · ${years.join(', ')}${identity?' · '+nEsc(identity):''}</small></button>`}).join(''):'<div class="empty">Ingen löpare hittades</div>';box.hidden=false;
   n$$('#historySuggestions button').forEach(b=>b.onclick=()=>{const g=allHistories().find(x=>x.key===b.dataset.key);if(g){input.value=g.rows.at(-1).name_as_published;box.hidden=true;renderRunnerHistory(g)}});
 }
 function renderRunnerHistory(g){
@@ -189,4 +204,7 @@ function renderRunnerHistory(g){
   n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(rows.slice(-5)):window.open(`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`,'_blank');
 }
 
-const nerdTimer=setInterval(()=>{try{initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
+if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories};
+if(typeof window!=='undefined'&&typeof document!=='undefined'){
+  const nerdTimer=setInterval(()=>{try{initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
+}
