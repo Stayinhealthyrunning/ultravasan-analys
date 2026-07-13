@@ -398,3 +398,10 @@ html,body{max-width:100%;overflow-x:hidden}
   .chart-head-tools>.pill{flex-basis:auto}
   .chart-type-note{justify-content:flex-start;text-align:left;margin-bottom:5px}
 }
+
+/* Enhetsval i fartkartan */
+.unit-toggle-group{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}
+.unit-toggle{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:.67rem;font-weight:850;cursor:pointer;user-select:none;transition:.18s ease}
+.unit-toggle input{margin:0;accent-color:var(--green)}
+.unit-toggle.active{background:var(--forest);border-color:var(--forest);color:#fff;box-shadow:0 4px 12px rgba(13,76,58,.16)}
+@media(max-width:720px){.unit-toggle-group{width:100%}.unit-toggle{flex:1;justify-content:center;min-height:42px}}

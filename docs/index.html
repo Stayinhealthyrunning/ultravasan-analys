@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260713-sexcontrols1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260713-classheatunit1" rel="stylesheet"/>
 </head>
 <body>
 <header class="hero hero-image-header"><img alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260711-final5"/></header>
@@ -125,7 +125,7 @@
 <div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass från Sälen till Mora</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och se både klasspercentil och dominans mot klassmedianen.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
 <div class="class-cards" id="classCards"></div>
 <div class="world-grid">
-<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><span class="pill">median km/h</span></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><div class="chart-head-tools"><div class="unit-toggle-group" aria-label="Välj enhet i fartkartan"><label class="unit-toggle active"><input id="classHeatUnitPace" type="checkbox" checked> min/km</label><label class="unit-toggle"><input id="classHeatUnitSpeed" type="checkbox"> km/h</label></div><span class="pill" id="classHeatUnitLabel">median min/km</span></div></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Klassens starkaste prestationer</h3></div><span class="pill">dominans mot klassmedian</span></div><div class="metric-tabs class-index-tabs" id="classIndexTabs"></div><div class="index-ranking" id="classIndexTable"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart" id="classHistoryChart"></div></article>
@@ -247,8 +247,8 @@
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
 <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-<script src="assets/app.js?v=20260713-sexcontrols1"></script>
+<script src="assets/app.js?v=20260713-classheatunit1"></script>
 <script src="assets/nerdlab.js?v=20260713-sexcontrols1"></script>
-<script src="assets/audience-analytics.js?v=20260713-sexcontrols1"></script>
+<script src="assets/audience-analytics.js?v=20260713-classheatunit1"></script>
 </body>
 </html>

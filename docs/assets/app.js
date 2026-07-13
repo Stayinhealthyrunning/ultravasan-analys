@@ -331,7 +331,7 @@ const INFO_HELP_EXTENDED=[
   ['#genderInsights','Automatiska textinsikter som lyfter fram skillnader och mönster i det valda urvalet.'],
   ['#klasser .world-hero','Klasslabbet jämför åldersklasser, delsträckor, historik och prestation relativt den egna klassen.'],
   ['#classCards','Klicka på en klass för att välja eller avmarkera den i Klassduellen. Korten visar klassens storlek och centrala resultatmått.'],
-  ['#classHeatmap','Raderna är åldersklasser och kolumnerna delsträckor. Färgen visar klassens medianfart.'],
+  ['#classHeatmap','Raderna är åldersklasser och kolumnerna delsträckor. Välj min/km eller km/h ovanför tabellen; min/km är förvalt. Varje ruta visar klassens median på delsträckan. Färgskalan är alltid fartorienterad: grönare ruta betyder snabbare delsträcka, oavsett vald enhet. Ett streck betyder att tillräckliga mellantider saknas.'],
   ['#classCompareChart','Jämför fartkurvor för upp till fyra valda åldersklasser.'],
   ['#classIndexTable','Klassens starkaste prestationer visar i första hand klassvinnare och rangordnar dem efter dominans: hur många procent snabbare vinnaren var än medianen bland fullföljande i samma loppår, kön och åldersklass. Minst fem fullföljande krävs för att komma med i huvudlistan. Huvudvärdet till höger är dominansen mot klassmedianen. Under namnet ser du klassplacering, antal fullföljande, tidsmarginal till tvåan och Sälen–Mora-index som ett kompletterande percentilmått där 100 betyder bäst i klassen och 90 betyder bättre än 90 procent av jämförelsegruppen. Om underlaget är litet visas det bara som reservläge.'],
   ['#classHistoryChart','Visar hur valda klassers mediantider och DNF-andelar utvecklats över åren.'],

@@ -1,8 +1,8 @@
 {
-  "installed_at_utc": "2026-07-13T09:27:39.893472+00:00",
-  "name": "Klassindex med dominans, segermarginal och tydligare info",
-  "version": "2026.07.13-classindex2",
-  "description": "Gör om Sälen–Mora-index-rutan i Klasslabbet så att den visar klassens starkaste prestationer. Lägger till lägen för mest dominant, störst segermarginal och högst klasspercentil, kräver minst fem fullföljande i huvudlistan, visar tydligare detaljdata per rad samt uppdaterar informationsförklaringen.",
+  "installed_at_utc": "2026-07-13T09:31:20.867159+00:00",
+  "name": "Fartkarta med valbar min/km och km/h",
+  "version": "2026.07.13-classheatunit1",
+  "description": "Lägger till enhetsval i Fartkarta Klasser × delsträckor. min/km är förvalt och km/h kan väljas. Färgskalan fortsätter att visa snabbare delsträckor som grönare. Uppdaterar informationsförklaringen och cacheversionerna.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
@@ -11,5 +11,5 @@
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "66bad07859f641c70cde9c230c2b940c117373e3b0794d0bc5784070d783f2f0"
+  "manifest_sha256": "c651c835b9517f57c6cc0eac36598628fa921c96eaef8596b8297632750b4d69"
 }

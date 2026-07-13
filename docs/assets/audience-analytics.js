@@ -3,7 +3,7 @@
 (() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),classIndexMode:'dominance',yearTimer:null,currentClubStats:[],clubSearchReady:false};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',yearTimer:null,currentClubStats:[],clubSearchReady:false};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const statusKey=r=>String(r?.status||'').toUpperCase();
@@ -34,6 +34,7 @@
   const pct=(n,d)=>d?Math.round(n/d*1000)/10:0;
   const safeMed=a=>a.length?median(a):null;
   const fmtHour=s=>s==null?'–':fmtTime(s).replace(/:00$/,'');
+  const fmtHeatPace=speed=>{if(!Number.isFinite(speed)||speed<=0)return '–';let sec=Math.round(3600/speed),min=Math.floor(sec/60),rest=sec%60;return `${min}:${String(rest).padStart(2,'0')}`};
   const cpList=()=>state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no);
   const cleanCp=v=>String(v||'').replace('Mora mål','Mora').replace('Start Sälen','Start').trim();
   const segmentPairs=cps=>{let previous='Start';return cps.map(c=>{const pair={checkpoint:c,from:previous,to:cleanCp(c.name),label:`${cleanCp(previous)||'Start'} – ${cleanCp(c.name)}`};previous=c.name;return pair})};
@@ -217,15 +218,42 @@
   }
   function toggleClass(k){if(advanced.classSelection.includes(k))advanced.classSelection=advanced.classSelection.filter(x=>x!==k);else if(advanced.classSelection.length<4)advanced.classSelection.push(k);advanced.classSelection.sort(compareClasses);renderClassWorld()}
   function renderClassChips(stats){document.querySelector('#classChips').innerHTML=stats.map(x=>`<button class="selector-chip ${advanced.classSelection.includes(x.key)?'active':''}" data-class="${esc(x.key)}">${esc(x.key)} <small>${x.starters}</small></button>`).join('');document.querySelectorAll('#classChips .selector-chip').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class))}
+  function setupClassHeatUnitControls(){
+    const pace=document.querySelector('#classHeatUnitPace'),speed=document.querySelector('#classHeatUnitSpeed');
+    if(!pace||!speed||pace.dataset.unitReady)return;
+    pace.dataset.unitReady='1';
+    const apply=unit=>{
+      advanced.classHeatUnit=unit;
+      pace.checked=unit==='pace';
+      speed.checked=unit==='speed';
+      pace.closest('label')?.classList.toggle('active',unit==='pace');
+      speed.closest('label')?.classList.toggle('active',unit==='speed');
+      const label=document.querySelector('#classHeatUnitLabel');
+      if(label)label.textContent=unit==='pace'?'median min/km':'median km/h';
+      renderClassWorld();
+    };
+    pace.addEventListener('change',()=>apply(pace.checked?'pace':'speed'));
+    speed.addEventListener('change',()=>apply(speed.checked?'speed':'pace'));
+    advanced.classHeatUnit='pace';
+    pace.checked=true;speed.checked=false;
+    pace.closest('label')?.classList.add('active');
+    speed.closest('label')?.classList.remove('active');
+  }
   function renderClassHeatmap(stats){
     const el=document.querySelector('#classHeatmap'),rows=stats.slice().sort((a,b)=>compareClasses(a.key,b.key)),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps),values=[];
+    const unit=advanced.classHeatUnit||'pace';
     rows.forEach(g=>cps.forEach(c=>{const v=segmentSpeeds(g.rows,c.sequence_no);if(v.length)values.push(safeMed(v))}));
     if(!rows.length||!cps.length){el.innerHTML='<div class="empty">Klasser eller mellantider saknas.</div>';return}
     const lo=values.length?Math.min(...values):0,hi=values.length?Math.max(...values):1;
+    const display=med=>unit==='pace'?fmtHeatPace(med):med.toFixed(1);
+    const suffix=unit==='pace'?' min/km':' km/h';
     let html=`<div class="class-map-scroll"><div class="class-map-grid" style="--segment-count:${cps.length}"><div class="class-map-corner">Klass</div>${pairs.map(p=>`<div class="class-map-head segment-range-head">${segmentHeader(p.from,p.to)}</div>`).join('')}`;
     rows.forEach(g=>{
       html+=`<button class="class-map-class ${g.key.startsWith('W')?'female-text':'male-text'}" data-class="${esc(g.key)}">${esc(g.key)}</button>`;
-      cps.forEach(c=>{const v=segmentSpeeds(g.rows,c.sequence_no),med=safeMed(v),t=med?(med-lo)/(hi-lo||1):0,hue=Math.round(45+105*t),light=Math.round(88-43*t);html+=`<div class="class-map-cell" style="background:hsl(${hue} 55% ${light}%)" title="${esc(g.key)} · ${esc(c.name)}: ${med?med.toFixed(1)+' km/h':'saknas'}">${med?med.toFixed(1):'–'}</div>`});
+      cps.forEach((c,i)=>{
+        const v=segmentSpeeds(g.rows,c.sequence_no),med=safeMed(v),t=med?(med-lo)/(hi-lo||1):0,hue=Math.round(45+105*t),light=Math.round(88-43*t),pair=pairs[i];
+        html+=`<div class="class-map-cell" style="background:hsl(${hue} 55% ${light}%)" title="${esc(g.key)} · ${esc(pair?.label||c.name)}: ${med?display(med)+suffix:'saknas'}">${med?display(med):'–'}</div>`;
+      });
     });
     el.innerHTML=html+'</div></div>';
     el.querySelectorAll('.class-map-class').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class));
@@ -369,7 +397,7 @@
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupNavigation();setupClubSearches();refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
