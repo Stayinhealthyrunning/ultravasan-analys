@@ -16,6 +16,31 @@ CONFIG = uvtool.load_config(ROOT / "config" / "races.json")
 RACES = {race["race_key"]: race for race in CONFIG["races"]}
 
 
+def observed_2015_detail(
+    *, name: str, age_class: str, status: str, total_time: str | None,
+    splits: list[tuple[str, str]],
+) -> str:
+    total = (
+        f"<tr class='f-time_finish_brutto'><th>Totaltid (Brutto)</th>"
+        f"<td class='f-time_finish_brutto'>{total_time}</td></tr>"
+        if total_time else ""
+    )
+    split_rows = "".join(
+        f"<tr class='{'f-time_finish_netto' if label == 'Mål' else 'split'}'>"
+        f"<th class='desc'>{label}</th><td class='time'>{elapsed}</td></tr>"
+        for label, elapsed in splits
+    )
+    return f"""
+    <table>
+      <tr><th>Namn</th><td class='f-__fullname'>{name}</td></tr>
+      <tr><th>Klass</th><td class='f-age_class'>{age_class}</td></tr>
+      <tr><th>Status</th><td class='f-status'>{status}</td></tr>
+      {total}
+    </table>
+    <table><tr><th>Mellantid</th><th>Tid</th></tr>{split_rows}</table>
+    """
+
+
 class HistoricalParserRegressionTests(unittest.TestCase):
     def test_historical_and_current_class_prefixes(self) -> None:
         expected = {
@@ -30,6 +55,57 @@ class HistoricalParserRegressionTests(unittest.TestCase):
         for source in ("Startade inte", "STARTADE INTE", "  startade inte  "):
             with self.subTest(source=source):
                 self.assertEqual("DNS", uvtool.normalize_result_status(source))
+
+    def test_startat_is_supported_unknown_status_case_insensitively(self) -> None:
+        for source in ("STARTAT", "startat", "  Startat  "):
+            with self.subTest(source=source):
+                self.assertEqual("UNKNOWN", uvtool.normalize_result_status(source))
+
+    def test_exact_2015_startat_record(self) -> None:
+        parsed = uvtool.parse_detail_html(
+            observed_2015_detail(
+                name="Hårrskog, Andreas (SWE)", age_class="M45",
+                status="Startat", total_time=None, splits=[],
+            ),
+            "UL45_9999991678885A000000043D:9999991678885A00001FFB7E",
+            "https://results.vasaloppet.se/2016/",
+            RACES["ultravasan45-2015"]["checkpoints"],
+        )
+        self.assertEqual("Hårrskog, Andreas", parsed.name)
+        self.assertEqual("M45", parsed.age_class)
+        self.assertEqual("M", parsed.sex)
+        self.assertEqual("UNKNOWN", parsed.status)
+        self.assertIsNone(parsed.finish_seconds)
+        self.assertEqual([], parsed.splits)
+
+    def test_exact_2015_gender_neutral_records_are_not_name_guessed(self) -> None:
+        cases = [
+            ("Irestedt Horne, Vemund (NOR)", "–", "05:18:26", "NOR"),
+            ("Sardagna, Carmela (ITA)", "�", "05:19:15", "ITA"),
+        ]
+        for index, (name, age_class, finish, nationality) in enumerate(cases):
+            with self.subTest(name=name):
+                parsed = uvtool.parse_detail_html(
+                    observed_2015_detail(
+                        name=name, age_class=age_class, status="I mål", total_time=finish,
+                        splits=[
+                            ("Oxberg", "01:40:00"), ("Hökberg", "02:40:00"),
+                            ("Eldris", "04:00:00"), ("Mål", finish),
+                        ],
+                    ),
+                    f"UL45_9999991678885A000000043D:neutral-{index}",
+                    "https://results.vasaloppet.se/2016/",
+                    RACES["ultravasan45-2015"]["checkpoints"],
+                )
+                self.assertIsNone(parsed.age_class)
+                self.assertIsNone(parsed.sex)
+                self.assertEqual(nationality, parsed.nationality)
+                self.assertEqual("FINISHED", parsed.status)
+
+    def test_neutral_or_missing_class_never_uses_the_name(self) -> None:
+        self.assertIsNone(uvtool.sex_code(None, "Motion"))
+        self.assertIsNone(uvtool.sex_code(None, None))
+        self.assertIsNone(uvtool.sex_code(None, "Carmela"))
 
     def test_empty_club_city_never_becomes_the_label(self) -> None:
         html = """
@@ -150,6 +226,48 @@ class HistoricalImportSafetyTests(unittest.TestCase):
         self.assertIn("inputs.full_import_confirmed == true", workflow[full_import:publication])
         self.assertIn("--compare-uv90-snapshot", workflow)
         self.assertIn("tools/validate_uv45_history.py", workflow)
+
+    def test_quality_gate_accepts_missing_sex_only_for_neutral_class(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            db = Path(temp) / "neutral.sqlite"
+            uvtool.init_db(db, ROOT / "config" / "races.json")
+            conn = uvtool.connect(db)
+            race = conn.execute("SELECT * FROM races WHERE race_key='ultravasan45-2015'").fetchone()
+            source = conn.execute("SELECT * FROM sources WHERE code='vasaloppet_mika'").fetchone()
+            checkpoints = RACES["ultravasan45-2015"]["checkpoints"]
+            neutral = uvtool.ParsedResult(
+                source_result_id="UL45_9999991678885A000000043D:neutral",
+                name="Neutral Test", sex=None, age_class=None, nationality="NOR",
+                status="FINISHED", finish_seconds=19000,
+                splits=[
+                    {"checkpoint_key": "oxberg", "elapsed_seconds": 6000},
+                    {"checkpoint_key": "hokberg", "elapsed_seconds": 10000},
+                    {"checkpoint_key": "eldris", "elapsed_seconds": 14500},
+                    {"checkpoint_key": "mora", "elapsed_seconds": 19000},
+                ],
+            )
+            uvtool.save_result(conn, race["id"], source["id"], 45.0, checkpoints, neutral)
+            conn.commit()
+            issues = validate_uv45_history.collect_race_issues(
+                conn, "ultravasan45-2015", "UL45_9999991678885A000000043D"
+            )
+            self.assertFalse(any("kön saknas" in issue for issue in issues), issues)
+
+            conn.execute("UPDATE results SET age_class='H40',sex=NULL")
+            conn.commit()
+            issues = validate_uv45_history.collect_race_issues(
+                conn, "ultravasan45-2015", "UL45_9999991678885A000000043D"
+            )
+            self.assertTrue(any("kön saknas trots könsbärande klass" in issue for issue in issues), issues)
+            conn.close()
+
+    def test_uv45_2025_and_uv90_class_rules_remain_supported(self) -> None:
+        self.assertEqual("M", uvtool.sex_code(None, "M35"))
+        self.assertEqual("F", uvtool.sex_code(None, "K35"))
+        self.assertEqual("M", uvtool.sex_code("Man", None))
+        self.assertEqual("F", uvtool.sex_code("Kvinna", None))
+        self.assertEqual("mora_warning", RACES["ultravasan45-2025"]["checkpoints"][-2]["checkpoint_key"])
+        self.assertEqual("smagan", RACES["ultravasan90-2025"]["checkpoints"][1]["checkpoint_key"])
 
 
 if __name__ == "__main__":

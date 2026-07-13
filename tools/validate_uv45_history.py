@@ -103,8 +103,11 @@ def collect_race_issues(conn: sqlite3.Connection, race_key: str, event_code: str
         label = f"{race_key} resultat {row['id']} {row['name_as_published']}"
         if row["status"] not in CANONICAL_STATUSES:
             issues.append(f"{label}: status är inte normaliserad ({row['status']}).")
-        if not row["sex"]:
-            issues.append(f"{label}: kön saknas.")
+        expected_sex = uvtool.sex_from_age_class(row["age_class"])
+        if not row["sex"] and expected_sex:
+            issues.append(
+                f"{label}: kön saknas trots könsbärande klass {row['age_class']!r}."
+            )
         if not row["nationality"]:
             issues.append(f"{label}: nationalitet saknas.")
         splits = conn.execute("""

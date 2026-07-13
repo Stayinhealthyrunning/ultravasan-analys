@@ -163,14 +163,35 @@ def parse_int(value: Any) -> int | None:
     return int(m.group()) if m else None
 
 
-def sex_code(value: str | None, age_class: str | None = None) -> str | None:
-    n = normalize(value or age_class or "")
+def optional_source_value(value: str | None) -> str | None:
+    """Return None for Mika's empty/missing-value placeholders."""
+    text = clean_text(value)
+    if not text or not any(character.isalnum() for character in text):
+        return None
+    if normalize(text) in {"n a", "na", "saknas", "ej angivet", "unknown"}:
+        return None
+    return text
+
+
+def sex_from_age_class(age_class: str | None) -> str | None:
+    n = normalize(optional_source_value(age_class) or "")
     compact = n.replace(" ", "")
     if n in {"m", "h", "man", "male", "men", "herr", "herrar"} or re.match(r"^[mh]\d", compact):
         return "M"
     if n in {"d", "f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"} or re.match(r"^[dkfw]\d", compact):
         return "F"
-    return clean_text(value)
+    return None
+
+
+def sex_code(value: str | None, age_class: str | None = None) -> str | None:
+    explicit = optional_source_value(value)
+    if explicit:
+        n = normalize(explicit)
+        if n in {"m", "h", "man", "male", "men", "herr", "herrar"}:
+            return "M"
+        if n in {"d", "f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"}:
+            return "F"
+    return sex_from_age_class(age_class)
 
 
 def normalize_result_status(value: str | None) -> str | None:
@@ -183,6 +204,10 @@ def normalize_result_status(value: str | None) -> str | None:
         return "DNF"
     if n in {"dns", "ej start", "ej startat", "inte startat", "startade inte"} or "did not start" in n:
         return "DNS"
+    if n in {"startat", "started"}:
+        # The archive uses Startat when a runner has started but has neither a
+        # registered finish nor enough evidence to classify the outcome DNF.
+        return "UNKNOWN"
     if n in {"dsq", "diskvalificerad"} or "disqualified" in n:
         return "DSQ"
     if n in {"finished", "finisher", "i mal", "malgang"}:
@@ -616,7 +641,7 @@ def parse_detail_html(html: str, source_result_id: str, source_url: str, checkpo
         bib=clean_text(vals.get("bib")),
         name=parsed_name or f"Okänd löpare {source_result_id}",
         sex=sex_code(vals.get("sex"), vals.get("age_class")),
-        age_class=clean_text(vals.get("age_class")),
+        age_class=optional_source_value(vals.get("age_class")),
         nationality=parsed_nationality,
         club=club,
         city=city,

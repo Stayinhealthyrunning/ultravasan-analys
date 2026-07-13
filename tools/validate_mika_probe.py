@@ -43,8 +43,11 @@ def collect_blockers(conn: sqlite3.Connection, config: dict, race_key: str, repo
         label = f"Resultat {result['id']} {result['name_as_published']}"
         if result["status"] not in canonical_statuses:
             blockers.append(f"{label}: status är inte normaliserad ({result['status']}).")
-        if not result["sex"]:
-            blockers.append(f"{label}: kön saknas.")
+        expected_sex = uvtool.sex_from_age_class(result["age_class"])
+        if not result["sex"] and expected_sex:
+            blockers.append(
+                f"{label}: kön saknas trots könsbärande klass {result['age_class']!r}."
+            )
         if not result["nationality"]:
             blockers.append(f"{label}: nationalitet saknas.")
         splits = conn.execute("""
