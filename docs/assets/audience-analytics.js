@@ -3,7 +3,7 @@
 (() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],activeClubKey:'',clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),yearTimer:null,currentClubStats:[],clubSearchReady:false,unitControlsReady:false};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],clubSelection:[],activeClubKey:'',clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),smIndex:new Map(),expectedSegmentShares:new Map(),yearTimer:null,currentClubStats:[],clubSearchReady:false,unitControlsReady:false};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const statusKey=r=>String(r?.status||'').toUpperCase();
@@ -66,6 +66,63 @@
     const groups=new Map();
     state.data.results.filter(isFinished).forEach(r=>{const k=`${r.race_id}|${sexKey(r)}|${normClass(r.age_class)}`;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});
     groups.forEach(rows=>{rows.sort((a,b)=>a.finish_seconds-b.finish_seconds);rows.forEach((r,i)=>advanced.smIndex.set(r.id,rows.length===1?100:100*(rows.length-1-i)/(rows.length-1)))})
+  }
+
+
+  function expectedSegmentShares(raceId){
+    if(advanced.expectedSegmentShares.has(raceId))return advanced.expectedSegmentShares.get(raceId);
+    const bySeq=new Map(),finishers=state.data.results.filter(r=>r.race_id===raceId&&isFinished(r));
+    finishers.forEach(r=>{
+      const finish=Number(r.finish_seconds);if(!(finish>0))return;
+      (advanced.splitsByResult.get(r.id)||[]).forEach(s=>{
+        const seq=Number(s.sequence_no),segment=Number(s.segment_seconds);
+        if(!(seq>0&&segment>0&&segment<finish))return;
+        const share=segment/finish;
+        if(!(share>0&&share<0.5))return;
+        if(!bySeq.has(seq))bySeq.set(seq,[]);
+        bySeq.get(seq).push(share);
+      });
+    });
+    const medians=new Map();bySeq.forEach((values,seq)=>{if(values.length>=5)medians.set(seq,safeMed(values))});
+    advanced.expectedSegmentShares.set(raceId,medians);return medians;
+  }
+
+  function adjustedPacingIndex(r,split){
+    if(!isFinished(r))return null;
+    const finish=Number(r.finish_seconds),segment=Number(split?.segment_seconds),share=expectedSegmentShares(r.race_id).get(Number(split?.sequence_no));
+    if(!(finish>0&&segment>0&&share>0))return null;
+    const index=finish*share/segment*100;
+    return Number.isFinite(index)&&index>35&&index<220?index:null;
+  }
+
+  function adjustedPacingPoints(rows,controlKey){
+    rows=filterRowsForSexControl(rows.filter(isFinished),controlKey);
+    const cps=cpList().filter(c=>Number(c.sequence_no)>0),groups=new Map();
+    rows.forEach(r=>{
+      const sx=sexKey(r);if(sx!=='M'&&sx!=='F')return;
+      (advanced.splitsByResult.get(r.id)||[]).forEach(s=>{
+        const seq=Number(s.sequence_no),index=adjustedPacingIndex(r,s);if(index==null)return;
+        if(!groups.has(seq))groups.set(seq,{M:[],F:[]});groups.get(seq)[sx].push(index);
+      });
+    });
+    let previous='Start';
+    return cps.map(c=>{
+      const g=groups.get(Number(c.sequence_no))||{M:[],F:[]},name=`${cleanCp(previous)||'Start'} – ${cleanCp(c.name)}`;previous=c.name;
+      return{seq:Number(c.sequence_no),name,M:safeMed(g.M),F:safeMed(g.F),countM:g.M.length,countF:g.F.length};
+    }).filter(p=>p.M!=null||p.F!=null);
+  }
+
+  function renderAdjustedPacingChart(el,rows,controlKey='genderRetention'){
+    if(!el)return;const selected=visibleSexes(controlKey);if(!selected.length){el.innerHTML='<div class="empty">Välj minst ett kön</div>';return}
+    const points=adjustedPacingPoints(rows,controlKey),series=selected.filter(s=>points.some(p=>Number.isFinite(p[s])));if(!series.length){el.innerHTML='<div class="empty">Fullföljande löpare med giltiga mellantider saknas för valt urval.</div>';return}
+    const W=760,H=280,pad={l:58,r:22,t:24,b:68},all=points.flatMap(p=>series.map(s=>p[s]).filter(Number.isFinite));
+    const rawMin=Math.min(100,...all),rawMax=Math.max(100,...all),min=Math.floor((rawMin-5)/5)*5,max=Math.ceil((rawMax+5)/5)*5,x=i=>pad.l+i*(W-pad.l-pad.r)/(points.length-1||1),y=v=>pad.t+(max-v)*(H-pad.t-pad.b)/(max-min||1);let out='';
+    for(let i=0;i<=4;i++){const v=max-(max-min)*i/4,yy=y(v);out+=svg('line',{x1:pad.l,y1:yy,x2:W-pad.r,y2:yy,class:'gridline'})+svg('text',{x:pad.l-9,y:yy+4,'text-anchor':'end'},String(Math.round(v)))}
+    const baseline=y(100);out+=`<line x1="${pad.l}" y1="${baseline}" x2="${W-pad.r}" y2="${baseline}" stroke="${COLORS.green}" stroke-width="2" stroke-dasharray="7 6" opacity=".8"/>`;
+    out+=svg('text',{x:15,y:(pad.t+H-pad.b)/2,'text-anchor':'middle',transform:`rotate(-90 15 ${(pad.t+H-pad.b)/2})`},'Banjusterat index');
+    series.forEach(s=>{const color=s==='M'?COLORS.male:COLORS.female,valid=points.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d[s]));out+=`<path d="${valid.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${y(d[s])}`).join(' ')}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;valid.forEach(d=>{const delta=d[s]-100,direction=Math.abs(delta)<0.5?'ungefär enligt förväntan':delta>0?`${Math.abs(delta).toFixed(0)} % snabbare än förväntat`:`${Math.abs(delta).toFixed(0)} % långsammare än förväntat`,count=s==='M'?d.countM:d.countF,title=`${sexLabel(s)} · ${d.name}: index ${d[s].toFixed(0)} · ${direction} · ${count} löpare`;out+=s==='F'?`<path d="M${x(d.i)} ${y(d[s])-5}l5 5-5 5-5-5z" fill="${color}"><title>${esc(title)}</title></path>`:`<circle cx="${x(d.i)}" cy="${y(d[s])}" r="5" fill="${color}" stroke="#fff" stroke-width="2"><title>${esc(title)}</title></circle>`})});
+    points.forEach((d,i)=>out+=svg('text',{x:x(i),y:H-29,'text-anchor':'middle',transform:`rotate(-30 ${x(i)} ${H-29})`},String(d.name||'').replace('Mora mål','Mora')));
+    el.innerHTML=`<div class="chart-type-note">100 = förväntad fart för delsträckan · över 100 snabbare · under 100 långsammare</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
   }
 
   function currentClubOptions(){
@@ -150,6 +207,7 @@
   }
 
   function renderSexPaceChart(el,rows,includeStart=false,relative=false,controlKey='pace'){
+    if(relative)return renderAdjustedPacingChart(el,rows,controlKey);
     if(!el)return;const selected=visibleSexes(controlKey);if(!selected.length){el.innerHTML='<div class="empty">Välj minst ett kön</div>';return}
     rows=filterRowsForSexControl(rows,controlKey);const ids=new Set(rows.map(r=>r.id)),groups=new Map();state.data.splits.filter(s=>ids.has(s.result_id)&&Number(s.pace_seconds_per_km)>0).forEach(s=>{const speed=3600/Number(s.pace_seconds_per_km);if(!Number.isFinite(speed)||speed<=0||speed>30)return;if(!groups.has(s.sequence_no))groups.set(s.sequence_no,{name:s.checkpoint_name,M:[],F:[]});const sx=resultSex(s.result_id);if(groups.get(s.sequence_no)[sx])groups.get(s.sequence_no)[sx].push(speed)});
     let previous='Start';const points=[...groups].sort((a,b)=>a[0]-b[0]).map(([seq,g])=>{const name=`${cleanCp(previous)||'Start'} – ${cleanCp(g.name)}`;previous=g.name;return{seq,name,M:safeMed(g.M),F:safeMed(g.F)}});if(!points.length){el.innerHTML='<div class="empty">Mellantider saknas i urvalet.</div>';return}
@@ -220,8 +278,8 @@
     data.forEach((d,i)=>{const bw=Math.max(9,(W-p.l-p.r)/(data.length*(selected.length+1.2))),totalWidth=bw*selected.length,start=x(i)-totalWidth/2;selected.forEach((s,si)=>{const color=s==='M'?COLORS.male:COLORS.female;out+=`<rect x="${start+si*bw}" y="${yN(d[s])}" width="${Math.max(7,bw-1)}" height="${H-p.b-yN(d[s])}" fill="${color}" opacity=".75"><title>${d.year}: ${d[s]} ${s==='M'?'män':'kvinnor'}</title></rect>`});out+=svg('text',{x:x(i),y:H-14,'text-anchor':'middle'},String(d.year))});selected.forEach(s=>{const k=s==='M'?'MR':'FR',c=s==='M'?COLORS.male:COLORS.female;out+=`<path d="${data.map((d,i)=>`${i?'L':'M'}${x(i)} ${yP(d[k])}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="7 5"/>`});el.innerHTML=`<div class="chart-type-note">Staplar = startande · streckad linje = fullföljandegrad</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
   }
   
-  function closingRetention(rows){const ids=new Set(rows.map(r=>r.id)),bySeq=new Map();state.data.splits.filter(s=>ids.has(s.result_id)&&s.pace_seconds_per_km).forEach(s=>{if(!bySeq.has(s.sequence_no))bySeq.set(s.sequence_no,[]);bySeq.get(s.sequence_no).push(3600/s.pace_seconds_per_km)});const seq=[...bySeq].sort((a,b)=>a[0]-b[0]);if(seq.length<2)return null;return safeMed(seq.at(-1)[1])/safeMed(seq[0][1])*100}
-  function renderGenderInsights(m,f){const el=document.querySelector('#genderInsights'),ms=m.filter(isFinished),fs=f.filter(isFinished),mm=safeMed(ms.map(r=>r.finish_seconds)),fm=safeMed(fs.map(r=>r.finish_seconds)),mrate=pct(ms.length,m.filter(r=>!isDns(r)).length),frate=pct(fs.length,f.filter(r=>!isDns(r)).length),mr=closingRetention(m),fr=closingRetention(f),femaleShare=pct(f.filter(r=>!isDns(r)).length,m.filter(r=>!isDns(r)).length+f.filter(r=>!isDns(r)).length);const cards=[['Kvinnornas andel',`${femaleShare} %`,'av de faktiska startande'],['Skillnad i median',mm&&fm?`${Math.round(Math.abs(fm-mm)/60)} min`:'–',fm>mm?'kvinnornas median är senare':'kvinnornas median är tidigare'],['Fullföljandegrad',`${mrate} % / ${frate} %`,'män / kvinnor'],['Fart kvar i avslutningen',mr&&fr?`${mr.toFixed(0)} / ${fr.toFixed(0)}`:'–','index män / kvinnor, första segmentet = 100']];el.innerHTML=cards.map(([a,b,c])=>`<div><span>${a}</span><strong>${b}</strong><small>${c}</small></div>`).join('')}
+  function closingAdjustedPacing(rows){const finishSeq=Number(cpList().filter(c=>Number(c.sequence_no)>0).at(-1)?.sequence_no),values=[];rows.filter(isFinished).forEach(r=>{const split=(advanced.splitsByResult.get(r.id)||[]).find(s=>Number(s.sequence_no)===finishSeq),index=adjustedPacingIndex(r,split);if(index!=null)values.push(index)});return safeMed(values)}
+  function renderGenderInsights(m,f){const el=document.querySelector('#genderInsights'),ms=m.filter(isFinished),fs=f.filter(isFinished),mm=safeMed(ms.map(r=>r.finish_seconds)),fm=safeMed(fs.map(r=>r.finish_seconds)),mrate=pct(ms.length,m.filter(r=>!isDns(r)).length),frate=pct(fs.length,f.filter(r=>!isDns(r)).length),mr=closingAdjustedPacing(m),fr=closingAdjustedPacing(f),femaleShare=pct(f.filter(r=>!isDns(r)).length,m.filter(r=>!isDns(r)).length+f.filter(r=>!isDns(r)).length);const cards=[['Kvinnornas andel',`${femaleShare} %`,'av de faktiska startande'],['Skillnad i median',mm&&fm?`${Math.round(Math.abs(fm-mm)/60)} min`:'–',fm>mm?'kvinnornas median är senare':'kvinnornas median är tidigare'],['Fullföljandegrad',`${mrate} % / ${frate} %`,'män / kvinnor'],['Pacing i avslutningen',mr&&fr?`${mr.toFixed(0)} / ${fr.toFixed(0)}`:'–','banjusterat index män / kvinnor; 100 = förväntad fart']];el.innerHTML=cards.map(([a,b,c])=>`<div><span>${a}</span><strong>${b}</strong><small>${c}</small></div>`).join('')}
 
   function classBase(){return filteredCurrent({ignoreClass:true})}
   function classGroups(rows=classBase()){const m=new Map();rows.forEach(r=>{const k=normClass(r.age_class);if(!m.has(k))m.set(k,[]);m.get(k).push(r)});return m}

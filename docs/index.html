@@ -116,7 +116,7 @@
 <div class="gender-kpis" id="genderKpis"></div>
 <div class="world-grid">
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderPace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderPaceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderPaceSexF" type="checkbox" checked> Kvinnor</label></div><div class="unit-toggle-group" data-unit-control="genderPace" aria-label="Välj fartenhet"><span class="control-caption">Enhet</span><label class="unit-toggle"><input id="genderPaceUnitSpeed" type="checkbox" checked> km/h</label><label class="unit-toggle"><input id="genderPaceUnitPace" type="checkbox"> min/km</label></div></div></div><div class="chart world-chart" id="genderPaceChart"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = första segmentet</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Pacing jämfört med förväntad fart</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = förväntad fart</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderHistory" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderHistorySexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderHistorySexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">alla loppår</span></div></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
 </div>
@@ -243,8 +243,8 @@
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
 <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-<script src="assets/app.js?v=20260713-unitlayout2"></script>
+<script src="assets/app.js?v=20260713-pacing1"></script>
 <script src="assets/nerdlab.js?v=20260713-unitlayout2"></script>
-<script src="assets/audience-analytics.js?v=20260713-unitlayout2"></script>
+<script src="assets/audience-analytics.js?v=20260713-pacing1"></script>
 </body>
 </html>

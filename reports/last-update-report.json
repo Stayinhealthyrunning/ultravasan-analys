@@ -1,14 +1,14 @@
 {
-  "installed_at_utc": "2026-07-13T08:55:42.939041+00:00",
-  "name": "Enhetlig diagramdesign, valbar fartenhet och förenklat klubbval",
-  "version": "2026.07.13-unitlayout2",
-  "description": "Lägger till exklusivt val mellan km/h och min/km i fartlinjediagram, staplar Klasslabbets fyra kort i full bredd, förenklar klubb/ort-valet till ett enda sökfält och standardiserar diagramhuvudenas layout.",
+  "installed_at_utc": "2026-07-13T09:11:05.409144+00:00",
+  "name": "Banjusterad pacing med tydlig metodförklaring",
+  "version": "2026.07.13-pacing1",
+  "description": "Ersätter jämförelsen mot det första branta segmentet med ett ban- och årsjusterat pacingindex. 100 motsvarar förväntad delsträcksprestation utifrån löparens sluttid och delsträckans normala andel av sluttiden. Uppdaterar även informationsikonen och automatiska insikter.",
   "source_package": "uppdatering.zip",
   "installed_files": [
+    "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
-    "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "879c3f10b712f012a83d410e427bcc9307e42b43ea5554ba6630a71c3c69615c"
+  "manifest_sha256": "a26a4b9ca4507d9b96e5db270cfd011d2aaaad2e9b034a9dc210019fc3b590a0"
 }
