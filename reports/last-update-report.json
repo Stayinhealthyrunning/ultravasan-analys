@@ -1,14 +1,15 @@
 {
-  "installed_at_utc": "2026-07-13T09:11:05.409144+00:00",
-  "name": "Banjusterad pacing med tydlig metodförklaring",
-  "version": "2026.07.13-pacing1",
-  "description": "Ersätter jämförelsen mot det första branta segmentet med ett ban- och årsjusterat pacingindex. 100 motsvarar förväntad delsträcksprestation utifrån löparens sluttid och delsträckans normala andel av sluttiden. Uppdaterar även informationsikonen och automatiska insikter.",
+  "installed_at_utc": "2026-07-13T09:27:39.893472+00:00",
+  "name": "Klassindex med dominans, segermarginal och tydligare info",
+  "version": "2026.07.13-classindex2",
+  "description": "Gör om Sälen–Mora-index-rutan i Klasslabbet så att den visar klassens starkaste prestationer. Lägger till lägen för mest dominant, störst segermarginal och högst klasspercentil, kräver minst fem fullföljande i huvudlistan, visar tydligare detaljdata per rad samt uppdaterar informationsförklaringen.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
+    "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "a26a4b9ca4507d9b96e5db270cfd011d2aaaad2e9b034a9dc210019fc3b590a0"
+  "manifest_sha256": "66bad07859f641c70cde9c230c2b940c117373e3b0794d0bc5784070d783f2f0"
 }
