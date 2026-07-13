@@ -1,0 +1,114 @@
+{
+  "race_key": "ultravasan45-2025",
+  "event_code": "UL45_HCH8NDMR2501",
+  "pages": [
+    {
+      "partition": "M",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2026/?page=1&event=UL45_HCH8NDMR2501&num_results=100&pid=search&search%5Bsex%5D=M",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2026/?page=1&event=UL45_HCH8NDMR2501&num_results=100&pid=search&search%5Bsex%5D=M",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "HCH8NDMRA385E1",
+      "name": "Biranvand, Yavar",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3DF7D",
+      "name": "Andersson, Erik",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3E506",
+      "name": "Andersson, Fredrik",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3E9A4",
+      "name": "Bergström, David",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3EB53",
+      "name": "Brolin, Hans",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3F02B",
+      "name": "Borselius, Tony",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3F202",
+      "name": "Andersson, Mats",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3F31A",
+      "name": "Boberg, Urban",
+      "splits": 3,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3F6F2",
+      "name": "Alesand, Adam",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA3FC9E",
+      "name": "Boström, Daniel",
+      "splits": 6,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-13T17:15:40+00:00",
+  "finished_at": "2026-07-13T17:15:57+00:00",
+  "records": 10,
+  "inserted": 10,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}

@@ -1,0 +1,362 @@
+[
+  {
+    "year": 2003,
+    "event_code": "UL45_000017167888590000000399",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2003,
+    "event_code": "UL90_000017167888590000000399",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2006,
+    "event_code": "UL45_9999991678885A0000000620",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2006,
+    "event_code": "UL90_9999991678885A0000000621",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2007,
+    "event_code": "UL45_9999991678885C0000000709",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2022,
+    "event_code": "UL45_HCH8NDMR2201",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2022,
+    "event_code": "UL90_HCH8NDMR2201",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2023,
+    "event_code": "UL45_HCH8NDMR2301",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2023,
+    "event_code": "UL90_HCH8NDMR2301",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2024,
+    "event_code": "UL45_HCH8NDMR2401",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2024,
+    "event_code": "UL90_HCH8NDMR2401",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL45_9999991678885A000000043D",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL45_9999991678885A00000004CB",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL45_9999991678885B00000006D3",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL45_HCH8NDMR2501",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL4E_9999991678887600000007BZ",
+    "label": "Ultravasan 45 Elit",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL90_9999991678885A00000003FE",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL90_9999991678885A00000004CC",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL90_9999991678885B00000006D4",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL90_9999991678885C000000070B",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL90_HCH8NDMR2501",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2025,
+    "event_code": "UL9E_9999991678887600000007BZ",
+    "label": "Ultravasan 90 Elit",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL45_9999991678885A000000043D",
+    "label": "Ultravasan 45",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL45_9999991678885A00000004CB",
+    "label": "Ultravasan 45",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL45_9999991678885B00000006D3",
+    "label": "Ultravasan 45",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL45_HCH8NDMR2601",
+    "label": "Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL4E_9999991678887600000007BZ",
+    "label": "Ultravasan 45 Elit",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL90_9999991678885A00000003FE",
+    "label": "Ultravasan 90",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL90_9999991678885A00000004CC",
+    "label": "Ultravasan 90",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL90_9999991678885B00000006D4",
+    "label": "Ultravasan 90",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL90_9999991678885C000000070B",
+    "label": "Ultravasan 90",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL90_HCH8NDMR2601",
+    "label": "Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL9E_9999991678887600000007BZ",
+    "label": "Ultravasan 90 Elit",
+    "result_year_path": 2026,
+    "catalogue_url": "https://results.vasaloppet.se/2026/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2026,
+    "event_code": "UL9S_HCH8NDMR2601",
+    "label": "Ultravasan 90 - Svenskt Mästerskap",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2045,
+    "event_code": "ALL_HISTORY_UL45",
+    "label": "Alla Ultravasan 45",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  },
+  {
+    "year": 2090,
+    "event_code": "ALL_HISTORY_UL90",
+    "label": "Alla Ultravasan 90",
+    "result_year_path": 2025,
+    "catalogue_url": "https://results.vasaloppet.se/2025/?pid=list",
+    "mode": "http",
+    "cached": false,
+    "status": 200
+  }
+]

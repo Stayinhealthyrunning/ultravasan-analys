@@ -100,11 +100,11 @@
       "year": 2025,
       "race_date": "2025-08-16",
       "distance_km": 45.0,
-      "event_code": null,
+      "event_code": "UL45_HCH8NDMR2501",
       "result_year_path": 2026,
-      "official_url": "https://results.vasaloppet.se/2026/",
-      "page_url_template": null,
-      "detail_url_template": null,
+      "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL45_HCH8NDMR2501",
+      "page_url_template": "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2026/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2501",
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
@@ -153,7 +153,11 @@
       ],
       "course_version": "uv45-current",
       "partition_by_sex": true,
-      "notes": "Eventkod upptäcks via discover_events eller anges före officiell import."
+      "notes": "Eventkod upptäcks via discover_events eller anges före officiell import.",
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=list"
+      ]
     }
   ]
 }
