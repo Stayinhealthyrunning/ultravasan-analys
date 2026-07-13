@@ -8,7 +8,7 @@ public pages in a real browser when a hosting network receives HTTP 403.
 Commands:
   probe     Test list parsing and a limited number of participant details.
   scrape    Import the complete configured race.
-  discover  Find Ultravasan 90 event codes from Mika's event catalogue.
+  discover  Find Ultravasan 90 and Ultravasan 45 event codes from Mika's event catalogue.
 """
 from __future__ import annotations
 
@@ -343,7 +343,7 @@ def discover(args: argparse.Namespace) -> None:
                     event = parse_qs(urlparse(urljoin(url, value)).query).get("event", [None])[0]
                 else:
                     event = value
-                if event and "ultravasan" in uvtool.normalize(text) and re.search(r"\b90\b", text):
+                if event and "ultravasan" in uvtool.normalize(text) and re.search(r"\b(?:45|90)\b", text):
                     candidates.append((event, text))
             for event, text in candidates:
                 year_match = re.search(r"20\d{2}", text)
@@ -378,7 +378,7 @@ def parser() -> argparse.ArgumentParser:
     common(q); q.set_defaults(limit=10)
     s = sub.add_parser("scrape", help="Importera hela loppet")
     common(s)
-    d = sub.add_parser("discover", help="Sök eventkoder för Ultravasan 90")
+    d = sub.add_parser("discover", help="Sök eventkoder för Ultravasan 90 och 45")
     d.add_argument("--path-years", type=int, nargs="+", default=[2026, 2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015, 2014])
     d.add_argument("--raw", type=Path, default=uvtool.DEFAULT_RAW)
     d.add_argument("--delay", type=float, default=1.0)

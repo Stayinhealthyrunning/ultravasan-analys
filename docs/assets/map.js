@@ -18,11 +18,8 @@ async function ensureRaceData(){const quick=readSessionData();if(quick){setLoadi
 function ensureLeaflet(){if(window.L)return Promise.resolve();setLoading('Förbereder karta och banlager…');return new Promise(resolve=>{const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);const script=document.createElement('script');let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=finish;script.onerror=finish;document.head.appendChild(script);const timer=setTimeout(finish,2200)})}
 
 
-function routeForYear(year){
-  const rule=app.registry.route_for_year.find(r=>year>=r.from&&year<=r.to);
-  return app.registry.routes[rule?.route_id||app.registry.default_route_id];
-}
 function raceForResult(result){return app.data.races.find(r=>r.id===result.race_id)}
+function routeForRace(race){const specific=(app.registry.route_for_race||[]).find(x=>String(race?.race_key||'').startsWith(x.race_key_prefix||'')&&(!x.year_from||race.year>=x.year_from)&&(!x.year_to||race.year<=x.year_to));if(specific)return app.registry.routes[specific.route_id];const rule=(app.registry.route_for_year||[]).find(r=>race?.year>=r.from&&race?.year<=r.to);return app.registry.routes[rule?.route_id||app.registry.default_route_id]}
 
 function boot(){
   if(!app.data||!app.registry)throw new Error('Datafilerna kunde inte läsas.');
@@ -31,11 +28,12 @@ function boot(){
   if(!selected.length){const requested=Number(params.get('year'));const race=app.data.races.find(r=>r.id===requested||r.year===requested)||app.data.races.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
   selected=selected.slice(0,5);if(!selected.length){showFatal('Det finns inga löpare att visa.');return}
   app.models=selected.map((r,i)=>buildModel(r,COLORS[i],i));
+  const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=is45?'assets/Ultravasan-45.mp3?v=20260713-multirace1':'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1';document.body.classList.toggle('race-uv45',is45);
   app.usedRoutes=[...new Map(app.models.map(m=>[m.route.id,m.route])).values()];
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;
   const years=[...new Set(app.models.map(m=>m.race.year))].sort();
-  $('#raceTitle').textContent=years.length===1?`Ultravasan 90 ${years[0]}`:`Ultravasan 90 · ${years.join(', ')}`;
+  const families=[...new Set(app.models.map(m=>String(m.race?.race_key||'').startsWith('ultravasan45-')?'45':'90'))];const label=families.length===1?`Ultravasan ${families[0]}`:'Ultravasan';$('#raceTitle').textContent=years.length===1?`${label} ${years[0]}`:`${label} · ${years.join(', ')}`;
   $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km${r.geometry_quality==='reference-reconstruction'?' · referenslager':''}</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
   $('#stripLeader').textContent='Start';$('#stripFinishDistance').textContent=app.usedRoutes.length>1?'90/92 km · Mora':`${app.usedRoutes[0].official_distance_km.toFixed(0)} km · Mora`;
@@ -44,9 +42,9 @@ function boot(){
 function showFatal(message){$('#mapLoading').innerHTML=`<p><strong>Kartjämförelsen kunde inte starta.</strong><br>${esc(message)}</p>`}
 
 function buildModel(result,color,index){
-  const race=raceForResult(result);if(!race)throw new Error(`Loppår saknas för ${result.name_as_published||result.id}.`);const route=routeForYear(race.year);if(!route||!Array.isArray(route.points)||route.points.length<2)throw new Error(`Banlager saknas för ${race.year}.`);const routeCp=new Map((route.checkpoints||[]).map(c=>[c.key,c]));
+  const race=raceForResult(result);if(!race)throw new Error(`Loppår saknas för ${result.name_as_published||result.id}.`);const route=routeForRace(race);if(!route||!Array.isArray(route.points)||route.points.length<2)throw new Error(`Banlager saknas för ${race.year}.`);const routeCp=new Map((route.checkpoints||[]).map(c=>[c.key,c]));
   const raw=app.data.splits.filter(s=>s.result_id===result.id&&Number.isFinite(s.elapsed_seconds)).sort((a,b)=>a.elapsed_seconds-b.elapsed_seconds);
-  let anchors=[{time:0,distance:0,name:'Start Sälen',exact:true,kind:'start'}];
+  let anchors=[{time:0,distance:0,name:route.id==='ultravasan45-current'?'Start Oxberg':'Start Sälen',exact:true,kind:'start'}];
   for(const s of raw){
     if(s.elapsed_seconds<=0)continue;const cp=routeCp.get(s.checkpoint_key);const dist=cp?.distance_km??s.distance_km;
     if(!Number.isFinite(dist)||dist<=0)continue;anchors.push({time:Number(s.elapsed_seconds),distance:Math.min(route.official_distance_km,Number(dist)),name:s.checkpoint_name,exact:!s.is_estimated,kind:'split'})
@@ -61,9 +59,8 @@ function buildModel(result,color,index){
 }
 
 function buildCheckpointJump(){
-  const names=['smagan','mangsbodarna','risberg','evertsberg','oxberg','hokberg','eldris','finish'];
-  const labels={smagan:'Smågan',mangsbodarna:'Mångsbodarna',risberg:'Risberg',evertsberg:'Evertsberg',oxberg:'Oxberg',hokberg:'Hökberg',eldris:'Eldris',finish:'Mora mål'};
-  $('#checkpointJump').innerHTML='<option value="">Kontroll…</option>'+names.map(k=>`<option value="${k}">${labels[k]}</option>`).join('')
+  const checkpoints=[];for(const route of app.usedRoutes)for(const cp of (route.checkpoints||[])){if(cp.key==='start')continue;if(!checkpoints.some(x=>x.key===cp.key))checkpoints.push(cp)}
+  $('#checkpointJump').innerHTML='<option value="">Kontroll…</option>'+checkpoints.map(cp=>`<option value="${cp.key}">${esc(cp.name||cp.short||cp.key)}</option>`).join('')
 }
 
 function validLatLng(value){

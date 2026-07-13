@@ -6,10 +6,17 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260713-layoutclub1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260713-multirace1" rel="stylesheet"/>
 </head>
 <body>
-<header class="hero hero-image-header"><img alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260711-final5"/></header>
+<header class="hero hero-image-header"><img id="heroHeaderImage" alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260713-multirace1"/></header>
+<div class="race-switch-shell">
+  <div class="race-switch" role="tablist" aria-label="Välj lopp">
+    <button class="race-switch-button active" id="raceSwitch90" data-race-family="uv90" role="tab" aria-selected="true"><span>Ultravasan</span><strong>90</strong><small>Sälen–Mora</small></button>
+    <span class="race-switch-track" aria-hidden="true"><i></i></span>
+    <button class="race-switch-button" id="raceSwitch45" data-race-family="uv45" role="tab" aria-selected="false"><span>Ultravasan</span><strong>45</strong><small>Oxberg–Mora</small></button>
+  </div>
+</div>
 <main>
 <nav aria-label="Analysområden" class="analysis-nav panel">
 <div class="analysis-nav-scroll">
@@ -122,7 +129,7 @@
 </div>
 </section>
 <section aria-label="Analys av åldersklasser" class="audience-world class-world" id="klasser">
-<div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass från Sälen till Mora</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och se både klasspercentil och dominans mot klassmedianen.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
+<div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass genom loppet</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och se både klasspercentil och dominans mot klassmedianen.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
 <div class="class-cards" id="classCards"></div>
 <div class="world-grid class-lab-stack">
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
@@ -242,9 +249,9 @@
 </dialog>
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
-<script src="data/ultravasan-routes.js?v=20260710-3"></script>
-<script src="assets/app.js?v=20260713-layoutclub1"></script>
-<script src="assets/nerdlab.js?v=20260713-sexcontrols1"></script>
-<script src="assets/audience-analytics.js?v=20260713-layoutclub1"></script>
+<script src="data/ultravasan-routes.js?v=20260713-multirace1"></script>
+<script src="assets/app.js?v=20260713-multirace1"></script>
+<script src="assets/nerdlab.js?v=20260713-multirace1"></script>
+<script src="assets/audience-analytics.js?v=20260713-multirace1"></script>
 </body>
 </html>

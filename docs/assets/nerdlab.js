@@ -38,9 +38,9 @@ function populateSegmentSelectorsPreserve(){
   if(oldRace===String(state.raceId))return;populateSegmentSelectors();from.dataset.race=String(state.raceId);
 }
 function renderCoverage(){
-  const years=new Set(state.data.races.filter(r=>state.data.results.some(x=>x.race_id===r.id)).map(r=>r.year));
-  const resultIds=new Set(state.data.splits.map(s=>s.result_id)),coverage=state.data.results.length?resultIds.size/state.data.results.length:0;
-  const el=n$('#intelligenceCoverage');if(el)el.textContent=`${years.size} loppår · ${state.data.results.length.toLocaleString('sv-SE')} resultat · ${Math.round(coverage*100)} % med passager`;
+  const fr=familyRaces(),results=familyResults(),years=new Set(fr.filter(r=>results.some(x=>x.race_id===r.id)).map(r=>r.year));
+  const ids=new Set(results.map(r=>r.id)),resultIds=new Set(state.data.splits.filter(s=>ids.has(s.result_id)).map(s=>s.result_id)),coverage=results.length?resultIds.size/results.length:0;
+  const el=n$('#intelligenceCoverage');if(el)el.textContent=`${years.size} loppår · ${results.length.toLocaleString('sv-SE')} resultat · ${Math.round(coverage*100)} % med passager`;
 }
 function renderStories(){
   const el=n$('#raceStories');if(!el)return;const rows=state.filtered.filter(r=>r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds),splits=activeSplits();
@@ -100,7 +100,7 @@ function renderFieldFlow(){
   }).join('')}</div>`;
 }
 function allHistories(){
-  const groups=new Map();state.data.results.forEach(r=>{const k=resultNameKey(r);if(!k)return;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});return [...groups.entries()].map(([key,rows])=>({key,rows:rows.sort((a,b)=>(state.data.races.find(x=>x.id===a.race_id)?.year||0)-(state.data.races.find(x=>x.id===b.race_id)?.year||0))}));
+  const groups=new Map();familyResults().forEach(r=>{const k=resultNameKey(r);if(!k)return;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});return [...groups.entries()].map(([key,rows])=>({key,rows:rows.sort((a,b)=>(state.data.races.find(x=>x.id===a.race_id)?.year||0)-(state.data.races.find(x=>x.id===b.race_id)?.year||0))}));
 }
 function renderHall(){
   const el=n$('#hallOfFame'),explain=n$('#hallExplanation');if(!el)return;
@@ -115,7 +115,7 @@ function renderHall(){
   if(nerd.hall==='veterans')rows=histories.map(x=>({...x,completed:x.rows.filter(r=>r.finish_seconds)})).filter(x=>x.completed.length>1).map(x=>{const years=x.completed.map(r=>state.data.races.find(q=>q.id===r.race_id)?.year).filter(Boolean);return{...x,rows:x.completed,score:x.completed.length,label:`${x.completed.length} fullföljda lopp`,detail:`${Math.min(...years)}–${Math.max(...years)}`,reason:`Har fullföljt ${x.completed.length} Ultravasan under ${years.length} registrerade loppår.`}}).sort((a,b)=>b.score-a.score);
   if(nerd.hall==='improved')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>1).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds,fy=state.data.races.find(q=>q.id===first.race_id)?.year,ly=state.data.races.find(q=>q.id===last.race_id)?.year;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${fy} → ${ly}`,reason:`Förbättrade sluttiden från ${nTime(first.finish_seconds)} till ${nTime(last.finish_seconds)}.`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
   if(nerd.hall==='consistent')rows=histories.filter(x=>x.rows.filter(r=>r.finish_seconds).length>2).map(x=>{const f=x.rows.filter(r=>r.finish_seconds),t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`${Math.round(range/60)} min spridning`,detail:`${f.length} målgångar`,reason:`Skillnaden mellan snabbaste och långsammaste lopp är bara ${Math.round(range/60)} minuter över ${f.length} målgångar.`}}).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='chargers')rows=state.data.results.map(r=>{const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`${mid.place_overall} → ${finish.place_overall}`,reason:`Avancerade från plats ${mid.place_overall} i Evertsberg till plats ${finish.place_overall} i Mora.`}:null}).filter(Boolean).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='chargers')rows=familyResults().map(r=>{const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`${mid.place_overall} → ${finish.place_overall}`,reason:`Avancerade från plats ${mid.place_overall} i Evertsberg till plats ${finish.place_overall} i Mora.`}:null}).filter(Boolean).sort((a,b)=>b.score-a.score);
   const renderGroup=(sex,title)=>{const list=rows.filter(x=>nSex(x.rows.at(-1))===sex).slice(0,5);return `<section class="hall-sex-group ${sex==='F'?'women':'men'}"><h4>${title}</h4>${list.length?list.map((x,i)=>{const r=x.rows.at(-1);return `<button class="hall-row" data-id="${r.id}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(x.detail||'')}</small><em>${nEsc(x.reason||x.label)}</em></span><i>${nEsc(x.label)}</i><u aria-hidden="true">Karta ↗</u></button>`}).join(''):'<div class="empty compact-empty">Underlaget räcker inte till fem placeringar.</div>'}</section>`};
   el.innerHTML=`<div class="hall-columns">${renderGroup('F','Kvinnor')}${renderGroup('M','Män')}</div>`;
   n$$('.hall-row').forEach(b=>b.onclick=()=>openHallMap(Number(b.dataset.id)));
@@ -146,7 +146,7 @@ function renderHallFallback(route){
   el.innerHTML=`<svg class="hall-fallback-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bana med delsträckor">${content}</svg><div class="hall-map-fallback-note">Kartbakgrunden kunde inte laddas. Den verkliga GPS-rutten visas ändå.</div>`;
 }
 async function openHallMap(resultId){
-  const r=state.data.results.find(x=>x.id===resultId),race=r&&state.data.races.find(x=>x.id===r.race_id),route=race&&hallRouteForYear(race.year),dialog=n$('#hallMapDialog');if(!r||!race||!route||!dialog)return;
+  const r=state.data.results.find(x=>x.id===resultId),race=r&&state.data.races.find(x=>x.id===r.race_id),route=race&&runnerRouteForRace(race),dialog=n$('#hallMapDialog');if(!r||!race||!route||!dialog)return;
   const splits=state.data.splits.filter(s=>s.result_id===r.id).sort((a,b)=>a.sequence_no-b.sequence_no),splitKey=k=>k==='finish'?'mora':k,byKey=new Map(splits.map(s=>[String(s.checkpoint_key||'').toLowerCase(),s])),cps=route.checkpoints||[];
   n$('#hallMapTitle').textContent=`${r.name_as_published} · Ultravasan ${race.year}`;
   n$('#hallMapSubtitle').textContent=`${nTime(r.finish_seconds)} · plats ${r.overall_place??'–'} · ${r.age_class||'klass saknas'}`;
@@ -168,11 +168,11 @@ async function openHallMap(resultId){
 }
 
 function renderFingerprint(){
-  const el=n$('#raceFingerprint');if(!el)return;const race=activeRace(),current=state.filtered.filter(r=>r.finish_seconds),all=state.data.results.filter(r=>r.finish_seconds),raceMed=nMedian(current.map(r=>r.finish_seconds)),histMed=nMedian(all.map(r=>r.finish_seconds));
+  const el=n$('#raceFingerprint');if(!el)return;const race=activeRace(),current=state.filtered.filter(r=>r.finish_seconds),all=familyResults().filter(r=>r.finish_seconds),raceMed=nMedian(current.map(r=>r.finish_seconds)),histMed=nMedian(all.map(r=>r.finish_seconds));
   if(!raceMed||!histMed){el.innerHTML='<div class="empty">Historik behövs för index</div>';return}
-  const splitIds=new Set(current.map(r=>r.id)),pace=state.data.splits.filter(s=>splitIds.has(s.result_id)&&s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km),allPace=state.data.splits.filter(s=>s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km);
-  const dnf=(state.filtered.length-current.length)/(state.filtered.length||1),allDnf=(state.data.results.length-all.length)/(state.data.results.length||1),women=state.filtered.filter(r=>r.sex==='F').length/(state.filtered.length||1),allWomen=state.data.results.filter(r=>r.sex==='F').length/(state.data.results.length||1);
-  const metrics=[['Svårighetsgrad',raceMed/histMed*100],['Fartnivå',allPace.length&&pace.length?nMedian(allPace)/nMedian(pace)*100:100],['DNF-belastning',allDnf?dnf/allDnf*100:100],['Kvinnorepresentation',allWomen?women/allWomen*100:100],['Fältstorlek',state.filtered.length/(state.data.results.length/state.data.races.length||1)*100]];
+  const splitIds=new Set(current.map(r=>r.id)),pace=state.data.splits.filter(s=>splitIds.has(s.result_id)&&s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km),familyIds=new Set(familyResults().map(r=>r.id)),allPace=state.data.splits.filter(s=>familyIds.has(s.result_id)&&s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km);
+  const dnf=(state.filtered.length-current.length)/(state.filtered.length||1),allResults=familyResults(),allDnf=(allResults.length-all.length)/(allResults.length||1),women=state.filtered.filter(r=>r.sex==='F').length/(state.filtered.length||1),allWomen=allResults.filter(r=>r.sex==='F').length/(allResults.length||1);
+  const metrics=[['Svårighetsgrad',raceMed/histMed*100],['Fartnivå',allPace.length&&pace.length?nMedian(allPace)/nMedian(pace)*100:100],['DNF-belastning',allDnf?dnf/allDnf*100:100],['Kvinnorepresentation',allWomen?women/allWomen*100:100],['Fältstorlek',state.filtered.length/(allResults.length/(familyRaces().length||1)||1)*100]];
   el.innerHTML=metrics.map(([name,v])=>`<div class="finger-row"><span>${nEsc(name)}</span><div><i style="width:${Math.max(4,Math.min(100,v/1.6))}%"></i><b style="left:${Math.max(4,Math.min(96,v/1.6))}%"></b></div><strong>${Math.round(v)}</strong></div>`).join('')+`<p class="microcopy">${race.year}: över 100 betyder mer av egenskapen än genomsnittet i importerad historik.</p>`;
 }
 function renderHistorySuggestions(){

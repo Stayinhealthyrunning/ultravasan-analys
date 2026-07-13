@@ -1,8 +1,14 @@
-# Ultravasan 90 – resultat, statistik och animerad kartduell
+# Ultravasan 90 & 45 – resultat, statistik och animerad kartduell
 
 Detta är en fristående HTML-webbplats med lokal SQLite-databas och en importmotor som
 kan köras helt online i GitHub Actions. Ingen `.bat`-fil, terminal eller lokal
 Python-installation behövs för normal användning.
+
+## Två lopp i samma analysverktyg
+
+Startsidan har en mjuk växlare mellan **Ultravasan 90** (standard) och **Ultravasan 45**. Varje lopp har egen rubrikbild, egna loppår, egna resultatfilter, egna analyser, egen GPS-rutt och egen musik i kartduellen. Data hålls åtskilda med loppnycklarna `ultravasan90-ÅR` och `ultravasan45-ÅR`.
+
+Ultravasan 45-rutten byggs från `source/UV45_20260610.kmz`. Den konfigurerade kontrollmodellen är Start Oxberg, Oxberg efter inledningsslingan, Hökberg, Eldris och Mora. `tools/mika_import.py discover` söker nu eventkoder för både 90 och 45 km. När rätt eventkod har lagts in i `config/races.json` fungerar samma probe-, fullimport-, validerings- och exportflöde för båda loppen.
 
 ## Öppna verktyget
 

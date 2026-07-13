@@ -1,5 +1,5 @@
 'use strict';
-const state={data:null,filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null};
+const state={data:null,filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null,raceFamily:'uv90'};
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const fmtTime=s=>{if(s==null)return '–';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.round(s%60);return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fmtPace=s=>s==null?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
@@ -11,10 +11,19 @@ const cleanCheckpointName=v=>String(v||'').replace('Mora mål','Mora').replace('
 const segmentRangeLabel=(from,to)=>`${cleanCheckpointName(from)||'Start'} – ${cleanCheckpointName(to)}`;
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
 const quantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),p=(b.length-1)*q,l=Math.floor(p),h=Math.ceil(p);return b[l]+(b[h]-b[l])*(p-l)};
+
+const raceFamilyOf=r=>String(r?.race_key||'').startsWith('ultravasan45-')||/45/.test(String(r?.name||''))?'uv45':'uv90';
+const familyRaces=()=>state.data.races.filter(r=>raceFamilyOf(r)===state.raceFamily);
+const familyResults=()=>{const ids=new Set(familyRaces().map(r=>r.id));return state.data.results.filter(r=>ids.has(r.race_id))};
+const raceUi={uv90:{hero:'assets/salen-mora-header.png?v=20260713-multirace1',alt:'Sälen-Mora Splits – analysera din resa i Ultravasan 90 från Sälen till Mora',title:'Sälen-Mora splits'},uv45:{hero:'assets/oxberg-mora-header.png?v=20260713-multirace1',alt:'Oxberg-Mora Splits – analysera din resa i Ultravasan 45 från Oxberg till Mora',title:'Oxberg-Mora splits'}};
+function populateRaceYears(){const races=familyRaces().slice().sort((a,b)=>b.year-a.year),year=$('#yearFilter');year.innerHTML=races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value)||races[0]?.id||null}
+function switchRaceFamily(family,initial=false){if(!['uv90','uv45'].includes(family))return;state.raceFamily=family;document.body.classList.toggle('race-uv45',family==='uv45');const sw=$('.race-switch');if(sw)sw.dataset.active=family;$$('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});const img=$('#heroHeaderImage'),ui=raceUi[family];if(img&&img.src&&!initial)img.classList.add('switching');setTimeout(()=>{if(img){img.src=ui.hero;img.alt=ui.alt;img.classList.remove('switching')}},initial?0:140);document.title=ui.title;populateRaceYears();state.page=1;compareState.selected=[];refreshFilters();applyFilters();setupMapCompare(true);setupMainRunnerSearch(true);try{localStorage.setItem('ultravasan-race-family',family)}catch{}}
+function setupRaceSwitch(){const saved=new URLSearchParams(location.search).get('race')||localStorage.getItem('ultravasan-race-family')||'uv90';$$('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));switchRaceFamily(saved==='uv45'?'uv45':'uv90',true)}
+
 const hydrateData=d=>{const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});return d};
 
 async function load(){try{if(window.ULTRAVASAN_DATA){state.data=hydrateData(window.ULTRAVASAN_DATA);setup();return}const r=await fetch('data/ultravasan.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);state.data=hydrateData(await r.json());setup();}catch(e){console.error(e);$('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera att filen <code>data/ultravasan-data.js</code> finns bredvid webbplatsen.<br><small>${esc(e.message)}</small></p>`;}}
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}const races=state.data.races;const year=$('#yearFilter');year.innerHTML=races.slice().sort((a,b)=>b.year-a.year).map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value);year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});$('#runnerDialog .dialog-close').onclick=()=>$('#runnerDialog').close();refreshFilters();applyFilters();setupMapCompare();setupMainRunnerSearch();setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});$('#runnerDialog .dialog-close').onclick=()=>$('#runnerDialog').close();setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
 function raceResults(){return state.data.results.filter(r=>r.race_id===state.raceId)}
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(compareClasses),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));renderAll()}
@@ -33,7 +42,7 @@ function renderPaceChart(){
   });
   const rawSegments=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([seq,g])=>({seq,checkpoint:g.name,value:median(g.vals)}));
   let previous='Start';const segmentPoints=rawSegments.map(g=>{const name=segmentRangeLabel(previous,g.checkpoint);previous=g.checkpoint;return {...g,name}});
-  const pts=[{seq:0,name:'Sälen (start)',value:0,isStart:true},...segmentPoints];
+  const startName=state.raceFamily==='uv45'?'Oxberg (start)':'Sälen (start)';const pts=[{seq:0,name:startName,value:0,isStart:true},...segmentPoints];
   const el=$('#paceChart');
   if(segmentPoints.length<1){el.innerHTML='<div class="empty">Mellantider saknas i det aktuella urvalet.</div>';return}
   const W=650,H=270,p={l:48,r:20,t:15,b:62};
@@ -47,14 +56,14 @@ function renderPaceChart(){
   const path=pts.map((d,i)=>`${i?'L':'M'}${x(i)} ${y(d.value)}`).join(' ');
   out+=`<path class="line-area" d="${path} L${x(pts.length-1)} ${H-p.b} L${x(0)} ${H-p.b} Z"/><path class="line-path" d="${path}"/>`;
   pts.forEach((d,i)=>{
-    const title=d.isStart?'Sälen: startpunkt, 0 km/h':`${d.name}: median ${d.value.toFixed(1)} km/h`;
+    const title=d.isStart?`${state.raceFamily==='uv45'?'Oxberg':'Sälen'}: startpunkt, 0 km/h`:`${d.name}: median ${d.value.toFixed(1)} km/h`;
     out+=`<circle class="dot" cx="${x(i)}" cy="${y(d.value)}" r="5"><title>${title}</title></circle>`+svg('text',{x:x(i),y:H-31,'text-anchor':'middle',transform:`rotate(-30 ${x(i)} ${H-31})`},d.name.replace('Mora mål','Mora'));
   });
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
 function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$$('#resultsBody tr[data-id]').forEach(tr=>tr.onclick=()=>openRunner(Number(tr.dataset.id)));$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
 const RUNNER_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3aa676','#d6a12d','#e86f3b','#7c3aed','#2878b5','#c04078','#203d62'];
-function runnerRouteForYear(year){const reg=window.ULTRAVASAN_ROUTES;if(!reg)return null;const rule=(reg.route_for_year||[]).find(x=>year>=x.from&&year<=x.to);return reg.routes?.[rule?.route_id||reg.default_route_id]||null}
+function runnerRouteForRace(race){const reg=window.ULTRAVASAN_ROUTES;if(!reg)return null;const specific=(reg.route_for_race||[]).find(x=>String(race?.race_key||'').startsWith(x.race_key_prefix||'')&&(!x.year_from||race.year>=x.year_from)&&(!x.year_to||race.year<=x.year_to));if(specific)return reg.routes?.[specific.route_id]||null;const rule=(reg.route_for_year||[]).find(x=>race?.year>=x.from&&race?.year<=x.to);return reg.routes?.[rule?.route_id||reg.default_route_id]||null}
 function runnerRouteSegment(route,a,b){return (route?.points||[]).filter(p=>Number(p[2])>=a-.03&&Number(p[2])<=b+.03)}
 function runnerSplitForCheckpoint(splits,cp){const key=String(cp.key||'').toLowerCase();return splits.find(s=>String(s.checkpoint_key||'').toLowerCase()===key)||splits.find(s=>cleanCheckpointName(s.checkpoint_name).toLowerCase()===cleanCheckpointName(cp.name||cp.short).toLowerCase())}
 function runnerMapMarkup(route,splits){
@@ -67,9 +76,9 @@ function runnerMapMarkup(route,splits){
   return `<div class="runner-route-map"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="GPS-karta mellan Sälen och Mora med färgmarkerade delsträckor"><defs><linearGradient id="runnerTerrain" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e7efe7"/><stop offset="1" stop-color="#cbdccf"/></linearGradient><pattern id="runnerContours" width="64" height="38" patternUnits="userSpaceOnUse"><path d="M0 20 Q16 4 32 20 T64 20" fill="none" stroke="#8ba899" stroke-opacity=".23" stroke-width="1"/></pattern></defs><rect width="${W}" height="${H}" rx="18" fill="url(#runnerTerrain)"/><rect width="${W}" height="${H}" rx="18" fill="url(#runnerContours)"/><path d="M0 ${H*.78} Q${W*.22} ${H*.58} ${W*.45} ${H*.76} T${W} ${H*.58} V${H} H0Z" fill="#aec9b4" opacity=".45"/>${paths}${markers}</svg></div><div class="runner-segment-grid">${legend}</div>`
 }
 function openRunner(id){
-  const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=state.data.splits.filter(x=>x.result_id===id).sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForYear(race?.year);
+  const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=state.data.splits.filter(x=>x.result_id===id).sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race);
   const map=runnerMapMarkup(route,splits),clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven';
-  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||'Ultravasan 90')}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Snittfart</span><strong>${fmtPace(r.pace_seconds_per_km)}</strong></div></div><section class="runner-map-section"><div class="runner-map-heading"><div><p class="eyebrow">LOPPSKARTA</p><h3>Sälen–Mora, delsträcka för delsträcka</h3></div><span class="pill">${race?.year<2023?'bansträckning före 2023':'bansträckning från 2023'}</span></div>${map}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cleanCheckpointName(s.checkpoint_name))}</td><td>${s.distance_km??'–'} km</td><td class="time">${fmtTime(s.elapsed_seconds)}</td><td class="time">${fmtTime(s.segment_seconds)}</td><td class="time">${fmtPace(s.pace_seconds_per_km)}</td><td>${s.place_overall??'–'}</td></tr>`).join('')||'<tr><td colspan="6">Mellantider saknas</td></tr>'}</tbody></table></div></details></div>`;
+  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||'Ultravasan 90')}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Snittfart</span><strong>${fmtPace(r.pace_seconds_per_km)}</strong></div></div><section class="runner-map-section"><div class="runner-map-heading"><div><p class="eyebrow">LOPPSKARTA</p><h3>${raceFamilyOf(race)==='uv45'?'Oxberg–Mora':'Sälen–Mora'}, delsträcka för delsträcka</h3></div><span class="pill">${raceFamilyOf(race)==='uv45'?'Ultravasan 45':(race?.year<2023?'bansträckning före 2023':'bansträckning från 2023')}</span></div>${map}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cleanCheckpointName(s.checkpoint_name))}</td><td>${s.distance_km??'–'} km</td><td class="time">${fmtTime(s.elapsed_seconds)}</td><td class="time">${fmtTime(s.segment_seconds)}</td><td class="time">${fmtPace(s.pace_seconds_per_km)}</td><td>${s.place_overall??'–'}</td></tr>`).join('')||'<tr><td colspan="6">Mellantider saknas</td></tr>'}</tbody></table></div></details></div>`;
   $('#runnerDialog').showModal();
 }
 
@@ -159,7 +168,7 @@ function renderOvertakes(){
 }
 function renderYearTrend(){
   const el=$('#yearTrend'),groups=new Map();
-  state.data.races.forEach(r=>groups.set(r.id,{year:r.year,times:[]}));
+  familyRaces().forEach(r=>groups.set(r.id,{year:r.year,times:[]}));
   state.data.results.forEach(r=>{if(Number.isFinite(Number(r.finish_seconds))&&groups.has(r.race_id))groups.get(r.race_id).times.push(Number(r.finish_seconds))});
   const rows=[...groups.values()].filter(g=>g.times.length).sort((a,b)=>a.year-b.year).map(g=>({year:g.year,med:median(g.times),n:g.times.length,p25:quantile(g.times,.25),p75:quantile(g.times,.75)}));
   if(!rows.length){el.innerHTML='<div class="empty">Ingen årsdata finns i databasen.</div>';return}
@@ -242,8 +251,8 @@ function openMapWithRunners(selected){
   if(win){try{win.opener=null}catch{}}else location.href=url;
 }
 window.openUltravasanMap=openMapWithRunners;
-function setupMapCompare(){
-  const year=$('#compareYear'),races=state.data.races.slice().sort((a,b)=>b.year-a.year);
+function setupMapCompare(rebuild=false){
+  const year=$('#compareYear'),races=familyRaces().slice().sort((a,b)=>b.year-a.year);
   year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');
   year.value=String(state.raceId||races[0]?.id||'all');compareState.raceId=year.value==='all'?'all':Number(year.value);
   year.onchange=()=>{compareState.raceId=year.value==='all'?'all':Number(year.value);$('#compareRunnerSearch').value='';hideCompareSuggestions();renderCompareSelection()};
@@ -253,7 +262,7 @@ function setupMapCompare(){
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
   renderCompareSelection();
 }
-function compareRaceResults(){return compareState.raceId==='all'?state.data.results:state.data.results.filter(r=>r.race_id===compareState.raceId)}
+function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
 function renderCompareSuggestions(){
   const q=$('#compareRunnerSearch').value.trim().toLowerCase(),box=$('#runnerSuggestions');
   if(!q){box.hidden=true;return}
@@ -276,14 +285,14 @@ function renderCompareSelection(){
 }
 
 const MAIN_SEARCH_LIMIT=14;
-function setupMainRunnerSearch(){
+function setupMainRunnerSearch(rebuild=false){
   const input=$('#nameFilter'),box=$('#mainRunnerSuggestions'),year=$('#mainSearchYear');
   if(!input||!box||!year||input.dataset.suggestionsReady)return;
   input.dataset.suggestionsReady='1';
-  const races=state.data.races.slice().sort((a,b)=>b.year-a.year);
+  const races=familyRaces().slice().sort((a,b)=>b.year-a.year);
   year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');
   year.value='all';
-  const rowsForYear=()=>year.value==='all'?state.data.results:state.data.results.filter(r=>r.race_id===Number(year.value));
+  const rowsForYear=()=>year.value==='all'?familyResults():state.data.results.filter(r=>r.race_id===Number(year.value));
   const show=()=>{
     const q=input.value.trim().toLowerCase();
     if(q.length<1){box.hidden=true;box.innerHTML='';return}

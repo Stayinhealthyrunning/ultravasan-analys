@@ -1,15 +1,29 @@
 {
-  "installed_at_utc": "2026-07-13T09:49:24.636843+00:00",
-  "name": "Klasslabbet i rätt ordning och ett enda klubb/ort-val",
-  "version": "2026.07.13-classclub-layout1",
-  "description": "Lägger Klasslabbets fyra rutor under varandra i ordningen Klassduell, Klassens starkaste prestationer, Median och DNF över åren, Fartkarta. Tar bort det separata klubb/ort-profilvalet och behåller ett gemensamt sökfält där upp till fyra klubbar eller orter kan väljas. Den senast valda visas som profil.",
-  "source_package": "uppdatering.zip",
+  "installed_at_utc": "2026-07-13T11:29:17.428032+00:00",
+  "name": "Ultravasan 45 – etapp 1",
+  "version": "2026.07.13-uv45-etapp1",
+  "description": "Grundstöd för Ultravasan 45: loppväxlare, separat loppkonfiguration, karta, rubrikbild, musik och importstöd.",
+  "source_package": "uppdatering-ultravasan45-etapp1.zip",
   "installed_files": [
+    "README.md",
+    "config/races.json",
+    "data/ultravasan.sqlite",
+    "docs/assets/Ultravasan-45.mp3",
     "docs/assets/app.js",
     "docs/assets/audience-analytics.js",
+    "docs/assets/map.js",
+    "docs/assets/nerdlab.js",
+    "docs/assets/oxberg-mora-header.png",
     "docs/assets/styles.css",
-    "docs/index.html"
+    "docs/data/manifest.json",
+    "docs/data/ultravasan-data.js",
+    "docs/data/ultravasan-routes.js",
+    "docs/data/ultravasan.json",
+    "docs/index.html",
+    "docs/karta.html",
+    "source/UV45_20260610.kmz",
+    "tools/mika_import.py"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "46847deaecce17599641ef76cf604302b9a06468a98419a1187287504608d4a6"
+  "manifest_sha256": "f0be77b4146511973c39ada550eeac9c2cff085f8e54a2a184a1f97194e866bc"
 }
