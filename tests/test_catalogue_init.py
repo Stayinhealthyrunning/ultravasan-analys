@@ -22,7 +22,8 @@ class CatalogueInitTests(unittest.TestCase):
             first = self.snapshot(db_path)
             uvtool.init_db(db_path, uvtool.DEFAULT_CONFIG)
             self.assertEqual(first, self.snapshot(db_path))
-            self.assertEqual(2, len(first["races"]))
+            configured = uvtool.load_config(uvtool.DEFAULT_CONFIG)["races"]
+            self.assertEqual(len(configured), len(first["races"]))
 
     def test_imported_uv90_checkpoint_model_is_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

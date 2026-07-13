@@ -1,0 +1,207 @@
+name: Importera historiska Ultravasan 45-resultat
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_permission_confirmed:
+        description: "Bekräfta att Vasaloppets publika resultatsidor får hämtas"
+        required: true
+        default: false
+        type: boolean
+      full_import_confirmed:
+        description: "Bekräfta full historikimport efter granskade probar"
+        required: true
+        default: false
+        type: boolean
+      force_refresh:
+        description: "Hämta om redan cachade resultatsidor"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan45-history
+  cancel-in-progress: false
+
+env:
+  HISTORY_RACES: |
+    2014|ultravasan45-2014|UL45_000017167888590000000399
+    2015|ultravasan45-2015|UL45_9999991678885A000000043D
+    2016|ultravasan45-2016|UL45_9999991678885A00000004CB
+    2017|ultravasan45-2017|UL45_9999991678885A0000000620
+    2018|ultravasan45-2018|UL45_9999991678885B00000006D3
+    2019|ultravasan45-2019|UL45_9999991678885C0000000709
+    2022|ultravasan45-2022|UL45_HCH8NDMR2201
+    2023|ultravasan45-2023|UL45_HCH8NDMR2301
+    2024|ultravasan45-2024|UL45_HCH8NDMR2401
+
+jobs:
+  importera:
+    if: inputs.source_permission_confirmed == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Hämta projektet
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installera Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installera importpaket och Chromium
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Validera år, eventkoder och kontrolluppsättningar
+        run: |
+          python tools/validate_uv45_history.py --config-only
+          echo "Konfigurationen innehåller exakt de nio godkända historikåren."
+
+      - name: Säkerhetskopiera databasen och UV90-läget
+        run: |
+          mkdir -p "$RUNNER_TEMP/uv45-history-backup"
+          cp data/ultravasan.sqlite "$RUNNER_TEMP/uv45-history-backup/ultravasan-before-uv45-history.sqlite"
+          python tools/validate_uv45_history.py \
+            --write-uv90-snapshot "$RUNNER_TEMP/uv90-before-history.json"
+
+      - name: Probe och kvalitetsgrind för varje år
+        shell: bash
+        run: |
+          set -euo pipefail
+          force_args=()
+          if [[ "${{ inputs.force_refresh }}" == "true" ]]; then
+            force_args+=(--force)
+          fi
+
+          while IFS='|' read -r year race event; do
+            [[ -z "$year" ]] && continue
+            db="$RUNNER_TEMP/uv45-probe-$year.sqlite"
+            raw="$RUNNER_TEMP/uv45-probe-raw-$year"
+            snapshot="$RUNNER_TEMP/uv90-probe-$year.json"
+            rm -f "$db"
+
+            echo "::group::Probe UV45 $year ($event)"
+            python tools/uvtool.py --db "$db" init
+            python tools/validate_uv45_history.py \
+              --db "$db" \
+              --write-uv90-snapshot "$snapshot"
+
+            if ! python tools/mika_import.py probe \
+              --race "$race" \
+              --db "$db" \
+              --raw "$raw" \
+              --limit 3 \
+              --max-pages 1 \
+              --browser-fallback \
+              "${force_args[@]}"; then
+              echo "::error title=Probe misslyckades för UV45 $year::$event kunde inte provimporteras."
+              exit 1
+            fi
+
+            if ! python tools/validate_mika_probe.py --race "$race" --db "$db"; then
+              echo "::error title=Parservalidering misslyckades för UV45 $year::$event har blockerande parserproblem."
+              exit 1
+            fi
+
+            if ! python tools/validate_uv45_history.py \
+              --db "$db" \
+              --race "$race" \
+              --event-code "$event" \
+              --compare-uv90-snapshot "$snapshot"; then
+              echo "::error title=Historikgrind misslyckades för UV45 $year::$event klarade inte kontroll- eller UV90-separeringen."
+              exit 1
+            fi
+            echo "::endgroup::"
+          done <<< "$HISTORY_RACES"
+
+      - name: Stoppa säkert efter godkända probar
+        if: inputs.full_import_confirmed != true
+        run: |
+          echo "Alla nio probar är godkända."
+          echo "Full import är inte bekräftad och den riktiga databasen har därför inte ändrats."
+          echo "Granska artefakterna och starta om med full_import_confirmed=true för att importera."
+
+      - name: Importera de nio historikåren
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          force_args=()
+          if [[ "${{ inputs.force_refresh }}" == "true" ]]; then
+            force_args+=(--force)
+          fi
+
+          python tools/uvtool.py init
+          while IFS='|' read -r year race event; do
+            [[ -z "$year" ]] && continue
+            echo "::group::Full import UV45 $year ($event)"
+            if ! python tools/mika_import.py scrape \
+              --race "$race" \
+              --raw "raw/mika/$race" \
+              --browser-fallback \
+              "${force_args[@]}"; then
+              echo "::error title=Import misslyckades för UV45 $year::$event kunde inte fullimporteras. Databasbackupen finns som artefakt."
+              exit 1
+            fi
+
+            if ! python tools/validate_uv45_history.py \
+              --race "$race" \
+              --event-code "$event"; then
+              echo "::error title=Kvalitetsgrind misslyckades för UV45 $year::$event importeras inte vidare till publicering."
+              exit 1
+            fi
+            echo "::endgroup::"
+          done <<< "$HISTORY_RACES"
+
+      - name: Validera hela databasen och bygg webbdata
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        run: |
+          python tools/validate_uv45_history.py \
+            --compare-uv90-snapshot "$RUNNER_TEMP/uv90-before-history.json"
+          python tools/uvtool.py validate
+          python tools/uvtool.py export
+          echo "Alla nio UV45-år är validerade och UV90 är semantiskt oförändrat."
+
+      - name: Publicera den validerade historikimporten
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f \
+            data/ultravasan.sqlite \
+            docs/data/ultravasan.json \
+            docs/data/ultravasan-data.js \
+            docs/data/manifest.json \
+            reports/ultravasan45-20{14,15,16,17,18,19,22,23,24}-import.json
+          if git diff --cached --quiet; then
+            echo "Historikresultaten var redan aktuella; inga dubletter eller nya ändringar skapades."
+          else
+            git commit -m "Importera historiska Ultravasan 45-resultat"
+            git push origin main
+          fi
+
+      - name: Spara backup och importrapporter
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uv45-historik-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            ${{ runner.temp }}/uv45-history-backup/ultravasan-before-uv45-history.sqlite
+            ${{ runner.temp }}/uv90-before-history.json
+            ${{ runner.temp }}/uv45-probe-*.json
+            reports/ultravasan45-*-probe.json
+            reports/ultravasan45-*-import.json
+            docs/data/manifest.json

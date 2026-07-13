@@ -94,6 +94,258 @@
       "partition_by_sex": true
     },
     {
+      "race_key": "ultravasan45-2014",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2014,
+      "race_date": "2014-08-23",
+      "distance_km": 45.0,
+      "event_code": "UL45_000017167888590000000399",
+      "result_year_path": 2015,
+      "official_url": "https://results.vasaloppet.se/2015/?pid=search&event=UL45_000017167888590000000399",
+      "page_url_template": "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2015/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_000017167888590000000399",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2015",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2015,
+      "race_date": "2015-08-22",
+      "distance_km": 45.0,
+      "event_code": "UL45_9999991678885A000000043D",
+      "result_year_path": 2016,
+      "official_url": "https://results.vasaloppet.se/2016/?pid=search&event=UL45_9999991678885A000000043D",
+      "page_url_template": "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2016/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A000000043D",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2016",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2016,
+      "race_date": "2016-08-20",
+      "distance_km": 45.0,
+      "event_code": "UL45_9999991678885A00000004CB",
+      "result_year_path": 2017,
+      "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL45_9999991678885A00000004CB",
+      "page_url_template": "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2017/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A00000004CB",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2017",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2017,
+      "race_date": "2017-08-19",
+      "distance_km": 45.0,
+      "event_code": "UL45_9999991678885A0000000620",
+      "result_year_path": 2018,
+      "official_url": "https://results.vasaloppet.se/2018/?pid=search&event=UL45_9999991678885A0000000620",
+      "page_url_template": "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2018/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A0000000620",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2018",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2018,
+      "race_date": "2018-08-18",
+      "distance_km": 45.0,
+      "event_code": "UL45_9999991678885B00000006D3",
+      "result_year_path": 2019,
+      "official_url": "https://results.vasaloppet.se/2019/?pid=search&event=UL45_9999991678885B00000006D3",
+      "page_url_template": "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2019/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885B00000006D3",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2019",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2019,
+      "race_date": "2019-08-17",
+      "distance_km": 45.0,
+      "event_code": "UL45_9999991678885C0000000709",
+      "result_year_path": 2020,
+      "official_url": "https://results.vasaloppet.se/2020/?pid=search&event=UL45_9999991678885C0000000709",
+      "page_url_template": "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2020/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885C0000000709",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2022",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2022,
+      "race_date": "2022-08-20",
+      "distance_km": 45.0,
+      "event_code": "UL45_HCH8NDMR2201",
+      "result_year_path": 2023,
+      "official_url": "https://results.vasaloppet.se/2023/?pid=search&event=UL45_HCH8NDMR2201",
+      "page_url_template": "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2023/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2201",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2023",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2023,
+      "race_date": "2023-08-19",
+      "distance_km": 45.0,
+      "event_code": "UL45_HCH8NDMR2301",
+      "result_year_path": 2024,
+      "official_url": "https://results.vasaloppet.se/2024/?pid=search&event=UL45_HCH8NDMR2301",
+      "page_url_template": "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2024/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2301",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2024",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2024,
+      "race_date": "2024-08-17",
+      "distance_km": 45.0,
+      "event_code": "UL45_HCH8NDMR2401",
+      "result_year_path": 2025,
+      "official_url": "https://results.vasaloppet.se/2025/?pid=search&event=UL45_HCH8NDMR2401",
+      "page_url_template": "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2025/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2401",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+      ],
+      "course_version": "uv45-legacy-2014-2024",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=list"
+      ]
+    },
+    {
       "race_key": "ultravasan45-2025",
       "race_family": "uv45",
       "name": "Ultravasan 45",

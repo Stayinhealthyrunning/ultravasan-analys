@@ -166,9 +166,9 @@ def parse_int(value: Any) -> int | None:
 def sex_code(value: str | None, age_class: str | None = None) -> str | None:
     n = normalize(value or age_class or "")
     compact = n.replace(" ", "")
-    if n in {"m", "man", "male", "men", "herr", "herrar"} or re.match(r"^m\d", compact):
+    if n in {"m", "h", "man", "male", "men", "herr", "herrar"} or re.match(r"^[mh]\d", compact):
         return "M"
-    if n in {"f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"} or re.match(r"^[kfw]\d", compact):
+    if n in {"d", "f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"} or re.match(r"^[dkfw]\d", compact):
         return "F"
     return clean_text(value)
 
@@ -181,7 +181,7 @@ def normalize_result_status(value: str | None) -> str | None:
     n = normalize(text)
     if n in {"dnf", "brutit", "brot", "avbrutit"} or "did not finish" in n:
         return "DNF"
-    if n in {"dns", "ej start", "ej startat", "inte startat"} or "did not start" in n:
+    if n in {"dns", "ej start", "ej startat", "inte startat", "startade inte"} or "did not start" in n:
         return "DNS"
     if n in {"dsq", "diskvalificerad"} or "disqualified" in n:
         return "DSQ"
@@ -407,7 +407,14 @@ def first_selector_text(soup: BeautifulSoup, selectors: Iterable[str]) -> str | 
     for selector in selectors:
         node = soup.select_one(selector)
         if node:
-            value = clean_text(node.get_text(" ", strip=True))
+            # Mika often assigns the same field class to both the table row and
+            # its value cell. For empty values, reading the row would otherwise
+            # return the label itself, e.g. "Klubb/Stad".
+            if node.name == "tr":
+                cells = node.find_all(["th", "td"], recursive=False)
+                value = clean_text(cells[1].get_text(" ", strip=True)) if len(cells) >= 2 else None
+            else:
+                value = clean_text(node.get_text(" ", strip=True))
             if value:
                 return value
     return None
