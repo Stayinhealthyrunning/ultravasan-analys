@@ -115,27 +115,39 @@
           "distance_km": 0.0
         },
         {
+          "checkpoint_key": "lillsjon",
+          "name": "Lillsjön",
+          "sequence_no": 1,
+          "distance_km": 2.25
+        },
+        {
           "checkpoint_key": "oxberg",
           "name": "Oxberg",
-          "sequence_no": 1,
+          "sequence_no": 2,
           "distance_km": 13.907
         },
         {
           "checkpoint_key": "hokberg",
           "name": "Hökberg",
-          "sequence_no": 2,
+          "sequence_no": 3,
           "distance_km": 23.976
         },
         {
           "checkpoint_key": "eldris",
           "name": "Eldris",
-          "sequence_no": 3,
+          "sequence_no": 4,
           "distance_km": 33.317
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 5,
+          "distance_km": 44.3
         },
         {
           "checkpoint_key": "mora",
           "name": "Mora mål",
-          "sequence_no": 4,
+          "sequence_no": 6,
           "distance_km": 45.0
         }
       ],

@@ -29742,6 +29742,16 @@
           ]
         },
         {
+          "key": "lillsjon",
+          "name": "Lillsjön",
+          "short": "Lillsjön",
+          "distance_km": 2.25,
+          "coord": [
+            61.122876,
+            14.15007
+          ]
+        },
+        {
           "key": "oxberg",
           "name": "Oxberg",
           "short": "Oxberg",
@@ -29769,6 +29779,16 @@
           "coord": [
             61.030659,
             14.380972
+          ]
+        },
+        {
+          "key": "mora_warning",
+          "name": "Mora Förvarning",
+          "short": "Mora Förvarning",
+          "distance_km": 44.3,
+          "coord": [
+            61.009495,
+            14.53375
           ]
         },
         {

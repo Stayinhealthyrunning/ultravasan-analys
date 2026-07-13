@@ -77,6 +77,8 @@ LABEL_MAP = {
 }
 
 CHECKPOINT_ALIASES = {
+    "mora forvarning": "mora_warning", "mora förvarning": "mora_warning",
+    "lillsjon": "lillsjon", "lillsjön": "lillsjon",
     "start": "start", "salen": "start", "sälen": "start",
     "smagan": "smagan", "smågan": "smagan",
     "mangsbodarna": "mangsbodarna", "mångsbodarna": "mangsbodarna",
@@ -84,6 +86,13 @@ CHECKPOINT_ALIASES = {
     "hokberg": "hokberg", "hökberg": "hokberg", "eldris": "eldris",
     "mora": "mora", "mal": "mora", "mål": "mora", "finish": "mora"
 }
+
+CLUB_MARKERS = re.compile(
+    r"(?:^|\s)(?:if|fk|sk|ok|ik|aik|team|club|klubb|förening|forening)(?:\s|$)"
+    r"|löparklubb|loparklubb|friidrott|runacademy|running",
+    re.IGNORECASE,
+)
+NATIONALITY_SUFFIX_RE = re.compile(r"\s*\(([A-Za-z]{3})\)\s*$")
 
 
 def utc_now() -> str:
@@ -156,17 +165,67 @@ def parse_int(value: Any) -> int | None:
 
 def sex_code(value: str | None, age_class: str | None = None) -> str | None:
     n = normalize(value or age_class or "")
-    if n in {"m", "man", "male", "men", "herr", "herrar"} or n.startswith("m "):
+    compact = n.replace(" ", "")
+    if n in {"m", "man", "male", "men", "herr", "herrar"} or re.match(r"^m\d", compact):
         return "M"
-    if n in {"f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"} or n.startswith(("w ", "f ", "k ")):
+    if n in {"f", "w", "k", "woman", "women", "female", "dam", "damer", "kvinna"} or re.match(r"^[kfw]\d", compact):
         return "F"
     return clean_text(value)
+
+
+def normalize_result_status(value: str | None) -> str | None:
+    """Normalize Mika's Swedish/English race statuses to stable database codes."""
+    text = clean_text(value)
+    if not text:
+        return None
+    n = normalize(text)
+    if n in {"dnf", "brutit", "brot", "avbrutit"} or "did not finish" in n:
+        return "DNF"
+    if n in {"dns", "ej start", "ej startat", "inte startat"} or "did not start" in n:
+        return "DNS"
+    if n in {"dsq", "diskvalificerad"} or "disqualified" in n:
+        return "DSQ"
+    if n in {"finished", "finisher", "i mal", "malgang"}:
+        return "FINISHED"
+    return text.upper()
+
+
+def clean_name_and_nationality(name: str | None, nationality: str | None = None) -> tuple[str | None, str | None]:
+    """Split a trailing ISO-like country code, e.g. ``Runner (SWE)``."""
+    clean_name = clean_text(name)
+    clean_nationality = clean_text(nationality)
+    if not clean_name:
+        return clean_name, clean_nationality.upper() if clean_nationality else None
+    match = NATIONALITY_SUFFIX_RE.search(clean_name)
+    if match:
+        clean_nationality = clean_nationality or match.group(1).upper()
+        clean_name = clean_text(NATIONALITY_SUFFIX_RE.sub("", clean_name))
+    return clean_name, clean_nationality.upper() if clean_nationality else None
+
+
+def classify_club_city(value: str | None) -> tuple[str | None, str | None, str | None]:
+    """Classify Mika's combined Klubb/Stad field conservatively.
+
+    Clear organisation markers become club.  Plain all-uppercase place-like
+    values become city.  Ambiguous values stay in club for backwards
+    compatibility and are also retained verbatim in raw parser metadata.
+    """
+    original = clean_text(value)
+    if not original:
+        return None, None, None
+    if CLUB_MARKERS.search(normalize(original)):
+        return original, None, "club"
+    letters = "".join(char for char in original if char.isalpha())
+    if letters and letters == letters.upper() and not any(char.isdigit() for char in original):
+        return None, original, "city"
+    return original, None, "ambiguous-kept-as-club"
 
 
 def checkpoint_key(value: str | None) -> str | None:
     n = normalize(value)
     for alias, key in CHECKPOINT_ALIASES.items():
-        if normalize(alias) in n:
+        normalized_alias = normalize(alias)
+        if n == normalized_alias or re.search(rf"\b{re.escape(normalized_alias)}\b", n):
             return key
     return None
 
@@ -378,6 +437,16 @@ def extract_labeled_values(soup: BeautifulSoup) -> dict[str, str]:
     return out
 
 
+def extract_combined_club_city(soup: BeautifulSoup) -> str | None:
+    for row in soup.select("tr"):
+        cells = row.find_all(["th", "td"], recursive=False)
+        if len(cells) != 2:
+            continue
+        if normalize(cells[0].get_text(" ", strip=True)).rstrip(":") == "klubb stad":
+            return clean_text(cells[1].get_text(" ", strip=True))
+    return None
+
+
 def _class_text(node: Any, class_names: Iterable[str]) -> str | None:
     for cls in class_names:
         child = node.select_one(f".{cls}")
@@ -399,7 +468,7 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
 
     # Primary parser based on the public Mika markup used by Vasaloppet.
     rows = list(soup.select("tr.split"))
-    finish_rows = list(soup.select("tr.f-time_finish_brutto, tr.f-time_finish, tr.finish"))
+    finish_rows = list(soup.select("tr.f-time_finish_brutto, tr.f-time_finish_netto, tr.f-time_finish, tr.finish"))
     for row in rows + finish_rows:
         desc = _class_text(row, ["desc", "name", "split-name"])
         if row in finish_rows and not desc:
@@ -416,6 +485,7 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
             continue
         item = found.setdefault(key, {"checkpoint_key": key})
         item.update({
+            "source_label": desc,
             "elapsed_seconds": elapsed or 0,
             "time_of_day": _class_text(row, ["daytime", "time_of_day", "timeofday"]),
             "diff_seconds": parse_diff(_class_text(row, ["diff", "difference"])),
@@ -468,6 +538,7 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
             if elapsed is None and key != "start":
                 continue
             item = found.setdefault(key, {"checkpoint_key": key})
+            item.setdefault("source_label", cells[cp_col])
             item.setdefault("elapsed_seconds", elapsed or 0)
             if place_col is not None and place_col < len(cells):
                 item.setdefault("place_overall", parse_int(cells[place_col]))
@@ -493,44 +564,55 @@ def parse_detail_html(html: str, source_result_id: str, source_url: str, checkpo
     if not vals.get("name") and title_name and len(title_name) < 160:
         vals["name"] = title_name
 
-    status_text = normalize(vals.get("status") or "")
-    body_text = normalize(soup.get_text(" ", strip=True))
-    if "did not finish" in body_text or re.search(r"\bdnf\b", body_text):
-        status = "DNF"
-    elif "did not start" in body_text or re.search(r"\bdns\b", body_text):
-        status = "DNS"
-    elif "disqualified" in body_text or re.search(r"\bdsq\b", body_text):
-        status = "DSQ"
-    elif status_text:
-        status = vals["status"].upper()
-    else:
-        status = "FINISHED" if any(parse_time(vals.get(k)) for k in ["finish_time", "net_time", "gun_time"]) else "UNKNOWN"
+    status = normalize_result_status(vals.get("status"))
+    if not status:
+        body_text = normalize(soup.get_text(" ", strip=True))
+        for marker in ("did not finish", "dnf", "did not start", "dns", "disqualified", "dsq"):
+            if re.search(rf"\b{re.escape(marker)}\b", body_text):
+                status = normalize_result_status(marker)
+                break
 
     net = parse_time(vals.get("net_time"))
     gun = parse_time(vals.get("gun_time"))
     finish = parse_time(vals.get("finish_time")) or net or gun
+    if not status:
+        status = "FINISHED" if finish is not None else "UNKNOWN"
     cp_map = {c["checkpoint_key"]: c for c in checkpoints}
     splits = extract_split_tables(soup, cp_map)
     mora_split = next((s for s in splits if s["checkpoint_key"] == "mora" and s.get("elapsed_seconds") is not None), None)
-    if mora_split and (finish is None or abs(finish - mora_split["elapsed_seconds"]) > 60):
+    real_finish_labels = {"mal", "mora mal", "finish"}
+    mora_is_real_finish = mora_split and normalize(mora_split.get("source_label")) in real_finish_labels
+    if mora_split and (finish is None or (mora_is_real_finish and abs(finish - mora_split["elapsed_seconds"]) > 60)):
         # A selector may hit the whole finish row and parse the time-of-day
-        # column. The split row's dedicated .time cell is the race elapsed time.
+        # column. Only a real finish row may correct an existing result time;
+        # an advance-warning control must never replace the official finish.
         finish = mora_split["elapsed_seconds"]
         gun = finish if gun is None or abs(gun - finish) > 60 else gun
         status = "FINISHED"
     if finish is not None and "mora" in cp_map and not any(s["checkpoint_key"] == "mora" for s in splits):
         splits.append({"checkpoint_key": "mora", "elapsed_seconds": finish})
 
+    original_name = clean_text(vals.get("name"))
+    parsed_name, parsed_nationality = clean_name_and_nationality(original_name, vals.get("nationality"))
+    combined_club_city = extract_combined_club_city(soup)
+    club_city_classification = None
+    club = clean_text(vals.get("club"))
+    city = clean_text(vals.get("city"))
+    if combined_club_city:
+        combined_club, combined_city, club_city_classification = classify_club_city(combined_club_city)
+        club = combined_club
+        city = combined_city or city
+
     return ParsedResult(
         source_result_id=source_result_id,
         source_url=source_url,
         bib=clean_text(vals.get("bib")),
-        name=clean_text(vals.get("name")) or f"Okänd löpare {source_result_id}",
+        name=parsed_name or f"Okänd löpare {source_result_id}",
         sex=sex_code(vals.get("sex"), vals.get("age_class")),
         age_class=clean_text(vals.get("age_class")),
-        nationality=clean_text(vals.get("nationality")),
-        club=clean_text(vals.get("club")),
-        city=clean_text(vals.get("city")),
+        nationality=parsed_nationality,
+        club=club,
+        city=city,
         start_group=clean_text(vals.get("start_group")),
         status=status,
         finish_seconds=finish,
@@ -540,7 +622,13 @@ def parse_detail_html(html: str, source_result_id: str, source_url: str, checkpo
         gender_place=parse_int(vals.get("gender_place")),
         class_place=parse_int(vals.get("class_place")),
         splits=splits,
-        raw={"selector_values": vals, "labeled_values": labeled}
+        raw={
+            "selector_values": vals,
+            "labeled_values": labeled,
+            "published_name_original": original_name,
+            "club_city_original": combined_club_city,
+            "club_city_classification": club_city_classification,
+        }
     )
 
 
@@ -587,10 +675,15 @@ def get_race_config(config: dict[str, Any], race_key: str) -> dict[str, Any]:
 
 def record_source_page(conn: sqlite3.Connection, import_run_id: int, source_id: int, race_id: int, record_type: str, external_id: str, url: str, status: int, cache_path: Path, html: str) -> None:
     sha = hashlib.sha256(html.encode("utf-8", errors="replace")).hexdigest()
+    resolved_cache = cache_path.expanduser().resolve()
+    try:
+        cache_reference = resolved_cache.relative_to(ROOT.resolve())
+    except ValueError:
+        cache_reference = resolved_cache
     conn.execute("""
       INSERT OR IGNORE INTO source_records(import_run_id,source_id,race_id,record_type,external_id,url,http_status,content_sha256,cache_path)
       VALUES(?,?,?,?,?,?,?,?,?)
-    """, (import_run_id, source_id, race_id, record_type, external_id, url, status, sha, str(cache_path.relative_to(ROOT))))
+    """, (import_run_id, source_id, race_id, record_type, external_id, url, status, sha, str(cache_reference)))
 
 
 def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, source_id: int) -> int:
@@ -657,7 +750,11 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
     cp_by_key = {c["checkpoint_key"]: c for c in checkpoints}
     last_elapsed = 0
     last_distance = 0.0
-    for split in parsed.splits or []:
+    ordered_splits = sorted(
+        parsed.splits or [],
+        key=lambda split: cp_by_key.get(split.get("checkpoint_key"), {}).get("sequence_no", 10**9),
+    )
+    for split in ordered_splits:
         cp = cp_by_key.get(split["checkpoint_key"])
         if not cp:
             continue

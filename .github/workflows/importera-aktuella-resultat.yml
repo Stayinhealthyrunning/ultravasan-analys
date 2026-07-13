@@ -26,6 +26,11 @@ on:
         required: true
         default: false
         type: boolean
+      full_import_confirmed:
+        description: "Bekräfta uttryckligen full import efter godkänd probe och parservalidering"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -72,11 +77,26 @@ jobs:
         run: |
           python tools/mika_import.py probe --race "${{ inputs.race }}" --browser-fallback ${{ inputs.force_refresh && '--force' || '' }}
 
-      - name: Importera hela loppet
+      - name: Validera probe och parserkvalitet
         run: |
+          python tools/uvtool.py validate
+          python tools/validate_mika_probe.py --race "${{ inputs.race }}"
+          echo "Probe lyckades och parservalideringen har 0 blockerande problem."
+
+      - name: Stoppa säkert efter probe
+        if: ${{ inputs.full_import_confirmed != true }}
+        run: |
+          echo "Full import är inte bekräftad. Körningen stannar efter godkänd probe och validering."
+          echo "Starta workflowet igen med full_import_confirmed=true först när probe-rapporten har granskats."
+
+      - name: Importera hela loppet
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        run: |
+          echo "Probe och parservalidering är godkända; uttrycklig full-importbekräftelse finns."
           python tools/mika_import.py scrape --race "${{ inputs.race }}" --browser-fallback ${{ inputs.force_refresh && '--force' || '' }}
 
       - name: Validera och bygg webbdatabasen
+        if: ${{ success() && inputs.full_import_confirmed == true }}
         run: |
           python tools/uvtool.py validate
           python tools/uvtool.py export
@@ -96,6 +116,7 @@ jobs:
           PY
 
       - name: Spara resultat och publicera webbplatsen
+        if: ${{ success() && inputs.full_import_confirmed == true }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

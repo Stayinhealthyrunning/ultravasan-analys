@@ -29,6 +29,11 @@ import uvtool
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def resolve_raw_path(path: Path) -> Path:
+    """Resolve relative CLI raw paths from the caller's working directory."""
+    return path.expanduser().resolve()
+
+
 def merge_query(url: str, **values: Any) -> str:
     parsed = urlparse(url)
     query = parse_qs(parsed.query, keep_blank_values=True)
@@ -150,6 +155,7 @@ def apply_fallback(parsed: uvtool.ParsedResult, summary: dict[str, Any]) -> uvto
         parsed.gender_place = uvtool.parse_int(summary.get("gender_place"))
     if parsed.class_place is None:
         parsed.class_place = uvtool.parse_int(summary.get("class_place"))
+    parsed.name, parsed.nationality = uvtool.clean_name_and_nationality(parsed.name, parsed.nationality)
     return parsed
 
 
@@ -194,7 +200,7 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
     source = conn.execute("SELECT * FROM sources WHERE code='vasaloppet_mika'").fetchone()
     run_id = start_run(conn, race_row, source)
     fetcher = Fetcher(args.delay, args.browser_fallback, args.force)
-    race_raw = args.raw / args.race
+    race_raw = resolve_raw_path(args.raw) / args.race
     report = {"race_key": args.race, "event_code": race_cfg.get("event_code"), "pages": [], "details": [], "started_at": uvtool.utc_now()}
     all_entries: dict[str, dict[str, Any]] = {}
     empty_pages = 0
@@ -329,10 +335,11 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
 def discover(args: argparse.Namespace) -> None:
     fetcher = Fetcher(args.delay, args.browser_fallback, args.force)
     found: dict[tuple[int, str], dict[str, Any]] = {}
+    raw_root = resolve_raw_path(args.raw)
     try:
         for path_year in args.path_years:
             url = f"https://results.vasaloppet.se/{path_year}/?pid=list"
-            cache = args.raw / "catalogue" / f"events-{path_year}.html"
+            cache = raw_root / "catalogue" / f"events-{path_year}.html"
             html, status, cached, mode = fetcher.get(url, cache)
             soup = BeautifulSoup(html, "lxml")
             candidates = []
