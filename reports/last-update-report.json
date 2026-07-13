@@ -1,13 +1,14 @@
 {
-  "installed_at_utc": "2026-07-11T16:08:49.926270+00:00",
-  "name": "Korrigerad rubrikbild",
-  "version": "2026.07.11.final5b",
-  "description": "Byter rubrikbilden till den korrigerade versionen och uppdaterar cacheversionen för headerbilden.",
+  "installed_at_utc": "2026-07-13T07:54:32.423313+00:00",
+  "name": "Detaljjustering källhänvisning och kartduellrubrik",
+  "version": "2026.07.13.detail1",
+  "description": "Tar bort synlig källhänvisning i löparprofilen och ökar avståndet mellan raderna i kartduellens introduktion.",
   "source_package": "uppdatering.zip",
   "installed_files": [
-    "docs/assets/salen-mora-header.png",
+    "docs/assets/app.js",
+    "docs/assets/styles.css",
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "db901ee8d5d38ce4ea37a318da00e17e251b6fc276f3fdc6ce2d43f8388beb88"
+  "manifest_sha256": "2a8dc87ed0afd69e556624c9567ae11e3476f73cc65815afef35cfe198ca876a"
 }

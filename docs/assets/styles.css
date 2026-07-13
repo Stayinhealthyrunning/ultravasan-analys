@@ -361,3 +361,16 @@ html,body{max-width:100%;overflow-x:hidden}
 .club-top-runners-list::-webkit-scrollbar{width:8px}.club-top-runners-list::-webkit-scrollbar-thumb{background:#c7d2c9;border-radius:99px}.club-top-runners-list::-webkit-scrollbar-track{background:#edf1eb;border-radius:99px}
 .club-top-runners button{min-height:30px}
 @media(max-width:620px){.club-top-runners-list{max-height:280px}}
+
+
+/* Detaljjustering: luftigare kartduellrubrik */
+.compare-copy{display:flex;flex-direction:column;align-items:flex-start}
+.compare-copy .scope-chip{margin-bottom:15px}
+.compare-copy .eyebrow{margin:0 0 10px}
+.compare-copy h2{margin:0 0 15px}
+.compare-copy>p:last-child{margin:0;line-height:1.75}
+@media(max-width:680px){
+  .compare-copy .scope-chip{margin-bottom:12px}
+  .compare-copy .eyebrow{margin-bottom:8px}
+  .compare-copy h2{margin-bottom:12px}
+}
