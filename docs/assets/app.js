@@ -336,7 +336,7 @@ const INFO_HELP_EXTENDED=[
   ['#classIndexTable','Klassens starkaste prestationer visar i första hand klassvinnare och rangordnar dem efter dominans: hur många procent snabbare vinnaren var än medianen bland fullföljande i samma loppår, kön och åldersklass. Minst fem fullföljande krävs för att komma med i huvudlistan. Huvudvärdet till höger är dominansen mot klassmedianen. Under namnet ser du klassplacering, antal fullföljande, tidsmarginal till tvåan och Sälen–Mora-index som ett kompletterande percentilmått där 100 betyder bäst i klassen och 90 betyder bättre än 90 procent av jämförelsegruppen. Om underlaget är litet visas det bara som reservläge.'],
   ['#classHistoryChart','Visar hur valda klassers mediantider och DNF-andelar utvecklats över åren.'],
   ['#klubbar .world-hero','Klubb/ort-analysen jämför deltagande, individuella prestationer, bredd, fullföljande och utveckling för registrerade klubb- och ortsnamn. Små underlag märks tydligt.'],
-  ['.club-controls','Sök fram en klubb/ort-profil och välj upp till fyra klubb- eller ortsnamn att jämföra.'],
+  ['.club-controls','Sök och välj upp till fyra klubbar eller orter. Den senast valda visas som profil, och du kan klicka på en vald bricka för att byta profil. Kryssknappen tar bort valet.'],
   ['#clubProfile','Klubb/ort-profilen visar deltagande, fullföljande, median, klassbredd och de snabbaste löparna i urvalet.'],
   ['#clubRankings','Byt mått för att rangordna klubbar efter exempelvis antal startande, snabbast median, bredd, fullföljandegrad eller stark avslutning.'],
   ['#clubDna','Fem relativa klubbmått: fart, bredd, uthållighet, avslutning och deltagande.'],

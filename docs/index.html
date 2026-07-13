@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260713-classheatunit1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260713-layoutclub1" rel="stylesheet"/>
 </head>
 <body>
 <header class="hero hero-image-header"><img alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260711-final5"/></header>
@@ -124,24 +124,20 @@
 <section aria-label="Analys av åldersklasser" class="audience-world class-world" id="klasser">
 <div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass från Sälen till Mora</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och se både klasspercentil och dominans mot klassmedianen.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
 <div class="class-cards" id="classCards"></div>
-<div class="world-grid">
-<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><div class="chart-head-tools"><div class="unit-toggle-group" aria-label="Välj enhet i fartkartan"><label class="unit-toggle active"><input id="classHeatUnitPace" type="checkbox" checked> min/km</label><label class="unit-toggle"><input id="classHeatUnitSpeed" type="checkbox"> km/h</label></div><span class="pill" id="classHeatUnitLabel">median min/km</span></div></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
-<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Klassens starkaste prestationer</h3></div><span class="pill">dominans mot klassmedian</span></div><div class="metric-tabs class-index-tabs" id="classIndexTabs"></div><div class="index-ranking" id="classIndexTable"></div></article>
+<div class="world-grid class-lab-stack">
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Klassens starkaste prestationer</h3></div><span class="pill">dominans mot klassmedian</span></div><div class="metric-tabs class-index-tabs" id="classIndexTabs"></div><div class="index-ranking" id="classIndexTable"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart" id="classHistoryChart"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><div class="chart-head-tools"><div class="unit-toggle-group" aria-label="Välj enhet i fartkartan"><label class="unit-toggle active"><input id="classHeatUnitPace" type="checkbox" checked> min/km</label><label class="unit-toggle"><input id="classHeatUnitSpeed" type="checkbox"> km/h</label></div><span class="pill" id="classHeatUnitLabel">median min/km</span></div></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
 </div>
 </section>
 <section aria-label="Statistik för klubb och ort" class="audience-world club-world" id="klubbar">
 <div class="world-hero club-hero"><div><p class="eyebrow">KLUBB/ORT-ANALYS</p><h2>Klubbar, orter, bredd och fart</h2><p>Utforska profiler för klubb eller ort, deltagande, fullföljandegrad, individuella prestationer, starka avslutningar och utveckling över flera år.</p></div><div class="world-badge">Små underlag märks tydligt</div></div>
-<div class="club-controls panel">
-<label class="club-search-label">Klubb/ort
-  <input id="clubProfileSearch" type="search" autocomplete="off" placeholder="Sök klubb eller ort">
-  <input id="clubProfileSelect" type="hidden" value="">
-  <div id="clubProfileSuggestions" class="club-search-suggestions" hidden></div>
-</label>
-<div class="club-compare-control"><span>Jämför klubbar/orter</span>
+<div class="club-controls panel club-controls-single">
+<input id="clubProfileSelect" type="hidden" value="">
+<div class="club-compare-control"><span>Välj upp till fyra klubbar/orter</span>
   <div class="club-search-label compact-search">
-    <input id="clubCompareSearch" type="search" autocomplete="off" placeholder="Lägg till klubb eller ort">
+    <input id="clubCompareSearch" type="search" autocomplete="off" placeholder="Sök och lägg till klubb eller ort">
     <div id="clubCompareSuggestions" class="club-search-suggestions" hidden></div>
   </div>
   <div class="selector-chips compact" id="clubCompareChips"></div>
@@ -247,8 +243,8 @@
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
 <script src="data/ultravasan-routes.js?v=20260710-3"></script>
-<script src="assets/app.js?v=20260713-classheatunit1"></script>
+<script src="assets/app.js?v=20260713-layoutclub1"></script>
 <script src="assets/nerdlab.js?v=20260713-sexcontrols1"></script>
-<script src="assets/audience-analytics.js?v=20260713-classheatunit1"></script>
+<script src="assets/audience-analytics.js?v=20260713-layoutclub1"></script>
 </body>
 </html>

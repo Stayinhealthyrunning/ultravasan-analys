@@ -1,8 +1,8 @@
 {
-  "installed_at_utc": "2026-07-13T09:31:20.867159+00:00",
-  "name": "Fartkarta med valbar min/km och km/h",
-  "version": "2026.07.13-classheatunit1",
-  "description": "Lägger till enhetsval i Fartkarta Klasser × delsträckor. min/km är förvalt och km/h kan väljas. Färgskalan fortsätter att visa snabbare delsträckor som grönare. Uppdaterar informationsförklaringen och cacheversionerna.",
+  "installed_at_utc": "2026-07-13T09:49:24.636843+00:00",
+  "name": "Klasslabbet i rätt ordning och ett enda klubb/ort-val",
+  "version": "2026.07.13-classclub-layout1",
+  "description": "Lägger Klasslabbets fyra rutor under varandra i ordningen Klassduell, Klassens starkaste prestationer, Median och DNF över åren, Fartkarta. Tar bort det separata klubb/ort-profilvalet och behåller ett gemensamt sökfält där upp till fyra klubbar eller orter kan väljas. Den senast valda visas som profil.",
   "source_package": "uppdatering.zip",
   "installed_files": [
     "docs/assets/app.js",
@@ -11,5 +11,5 @@
     "docs/index.html"
   ],
   "deleted_paths": [],
-  "manifest_sha256": "c651c835b9517f57c6cc0eac36598628fa921c96eaef8596b8297632750b4d69"
+  "manifest_sha256": "46847deaecce17599641ef76cf604302b9a06468a98419a1187287504608d4a6"
 }
