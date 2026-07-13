@@ -189,6 +189,15 @@ class UV45SafetyTests(unittest.TestCase):
         self.assertIn("inputs.full_import_confirmed == true", scrape_block)
         self.assertIn("tools/validate_mika_probe.py", workflow)
 
+    def test_workflow_installs_playwright_before_chromium(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "importera-aktuella-resultat.yml").read_text(encoding="utf-8")
+        requirements = (ROOT / "requirements-browser.txt").read_text(encoding="utf-8")
+        package_install = workflow.index("python -m pip install -r requirements-browser.txt")
+        browser_install = workflow.index("python -m playwright install --with-deps chromium")
+        self.assertLess(package_install, browser_install)
+        self.assertIn("-r requirements.txt", requirements)
+        self.assertIn("playwright", requirements)
+
 
 if __name__ == "__main__":
     unittest.main()
