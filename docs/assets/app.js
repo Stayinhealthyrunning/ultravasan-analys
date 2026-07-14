@@ -328,7 +328,7 @@ const INFO_HELP_EXTENDED=[
   
   ['#kon .world-hero','Genusperspektivet jämför deltagande, fart, fullföljande och historisk utveckling för män och kvinnor med samma övriga filter.'],
   ['#genderPaceChart','Jämför männens och kvinnornas medianfart på varje delsträcka.'],
-  ['#genderRetentionChart','Visar hur mycket fart respektive grupp behåller jämfört med sin egen öppning. 100 betyder samma nivå som första segmentet.'],
+  ['#genderRetentionChart','Jämför varje delsträckas aggregerade fart med samma grupps genomsnittliga fart över hela loppet. 100 är gruppens snittfart; över 100 är snabbare och under 100 långsammare. Endast fullföljande med giltiga tider ingår.'],
   ['#genderHistoryChart','Visar hur deltagande och fullföljande för män och kvinnor har förändrats mellan loppåren.'],
   ['#genderInsights','Automatiska textinsikter som lyfter fram skillnader och mönster i det valda urvalet.'],
   ['#klasser .world-hero','Klasslabbet jämför åldersklasser, delsträckor, historik och prestation relativt den egna klassen.'],

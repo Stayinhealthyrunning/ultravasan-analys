@@ -426,3 +426,18 @@ html,body{max-width:100%;overflow-x:hidden}
 @keyframes raceLap{to{transform:rotate(360deg)}}@keyframes raceStride{50%{transform:translate(-3px,2px);opacity:.55}}
 @media(max-width:640px){.race-switch-shell{margin:-14px auto 12px;padding:0 10px}.race-switch-shell+main{margin-top:0!important}.race-switch{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);min-width:0;border-radius:18px}.race-switch-button{min-width:0;padding:9px 6px}.race-switch-button strong{font-size:1.6rem}.race-switch-button span{font-size:.58rem}.race-switch-button small{font-size:.7rem}.race-switch[data-active="uv45"] .race-switch-track i{left:25px}.race-load-slot{height:64px}.race-load-status{top:7px;width:min(390px,100%);padding:8px 11px}.race-load-copy strong{font-size:.77rem}.race-load-copy small{font-size:.64rem}}
 @media(prefers-reduced-motion:reduce){.race-load-status,.hero-header-image,main{transition-duration:.01ms}.race-load-motion:before,.race-load-motion:after{animation:none}}
+
+/* Pacingreferens, läsbara etiketter och den avsedda Intelligence-layouten */
+#genderRetentionChart{height:330px!important;min-height:330px!important;overflow:visible!important}
+#genderRetentionChart svg{overflow:visible}
+.pace-reference-line{stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 4;opacity:.8}.pace-reference-label{fill:var(--orange)!important;font-weight:800}.pace-segment-label{font-size:10px!important}
+.intelligence-grid>.history-lab,.intelligence-grid>.fingerprint-card{grid-column:span 6}.intelligence-grid>.field-flow-card,.intelligence-grid>.hall-card{grid-column:1/-1}
+.segment-lab .lab-controls{grid-template-columns:repeat(4,minmax(0,1fr))}
+.segment-cell{min-height:120px}.segment-cell span{min-height:2.7em;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35}
+.story-card{align-items:flex-start;min-height:78px}.story-card strong,.story-card em{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35}
+.podium-place span{min-height:2.55em;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.25}
+.segment-row span strong,.segment-row span small,.hall-row span strong,.hall-row span small{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.3}
+.segment-row,.hall-row{align-items:start}.flow-node span{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.15}.hall-segment-item strong,.hall-segment-item small{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.3}
+.funnel-row>span:first-child{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.25}.pill,.world-badge,.live-chip{white-space:normal;line-height:1.3;text-align:center}th{white-space:normal;line-height:1.25;overflow-wrap:anywhere}
+@media(max-width:1100px){.intelligence-grid>.history-lab,.intelligence-grid>.fingerprint-card{grid-column:span 1}.intelligence-grid>.field-flow-card,.intelligence-grid>.hall-card{grid-column:1/-1}.segment-lab .lab-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){#genderRetentionChart{height:320px!important;min-height:320px!important;overflow-x:auto!important;overflow-y:hidden!important}#genderRetentionChart svg{width:700px!important;min-width:700px!important;height:300px!important}.intelligence-grid>.history-lab,.intelligence-grid>.fingerprint-card,.intelligence-grid>.field-flow-card,.intelligence-grid>.hall-card{grid-column:1!important}.segment-lab .lab-controls{grid-template-columns:minmax(0,1fr)!important}.story-card{min-width:235px}.segment-row{grid-template-columns:26px minmax(0,1fr) auto}}
