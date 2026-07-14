@@ -10,6 +10,7 @@ const config=require('../config/races.json');
 const context={window:{}};
 vm.runInNewContext(fs.readFileSync(require.resolve('../docs/data/ultravasan-data.js'),'utf8'),context);
 const data=context.window.ULTRAVASAN_DATA;
+const realClassPlacements=replay.deriveClassPlacements(data.results,data.splits);
 
 function realModel(raceKey,resultId){
   const race=data.races.find(item=>item.race_key===raceKey);
@@ -107,6 +108,10 @@ assert.ok(Number.isFinite(replay.stateAt(uv45Current,20).elevation),'UV45 ska an
 const noElevation={...uv90New,route:{...uv90New.route,elevation_note:'Verifierad höjd saknas'},elevationProfile:[]};
 assert.ok(replay.render(noElevation).includes('Höjdprofil saknas'),'Saknad verifierad höjddata ska degradera tydligt');
 assert.ok(renderedOld.includes('data-replay-value="grade"')&&renderedOld.includes('data-replay-value="ascent-remaining"'),'Informationskortet ska visa lutning och återstående stigning');
+const wideElevation=replay.elevationProjection(uv90Old,1900);
+assert.strictEqual(wideElevation.width,1900,'Höjdprofilens logiska bredd ska följa det tillgängliga kortets proportioner');
+assert.strictEqual(wideElevation.x(0),wideElevation.pad.l,'Höjdkurvan ska börja vid den gemensamma vänsterkanten');
+assert.strictEqual(wideElevation.x(uv90Old.totalDistance),wideElevation.width-wideElevation.pad.r,'Höjdkurvan ska sluta vid den gemensamma högerkanten');
 
 // Alla kontroller kommer från aktuell loppmodell och exponeras i höjdprofilen.
 for(const model of [uv90Old,uv90New,uv45Current,uv45Historical]){
@@ -115,10 +120,12 @@ for(const model of [uv90Old,uv90New,uv45Current,uv45Historical]){
   for(const checkpoint of model.checkpoints)assert.ok(rendered.includes(`data-elevation-checkpoint="${checkpoint.key}"`),`${model.race.race_key}: ${checkpoint.name} saknas i höjdprofilen`);
 }
 
-// Slutlig och passerad klassplacering använder endast uttryckliga verifierade fält.
+// Slutlig och passerad klassplacering använder verifierade passertider och separata identiteter.
 assert.strictEqual(replay.formatClassPlace(12),'12');
 assert.strictEqual(replay.formatClassPlace(null),'Saknas');
-assert.strictEqual(replay.stateAt(uv90Old,15).lastKnownClassRank,null,'Klassplacering får inte härledas från totalplacering');
+assert.ok(realClassPlacements.size>0,'Klassplaceringarna ska beräknas en gång vid datahydrering');
+assert.strictEqual(replay.stateAt(uv90Old,0).hasRegisteredPassage,false,'Före första verifierade passage ska ingen klassplacering visas');
+assert.ok(Number.isFinite(replay.stateAt(uv90Old,15).lastKnownClassRank),'Klassplacering ska räknas fram från verifierade passertider');
 const classRace=data.races.find(item=>item.race_key==='ultravasan90-2015'),classResult=data.results.find(item=>item.id===11994),classRoute=replay.routeForRace(registry,classRace),classCheckpoints=data.checkpoints.filter(item=>item.race_id===classRace.id),classSplits=data.splits.filter(item=>item.result_id===classResult.id).map((split,index)=>({...split,place_class:12-index})),classModel=replay.createModel({race:classRace,result:classResult,route:classRoute,raceCheckpoints:classCheckpoints,splits:classSplits});
 const afterFirstClassCheckpoint=replay.stateAt(classModel,classModel.anchors[1].distance+.5);
 assert.strictEqual(afterFirstClassCheckpoint.lastKnownClassRank,12,'Senast verifierade klassplacering ska användas mellan kontroller');
@@ -126,8 +133,28 @@ assert.strictEqual(afterFirstClassCheckpoint.classRankIsExact,false,'Klassplacer
 const dnfRace=data.races.find(item=>item.race_key==='ultravasan90-2015'),dnfResult=data.results.find(item=>item.id===11971),dnfSplits=data.splits.filter(item=>item.result_id===dnfResult.id).map((split,index)=>({...split,place_class:30-index})),dnfClassModel=replay.createModel({race:dnfRace,result:dnfResult,route:classRoute,raceCheckpoints:classCheckpoints,splits:dnfSplits});
 assert.strictEqual(replay.stateAt(dnfClassModel,999).lastKnownClassRank,dnfClassModel.anchors.at(-1).classRank,'DNF ska behålla sista säkra klassplacering');
 assert.ok(renderedOld.includes('data-replay-value="class-rank"'),'Livepanelen ska ha separat klassplacering');
+const rankResults=[
+  {id:1,race_id:10,age_class:'M40',class_place:91},{id:2,race_id:10,age_class:'M40',class_place:92},{id:3,race_id:10,age_class:'M40',class_place:93},{id:4,race_id:10,age_class:'K40',class_place:1},{id:5,race_id:11,age_class:'M40',class_place:1},{id:6,race_id:10,age_class:'M40',class_place:94},{id:7,race_id:10,age_class:'M40',class_place:95}
+];
+const rankSplits=[
+  {result_id:1,checkpoint_key:'oxberg',elapsed_seconds:100},{result_id:2,checkpoint_key:'oxberg',elapsed_seconds:200},{result_id:3,checkpoint_key:'oxberg',elapsed_seconds:200},{result_id:4,checkpoint_key:'oxberg',elapsed_seconds:150},{result_id:5,checkpoint_key:'oxberg',elapsed_seconds:50},{result_id:6,checkpoint_key:'oxberg',elapsed_seconds:null},{result_id:7,checkpoint_key:'oxberg',elapsed_seconds:90,is_estimated:1},
+  {result_id:1,checkpoint_key:'hokberg',elapsed_seconds:300},{result_id:2,checkpoint_key:'hokberg',elapsed_seconds:280},{result_id:3,checkpoint_key:'hokberg',elapsed_seconds:400}
+];
+const officialPlaces=rankResults.map(result=>result.class_place),rankLookup=replay.deriveClassPlacements(rankResults,rankSplits);
+assert.deepStrictEqual(rankSplits.slice(0,3).map(split=>split.place_class),[1,2,2],'Lika kumulativa passertider ska ge tävlingsplacering 1, 2, 2');
+assert.strictEqual(rankSplits[3].place_class,1,'Olika klasser får inte blandas');
+assert.strictEqual(rankSplits[4].place_class,1,'Olika lopp eller år får inte blandas');
+assert.strictEqual(rankSplits[5].place_class,undefined,'Saknad passertid får inte rankas');
+assert.strictEqual(rankSplits[6].place_class,undefined,'Estimerad passertid får inte rankas');
+assert.strictEqual(rankLookup,replay.deriveClassPlacements(rankResults,rankSplits),'Samma data ska återanvända den cachade lookupen');
+assert.deepStrictEqual(rankResults.map(result=>result.class_place),officialPlaces,'Beräknade passageplaceringar får inte ändra officiell slutlig class_place');
+const rankRace={race_key:'ultravasan45-test',distance_km:20},rankRoute={points:[[0,0,0],[0,1,20]],elevation_profile:[[0,100],[20,100]]},rankCheckpoints=[{checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},{checkpoint_key:'oxberg',name:'Oxberg',sequence_no:1,distance_km:10},{checkpoint_key:'hokberg',name:'Hökberg',sequence_no:2,distance_km:20}],rankModel=replay.createModel({race:rankRace,result:rankResults[0],route:rankRoute,raceCheckpoints:rankCheckpoints,splits:rankSplits.filter(split=>split.result_id===1)});
+assert.strictEqual(replay.stateAt(rankModel,5).lastKnownClassRank,null,'Klassplacering får inte visas före första kontrollen');
+assert.strictEqual(replay.stateAt(rankModel,15).lastKnownClassRank,1,'Klassplacering får inte interpoleras eller bytas före nästa kontroll');
+assert.strictEqual(replay.stateAt(rankModel,20).lastKnownClassRank,2,'Klassplaceringen ska bytas först vid nästa verifierade passage');
 const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
+assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
 assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Återställning ska välja en minuts replay');
 
 // Replay klampar korrekt vid mål respektive DNF:s sista säkra passage.
@@ -142,6 +169,12 @@ assert.strictEqual(replay.distanceAtTime(uv90Dnf,999999),46.15);
 assert.strictEqual(media.musicForRace(uv90New.race),'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1');
 assert.strictEqual(media.musicForRace(uv45Current.race),'assets/Ultravasan-45.mp3?v=20260713-multirace1');
 assert.strictEqual(media.musicForRace(null),null,'Saknad loppidentitet får inte gissa musik');
+assert.strictEqual(replay.DEFAULT_VOLUME,.35,'Neutral standardvolym ska vara 35 procent');
+assert.ok(renderedOld.includes('value="0.35"'),'Volymreglaget ska starta på 35 procent när ingen sparad nivå finns');
+assert.ok(replaySource.includes('this.setVolume(DEFAULT_VOLUME)'),'Återställning ska återställa musikvolymen till 35 procent');
+assert.ok(replaySource.includes('this.lastAudibleVolume||DEFAULT_VOLUME'),'Avmutning ska återgå till senast hörbara nivå eller 35 procent, aldrig 100 procent');
+assert.ok(replaySource.includes('if(userGesture)this.playAudio()'),'Musiken får starta först efter användarens play-interaktion');
+assert.ok(replaySource.includes("else this.showAudioNote('Musik saknas för loppet. Replay fungerar utan ljud.')"),'Saknad musik ska degradera utan JavaScript-fel');
 
 // Tillgänglig reservvy/reduced motion och responsiv CSS ska finnas.
 assert.strictEqual(replay.motionAllowed(true),false);
