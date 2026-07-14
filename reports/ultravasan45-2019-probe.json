@@ -1,0 +1,58 @@
+{
+  "race_key": "ultravasan45-2019",
+  "event_code": "UL45_9999991678885C0000000709",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2020/?page=1&event=UL45_9999991678885C0000000709&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2020/?page=1&event=UL45_9999991678885C0000000709&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "000017167888690000442F52",
+      "name": "Arvidsson, Marianne",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678886D000059A601",
+      "name": "Billström, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678886D000059A8B1",
+      "name": "Andersson, Lotta",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:14:12+00:00",
+  "finished_at": "2026-07-14T11:14:19+00:00",
+  "records": 3,
+  "inserted": 3,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}

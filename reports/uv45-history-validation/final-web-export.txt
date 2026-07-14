@@ -1,0 +1,1 @@
+Webbdata exporterad: /home/runner/work/ultravasan-analys/ultravasan-analys/docs/data/ultravasan.json och /home/runner/work/ultravasan-analys/ultravasan-analys/docs/data/ultravasan-data.js (21141 resultat, 110074 mellantider)

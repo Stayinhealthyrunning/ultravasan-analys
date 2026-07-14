@@ -1,0 +1,58 @@
+{
+  "race_key": "ultravasan45-2023",
+  "event_code": "UL45_HCH8NDMR2301",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2024/?page=1&event=UL45_HCH8NDMR2301&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2024/?page=1&event=UL45_HCH8NDMR2301&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "BH28NDMRA0A299",
+      "name": "Bylund, Emil",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "BH28NDMRA0A29A",
+      "name": "Antonsson, Tobias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "BH28NDMRA0D78F",
+      "name": "Bjuggfält, Felix",
+      "splits": 3,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:14:28+00:00",
+  "finished_at": "2026-07-14T11:14:35+00:00",
+  "records": 3,
+  "inserted": 3,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}

@@ -1,0 +1,58 @@
+{
+  "race_key": "ultravasan45-2014",
+  "event_code": "UL45_000017167888590000000399",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2015/?page=1&event=UL45_000017167888590000000399&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2015/?page=1&event=UL45_000017167888590000000399&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "0000171678885900001EDA7F",
+      "name": "Boström, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885900001EDABB",
+      "name": "Corradini, Maria Rita",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885900001F3441",
+      "name": "Dahl, Julia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:13:30+00:00",
+  "finished_at": "2026-07-14T11:13:37+00:00",
+  "records": 3,
+  "inserted": 3,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}

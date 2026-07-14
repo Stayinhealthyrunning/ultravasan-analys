@@ -1,0 +1,58 @@
+{
+  "race_key": "ultravasan45-2024",
+  "event_code": "UL45_HCH8NDMR2401",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2025/?page=1&event=UL45_HCH8NDMR2401&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2025/?page=1&event=UL45_HCH8NDMR2401&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "HCH8NDMRA18893",
+      "name": "Biranvand, Yavar",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA1896E",
+      "name": "Bern, Janni",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "HCH8NDMRA189CB",
+      "name": "Berg, Madelene",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:14:36+00:00",
+  "finished_at": "2026-07-14T11:14:43+00:00",
+  "records": 3,
+  "inserted": 3,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}
