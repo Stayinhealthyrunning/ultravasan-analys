@@ -3,6 +3,7 @@
   width:min(1540px,calc(100% - 24px));
   max-height:96vh;
   overflow:auto;
+  scrollbar-gutter:stable;
   background:#f8f8f3;
 }
 #runnerDialog .runner-detail{
@@ -81,16 +82,15 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
 .runner-replay-side-heading .eyebrow,
 .runner-replay-map-heading .eyebrow{margin-bottom:5px;font-size:.65rem}
 .runner-replay-now .eyebrow{color:var(--lime)}
-.runner-replay-current-segment{margin:15px 0 8px;color:#d7e4dd;font-size:.75rem;line-height:1.35;font-weight:750}
+.runner-replay-current-segment{min-height:2.7em;margin:15px 0 8px;color:#d7e4dd;font-size:.75rem;line-height:1.35;font-weight:750}
 .runner-replay-info{display:flex;flex:1;flex-direction:column;min-width:0}
 .runner-replay-now-primary{display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.13)}
 .runner-replay-now-primary strong{font-size:1.8rem;line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
-.runner-replay-now-primary span{font-size:.72rem;font-weight:800;color:var(--lime)}
-.runner-replay-info dl{display:grid;grid-template-columns:1fr 1fr;gap:1px 10px;margin:10px 0 0}
-.runner-replay-info dl div{min-width:0;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
-.runner-replay-info dl div:first-child{grid-column:1/-1}
+.runner-replay-now-primary span{min-height:1.2em;font-size:.72rem;font-weight:800;color:var(--lime)}
+.runner-replay-info dl{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:60px;gap:1px 10px;margin:10px 0 0}
+.runner-replay-info dl div{box-sizing:border-box;contain:layout paint;min-width:0;height:60px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
 .runner-replay-info dt{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#abc5b9}
-.runner-replay-info dd{margin:3px 0 0;overflow-wrap:anywhere;font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums}
+.runner-replay-info dd{min-height:2.6em;margin:3px 0 0;overflow-wrap:anywhere;font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
 
 .runner-replay-map-panel{display:flex;flex-direction:column;padding:10px;background:#f8faf6}
 .runner-replay-map-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:1px 3px 9px}
@@ -188,14 +188,14 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
 
 .runner-replay-segments{border-radius:0 0 18px 18px}
 .runner-replay-segment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.runner-replay-segment-card{display:grid;grid-template-columns:7px minmax(0,1fr) auto;align-items:center;gap:9px;min-width:0;padding:10px;text-align:left;background:#f3f6f0;color:var(--ink);border:1px solid transparent;transition:.18s}
+.runner-replay-segment-card{box-sizing:border-box;contain:layout paint;display:grid;grid-template-columns:7px minmax(0,1fr) auto;align-items:center;gap:9px;min-width:0;min-height:68px;padding:10px;text-align:left;background:#f3f6f0;color:var(--ink);border:1px solid transparent;transition:border-color .18s,background-color .18s,box-shadow .18s}
 .runner-replay-segment-card:hover,.runner-replay-segment-card:focus,.runner-replay-segment-card.active{border-color:var(--segment-color,var(--green));background:#fff;filter:none;box-shadow:0 7px 20px rgba(16,36,29,.08)}
 .runner-replay-segment-card>i{width:7px;height:46px;border-radius:99px;background:var(--segment-color)}
 .runner-replay-segment-card span{min-width:0}
 .runner-replay-segment-card strong,.runner-replay-segment-card small,.runner-replay-segment-card em{display:block}
 .runner-replay-segment-card strong{overflow:hidden;text-overflow:ellipsis;font-size:.68rem;white-space:nowrap}
-.runner-replay-segment-card small{margin-top:3px;color:var(--muted);font-size:.61rem}
-.runner-replay-segment-card em{margin-top:3px;color:#486057;font-size:.58rem;font-style:normal}
+.runner-replay-segment-card small{margin-top:3px;color:var(--muted);font-size:.61rem;font-variant-numeric:tabular-nums}
+.runner-replay-segment-card em{margin-top:3px;color:#486057;font-size:.58rem;font-style:normal;font-variant-numeric:tabular-nums}
 .runner-replay-segment-card>b{font-size:.72rem}
 .runner-replay-segment-card.neutral{opacity:.58}
 .runner-replay-segment-card:disabled{cursor:not-allowed}

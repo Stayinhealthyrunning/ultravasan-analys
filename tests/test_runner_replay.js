@@ -103,6 +103,10 @@ assert.ok(replay.stateAt(uv90Old,25).ascentRemaining<state15.ascentRemaining,'Å
 assert.ok(state15.time>uv90Old.anchors[1].time&&state15.time<uv90Old.anchors[2].time,'Tid ska interpoleras mellan officiella passager');
 assert.strictEqual(state15.rankIsExact,false,'Placering mellan kontroller får inte markeras som exakt');
 assert.strictEqual(state15.lastKnownRank,1,'Senast registrerade placering ska behållas mellan kontroller');
+const smagan=uv90Old.checkpoints.find(checkpoint=>checkpoint.key==='smagan'),passageDistances=[smagan.distance-.15,smagan.distance,smagan.distance+.15],passageStates=passageDistances.map(distance=>replay.stateAt(uv90Old,distance)),passageProjection=replay.mapProjection(uv90Old.route),passagePixels=passageStates.map(state=>passageProjection.project(state.coordinate)),passageSteps=[Math.hypot(passagePixels[1][0]-passagePixels[0][0],passagePixels[1][1]-passagePixels[0][1]),Math.hypot(passagePixels[2][0]-passagePixels[1][0],passagePixels[2][1]-passagePixels[1][1])];
+assert.deepStrictEqual(passageStates.map(state=>state.distance),passageDistances,'Den globala distansen får inte avrundas eller låsas till kontrollen');
+assert.ok(passageSteps.every(step=>step>0)&&Math.max(...passageSteps)/Math.min(...passageSteps)<3,'Kartpositionen ska röra sig kontinuerligt över kontrollpassagen');
+assert.ok(passageStates[0].segment.index===passageStates[1].segment.index&&passageStates[2].segment.index===passageStates[1].segment.index+1,'Aktivt segment ska bytas först efter kontrollens globala distans');
 assert.ok(Number.isFinite(replay.stateAt(uv90New,20).elevation),'Post-2023 UV90 ska använda höjd från 2024-GPX');
 assert.ok(Number.isFinite(replay.stateAt(uv45Current,20).elevation),'UV45 ska använda höjd från 2026-GPX');
 const noElevation={...uv90New,route:{...uv90New.route,elevation_note:'Verifierad höjd saknas'},elevationProfile:[]};
@@ -156,6 +160,13 @@ const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8')
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
 assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
 assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Återställning ska välja en minuts replay');
+assert.ok(replaySource.includes('this.progressDistanceKm')&&!replaySource.includes('this.distance='),'Replay ska använda en enda kontinuerlig global distansvariabel');
+assert.ok(!replaySource.includes('chart.outerHTML=renderElevation'),'ResizeObserver får inte ersätta höjdprofilens SVG');
+assert.ok(replaySource.includes('index!==this.activeSegmentIndex'),'Aktiva segmentklasser ska bara uppdateras när segmentet faktiskt byts');
+assert.ok(replaySource.includes('this.applyMapView(false)'),'Kartföljningen ska uppdateras kontinuerligt i samma animationsframe');
+assert.ok(replaySource.includes('node&&node.textContent!==value'),'Oförändrade livevärden får inte skapa onödiga DOM-mutationer');
+const infoOrder=['Beräknad loppstid','Delsträcksfart','Totalplacering','Klassplacering','Höjd','Lutning','Återstår','Stigning kvar'].map(label=>renderedOld.indexOf(`<dt>${label}</dt>`));
+assert.ok(infoOrder.every((position,index)=>index===0||position>infoOrder[index-1]),'Vänsterpanelens informationsfält ligger i fel ordning');
 
 // Replay klampar korrekt vid mål respektive DNF:s sista säkra passage.
 assert.strictEqual(uv90New.finished,true);
@@ -183,6 +194,9 @@ const css=fs.readFileSync(require.resolve('../docs/assets/runner-replay.css'),'u
 assert.ok(css.includes('@media(max-width:1180px)')&&css.includes('@media(max-width:700px)'),'Tablet- eller mobillayout saknas');
 assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'),'Reduced-motion-stöd saknas');
 assert.ok(!css.includes('.runner-replay-info{position:absolute'),'Liveinformationen får inte ligga som en stor overlay ovanpå kartan');
+assert.ok(css.includes('scrollbar-gutter:stable'),'Popupens scrollbarutrymme ska vara stabilt');
+assert.ok(css.includes('grid-auto-rows:60px')&&css.includes('height:60px'),'Dynamiska placeringsfält ska ha stabil radhöjd vid kontrollpassage');
+assert.ok(css.includes('border:1px solid transparent')&&css.includes('transition:border-color .18s,background-color .18s,box-shadow .18s'),'Aktivt delsträckekort får inte ändra mått eller animera layoutvärden');
 assert.ok(renderedOld.includes(`--pace-fast:${replay.PACE_COLORS[0]}`)&&renderedOld.includes(`--pace-even:${replay.PACE_COLORS[2]}`)&&renderedOld.includes(`--pace-slow:${replay.PACE_COLORS[4]}`),'Legenden ska återanvända segmentens färgkonfiguration');
 assert.ok(renderedOld.includes('Snabbare än eget snitt')&&renderedOld.includes('Nära eget snitt')&&renderedOld.includes('Långsammare än eget snitt'),'Gemensam textlegend saknas');
 assert.ok(renderedUv45.includes('data-elevation-checkpoint="mora_warning"'),'UV45:s Mora Förvarning ska finnas i höjdprofilen');
