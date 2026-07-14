@@ -87,7 +87,9 @@ function openRunner(id){
   $('#runnerDialog').showModal();if(model)window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RACE_MEDIA_CONFIG);
 }
 
-function setupStatsControls(){const targetSelect=$('#targetTimeSelect');if(targetSelect)targetSelect.addEventListener('change',renderTargetSimulator);['placementSexM','placementSexF'].forEach(id=>$('#'+id)?.addEventListener('change',renderPlacementScatter))}
+const targetSimulatorSelections=new Map();
+const targetSimulatorKey=()=>`${state.raceFamily}:${state.raceId}`;
+function setupStatsControls(){const targetSelect=$('#targetTimeSelect');if(targetSelect)targetSelect.addEventListener('change',event=>{targetSimulatorSelections.set(targetSimulatorKey(),Number(event.target.value));renderTargetSimulator()});['placementSexM','placementSexF'].forEach(id=>$('#'+id)?.addEventListener('change',renderPlacementScatter))}
 function activeSplits(){const ids=new Set(state.filtered.map(r=>r.id));return state.data.splits.filter(s=>ids.has(s.result_id))}
 function renderStatistics(){renderPlacementScatter();renderDnfFunnel();renderSegmentHeatmap();renderOvertakes();renderYearTrend();renderPacingDNA();renderTargetSimulator()}
 function renderPlacementScatter(){
@@ -205,12 +207,12 @@ function renderPacingDNA(){
 function renderTargetSimulator(){
   const select=$('#targetTimeSelect'),label=$('#targetTimeLabel'),out=$('#targetTimeResult');
   if(!select||!label||!out)return;
-  const rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place).sort((a,b)=>a.finish_seconds-b.finish_seconds);
+  const rows=state.filtered.filter(r=>{const status=String(r.status||'').trim().toUpperCase();return Number(r.finish_seconds)>0&&r.overall_place&&!['DNF','DNS','DSQ','STARTED','STARTAT'].includes(status)&&!status.includes('DID NOT')&&!status.includes('BRUT')&&!status.includes('DISKVAL')}).sort((a,b)=>a.finish_seconds-b.finish_seconds);
   if(!rows.length){label.textContent='–';out.innerHTML='<div><span>Underlag</span><strong>Saknas</strong></div>';select.disabled=true;select.innerHTML='';return}
   select.disabled=false;
   const min=rows[0].finish_seconds,max=rows[rows.length-1].finish_seconds;
   const roundedMin=Math.floor(min/120)*120,roundedMax=Math.ceil(max/120)*120;
-  const prev=Number(select.value)||Math.round((min+max)/2/120)*120;
+  const mean=rows.reduce((sum,row)=>sum+Number(row.finish_seconds),0)/rows.length,defaultTime=Math.round(mean/120)*120,key=targetSimulatorKey(),prev=targetSimulatorSelections.get(key)??defaultTime;
   const options=[];
   for(let t=roundedMin;t<=roundedMax;t+=120)options.push(t);
   if(!options.length)options.push(Math.round(min/120)*120);
