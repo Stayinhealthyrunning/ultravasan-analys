@@ -5,7 +5,7 @@ const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:300,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true};
 const $=s=>document.querySelector(s);
 const fmtTime=s=>{if(s==null||!Number.isFinite(s))return '–';s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-const fmtPace=s=>!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
+const fmtPace=s=>window.SpeedUnits?.formatPace?.(s,window.SpeedUnits.get())??(!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`);
 const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -13,7 +13,8 @@ const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math
 const mapRaceFamily=r=>String(r?.race_key||'').startsWith('ultravasan45-')?'uv45':String(r?.race_key||'').startsWith('ultravasan90-')?'uv90':null;
 function mixedRaceFamilyError(results,races){const families=[...new Set((results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id))).filter(Boolean))];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
 function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||registry?.routes?.[registry?.default_route_id]||null}
-if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute};
+function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
+if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,splitRouteDistance};
 const hydrateData=d=>{d=d||{};d.races=Array.isArray(d.races)?d.races:[];d.results=Array.isArray(d.results)?d.results:[];d.checkpoints=Array.isArray(d.checkpoints)?d.checkpoints:[];d.splits=Array.isArray(d.splits)?d.splits:[];const rr=new Map(d.results.map(r=>[Number(r.id),Number(r.race_id)])),cp=new Map(d.checkpoints.map(c=>[`${Number(c.race_id)}|${c.checkpoint_key}`,c]));d.results.forEach(r=>{r.id=Number(r.id);r.race_id=Number(r.race_id);if(r.finish_seconds!=null)r.finish_seconds=Number(r.finish_seconds)});d.splits.forEach(s=>{s.result_id=Number(s.result_id);if(s.elapsed_seconds!=null)s.elapsed_seconds=Number(s.elapsed_seconds);const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=Number(c.sequence_no);s.distance_km=Number(c.distance_km)}else{if(s.sequence_no!=null)s.sequence_no=Number(s.sequence_no);if(s.distance_km!=null)s.distance_km=Number(s.distance_km)}if(s.is_estimated==null)s.is_estimated=0});return d};
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
@@ -33,7 +34,7 @@ function boot(){
   if(!selected.length){const requested=Number(params.get('year')),requestedFamily=['uv90','uv45'].includes(params.get('race'))?params.get('race'):'uv90',familyRaces=app.data.races.filter(r=>mapRaceFamily(r)===requestedFamily),race=familyRaces.find(r=>r.id===requested||r.year===requested)||familyRaces.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
   selected=selected.slice(0,5);if(!selected.length){showFatal('Det finns inga löpare att visa.');return}
   app.models=selected.map((r,i)=>buildModel(r,COLORS[i],i));
-  const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=is45?'assets/Ultravasan-45.mp3?v=20260713-multirace1':'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1';document.body.classList.toggle('race-uv45',is45);
+  const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=window.RACE_MEDIA_CONFIG?.musicForRace(is45?'uv45':'uv90')||'';document.body.classList.toggle('race-uv45',is45);
   app.usedRoutes=[...new Map(app.models.map(m=>[m.route.id,m.route])).values()];
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;
@@ -51,7 +52,7 @@ function buildModel(result,color,index){
   const raw=app.data.splits.filter(s=>s.result_id===result.id&&Number.isFinite(s.elapsed_seconds)).sort((a,b)=>a.elapsed_seconds-b.elapsed_seconds);
   let anchors=[{time:0,distance:0,name:route.id==='ultravasan45-current'?'Start Oxberg':'Start Sälen',exact:true,kind:'start'}];
   for(const s of raw){
-    if(s.elapsed_seconds<=0)continue;const cp=routeCp.get(s.checkpoint_key);const dist=cp?.distance_km??s.distance_km;
+    if(s.elapsed_seconds<=0)continue;const cp=routeCp.get(s.checkpoint_key);const dist=splitRouteDistance(s,cp);
     if(!Number.isFinite(dist)||dist<=0)continue;anchors.push({time:Number(s.elapsed_seconds),distance:Math.min(route.official_distance_km,Number(dist)),name:s.checkpoint_name,exact:!s.is_estimated,kind:'split'})
   }
   if(Number.isFinite(result.finish_seconds)&&result.finish_seconds>0)anchors.push({time:Number(result.finish_seconds),distance:route.official_distance_km,name:'Mora mål',exact:true,kind:'finish'});

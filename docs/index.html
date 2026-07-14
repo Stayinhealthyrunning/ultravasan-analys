@@ -6,7 +6,8 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260713-multirace1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260714-units1" rel="stylesheet"/>
+<link href="assets/runner-replay.css?v=20260714-stable1" rel="stylesheet"/>
 </head>
 <body>
 <header class="hero hero-image-header"><img id="heroHeaderImage" alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260713-multirace1"/></header>
@@ -15,6 +16,12 @@
     <button class="race-switch-button active" id="raceSwitch90" data-race-family="uv90" role="tab" aria-selected="true"><span>Ultravasan</span><strong>90</strong><small>Sälen–Mora</small></button>
     <span class="race-switch-track" aria-hidden="true"><i></i></span>
     <button class="race-switch-button" id="raceSwitch45" data-race-family="uv45" role="tab" aria-selected="false"><span>Ultravasan</span><strong>45</strong><small>Oxberg–Mora</small></button>
+  </div>
+  <div class="race-load-slot">
+    <div class="race-load-status" id="raceLoadStatus" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
+      <span class="race-load-motion" aria-hidden="true"><i></i></span>
+      <span class="race-load-copy"><strong>Laddar data...</strong><small>Byter lopp och uppdaterar analyser</small></span>
+    </div>
   </div>
 </div>
 <main>
@@ -60,6 +67,7 @@
   <div id="clubFilterSuggestions" class="club-search-suggestions" hidden></div>
 </label>
 <label>Status<select id="statusFilter"><option value="">Alla</option></select></label>
+<label>Fartenhet<select id="speedUnitFilter"><option value="pace">min/km</option><option value="speed">km/h</option></select></label>
 <button class="secondary" id="resetFilters">Återställ</button>
 </section>
 <div class="data-notice" hidden="" id="dataNotice"></div>
@@ -77,7 +85,7 @@
 <div aria-label="Histogram över sluttider" class="chart" id="histogram" role="img"></div>
 </article>
 <article class="panel chart-panel">
-<div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="pace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="paceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="paceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">km/h</span></div></div>
+<div class="panel-head"><div><p class="eyebrow">LOPPETS DYNAMIK</p><h2>Medianfart per delsträcka</h2></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="pace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="paceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="paceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill" data-speed-unit-label>min/km</span></div></div>
 <div aria-label="Medianhastighet per delsträcka, inklusive start i Sälen" class="chart" id="paceChart" role="img"></div>
 </article>
 </section>
@@ -97,19 +105,19 @@
 <label class="target-select-wrap" for="targetTimeSelect"><span>Välj måltid (jämna minuter)</span><select aria-label="Välj måltid i jämna minuter" id="targetTimeSelect"></select></label>
 <div class="target-result" id="targetTimeResult"></div>
 </article>
-<article class="panel insight-card dnf-card">
+<article class="panel insight-card dnf-card analysis-half-card">
 <div class="panel-head"><div><p class="eyebrow">REPET DRAS</p><h3>Avhopp genom loppet</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="dnf" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="dnfSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="dnfSexF" type="checkbox" checked> Kvinnor</label></div></div></div>
 <div class="funnel-chart" id="dnfFunnel"></div>
 </article>
-<article class="panel insight-card wide segment-card">
+<article class="panel insight-card wide segment-card analysis-full-card">
 <div class="panel-head"><div><p class="eyebrow">FARTSIGNATUR</p><h3>Delsträckornas karaktär</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="segment" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="segmentSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="segmentSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">median · spridning</span></div></div>
 <div class="segment-grid" id="segmentHeatmap"></div>
 </article>
-<article class="panel insight-card position-card">
+<article class="panel insight-card position-card analysis-half-card">
 <div class="panel-head"><div><p class="eyebrow">POSITIONSSPEL</p><h3>Placeringsexpressen</h3><p class="panel-subtitle">Vem klättrade mest – och på vilken delsträcka kom det starkaste rycket?</p></div></div>
 <div class="mini-ranking" id="overtakeTable"></div>
 </article>
-<article class="panel insight-card wide history-card">
+<article class="panel insight-card wide history-card analysis-full-card">
 <div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>År mot år</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="year" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="yearSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="yearSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">median och tidsspridning</span></div></div>
 <div class="chart compact-chart" id="yearTrend"></div>
 </article>
@@ -122,8 +130,8 @@
 </div>
 <div class="gender-kpis" id="genderKpis"></div>
 <div class="world-grid">
-<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderPace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderPaceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderPaceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">km/h</span></div></div><div class="chart world-chart" id="genderPaceChart"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med den egna öppningen</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = första segmentet</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
+<article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderPace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderPaceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderPaceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill" data-speed-unit-label>min/km</span></div></div><div class="chart world-chart" id="genderPaceChart"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med snittfarten i loppet</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = snittfarten i loppet</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderHistory" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderHistorySexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderHistorySexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">alla loppår</span></div></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
 </div>
@@ -134,8 +142,57 @@
 <div class="world-grid class-lab-stack">
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Klassens starkaste prestationer</h3></div><span class="pill">dominans mot klassmedian</span></div><div class="metric-tabs class-index-tabs" id="classIndexTabs"></div><div class="index-ranking" id="classIndexTable"></div></article>
-<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart" id="classHistoryChart"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median, startande och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart class-history-chart" id="classHistoryChart"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><div class="chart-head-tools"><div class="unit-toggle-group" aria-label="Välj enhet i fartkartan"><label class="unit-toggle active"><input id="classHeatUnitPace" type="checkbox" checked> min/km</label><label class="unit-toggle"><input id="classHeatUnitSpeed" type="checkbox"> km/h</label></div><span class="pill" id="classHeatUnitLabel">median min/km</span></div></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
+</div>
+</section>
+<section aria-label="Race Intelligence Lab" class="nerd-lab">
+<div class="nerd-hero">
+<div>
+<p class="eyebrow">RACE INTELLIGENCE LAB</p>
+<h2>Historien bakom siffrorna</h2>
+<p>Bygg en delsträcka, hitta loppets hjältar, följ en löpare över flera år och se vilka tider som krävs för olika percentiler.</p>
+</div>
+<div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
+</div>
+<div class="story-strip" id="raceStories"></div>
+<div class="intelligence-grid">
+<article class="panel lab-card segment-lab">
+<div class="panel-head"><div><p class="eyebrow">DELSTRÄCKELABBET</p><h3>Vem var bäst just här?</h3></div><span class="pill">valfri kontroll → kontroll</span></div>
+<div class="lab-controls">
+<label>Från<select id="segmentFrom"></select></label>
+<label>Till<select id="segmentTo"></select></label>
+<label>Klass<select id="segmentClass"><option value="">Alla klasser</option></select></label>
+<label>Sortera<select id="segmentMetric"><option value="time">Snabbast tid</option><option value="gain">Flest vunna platser</option><option value="speed">Högst fart</option></select></label>
+</div>
+<div class="podium" id="segmentPodium"></div>
+<div class="segment-ranking" id="segmentRanking"></div>
+</article>
+<article class="panel lab-card percentile-card">
+<div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="percentile" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="percentileSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="percentileSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">aktuellt urval</span></div></div>
+<div class="percentile-ladder" id="percentileLadder"></div>
+<p class="microcopy">Läs uppifrån: tiden som senast räcker till respektive nivå bland fullföljande löpare.</p>
+</article>
+<article class="panel lab-card history-lab">
+<div class="panel-head"><div><p class="eyebrow">LÖPARARKIVET</p><h3>En person genom åren</h3></div><span class="pill">namn eller startnummer</span></div>
+<label class="archive-search">Sök i alla loppår<input id="historySearch" placeholder="Exempel: Anna Andersson" type="search"/></label>
+<div class="history-suggestions" hidden="" id="historySuggestions"></div>
+<div class="runner-history" id="runnerHistory"><div class="empty">Sök fram en löpare för att se utveckling, bästa lopp och pacingprofil.</div></div>
+</article>
+<article class="panel lab-card fingerprint-card">
+<div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet från andra år</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
+<div class="fingerprint" id="raceFingerprint"></div>
+</article>
+<article class="panel lab-card field-flow-card">
+<div class="panel-head"><div><p class="eyebrow">FÄLTETS FLÖDE</p><h3>Från start till Mora</h3></div><span class="pill">DNF syns som läckage</span></div>
+<div class="field-flow" id="fieldFlow"></div>
+</article>
+<article class="panel lab-card hall-card">
+<div class="panel-head"><div><p class="eyebrow">HALL OF FAME</p><h3>Prestationer som sticker ut</h3></div><span class="pill">alla importerade år</span></div>
+<p class="hall-explanation" id="hallExplanation">Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.</p>
+<div class="hall-tabs" id="hallTabs"><button class="active" data-hall="veterans">Flest lopp</button><button data-hall="improved">Mest förbättrad</button><button data-hall="consistent">Jämnast</button><button data-hall="chargers">Starkast avslutning</button></div>
+<div class="hall-list" id="hallOfFame"></div>
+</article>
 </div>
 </section>
 <section aria-label="Statistik för klubb och ort" class="audience-world club-world" id="klubbar">
@@ -156,54 +213,6 @@
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-DNA</p><h3>Fem sidor av klubben</h3></div><span class="pill">relativt fältet</span></div><div class="club-dna" id="clubDna"></div></article>
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-JÄMFÖRELSE</p><h3>Medianfart genom loppet</h3></div><span class="pill">upp till fyra klubbar/orter</span></div><div class="chart world-chart" id="clubCompareChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-HISTORIK</p><h3>Starter, målgångar och median</h3></div></div><div class="chart world-chart" id="clubHistoryChart"></div></article>
-</div>
-</section>
-<section aria-label="Race Intelligence Lab" class="nerd-lab">
-<div class="nerd-hero">
-<div>
-<p class="eyebrow">RACE INTELLIGENCE LAB</p>
-<h2>Historien bakom siffrorna</h2>
-<p>Bygg en delsträcka, hitta loppets hjältar, följ en löpare över flera år och se vilka tider som krävs för olika percentiler.</p>
-</div>
-<div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
-</div>
-<div class="story-strip" id="raceStories"></div>
-<div class="intelligence-grid">
-<article class="panel lab-card segment-lab">
-<div class="panel-head"><div><p class="eyebrow">DELSTRÄCKELABBET</p><h3>Vem var bäst just här?</h3></div><span class="pill">valfri kontroll → kontroll</span></div>
-<div class="lab-controls">
-<label>Från<select id="segmentFrom"></select></label>
-<label>Till<select id="segmentTo"></select></label>
-<label>Sortera<select id="segmentMetric"><option value="time">Snabbast tid</option><option value="gain">Flest vunna platser</option><option value="speed">Högst fart</option></select></label>
-</div>
-<div class="podium" id="segmentPodium"></div>
-<div class="segment-ranking" id="segmentRanking"></div>
-</article>
-<article class="panel lab-card percentile-card">
-<div class="panel-head"><div><p class="eyebrow">VAD KRÄVS?</p><h3>Percentiltrappan</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="percentile" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="percentileSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="percentileSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">aktuellt urval</span></div></div>
-<div class="percentile-ladder" id="percentileLadder"></div>
-<p class="microcopy">Läs uppifrån: tiden som senast räcker till respektive nivå bland fullföljande löpare.</p>
-</article>
-<article class="panel lab-card history-lab">
-<div class="panel-head"><div><p class="eyebrow">LÖPARARKIVET</p><h3>En person genom åren</h3></div><span class="pill">namn eller startnummer</span></div>
-<label class="archive-search">Sök i alla loppår<input id="historySearch" placeholder="Exempel: Anna Andersson" type="search"/></label>
-<div class="history-suggestions" hidden="" id="historySuggestions"></div>
-<div class="runner-history" id="runnerHistory"><div class="empty">Sök fram en löpare för att se utveckling, bästa lopp och pacingprofil.</div></div>
-</article>
-<article class="panel lab-card field-flow-card">
-<div class="panel-head"><div><p class="eyebrow">FÄLTETS FLÖDE</p><h3>Från start till Mora</h3></div><span class="pill">DNF syns som läckage</span></div>
-<div class="field-flow" id="fieldFlow"></div>
-</article>
-<article class="panel lab-card hall-card">
-<div class="panel-head"><div><p class="eyebrow">HALL OF FAME</p><h3>Prestationer som sticker ut</h3></div><span class="pill">alla importerade år</span></div>
-<p class="hall-explanation" id="hallExplanation">Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.</p>
-<div class="hall-tabs" id="hallTabs"><button class="active" data-hall="veterans">Flest lopp</button><button data-hall="improved">Mest förbättrad</button><button data-hall="consistent">Jämnast</button><button data-hall="chargers">Starkast avslutning</button></div>
-<div class="hall-list" id="hallOfFame"></div>
-</article>
-<article class="panel lab-card fingerprint-card">
-<div class="panel-head"><div><p class="eyebrow">ÅRETS FINGERAVTRYCK</p><h3>Så skiljer sig loppet från andra år</h3></div><span class="pill">index 100 = historiskt normalt</span></div>
-<div class="fingerprint" id="raceFingerprint"></div>
-</article>
 </div>
 </section>
 <section class="panel results-panel" id="lopare">
@@ -249,9 +258,12 @@
 </dialog>
 <div class="loading" id="loading"><div></div><p>Läser resultatdatabasen…</p></div>
 <script src="data/ultravasan-data.js"></script>
-<script src="data/ultravasan-routes.js?v=20260713-multirace1"></script>
-<script src="assets/app.js?v=20260713-multirace1"></script>
-<script src="assets/nerdlab.js?v=20260713-multirace1"></script>
-<script src="assets/audience-analytics.js?v=20260713-multirace1"></script>
+<script src="data/ultravasan-routes.js?v=20260714-gpx1"></script>
+<script src="assets/speed-units.js?v=20260714-units1"></script>
+<script src="assets/race-media.js?v=20260714-replay1"></script>
+<script src="assets/runner-replay.js?v=20260714-units1"></script>
+<script src="assets/app.js?v=20260714-units1"></script>
+<script src="assets/nerdlab.js?v=20260714-units1"></script>
+<script src="assets/audience-analytics.js?v=20260714-units1"></script>
 </body>
 </html>

@@ -6,6 +6,11 @@ const nEsc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const nMedian=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
 const nQuantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),p=(b.length-1)*q,l=Math.floor(p),h=Math.ceil(p);return b[l]+(b[h]-b[l])*(p-l)};
 const nTime=s=>typeof fmtTime==='function'?fmtTime(s):(s==null?'–':new Date(s*1000).toISOString().slice(11,19));
+const nSpeed=s=>globalThis.SpeedUnits?.formatSpeed?.(s,globalThis.SpeedUnits.get())??(Number.isFinite(Number(s))?`${Number(s).toFixed(1)} km/h`:'–');
+const nClassInfo=v=>{let s=String(v||'').trim().toUpperCase().replace(/\s+/g,'');if(/^H\d/.test(s))s='M'+s.slice(1);if(/^D\d/.test(s)||/^K\d/.test(s))s='W'+s.slice(1);const sex=s.startsWith('W')?0:s.startsWith('M')?1:2,m=s.match(/(\d{1,3})/),age=m?Number(m[1]):999,tail=s.replace(/^[A-Z]?\d{1,3}/,'');return{s,sex,age,tail}};
+const nCompareClasses=(a,b)=>{const A=nClassInfo(a),B=nClassInfo(b);return A.sex-B.sex||A.age-B.age||A.tail.localeCompare(B.tail,'sv')||A.s.localeCompare(B.s,'sv')};
+function segmentClassOptions(rows){return [...new Set((rows||[]).map(r=>String(r?.age_class||'').trim()).filter(Boolean))].sort(nCompareClasses)}
+function filterRowsBySegmentClass(rows,selectedClass){const selected=String(selectedClass||'').trim();return selected?(rows||[]).filter(r=>String(r?.age_class||'')===selected):[...(rows||[])]}
 const activeRace=()=>state.data.races.find(r=>r.id===state.raceId);
 const splitMap=id=>new Map(state.data.splits.filter(s=>s.result_id===id).map(s=>[s.sequence_no,s]));
 const nSex=r=>{const x=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(x)?'F':['M','H'].includes(x)?'M':'U'};
@@ -29,7 +34,7 @@ function groupAthleteHistories(results,races=[]){
 function initNerdLab(){
   if(nerd.ready||!window.ULTRAVASAN_DATA||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
-  const selects=['segmentFrom','segmentTo','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
+  const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
   n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
@@ -46,11 +51,14 @@ function populateSegmentSelectors(){
 }
 
 function renderNerdLab(){
-  if(!nerd.ready)return;populateSegmentSelectorsPreserve();renderCoverage();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
+  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
 }
 function populateSegmentSelectorsPreserve(){
   const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;const old=[from.value,to.value],oldRace=from.dataset.race;
   if(oldRace===String(state.raceId))return;populateSegmentSelectors();from.dataset.race=String(state.raceId);
+}
+function populateSegmentClassFilter(){
+  const select=n$('#segmentClass');if(!select)return;const old=select.value,classes=segmentClassOptions(state.filtered);select.innerHTML='<option value="">Alla klasser</option>'+classes.map(cls=>`<option value="${nEsc(cls)}">${nEsc(cls)}</option>`).join('');select.value=classes.includes(old)?old:'';
 }
 function renderCoverage(){
   const fr=familyRaces(),results=familyResults(),years=new Set(fr.filter(r=>results.some(x=>x.race_id===r.id)).map(r=>r.year));
@@ -69,20 +77,20 @@ function renderStories(){
     ['🏆','Segrare',winner.name_as_published,`${nTime(winner.finish_seconds)} · plats ${winner.overall_place??1}`],
     ['⏱️','Fältets mitt',nTime(med),`${rows.length} fullföljande i urvalet`],
     ['🚀','Dagens avancemang',charger?.r?.name_as_published||'Placeringar saknas',charger?`+${charger.gain} platser`:'Saknas i underlaget'],
-    ['🔥','Tuffaste segment',tough?.name?.replace('Mora mål','Mora')||'Mellantider saknas',tough?`${Math.floor(tough.med/60)}:${String(Math.round(tough.med%60)).padStart(2,'0')} min/km median`:''],
+    ['🔥','Tuffaste segment',tough?.name?.replace('Mora mål','Mora')||'Mellantider saknas',tough?(globalThis.SpeedUnits?.formatPace?.(tough.med,globalThis.SpeedUnits.get())||`${Math.floor(tough.med/60)}:${String(Math.round(tough.med%60)).padStart(2,'0')} min/km`)+' median':''],
     ['🌙','Längsta resa',last.name_as_published,nTime(last.finish_seconds)]
   ];
   el.innerHTML=items.map(([icon,label,title,sub])=>`<article class="story-card"><span>${icon}</span><div><small>${nEsc(label)}</small><strong>${nEsc(title)}</strong><em>${nEsc(sub)}</em></div></article>`).join('');
 }
 function segmentRows(){
-  const from=Number(n$('#segmentFrom')?.value),to=Number(n$('#segmentTo')?.value);if(!(to>from))return [];
-  return state.filtered.map(r=>{const m=splitMap(r.id),a=from===0?{elapsed_seconds:0,place_overall:null,distance_km:0}:m.get(from),b=m.get(to);if(!a||!b||!Number.isFinite(a.elapsed_seconds)||!Number.isFinite(b.elapsed_seconds))return null;const seconds=b.elapsed_seconds-a.elapsed_seconds,km=(b.distance_km??0)-(a.distance_km??0),gain=(a.place_overall&&b.place_overall)?a.place_overall-b.place_overall:null;return{r,seconds,km,speed:km>0?km/(seconds/3600):null,gain,from:a,to:b}}).filter(Boolean);
+  const from=Number(n$('#segmentFrom')?.value),to=Number(n$('#segmentTo')?.value),selectedClass=n$('#segmentClass')?.value||'';if(!(to>from))return [];
+  return filterRowsBySegmentClass(state.filtered,selectedClass).map(r=>{const m=splitMap(r.id),a=from===0?{elapsed_seconds:0,place_overall:null,distance_km:0}:m.get(from),b=m.get(to);if(!a||!b||!Number.isFinite(a.elapsed_seconds)||!Number.isFinite(b.elapsed_seconds))return null;const seconds=b.elapsed_seconds-a.elapsed_seconds,km=(b.distance_km??0)-(a.distance_km??0),gain=(a.place_overall&&b.place_overall)?a.place_overall-b.place_overall:null;return{r,seconds,km,speed:km>0?km/(seconds/3600):null,gain,from:a,to:b}}).filter(Boolean);
 }
 function renderSegmentLab(){
   const podium=n$('#segmentPodium'),list=n$('#segmentRanking');if(!podium||!list)return;const metric=n$('#segmentMetric')?.value||'time',rows=segmentRows();
   rows.sort((a,b)=>metric==='gain'?(b.gain??-9999)-(a.gain??-9999):metric==='speed'?(b.speed??-1)-(a.speed??-1):a.seconds-b.seconds);
   if(!rows.length){podium.innerHTML='';list.innerHTML='<div class="empty">Välj två kontroller med tillgängliga passager.</div>';return}
-  const val=x=>metric==='gain'?(x.gain==null?'–':`${x.gain>0?'+':''}${x.gain} pl`):metric==='speed'?(x.speed?`${x.speed.toFixed(1)} km/h`:'–'):nTime(x.seconds);
+  const val=x=>metric==='gain'?(x.gain==null?'–':`${x.gain>0?'+':''}${x.gain} pl`):metric==='speed'?nSpeed(x.speed):nTime(x.seconds);
   const top=rows.slice(0,3),order=[top[1],top[0],top[2]].filter(Boolean);podium.innerHTML=order.map((x,i)=>`<div class="podium-place p${i===1?1:i===0?2:3}"><b>${i===1?'1':i===0?'2':'3'}</b><span>${nEsc(x.r.name_as_published)}</span><strong>${val(x)}</strong></div>`).join('');
   list.innerHTML=rows.slice(0,12).map((x,i)=>`<button class="segment-row" data-id="${x.r.id}"><b>${i+1}</b><span><strong>${nEsc(x.r.name_as_published)}</strong><small>${nEsc(x.r.age_class||'')} ${x.r.club?'· '+nEsc(x.r.club):''}</small></span><em>${val(x)}</em></button>`).join('');
   n$$('.segment-row').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
@@ -204,7 +212,7 @@ function renderRunnerHistory(g){
   n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(rows.slice(-5)):window.open(`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`,'_blank');
 }
 
-if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories};
+if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const nerdTimer=setInterval(()=>{try{initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
 }
