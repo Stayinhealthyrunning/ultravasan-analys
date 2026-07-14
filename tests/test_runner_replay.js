@@ -29,6 +29,12 @@ const uv90Dnf=realModel('ultravasan90-2015',11971);
 assert.strictEqual(uv90Old.route.id,'ultravasan90-pre2023','Äldre UV90 måste välja äldre ruttversion');
 assert.strictEqual(uv90New.route.id,'ultravasan90-post2023','Ny UV90 måste välja ny ruttversion');
 assert.strictEqual(uv45Current.route.id,'ultravasan45-current','UV45 måste välja UV45-rutten');
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2022',year:2022}).source_year,2022);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2023',year:2023}).source_year,2024);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2025',year:2025}).source_year,2024);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2014}).source_year,2026);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2024',year:2024}).source_year,2026);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2025',year:2025}).source_year,2026);
 assert.strictEqual(uv90Old.segments.length,8,'Äldre UV90 ska byggas från årets faktiska kontrollmodell');
 assert.strictEqual(uv90New.segments.length,9,'UV90 2025 ska inkludera Högsta punkten');
 assert.strictEqual(uv45Current.segments.length,6,'UV45 2025 ska använda kontrolluppsättning B');
@@ -47,6 +53,12 @@ const uv45Historical=replay.createModel({race:historicalRace,result:{id:999001,s
 assert.strictEqual(uv45Historical.checkpoints.map(cp=>cp.key).join(','),'start,oxberg,hokberg,eldris,mora');
 assert.strictEqual(uv45Historical.segments.length,4,'Historisk UV45 ska använda kontrolluppsättning A');
 assert.ok(!uv45Historical.segments.some(segment=>/smågan|evertsberg/i.test(segment.from.name+segment.to.name)),'UV45 får inte ärva UV90-kontroller');
+for(const year of [2014,2024]){
+  const historical=config.races.find(item=>item.race_key===`ultravasan45-${year}`);
+  assert.ok(historical,`Konfiguration för UV45 ${year} saknas`);
+  assert.strictEqual(historical.checkpoints.map(cp=>cp.checkpoint_key).join(','),'start,oxberg,hokberg,eldris,mora',`UV45 ${year} ska använda kontrolluppsättning A`);
+  assert.strictEqual(replay.routeForRace(registry,historical).source_year,2026,`UV45 ${year} ska använda verifierad UV45-GPX`);
+}
 
 // Färgskalan är relativ till löparens egna segment och saknad passage är neutral.
 const paces=uv90Old.segments.map(segment=>segment.pace);
@@ -64,10 +76,17 @@ assert.ok(uv90Old.elevationProfile.length>100,'Verifierad äldre GPX ska ge höj
 const state15=replay.stateAt(uv90Old,15);
 assert.ok(state15.coordinate&&state15.coordinate.length===3,'Kartposition ska interpoleras längs rutten');
 assert.ok(Number.isFinite(state15.elevation),'Höjd ska interpoleras från samma distans');
+assert.ok(Number.isFinite(state15.grade),'Lutning ska interpoleras från samma GPX-profil');
+assert.ok(Number.isFinite(state15.cumulativeAscent)&&Number.isFinite(state15.ascentRemaining),'Kumulativ och återstående stigning ska finnas');
+assert.ok(replay.stateAt(uv90Old,25).ascentRemaining<state15.ascentRemaining,'Återstående stigning ska minska längs banan');
 assert.ok(state15.time>uv90Old.anchors[1].time&&state15.time<uv90Old.anchors[2].time,'Tid ska interpoleras mellan officiella passager');
 assert.strictEqual(state15.rankIsExact,false,'Placering mellan kontroller får inte markeras som exakt');
 assert.strictEqual(state15.lastKnownRank,1,'Senast registrerade placering ska behållas mellan kontroller');
-assert.ok(replay.render(uv90New).includes('Höjdprofil saknas'),'Saknad verifierad höjddata ska degradera tydligt');
+assert.ok(Number.isFinite(replay.stateAt(uv90New,20).elevation),'Post-2023 UV90 ska använda höjd från 2024-GPX');
+assert.ok(Number.isFinite(replay.stateAt(uv45Current,20).elevation),'UV45 ska använda höjd från 2026-GPX');
+const noElevation={...uv90New,route:{...uv90New.route,elevation_note:'Verifierad höjd saknas'},elevationProfile:[]};
+assert.ok(replay.render(noElevation).includes('Höjdprofil saknas'),'Saknad verifierad höjddata ska degradera tydligt');
+assert.ok(renderedOld.includes('data-replay-value="grade"')&&renderedOld.includes('data-replay-value="ascent-remaining"'),'Informationskortet ska visa lutning och återstående stigning');
 
 // Replay klampar korrekt vid mål respektive DNF:s sista säkra passage.
 assert.strictEqual(uv90New.finished,true);
