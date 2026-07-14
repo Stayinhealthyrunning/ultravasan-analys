@@ -5,7 +5,7 @@ const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:300,playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true};
 const $=s=>document.querySelector(s);
 const fmtTime=s=>{if(s==null||!Number.isFinite(s))return '–';s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-const fmtPace=s=>!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
+const fmtPace=s=>window.SpeedUnits?.formatPace?.(s,window.SpeedUnits.get())??(!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`);
 const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

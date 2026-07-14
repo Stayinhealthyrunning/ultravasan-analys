@@ -16,7 +16,7 @@
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const cleanName=v=>String(v||'').replace('Mora mål','Mora').replace('Start Sälen','Sälen').replace('Start Oxberg','Oxberg start').trim();
   const fmtTime=s=>!finite(s)?'–':`${Math.floor(Number(s)/3600)}:${String(Math.floor((Number(s)%3600)/60)).padStart(2,'0')}:${String(Math.round(Number(s)%60)).padStart(2,'0')}`;
-  const fmtPace=s=>!finite(s)?'–':`${Math.floor(Number(s)/60)}:${String(Math.round(Number(s)%60)).padStart(2,'0')}/km`;
+  const fmtPace=s=>globalThis.SpeedUnits?.formatPace?.(s,globalThis.SpeedUnits.get())??(!finite(s)?'–':`${Math.floor(Number(s)/60)}:${String(Math.round(Number(s)%60)).padStart(2,'0')} /km`);
   const fmtDistance=v=>`${Number(v||0).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:1})} km`;
   const formatClassPlace=value=>finite(value)&&Number(value)>0?String(Math.trunc(Number(value))):'Saknas';
   const median=values=>{const a=values.filter(finite).map(Number).sort((a,b)=>a-b);if(!a.length)return null;const i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2};

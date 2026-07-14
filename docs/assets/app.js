@@ -2,7 +2,9 @@
 const state={data:null,filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null,raceFamily:'uv90'};
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const fmtTime=s=>{if(s==null)return '–';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.round(s%60);return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-const fmtPace=s=>s==null?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`;
+const speedUnit=()=>window.SpeedUnits?.get?.()||'pace';
+const fmtPace=s=>window.SpeedUnits?.formatPace?.(s,speedUnit())??(s==null?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`);
+const fmtSpeed=s=>window.SpeedUnits?.formatSpeed?.(s,speedUnit())??(Number.isFinite(Number(s))?`${Number(s).toFixed(1)} km/h`:'–');
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const normClassLabel=v=>{let s=String(v||'Okänd').toUpperCase().replace(/\s+/g,'');if(/^H\d/.test(s))s='M'+s.slice(1);if(/^D\d/.test(s)||/^K\d/.test(s))s='W'+s.slice(1);return s||'Okänd'};
 const classOrderInfo=v=>{const s=normClassLabel(v),sex=s.startsWith('W')?0:s.startsWith('M')?1:2,m=s.match(/(\d{1,3})/),age=m?Number(m[1]):999,tail=s.replace(/^[A-Z]?\d{1,3}/,'');return {s,sex,age,tail}};
@@ -28,7 +30,17 @@ function setupRaceSwitch(){const saved=new URLSearchParams(location.search).get(
 const hydrateData=d=>{const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});return d};
 
 async function load(){try{if(window.ULTRAVASAN_DATA){state.data=hydrateData(window.ULTRAVASAN_DATA);setup();return}const r=await fetch('data/ultravasan.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);state.data=hydrateData(await r.json());setup();}catch(e){console.error(e);$('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera att filen <code>data/ultravasan-data.js</code> finns bredvid webbplatsen.<br><small>${esc(e.message)}</small></p>`;}}
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+let speedUnitControlsReady=false;
+function syncSpeedUnitControls(unit=speedUnit()){
+  const select=$('#speedUnitFilter');if(select)select.value=unit;
+  $$('[data-speed-unit-label]').forEach(label=>label.textContent=window.SpeedUnits?.unitLabel?.(unit)||'min/km');
+}
+function setupSpeedUnitControls(){
+  syncSpeedUnitControls();if(speedUnitControlsReady)return;speedUnitControlsReady=true;
+  $('#speedUnitFilter')?.addEventListener('change',event=>window.SpeedUnits?.set?.(event.target.value));
+  window.addEventListener('ultravasan:speed-unit-change',event=>{syncSpeedUnitControls(event.detail?.unit);if(state.data)renderAll()});
+}
 function raceResults(){return state.data.results.filter(r=>r.race_id===state.raceId)}
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(compareClasses),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));renderAll()}
@@ -45,24 +57,24 @@ function renderPaceChart(){
     if(!groups.has(s.sequence_no))groups.set(s.sequence_no,{name:s.checkpoint_name,vals:[]});
     groups.get(s.sequence_no).vals.push(speed);
   });
-  const rawSegments=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([seq,g])=>({seq,checkpoint:g.name,value:median(g.vals)}));
+  const unit=speedUnit(),rawSegments=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([seq,g])=>({seq,checkpoint:g.name,speed:median(g.vals)}));
   let previous='Start';const segmentPoints=rawSegments.map(g=>{const name=segmentRangeLabel(previous,g.checkpoint);previous=g.checkpoint;return {...g,name}});
-  const startName=state.raceFamily==='uv45'?'Oxberg (start)':'Sälen (start)';const pts=[{seq:0,name:startName,value:0,isStart:true},...segmentPoints];
+  const startName=state.raceFamily==='uv45'?'Oxberg (start)':'Sälen (start)',display=speed=>unit==='pace'?window.SpeedUnits.paceFromSpeed(speed):speed;const pts=[{seq:0,name:startName,value:null,isStart:true},...segmentPoints.map(point=>({...point,value:display(point.speed)}))];
   const el=$('#paceChart');
   if(segmentPoints.length<1){el.innerHTML='<div class="empty">Mellantider saknas i det aktuella urvalet.</div>';return}
   const W=650,H=270,p={l:48,r:20,t:15,b:62};
-  const max=Math.max(2,Math.ceil(Math.max(...pts.map(x=>x.value))/2)*2);
-  const x=i=>p.l+i*(W-p.l-p.r)/(pts.length-1||1),y=v=>p.t+(max-v)*(H-p.t-p.b)/max;
+  const values=pts.map(x=>x.value).filter(Number.isFinite),min=Math.min(...values),max=Math.max(...values),x=i=>p.l+i*(W-p.l-p.r)/(pts.length-1||1),y=v=>unit==='pace'?p.t+(v-min)*(H-p.t-p.b)/(max-min||1):p.t+(max-v)*(H-p.t-p.b)/(max-min||1);
   let out='';
   for(let i=0;i<=4;i++){
-    const val=max-(max*i/4),yy=y(val);
-    out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:5,y:yy+4},val.toFixed(val%1?1:0));
+    const val=unit==='pace'?min+(max-min)*i/4:max-(max-min)*i/4,yy=y(val),label=unit==='pace'?window.SpeedUnits.formatPaceSeconds(val,{suffix:false}):val.toFixed(1);
+    out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:5,y:yy+4},label);
   }
-  const path=pts.map((d,i)=>`${i?'L':'M'}${x(i)} ${y(d.value)}`).join(' ');
-  out+=`<path class="line-area" d="${path} L${x(pts.length-1)} ${H-p.b} L${x(0)} ${H-p.b} Z"/><path class="line-path" d="${path}"/>`;
+  const valid=pts.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d.value)),path=valid.map((d,i)=>`${i?'L':'M'}${x(d.i)} ${y(d.value)}`).join(' ');
+  out+=`<path class="line-path" d="${path}"/>`;
   pts.forEach((d,i)=>{
-    const title=d.isStart?`${state.raceFamily==='uv45'?'Oxberg':'Sälen'}: startpunkt, 0 km/h`:`${d.name}: median ${d.value.toFixed(1)} km/h`;
-    out+=`<circle class="dot" cx="${x(i)}" cy="${y(d.value)}" r="5"><title>${title}</title></circle>`+svg('text',{x:x(i),y:H-31,'text-anchor':'middle',transform:`rotate(-30 ${x(i)} ${H-31})`},d.name.replace('Mora mål','Mora'));
+    const title=d.isStart?`${state.raceFamily==='uv45'?'Oxberg':'Sälen'}: startpunkt`:`${d.name}: median ${fmtSpeed(d.speed)}`;
+    if(!d.isStart)out+=`<circle class="dot" cx="${x(i)}" cy="${y(d.value)}" r="5"><title>${title}</title></circle>`;
+    out+=svg('text',{x:x(i),y:H-31,'text-anchor':'middle',transform:`rotate(-30 ${x(i)} ${H-31})`},d.name.replace('Mora mål','Mora'));
   });
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
@@ -130,7 +142,7 @@ function renderSegmentHeatmap(){
   let previous='Start';const cells=[...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([,g])=>{const name=segmentRangeLabel(previous,g.name);previous=g.name;return{name,med:median(g.vals),p25:quantile(g.vals,.25),p75:quantile(g.vals,.75),n:g.vals.length}});
   if(!cells.length){el.innerHTML='<div class="empty">Mellantider saknas i det aktuella urvalet</div>';return}
   const lo=Math.min(...cells.map(x=>x.med)),hi=Math.max(...cells.map(x=>x.med));
-  el.innerHTML=cells.map(c=>{const t=(c.med-lo)/(hi-lo||1),h=Math.round(150-110*t),l=Math.round(31+7*(1-t));return `<div class="segment-cell" style="background:hsl(${h} 55% ${l}%)"><span>${esc(c.name.replace('Mora mål','Mora'))}</span><strong>${fmtPace(c.med).replace(' /km','')}</strong><small>Hälften av löparna: ${fmtPace(c.p25).replace(' /km','')}–${fmtPace(c.p75).replace(' /km','')} · ${c.n} tider</small></div>`}).join('');
+  el.innerHTML=cells.map(c=>{const t=(c.med-lo)/(hi-lo||1),h=Math.round(150-110*t),l=Math.round(31+7*(1-t));return `<div class="segment-cell" style="background:hsl(${h} 55% ${l}%)"><span>${esc(c.name.replace('Mora mål','Mora'))}</span><strong>${fmtPace(c.med)}</strong><small>Hälften av löparna: ${fmtPace(c.p25)}–${fmtPace(c.p75)} · ${c.n} tider</small></div>`}).join('');
 }
 function renderOvertakes(){
   const el=$('#overtakeTable'),by=new Map();
@@ -317,14 +329,14 @@ const INFO_HELP_EXTENDED=[
   ['.kpis article:nth-child(3)','Den snabbaste registrerade sluttiden i det aktuella urvalet.'],
   ['.kpis article:nth-child(4)','Andelen i urvalet som har en registrerad måltid. DNS och DNF saknar normalt sluttid.'],
   ['#histogram','Visar hur sluttiderna fördelar sig. Varje stapel samlar löpare inom ett tidsintervall och delas upp efter kön när båda grupperna finns i urvalet.'],
-  ['#paceChart','Visar medianhastigheten på varje delsträcka. Sälen är startpunkten och visas därför som 0 km/h.'],
+  ['#paceChart','Visar medianfarten på varje delsträcka för det filtrerade startfältet. Farten visas i den gemensamma enheten min/km eller km/h; startpunkten saknar fartvärde eftersom ingen sträcka ännu har löpts. Saknade mellantider ingår inte.'],
   ['.stats-studio .studio-head','Statistikstudion sammanfattar sambandet mellan tid, placering, avhopp, delsträckor och historisk utveckling för det aktuella urvalet.'],
   ['#placementScatter','Varje punkt är en löpare. Diagrammet visar sambandet mellan sluttid och slutplacering. Kryssa i eller ur män och kvinnor för att fokusera jämförelsen. Håll över en punkt för detaljer.'],
   ['.target-card','Välj en sluttid i jämna minuter för att se vilken ungefärlig placering och percentil den brukar motsvara i det valda urvalet.'],
-  ['#dnfFunnel','Visar var registrerade DNF-löpare senast passerade en kontroll. DNS räknas inte som startande.'],
-  ['#segmentHeatmap','Sammanfattar medianfart och spridning på varje delsträcka. Uppdelningen gör det lättare att se var tempot förändras.'],
-  ['#overtakeTable','Visar både den totala klättringen i resultatfältet och den delsträcka där löparen vann flest placeringar.'],
-  ['#yearTrend','Jämför median sluttid mellan importerade loppår. Spridningen visar intervallet där den mittersta hälften av sluttiderna ligger.'],
+  ['#dnfFunnel','Visar på vilken del av banan registrerade DNF-löpare senast hade en säker passage. DNS räknas inte som startande och tas därför inte med bland avhoppen. En saknad passage betyder att källan inte kan placera avhoppet mer exakt.'],
+  ['#segmentHeatmap','Sammanfattar medianfart och den mittersta hälftens spridning på varje delsträcka. Jämför rutorna för att se var tempot typiskt förändras, men tänk på att underlaget kan skilja sig mellan segment när passager saknas.'],
+  ['#overtakeTable','Visar både löparens totala placeringsförändring och den delsträcka där flest placeringar vanns. Placering jämförs bara vid officiella passager och säger inte exakt var mellan kontrollerna en omkörning skedde.'],
+  ['#yearTrend','Jämför median sluttid mellan importerade loppår. Spridningen visar intervallet där den mittersta hälften av sluttiderna ligger. Skillnader kan bero på både förhållanden, startfält och banversion.'],
   
   ['#kon .world-hero','Genusperspektivet jämför deltagande, fart, fullföljande och historisk utveckling för män och kvinnor med samma övriga filter.'],
   ['#genderPaceChart','Jämför männens och kvinnornas medianfart på varje delsträcka.'],
@@ -334,9 +346,9 @@ const INFO_HELP_EXTENDED=[
   ['#klasser .world-hero','Klasslabbet jämför åldersklasser, delsträckor, historik och prestation relativt den egna klassen.'],
   ['#classCards','Klicka på en klass för att välja eller avmarkera den i Klassduellen. Korten visar klassens storlek och centrala resultatmått.'],
   ['#classHeatmap','Raderna är åldersklasser och kolumnerna delsträckor. Välj min/km eller km/h ovanför tabellen; min/km är förvalt. Varje ruta visar klassens median på delsträckan. Färgskalan är alltid fartorienterad: grönare ruta betyder snabbare delsträcka, oavsett vald enhet. Ett streck betyder att tillräckliga mellantider saknas.'],
-  ['#classCompareChart','Jämför fartkurvor för upp till fyra valda åldersklasser.'],
+  ['#classCompareChart','Jämför medianfarten per delsträcka för upp till fyra valda åldersklasser. Hovra eller fokusera en punkt för klass, delsträcka och exakt värde i vald fartenhet. Endast löpare med giltig mellantid på segmentet ingår.'],
   ['#classIndexTable','Klassens starkaste prestationer visar i första hand klassvinnare och rangordnar dem efter dominans: hur många procent snabbare vinnaren var än medianen bland fullföljande i samma loppår, kön och åldersklass. Minst fem fullföljande krävs för att komma med i huvudlistan. Huvudvärdet till höger är dominansen mot klassmedianen. Under namnet ser du klassplacering, antal fullföljande, tidsmarginal till tvåan och Sälen–Mora-index som ett kompletterande percentilmått där 100 betyder bäst i klassen och 90 betyder bättre än 90 procent av jämförelsegruppen. Om underlaget är litet visas det bara som reservläge.'],
-  ['#classHistoryChart','Visar hur valda klassers mediantider och DNF-andelar utvecklats över åren.'],
+  ['#classHistoryChart','Linjerna visar median sluttid för fullföljande i valda klasser. Staplarna under linjerna visar antal startande och hur många av dem som registrerats som DNF. DNS räknas inte som startande, och år utan tillräckliga resultat lämnas tomma.'],
   ['#klubbar .world-hero','Klubb/ort-analysen jämför deltagande, individuella prestationer, bredd, fullföljande och utveckling för registrerade klubb- och ortsnamn. Små underlag märks tydligt.'],
   ['.club-controls','Sök och välj upp till fyra klubbar eller orter. Den senast valda visas som profil, och du kan klicka på en vald bricka för att byta profil. Kryssknappen tar bort valet.'],
   ['#clubProfile','Klubb/ort-profilen visar deltagande, fullföljande, median, klassbredd och de snabbaste löparna i urvalet.'],
@@ -346,13 +358,13 @@ const INFO_HELP_EXTENDED=[
   ['#clubHistoryChart','Visar klubbens starter, målgångar och mediantid över åren.'],
   ['.nerd-hero','Race Intelligence Lab samlar delsträckejämförelser, percentiler, flerårshistorik, fältflöde och topplistor.'],
   ['#raceStories','Automatiska berättelser som sammanfattar det valda loppårets mest framträdande resultat och mönster.'],
-  ['#segmentRanking','Välj två kontroller och jämför vilka löpare som var snabbast eller avancerade mest just där.'],
+  ['#segmentRanking','Välj två kontroller, klass och sortering för att jämföra prestationer på just den delen av loppet. Fart följer den gemensamma fartenheten, medan placering endast jämförs där officiella passager finns. Alla övriga aktiva loppfilter respekteras.'],
   ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika nivåer bland fullföljande löpare.'],
   ['#runnerHistory','Sök en löpare och jämför personens genomförda lopp, tider och utveckling över flera år.'],
-  ['#fieldFlow','Visar hur många faktiska startande som når varje kontroll. DNF syns efter den senast registrerade passagen och DNS räknas bort.'],
-  ['#hallOfFame','Fyra definierade topplistor. Klicka på ett namn för en karta över det aktuella loppåret och löparens delsträckor.'],
-  ['#raceFingerprint','Jämför det valda loppåret med den historiska normalnivån inom flera egenskaper.'],
-  ['.results-panel','Den sök- och sorterbara resultattabellen. Klicka på en rad för löparens kontrolltider och fartprofil.'],
+  ['#fieldFlow','Visar hur många faktiska startande som har en registrerad passage vid varje kontroll. DNF lämnar flödet efter sin sista säkra passage och DNS räknas bort. Diagrammet visar registrerad datatäckning, inte löparnas exakta position mellan kontrollerna.'],
+  ['#hallOfFame','Fyra topplistor byggda på stabil löparidentitet, aldrig enbart namn. Klicka på ett namn för en karta över aktuellt loppår och löparens delsträckor. Personer utan säker gemensam identitet mellan år hålls hellre isär än slås ihop felaktigt.'],
+  ['#raceFingerprint','Jämför det valda loppåret med historisk normalnivå inom flera egenskaper. Index 100 motsvarar den historiska referensen; avvikelser visar skillnad men förklarar inte orsaken. Endast år med tillräckligt jämförbara data ingår.'],
+  ['.results-panel','Sök, sortera och öppna enskilda resultat i det aktuella urvalet. Klicka på en rad för officiella passager, fartvärden och interaktiv replay när ruttdata finns. Saknade fält visas som okända och fylls inte med gissningar.'],
   ['.source-panel','Friskrivning från ansvar samt uppgifter om när databasen byggdes och hur många resultat och mellantider den innehåller.']
 ];
 
@@ -402,7 +414,7 @@ function installInfoTooltips(){
   generic.forEach(card=>{
     if(card.dataset.infoInstalled==='v4')return;
     const heading=card.querySelector('h2,h3')?.textContent?.trim()||card.getAttribute('aria-label')||'den här delen';
-    addCardInfo(card,`Visar ${heading.toLowerCase()} för det aktuella urvalet. Använd filtren högst upp för att ändra vilka resultat som ingår.`);
+    addCardInfo(card,`Visar ${heading.toLowerCase()} för det aktuella urvalet. Använd filtren högst upp för att ändra vilka resultat som ingår. Tomma värden betyder att tillräcklig verifierad data saknas.`);
   });
 }
 window.refreshInfoTips=installInfoTooltips;
