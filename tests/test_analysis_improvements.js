@@ -9,6 +9,7 @@ const nerd=require(path.join(root,'docs/assets/nerdlab.js'));
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
 const audienceSource=fs.readFileSync(path.join(root,'docs/assets/audience-analytics.js'),'utf8');
+const appSource=fs.readFileSync(path.join(root,'docs/assets/app.js'),'utf8');
 
 // Faktisk gruppfart viktas som total verifierad distans / total verifierad tid.
 const aggregate=audience.aggregateSpeedKmh([
@@ -45,4 +46,15 @@ assert.ok(css.includes('.intelligence-grid>.field-flow-card,.intelligence-grid>.
 for(const selector of ['.segment-cell span','.story-card strong,.story-card em','.podium-place span','.segment-row span strong','.flow-node span','.hall-segment-item strong'])assert.ok(css.includes(selector),`Textskydd saknas för ${selector}`);
 assert.ok(css.includes('.pace-segment-label')&&css.includes('#genderRetentionChart{height:330px!important'),'Pacinggrafen ska reservera höjd för läsbara etiketter');
 
-console.log('OK: pacingreferens, klassfilter, sektionsordning, analyslayout och textskydd');
+// Simulator, percentiler, DNF-fördelning och könshistorik ska använda korrekt underlag och yta.
+assert.ok(appSource.includes('targetSimulatorSelections=new Map()'),'Simulatorn ska minnas aktiva val separat per lopp och år');
+assert.ok(appSource.includes("!['DNF','DNS','DSQ','STARTED','STARTAT'].includes(status)"),'Simulatorns snitt får endast använda fullföljande resultat');
+assert.ok(appSource.includes('rows.reduce((sum,row)=>sum+Number(row.finish_seconds),0)/rows.length'),'Simulatorns default ska bygga på fullföljarnas medeltid');
+assert.ok(appSource.includes('Math.round(mean/120)*120'),'Simulatorns default ska avrundas till ett giltigt tvåminuterssteg med 00 sekunder');
+assert.ok(css.includes('.segment-lab{grid-column:span 7}.percentile-card{grid-column:span 5}'),'Percentiltrappan ska få större bredd på desktop');
+assert.ok(audienceSource.includes('dnf-bar-track')&&audienceSource.includes('dnf-bar-fill'),'Repet dras ska ha ett fullt spår med proportionell DNF-fyllnad');
+assert.ok(audienceSource.includes('rate:starters.length?pct(finishers.length,starters.length):null'),'Fullföljandegrad ska beräknas per år och kön utan falska nollvärden');
+assert.ok(audienceSource.includes('gender-history-rate-line')&&audienceSource.includes('gender-history-point'),'Historikens streckade serier ska ha interaktiva årspunkter');
+for(const value of ['startande · ${d.finishers} fullföljande','${d.dnf} DNF','% fullföljandegrad'])assert.ok(audienceSource.includes(value),`Historikens tooltip saknar ${value}`);
+
+console.log('OK: pacingreferens, klassfilter, analyslayout, simulator, DNF och könshistorik');
