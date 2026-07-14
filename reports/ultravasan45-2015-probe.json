@@ -1,0 +1,58 @@
+{
+  "race_key": "ultravasan45-2015",
+  "event_code": "UL45_9999991678885A000000043D",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2016/?page=1&event=UL45_9999991678885A000000043D&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2016/?page=1&event=UL45_9999991678885A000000043D&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "0000171678885A0000213B15",
+      "name": "Anundsson, Magnus",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000218871",
+      "name": "Burlon, Stefano Marcello",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000021AC7B",
+      "name": "Adami, Alfio",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:13:38+00:00",
+  "finished_at": "2026-07-14T11:13:45+00:00",
+  "records": 3,
+  "inserted": 3,
+  "updated": 0,
+  "warnings": 0,
+  "status": "probe-complete"
+}

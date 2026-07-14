@@ -1,0 +1,6165 @@
+{
+  "race_key": "ultravasan45-2016",
+  "event_code": "UL45_9999991678885A00000004CB",
+  "pages": [
+    {
+      "partition": "ALL",
+      "page": 1,
+      "entries": 100,
+      "new": 100,
+      "total": 100,
+      "url": "https://results.vasaloppet.se/2017/?page=1&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=1&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 2,
+      "entries": 100,
+      "new": 100,
+      "total": 200,
+      "url": "https://results.vasaloppet.se/2017/?page=2&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=2&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 3,
+      "entries": 100,
+      "new": 100,
+      "total": 300,
+      "url": "https://results.vasaloppet.se/2017/?page=3&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=3&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 4,
+      "entries": 100,
+      "new": 100,
+      "total": 400,
+      "url": "https://results.vasaloppet.se/2017/?page=4&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=4&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 5,
+      "entries": 100,
+      "new": 100,
+      "total": 500,
+      "url": "https://results.vasaloppet.se/2017/?page=5&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=5&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 6,
+      "entries": 100,
+      "new": 100,
+      "total": 600,
+      "url": "https://results.vasaloppet.se/2017/?page=6&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=6&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 7,
+      "entries": 100,
+      "new": 100,
+      "total": 700,
+      "url": "https://results.vasaloppet.se/2017/?page=7&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=7&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 100,
+          "new": 100,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 8,
+      "entries": 43,
+      "new": 43,
+      "total": 743,
+      "url": "https://results.vasaloppet.se/2017/?page=8&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+      "mode": "http",
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=8&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 43,
+          "new": 43,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 9,
+      "entries": 0,
+      "new": 0,
+      "total": 743,
+      "url": null,
+      "mode": null,
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=9&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 0,
+          "new": 0,
+          "mode": "http",
+          "cached": false
+        },
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=9&event=UL45_9999991678885A00000004CB&num_results=100&pid=list",
+          "status": 200,
+          "entries": 0,
+          "new": 0,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    },
+    {
+      "partition": "ALL",
+      "page": 10,
+      "entries": 0,
+      "new": 0,
+      "total": 743,
+      "url": null,
+      "mode": null,
+      "attempts": [
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=10&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+          "status": 200,
+          "entries": 0,
+          "new": 0,
+          "mode": "http",
+          "cached": false
+        },
+        {
+          "url": "https://results.vasaloppet.se/2017/?page=10&event=UL45_9999991678885A00000004CB&num_results=100&pid=list",
+          "status": 200,
+          "entries": 0,
+          "new": 0,
+          "mode": "http",
+          "cached": false
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "idp": "0000001678885A000026FECF",
+      "name": "Bergström, Christer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000022EEDD",
+      "name": "Bergquist, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000260F05",
+      "name": "Bergman, Ida",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026D43A",
+      "name": "Bladh, Cecilia",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026DE37",
+      "name": "Andersson, Sarah",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026DE38",
+      "name": "Andersson, Joacim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000027053E",
+      "name": "Andersson, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221703",
+      "name": "Andersson, Niklas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221741",
+      "name": "Burman, Åsa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221776",
+      "name": "Askås, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221785",
+      "name": "Andersson, Tommy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221789",
+      "name": "Bygdin, Mariatherese",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002217A7",
+      "name": "Ask, Henrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002217BD",
+      "name": "Ardenlid, Fredrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022188B",
+      "name": "Alemyr, Martin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221EC4",
+      "name": "Biwall-Hellman, Karolina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221FE7",
+      "name": "Bokenberger, Andreas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222169",
+      "name": "Andersson, Lotta",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222617",
+      "name": "Alpsten, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222E5A",
+      "name": "Boström, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222E8F",
+      "name": "Backström, Gia",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002239A9",
+      "name": "Berg, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224530",
+      "name": "Bergh, Giesela",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224C45",
+      "name": "Axelsson, Mikael",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224DE3",
+      "name": "Anjou, Klas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022641E",
+      "name": "Andersson, Mira",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002265A5",
+      "name": "Bergensjö, Cecilia",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226701",
+      "name": "Bohlin, Joakim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022920E",
+      "name": "Abrahamsson, Kajsa",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022B855",
+      "name": "Arvidsson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022C5C5",
+      "name": "Andersson, Kent",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022D6E2",
+      "name": "Bengtsson, Elias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022F096",
+      "name": "Andersson, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023073D",
+      "name": "Bjuggelius, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231B2B",
+      "name": "Bramfors, Roger",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231D85",
+      "name": "Berggren, Elisabeth",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000234FBD",
+      "name": "Boström, Jens",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000235C02",
+      "name": "Andersson, Matilda",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000236DBD",
+      "name": "Blomberg, Ingela",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002378FD",
+      "name": "Brus, Hielke",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A0E9",
+      "name": "Andersen, Gert",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A4AB",
+      "name": "Brandt, Tomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023AE09",
+      "name": "Brodin, Kerstin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023B4FF",
+      "name": "Bedö, Tomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023B517",
+      "name": "Boström, Mona",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023BF12",
+      "name": "Bodforss, Rikard",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023BF75",
+      "name": "Bodforss, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023CA7A",
+      "name": "Bergenhorn, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023D8ED",
+      "name": "Alfredsson, Tony",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023ED3E",
+      "name": "Andersson, Vania",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002412D2",
+      "name": "Andersson, Ann-Louise",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000242B95",
+      "name": "Back, Birgitta",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024527D",
+      "name": "Andersson, Elin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000246CD1",
+      "name": "Blom-Pfeiffer, Hillewi",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F3F0",
+      "name": "Axellie, Rebecka",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FD4A",
+      "name": "Axellie, Anna-Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250118",
+      "name": "Arthursson, Karin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250321",
+      "name": "Bellgran, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002503AE",
+      "name": "Brinkemar, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000253430",
+      "name": "Borgenstierna, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000253AA4",
+      "name": "Atterlid, Stefan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025620F",
+      "name": "Björnsson, Mikael",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002661EA",
+      "name": "Bencze, Sofia",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CC5B",
+      "name": "Bohman, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CDCF",
+      "name": "Andersson, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D203",
+      "name": "Ahlberg, Therese",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D4DC",
+      "name": "Annerhäll, Magnus",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D5CC",
+      "name": "Berglund, Petter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D652",
+      "name": "Antonsson, Marie Louise",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DA0D",
+      "name": "Belfrage, Helen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAB8",
+      "name": "Bengtsson, Lennart",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBDD",
+      "name": "Alfven, Richard",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DCE5",
+      "name": "Björkstrand, Tony",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DD54",
+      "name": "Bäck, Jocke",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DDCD",
+      "name": "Bjureland, William",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DED0",
+      "name": "Bodare, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF0B",
+      "name": "Bergkvist, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF11",
+      "name": "Brågård, Jan \"helsingborgaren\"",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DFCB",
+      "name": "Bergare, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E126",
+      "name": "Bäck, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E169",
+      "name": "Back, Per Göran",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E467",
+      "name": "Broman Vikström, Karl",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E5ED",
+      "name": "Acevski, Robert",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E7FF",
+      "name": "Aaltonen, Pia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC55",
+      "name": "Bard, Judd",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EE25",
+      "name": "Bergqvist, Emilia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EE77",
+      "name": "Bäckström, Madeleine",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F02A",
+      "name": "Abis, Paolo",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F04C",
+      "name": "Andersson, Pontus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F290",
+      "name": "Anfält, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F509",
+      "name": "Bengtsson, Mattias",
+      "splits": 3,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FBAF",
+      "name": "Alm-Nordqvist, Rickard",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FF34",
+      "name": "Axberg, Robert",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002701F6",
+      "name": "Bolmstam, Robin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027035C",
+      "name": "Alanen, Kari",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270372",
+      "name": "Björklund, Marcus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703A6",
+      "name": "Andersson, Adrian",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703BB",
+      "name": "Bjarkå, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704A0",
+      "name": "Anderson, Riina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704BA",
+      "name": "Berg, Robert",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000001678885A00002703E7",
+      "name": "Dareflod, Ronja",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000023C9B1",
+      "name": "Elden, Sandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A00002704F7",
+      "name": "Estéen, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270540",
+      "name": "Ersson, Björn",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221700",
+      "name": "Carlsson, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022175C",
+      "name": "Frey, Michael",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022182F",
+      "name": "Frey, Alexander",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221860",
+      "name": "Frid, Andrea",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002218B5",
+      "name": "Fagerdahl, Ann-Mari",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221997",
+      "name": "Eriksson, Patrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002219A9",
+      "name": "Ericson, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222CD2",
+      "name": "Fjällborg, Katarina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222D41",
+      "name": "Eriksson, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222EEA",
+      "name": "Djurberg, Nina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002233C5",
+      "name": "Eriksson, Camilla",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002236ED",
+      "name": "Ekenberg, Christian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000225013",
+      "name": "Forsberg, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022505B",
+      "name": "Eriksson, Tom",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000225E91",
+      "name": "Elvén, Fredrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022ECD7",
+      "name": "Derblom, Kent",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231C6C",
+      "name": "Frank, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023374B",
+      "name": "Eriksson, Frida",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002365C6",
+      "name": "Framme, Maria",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000237B41",
+      "name": "Demaret, Gilles",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023BB8D",
+      "name": "Eriksson, Ludvig",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023CF8D",
+      "name": "Fried, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023D1BD",
+      "name": "Edmundsson, Tony",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023E699",
+      "name": "Duvskog, Emma",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024072D",
+      "name": "Englund, Lisa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000244FC1",
+      "name": "Ejlertsson, Nina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024B7E5",
+      "name": "Dahl, Niklas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E484",
+      "name": "Forslund, Carina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E97A",
+      "name": "Eriksson, Jonatan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024ED0F",
+      "name": "Christofferson, Martin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024ED10",
+      "name": "Christofferson, Jessica",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE97",
+      "name": "Ericsson, Stefan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EFB4",
+      "name": "Dekreon, Christian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F3FB",
+      "name": "Ferm, Ulrika",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F879",
+      "name": "Fahlgren, Jesper",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FD46",
+      "name": "Eriksson, Beatrice",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250154",
+      "name": "Eliasson, Karin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250208",
+      "name": "Eriksson, David",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250209",
+      "name": "Eriksson, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000251824",
+      "name": "Edlund, Jonas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000251E78",
+      "name": "Eriksson, Hanna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000252EE1",
+      "name": "Eriksson, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000254310",
+      "name": "Forsberg, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266958",
+      "name": "Choi, Jae Hyuk",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266968",
+      "name": "Chang, Kwanwoong",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026696B",
+      "name": "Choi, Jieun",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002692F8",
+      "name": "Eriksen, Håvard Olerud",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C99E",
+      "name": "Eriksson, Markus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CB18",
+      "name": "Duvek, Annika",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CC6C",
+      "name": "Fredriksson, Björn",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CCE4",
+      "name": "Danielsson, Petter",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CCF8",
+      "name": "Ekman, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CF8D",
+      "name": "Ekelund, Pär",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D009",
+      "name": "Domar Lilljha, Carina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D08F",
+      "name": "Eriksson, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D10E",
+      "name": "Edenhorn, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D1E8",
+      "name": "Ekholm, Gunilla",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D232",
+      "name": "Falk, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D348",
+      "name": "Danielsson, Karina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D54A",
+      "name": "Eriksson, Eleonora",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D586",
+      "name": "Edvardsson, Ulf",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D72C",
+      "name": "Fransson, Sebastian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D9D1",
+      "name": "Forsgren, Mia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DA07",
+      "name": "Bäckström, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAA5",
+      "name": "Christensen, Pedro",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAD1",
+      "name": "De Beer, Denise",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAF2",
+      "name": "Börjvall, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBB6",
+      "name": "Friberg, Tommy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DC2F",
+      "name": "Fexner, Oskar",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF67",
+      "name": "Flodin, Benny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF8E",
+      "name": "Demirtas, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF8F",
+      "name": "Demirtas, Daniela",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E0A5",
+      "name": "Froste, Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E263",
+      "name": "Chirico, Angelica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E2C9",
+      "name": "Elmsjö, Bengt",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E333",
+      "name": "Ejresund, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E3FB",
+      "name": "Engberg, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E714",
+      "name": "Dalvik, Matts",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E716",
+      "name": "Dalvik, Tarja",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E919",
+      "name": "Erneby, Eva-Maj",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E930",
+      "name": "Carlsson, Lars",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E933",
+      "name": "Carlsson, Kerstin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F05C",
+      "name": "Edenhorn, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F062",
+      "name": "Carlsson, Petri",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F5BA",
+      "name": "Frisk, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F8B5",
+      "name": "Folkesson Blom, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FCF9",
+      "name": "Ehrengren Rubbetoft, Lisa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FF4A",
+      "name": "Croona Haglund, Helene",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270152",
+      "name": "Elings, Stefan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270301",
+      "name": "Elfsberg, Jimmy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027031C",
+      "name": "Christell, Nils",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270331",
+      "name": "Dahlberg, Joachim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027035A",
+      "name": "Freij, Madelene",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270430",
+      "name": "Eriksson, Dan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270459",
+      "name": "Eriksson, Åsa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704D5",
+      "name": "Eriksson, Tomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000236345",
+      "name": "Hansen, Helmut",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000025AD78",
+      "name": "Glad, Stefan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026DF49",
+      "name": "Gustafsson, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026FE0A",
+      "name": "Hedh, Jennie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270326",
+      "name": "Hermansson, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A00002704FE",
+      "name": "Held, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270502",
+      "name": "Granbom, Rikard",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270507",
+      "name": "Frykström, Niklas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270541",
+      "name": "Gulich, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221717",
+      "name": "Ingvarsson, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221797",
+      "name": "Hansdottter, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221835",
+      "name": "Hallsten, Caroline",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002219C3",
+      "name": "Haglöf, Jenny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221ABD",
+      "name": "Holmberg, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AF9",
+      "name": "Holmberg, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221E4B",
+      "name": "Ilis, Caroline",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222864",
+      "name": "Grabner, Ola",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002235B8",
+      "name": "Gallstad, Göran",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002237C9",
+      "name": "Färdig, Magnus",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224428",
+      "name": "Gustafsson, Per-Ola",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224C16",
+      "name": "Hild, Christina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226139",
+      "name": "Högfeldt, Therese",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226381",
+      "name": "Isacsson, Jan-Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226533",
+      "name": "Gustafsson, Susanne",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022817D",
+      "name": "Gunnarsson, Conny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000229FE6",
+      "name": "Hjalmarsson, Kristian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022B795",
+      "name": "Gustafsson, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022C9E9",
+      "name": "Haikonen, Vesa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022D6CD",
+      "name": "Holm, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022DAF5",
+      "name": "Gäfvert, Ida",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022E69F",
+      "name": "Holmgren, Eva",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022E6AA",
+      "name": "Holmgren, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022EC3A",
+      "name": "Haglund, Cecilia",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000230B61",
+      "name": "Fröberg, Pavel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231D82",
+      "name": "Holmqvist, Åsa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231E86",
+      "name": "Huwyler, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000233D11",
+      "name": "Hurtig, Anders",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000239CC6",
+      "name": "Hallberg, Tommy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000239CD9",
+      "name": "Hallberg, Anneli",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023B846",
+      "name": "Grönberg Eriksson, Elin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023C99D",
+      "name": "Gaastra, Robin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023D6E5",
+      "name": "Haller, Kristian",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023FEF9",
+      "name": "Hedrén, Jaana",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000248649",
+      "name": "Halvorsen, Tom Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000248E55",
+      "name": "Hansson, Ninnie",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000249F0D",
+      "name": "Guldbrand, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024DD22",
+      "name": "Hakopian, Arpine",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E2DC",
+      "name": "Hansen, Joakim",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE9A",
+      "name": "Hillerö, Martin Kth",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002501AD",
+      "name": "Holm, Camilla",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250212",
+      "name": "Holm, Sofie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025053C",
+      "name": "Höjer, Sven",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000251004",
+      "name": "Hietanen, Kimmo",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000252409",
+      "name": "Hansen, Lars Dybdal",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002525D1",
+      "name": "Grindewih, Kjell-Åke",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000253070",
+      "name": "Gruvås, Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000257C90",
+      "name": "Hörngren, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025CD52",
+      "name": "Ingard, Cecilia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025E571",
+      "name": "Hjertzén, Emanuel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025FD78",
+      "name": "Hongisto, Jimmy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002646F5",
+      "name": "Högfeldt, Anna Lena",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266942",
+      "name": "Heo, Seongbeom",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002691A4",
+      "name": "Hedberg, Elisabeth",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000269CF8",
+      "name": "Hedlund, Marcus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026A964",
+      "name": "Hedberg, Christoffer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026B761",
+      "name": "Grinde, Carina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C9F9",
+      "name": "Hellman, Hedvig",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CF2D",
+      "name": "Hellstrom, Adam",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D469",
+      "name": "Hedberg, Maria",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D46B",
+      "name": "Hedberg, Jessica",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D598",
+      "name": "Henriksson, Petra",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D9B8",
+      "name": "Hanley, David",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAE8",
+      "name": "Gerdsling, Niclas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBF6",
+      "name": "Fröbom, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DC3A",
+      "name": "Hanning, Håkan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF1E",
+      "name": "Hvitfeldt, Per-Owe",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF79",
+      "name": "Gerdtman, Calle",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E019",
+      "name": "Froste, Nils",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E16A",
+      "name": "Hedlund, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E4AA",
+      "name": "Hougland, Ulrika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E590",
+      "name": "Hoffmann, Markus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E66B",
+      "name": "Görrel, Hans",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E83E",
+      "name": "Gunhardsson, Anneli",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E84A",
+      "name": "Good, Jakob",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EBFF",
+      "name": "Holmgren, Lars",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC41",
+      "name": "Ilis, Lars",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026ED1A",
+      "name": "Hansen Jansson, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EF4C",
+      "name": "Gharbi, Latifa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F12D",
+      "name": "Hoffner, Åsa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F91E",
+      "name": "Hedlund, Malin",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F9C8",
+      "name": "Henningsson, Stig Arne",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FBFA",
+      "name": "Gustafsson, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FEE2",
+      "name": "Gryvik, Magdalena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027023D",
+      "name": "Häggblom, Kicki",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702B7",
+      "name": "Hellman, Yann",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702C6",
+      "name": "Green, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027038E",
+      "name": "Gräsberg, Marie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270487",
+      "name": "Gustavsson, Jan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027048A",
+      "name": "Holmgren, Viveka",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704B0",
+      "name": "Hermansson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270353",
+      "name": "Larsson, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270525",
+      "name": "Jansson Palmer, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002216F7",
+      "name": "Larsson, Petra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221744",
+      "name": "Jacobson, Per-Ola",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022175A",
+      "name": "Jonsson, Terese",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221773",
+      "name": "Johansson, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221786",
+      "name": "Johansson, Mats",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002218B6",
+      "name": "Johansson, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AB3",
+      "name": "Karlberg, Suzanna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AE2",
+      "name": "Johansson, Niclas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221C6F",
+      "name": "Larsson, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221D43",
+      "name": "Johansson, Therese",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002220BB",
+      "name": "Jonsson, Magnus",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222B16",
+      "name": "Kvist, Veronica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002232AC",
+      "name": "Jaldin, Joanna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223399",
+      "name": "Johansson, Anna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223A0B",
+      "name": "Johansson, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223AA9",
+      "name": "Landstedt, Alexander",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223BBA",
+      "name": "Karlberg, Martin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002254A6",
+      "name": "Lange, Morten",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002261A0",
+      "name": "Jansson, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226219",
+      "name": "Johansson, Hans",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022653A",
+      "name": "Johansson, Marika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002265D8",
+      "name": "Ivarsson, Kent",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002265D9",
+      "name": "Johanssson, Marianne",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000227719",
+      "name": "Jacobsson, Håkan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022786D",
+      "name": "Klingestål, Christina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000228191",
+      "name": "Larsson, Erik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022BB2B",
+      "name": "Johansson, Stefan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022CBB5",
+      "name": "Kumar, Rahul",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022DE39",
+      "name": "Jonson, Claes",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022E0BD",
+      "name": "Larsson, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022FD8D",
+      "name": "Johansson, Fredrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023118D",
+      "name": "Karlsson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002342ED",
+      "name": "Jolhammar, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000235215",
+      "name": "Kjellström, Erik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000236BA3",
+      "name": "Kulle, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000237FA1",
+      "name": "Julien, Houron",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A5D5",
+      "name": "Kopperud, Christina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000240576",
+      "name": "Jonsson, Helen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024070B",
+      "name": "Lampa, Therese",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000248F95",
+      "name": "Kvarnström, Patrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EDB7",
+      "name": "Larsson, Kristina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE5B",
+      "name": "Larsson, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE5F",
+      "name": "Larsson, Sofi",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EF80",
+      "name": "Larsson, Anette",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EF84",
+      "name": "Larsson, Monica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F09E",
+      "name": "Jobjörnsson, Hanna Klara",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FB56",
+      "name": "Laidlaw, Jonathon",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025021E",
+      "name": "Jensen, Aleksandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250551",
+      "name": "Köld, Mattias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000252121",
+      "name": "Ivarsson, Ronnie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000252879",
+      "name": "Jonsson, Bo",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002534A9",
+      "name": "Johansson, Christian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000255F55",
+      "name": "Kromm, Christian",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025909A",
+      "name": "Karlsson, Bo-Gunnar",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025D9E8",
+      "name": "Johansson Oehler, Hans Robert",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025ECD1",
+      "name": "Kram, Jan-Erik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026054C",
+      "name": "Kram, Niklas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000265967",
+      "name": "Landström, Susanna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266943",
+      "name": "Kim, Youngjun",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266956",
+      "name": "Jang, Boyoung",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026696D",
+      "name": "Kang, Yoon Young",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026A5CC",
+      "name": "Kjellin, Ulf",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C7E1",
+      "name": "Jörgensen, Robin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C8B7",
+      "name": "Kiellarson, Edvin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D3D4",
+      "name": "Jansson, Kjell",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D5A6",
+      "name": "Jansson, Christoffer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAF7",
+      "name": "Janusz, Marzanna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DB17",
+      "name": "Klöfver, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DB51",
+      "name": "Larsson, Sebastian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DB52",
+      "name": "Kang, Ju Hong",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DC38",
+      "name": "Kölhi, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DD29",
+      "name": "Karlsson, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DDC0",
+      "name": "Lageholm, Jesper",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DE2E",
+      "name": "Kreutz, Anna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E039",
+      "name": "Izindre, Anne-Louise",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E1C3",
+      "name": "Karlström, Joakim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E28A",
+      "name": "Lagerwall, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E299",
+      "name": "Kjellén, Tina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E2D2",
+      "name": "Karlén, Anders",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E367",
+      "name": "Isgren, Ninnie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E9B6",
+      "name": "Jansson, Thomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EA8E",
+      "name": "Kruse, Mikael",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC81",
+      "name": "Larsson, Ida",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026ED9C",
+      "name": "Lantz, Joacim",
+      "splits": 3,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EF3B",
+      "name": "Jansson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EF40",
+      "name": "Karlsson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F0A3",
+      "name": "Larsson, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F29B",
+      "name": "Larsson, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F307",
+      "name": "Johansson, Nina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F619",
+      "name": "Kilemar, Therese",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FBA2",
+      "name": "Johanson, Annika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FC2A",
+      "name": "Jansson, Erik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FE86",
+      "name": "Karlsson, Thomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FFCD",
+      "name": "Kebo, David",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702DA",
+      "name": "Karlsson, Krister",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270340",
+      "name": "Johansson, Torbjörn",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270375",
+      "name": "Jens, Eriksson",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704B8",
+      "name": "Karlsson, Sandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026FAD7",
+      "name": "Marcinkevicz, Jüri",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221732",
+      "name": "Månsson, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221742",
+      "name": "Michaelsen, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002217AC",
+      "name": "Lindkvist, Ulrika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221828",
+      "name": "Mattsson, Roland",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221989",
+      "name": "Lennartzon, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221A74",
+      "name": "Larsson, Ulrika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AAF",
+      "name": "Lundgård, Lisa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AEB",
+      "name": "Nilsson, Peter",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221DD7",
+      "name": "Lundgren, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222214",
+      "name": "Matseke, Monica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002232F8",
+      "name": "Måneving, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224961",
+      "name": "Moll, Markus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224EA5",
+      "name": "Nilsson, Susanne Alice",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224ED9",
+      "name": "Malmlöv, Carina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022588F",
+      "name": "Mbye, Alexandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022604A",
+      "name": "Lindström, Mats",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022657F",
+      "name": "Lindell, Elizabeth",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002270F3",
+      "name": "Liden, Klas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022AB9C",
+      "name": "Lidström, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022B336",
+      "name": "Manley, Stefan",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231141",
+      "name": "Morsing, Jessica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231D6D",
+      "name": "Nachtweij, Björn",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000238E65",
+      "name": "Nilsson, Ingela",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A31B",
+      "name": "Lönegren, Jakob",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023BB8F",
+      "name": "Magnfält, Niklas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023D7AE",
+      "name": "Mikaelsson, Lisette",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023F251",
+      "name": "Ljadas, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023FEE5",
+      "name": "Lindqvist, Peder",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000244CCC",
+      "name": "Möllberg, Jens",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002451C9",
+      "name": "Nieminen, Ronny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000246B08",
+      "name": "Mellberg-Ellefsen, Ulrika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024A2E2",
+      "name": "Nilsson, Ida",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024C8D9",
+      "name": "Lundborg, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024D8A4",
+      "name": "Nilsson, Ola",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024DD20",
+      "name": "Lindén, Elin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024DDAA",
+      "name": "Lundh, Louise",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E6E7",
+      "name": "Mørch Gøthberg, Anna Karin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE3A",
+      "name": "Lorén, Kristina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE3D",
+      "name": "Loren, Madelene",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE3E",
+      "name": "Nilsson, Helena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F0B8",
+      "name": "Ljung, Patric",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002502AF",
+      "name": "Melnes, Silje",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002503CA",
+      "name": "Mestdagh, Julie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002668C9",
+      "name": "Lindgren, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266941",
+      "name": "Lee, Yoonjoo",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266955",
+      "name": "Lee, Yeonji",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002685C5",
+      "name": "Morin, Markus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002685D8",
+      "name": "Mellbrink, Christoffer",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000268EFC",
+      "name": "Lindblad, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026A298",
+      "name": "Nilsson, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C83F",
+      "name": "Lehman, Karolina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CA1A",
+      "name": "Nilsson, Nicklas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CC51",
+      "name": "Lundberg, Jörgen",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D00E",
+      "name": "Lilljha, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D3AC",
+      "name": "Liljeberg, Hans",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D4C1",
+      "name": "Lee, Keun Rok",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D521",
+      "name": "Lindström, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D71F",
+      "name": "Lundin, Kerstin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DB76",
+      "name": "Nejman, Mathilda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBB2",
+      "name": "Löfstrand, Robert",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBF1",
+      "name": "Löhr, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DC73",
+      "name": "Nilsson, Jens",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DCE3",
+      "name": "Lindvall, David",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DDA7",
+      "name": "Lindberg, Christian",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DE51",
+      "name": "Lindström, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DE80",
+      "name": "Lindmark, Jörgen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DF50",
+      "name": "Lundholm, Martin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E001",
+      "name": "Lindberg, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E2BF",
+      "name": "Lindholm Eriksson, Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E32D",
+      "name": "Myllergård, Pontus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E371",
+      "name": "Lindqvist, Erik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E5A4",
+      "name": "Nihlgård, Kristina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E7B1",
+      "name": "Lindqvist, Per",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E8E1",
+      "name": "Mustonen, Martti",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E90A",
+      "name": "Lindgren, Jörgen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EB8F",
+      "name": "Nilsson, Magnus",
+      "splits": 3,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EEFE",
+      "name": "Lindqvist, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F09C",
+      "name": "Merriman, Jason",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F170",
+      "name": "Magnusson, Erica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F251",
+      "name": "Mattsson, Pornchita",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F3C7",
+      "name": "Malm, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F5D4",
+      "name": "Lindström, Joakim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FAD4",
+      "name": "Niemi, Staffan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FDA4",
+      "name": "Ljungberg, Helena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FED5",
+      "name": "Lundin, Emma",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270157",
+      "name": "Myhr, Sofia",
+      "splits": 3,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002701B3",
+      "name": "Liljerås, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027031D",
+      "name": "Luxemburg, Charlotte",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270324",
+      "name": "Lundberg, Gunilla",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270383",
+      "name": "Löjdquist, Charlotte",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270384",
+      "name": "Nilsson, Johnny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703B3",
+      "name": "Lund, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703C2",
+      "name": "Lee, Jim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703C5",
+      "name": "Lindahl, Marcus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704A7",
+      "name": "Nilsson, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704A9",
+      "name": "Lindgren, Tomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704B1",
+      "name": "Lee, Lisa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704E4",
+      "name": "Liderfeldt, Hanna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704E9",
+      "name": "Lindberg, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270504",
+      "name": "Pettersson Lindgren, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221780",
+      "name": "Nissler, Martin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002217BB",
+      "name": "Nissler, Pernilla",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002218E0",
+      "name": "Renström, Bo",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221A01",
+      "name": "Ripa, Matilda",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221D9F",
+      "name": "Olsson, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221EEA",
+      "name": "Norlin, Anna",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221FBF",
+      "name": "Odung, Susanne",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222343",
+      "name": "Olsson, Li",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002224CB",
+      "name": "Osmo, Elin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002224F8",
+      "name": "Nordström, Peter",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002231CC",
+      "name": "Ryge, Sune",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002233A2",
+      "name": "Olsson, Karin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022393D",
+      "name": "Roos, Tomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223942",
+      "name": "Norlin, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223B28",
+      "name": "Persson Liliegren, Mattias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226249",
+      "name": "Renström, Stina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022637D",
+      "name": "Oltmer, Anne",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226413",
+      "name": "Rothman, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022645C",
+      "name": "Olsson, Pia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022717B",
+      "name": "Norén Holthuis, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000233E51",
+      "name": "Ohlsson, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000237A8E",
+      "name": "Orhan, Valerie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000237D35",
+      "name": "Rougé, Franck",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002397D9",
+      "name": "Ring, Lisa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023B076",
+      "name": "Pommer, Anne",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024036D",
+      "name": "Rudén, Monica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024383E",
+      "name": "Rösliden, Monica",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000247581",
+      "name": "Parik, Ivo",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024BB2D",
+      "name": "Olofsson, Marcus",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024BB43",
+      "name": "Olofsson, Andreas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024C70F",
+      "name": "Pantzare, Hans",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024DFAA",
+      "name": "Pettersson, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E183",
+      "name": "Palo Svensson, Merja",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E623",
+      "name": "Nyström, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FD47",
+      "name": "Persson, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FEFD",
+      "name": "Robinson, Kelley",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000250231",
+      "name": "Rahm, Henrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002523F0",
+      "name": "Rudfeldt, Rickard",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000253278",
+      "name": "Olteus, Sofia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025C4CC",
+      "name": "Sanchez, Jose",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025E561",
+      "name": "Persson, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025E754",
+      "name": "Persson, Stig",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025F873",
+      "name": "Sabelström, Bo",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000025F88C",
+      "name": "Sabelström, Paula",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000265298",
+      "name": "Persson, Peter",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C1C5",
+      "name": "Olofsson, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CBDA",
+      "name": "Pettersson, Lena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CCAF",
+      "name": "Norman, Pål",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CD6A",
+      "name": "Rakoczy, Kristoffer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D2C2",
+      "name": "Sahlin, Karin",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D39E",
+      "name": "Pettersson, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D3C1",
+      "name": "Notfjäll, Lotta",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D417",
+      "name": "Sandbu, Odd",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D4A1",
+      "name": "Niska, Kristina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D4FD",
+      "name": "Rask, Jenny",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D5C8",
+      "name": "Ore, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D852",
+      "name": "Olsson, Per",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D9B5",
+      "name": "Norlin, Patrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D9FA",
+      "name": "Persson, Nicklas",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAA3",
+      "name": "Nordqvist, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DB6F",
+      "name": "Nässén, Phillip",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBAD",
+      "name": "Rahm, Alexandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBBB",
+      "name": "Olausson, Niclas",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBEE",
+      "name": "Päärni, Emma",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DDB9",
+      "name": "Nordblad, Johanna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E164",
+      "name": "Olsson, Clas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E199",
+      "name": "Ryapolov, Roman",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E1C4",
+      "name": "Ruud, Jan Egil",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E486",
+      "name": "Sahoo, Manas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E499",
+      "name": "Rao, Ranjith",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E54A",
+      "name": "Ranby, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E876",
+      "name": "Nordström, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E882",
+      "name": "Olsen, Freddy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC4A",
+      "name": "Ruben, Sandy",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EEFD",
+      "name": "Samuelsen, Vidar Log",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EFC5",
+      "name": "Rudzki, Filip",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F129",
+      "name": "Palmqvist, Mattias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F3F2",
+      "name": "Olsson, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F5C0",
+      "name": "Rahavard, Farhad",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F679",
+      "name": "Näström, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FAFD",
+      "name": "Nygren, Nicklas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FB93",
+      "name": "Nilsson, Viktoria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FC11",
+      "name": "Rhenman, Johannes",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FD19",
+      "name": "Noren, Klas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FDBA",
+      "name": "Nyman, Christian",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FE32",
+      "name": "Olsson, Ida",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270004",
+      "name": "Petersson, Susanne",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270316",
+      "name": "Rimstad, Mads",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270321",
+      "name": "Olofsson, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027036D",
+      "name": "Norlund, Michael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270374",
+      "name": "Omark, Vera",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002703C0",
+      "name": "Persson, Ulrica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027042C",
+      "name": "Persson, Leif",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270448",
+      "name": "Noaksson, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027044F",
+      "name": "Sandberg, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270451",
+      "name": "Nordell, Hans",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270453",
+      "name": "Partanen, Nicklas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270473",
+      "name": "Palmborg, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704A8",
+      "name": "Norlin, Sven",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000225F1E",
+      "name": "Trygg, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000024F034",
+      "name": "Ullström, Lina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000265A90",
+      "name": "Van Essen, Daryl",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000026E144",
+      "name": "Tomio, Carmine",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A0000270320",
+      "name": "Smolle, Jürgen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000027050E",
+      "name": "Van Nigtevecht, Ronald",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000027051F",
+      "name": "Van Der Hagen, Arvid",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221710",
+      "name": "Sjöberg, Anton",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221917",
+      "name": "Sundström, Magdalena",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221A64",
+      "name": "Ullberg, Ulla",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221B77",
+      "name": "Strandhag, Jenny",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221FEA",
+      "name": "Thingström, David",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022208E",
+      "name": "Timell, Ulf",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222177",
+      "name": "Tillman, Joakim",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002221CE",
+      "name": "Svensson, Ann",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022224E",
+      "name": "Sandström, Nils",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002224B2",
+      "name": "Uddén, Pierre",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222635",
+      "name": "Stöllman, Pia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022264A",
+      "name": "Sarheim Olsson, Pia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022284D",
+      "name": "Sandström, Gustav",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222A2E",
+      "name": "Stesl, Sebastijan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222B31",
+      "name": "Stridkvist, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222BA2",
+      "name": "Sjöberg, Mari",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222BEB",
+      "name": "Svan, Helena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000222E66",
+      "name": "Sjögren, Rolf",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000223428",
+      "name": "Sixtensson, Inge",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002236C1",
+      "name": "Schatvedt, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022480D",
+      "name": "Siikala, Titta",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224903",
+      "name": "Sheridan, Pauline",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000224AB6",
+      "name": "Stridbeck, Helene",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002279EC",
+      "name": "Storbacka, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022A8A3",
+      "name": "Stenberg, Ina",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022AD6A",
+      "name": "Swee, Stefan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022EFCD",
+      "name": "Silfversparre, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000231B16",
+      "name": "Söderholm, Karl Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000237B1A",
+      "name": "Sevenou, Nicolas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000239B5F",
+      "name": "Schef, Henric",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A111",
+      "name": "Steen, Cecilia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023A125",
+      "name": "Steen, Marcus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023AB4D",
+      "name": "Sönnert, Eric",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023BB66",
+      "name": "Skoog, Christer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002461F7",
+      "name": "Tinjan, Malin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024D8EC",
+      "name": "Ulander, Adrian",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E42D",
+      "name": "Sönnerfors, Eva",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EE66",
+      "name": "Strandberg, Christopher",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024EF6B",
+      "name": "Tenlén, Ann-Sofie",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F089",
+      "name": "Steneld, Annica",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F3DD",
+      "name": "Skagerlund, Thomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024F405",
+      "name": "Sørstad, Gjermund",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002511BF",
+      "name": "Sönnerfors, Lars",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000252DF0",
+      "name": "Torstensson, Johannes",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000259B09",
+      "name": "Stenqvist, Lina",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000259B8F",
+      "name": "Söderqvist, Anneli",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000259B9E",
+      "name": "Söderqvist, Tord",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002653ED",
+      "name": "Thomasson, Annelie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002653F4",
+      "name": "Thomasson, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266957",
+      "name": "Tae, Wonho",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002691E0",
+      "name": "Södergren, Mattias",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C917",
+      "name": "Terstad, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C9A3",
+      "name": "Svärd, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026C9BE",
+      "name": "Svärd, Petra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CA68",
+      "name": "Sjöström, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D39D",
+      "name": "Ståbis, Joel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D3C9",
+      "name": "Sundelin, Andreas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D3D6",
+      "name": "Sylvander, Stefan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D540",
+      "name": "Sennström, Anki",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DA2C",
+      "name": "Vallin, Åsa",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DAC8",
+      "name": "Svensson, Ulf",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBED",
+      "name": "Smeds, Josefin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DBF5",
+      "name": "Steen, Chen Yang",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DC3E",
+      "name": "Sander, Lars",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DDC1",
+      "name": "Sundberg, Sophia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DE84",
+      "name": "Spångberg, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026DE99",
+      "name": "Skjolden, Asgeir",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E04E",
+      "name": "Strömme, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E59F",
+      "name": "Svantesson, Sandra",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E5B8",
+      "name": "Ställberg, Björn",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E637",
+      "name": "Tovås Malmberg, Annalill",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E8A3",
+      "name": "Sjöberg, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E952",
+      "name": "Stål, Charlotta",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EB7F",
+      "name": "Ström, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F423",
+      "name": "Särnholm, Erika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F5B3",
+      "name": "Trondsen, Tor",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F9DB",
+      "name": "Svensson, Pontus",
+      "splits": 0,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FC62",
+      "name": "Sömsk Nylund, Mia",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FD27",
+      "name": "Seppas, Fredrik",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FDF6",
+      "name": "Strömberg, Mattias",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702EC",
+      "name": "Sjögren, Niclas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702F7",
+      "name": "Tjäder, Helene",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002702FA",
+      "name": "Ståhlkloo, Anna",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270382",
+      "name": "Tollesson, John",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027040C",
+      "name": "Vangbo, Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027042E",
+      "name": "Tidlund, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000027044B",
+      "name": "Sundholm, Sara",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270476",
+      "name": "Steiner, Jenni",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704A2",
+      "name": "Sjöström, Marie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704D2",
+      "name": "Sundström, Martin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704D4",
+      "name": "Svedin, Jörgen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704E1",
+      "name": "Solli, Viktor",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002704E8",
+      "name": "Söderström, Anna-Carin",
+      "splits": 2,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000022EEDE",
+      "name": "Wisén, Åke",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A00002703F3",
+      "name": "Videtind, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "0000171678885A000027053F",
+      "name": "Östberg, Jonas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221924",
+      "name": "Wassén, Lotta",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000221AC8",
+      "name": "Wassén, Christer",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002226D4",
+      "name": "Wallin, Fredrik",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022485B",
+      "name": "Åslund, Daniel",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000226FAD",
+      "name": "Åhlund, Johan",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022E7D6",
+      "name": "Varmin, Ylva",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000022FC6C",
+      "name": "Wikner, Ulrika",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000023429D",
+      "name": "Östlund, Ankie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002392B1",
+      "name": "Ådale, Karin",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000239ECD",
+      "name": "Zackrisson, Louise",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024234D",
+      "name": "Älpker, Daniel",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000244CE0",
+      "name": "Åkman, Magnus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024E8EB",
+      "name": "Östensson Lindblom, Margareta",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000024FECB",
+      "name": "Åström, Emelie",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A00002526C0",
+      "name": "Wiklund, Ulf",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000253511",
+      "name": "Våström, Robert",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000256C98",
+      "name": "Widmark, Mattias",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000266940",
+      "name": "Ye, Sangkuk",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CAA6",
+      "name": "Zetterberg, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CAFC",
+      "name": "Vestfält, Therese",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026CBB0",
+      "name": "Wallström, Jessica",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D1D3",
+      "name": "Ärlig, Thomas",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D40B",
+      "name": "Westin, Anders",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D47A",
+      "name": "Yttergren, Malin",
+      "splits": 1,
+      "status": "DNF",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D48E",
+      "name": "Ven, Arnout",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026D7F8",
+      "name": "Östnell, Mats",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E89D",
+      "name": "Wikström, Johan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026E9E4",
+      "name": "Viklander, Marcus",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC0B",
+      "name": "Vinayagam, Manjunath",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026EC49",
+      "name": "Weissenborn, Eileen",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026ED9F",
+      "name": "Zaninotti, Maria",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F157",
+      "name": "Åström, Monica",
+      "splits": 0,
+      "status": "DNS",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F8E4",
+      "name": "Åström, Mikael",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F916",
+      "name": "Wright, Linda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026F9F8",
+      "name": "Österberg, Ebba",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FA67",
+      "name": "Welander, Amanda",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FDC0",
+      "name": "Österlund, Magdalena",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A000026FF1A",
+      "name": "Zeller, Regine",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270297",
+      "name": "Åkerlund, Victor",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    },
+    {
+      "idp": "9999991678885A0000270298",
+      "name": "Westgärds, Håkan",
+      "splits": 4,
+      "status": "FINISHED",
+      "mode": "http",
+      "cached": false
+    }
+  ],
+  "started_at": "2026-07-14T11:44:11+00:00",
+  "finished_at": "2026-07-14T12:03:50+00:00",
+  "records": 743,
+  "inserted": 743,
+  "updated": 0,
+  "warnings": 0,
+  "status": "complete"
+}
