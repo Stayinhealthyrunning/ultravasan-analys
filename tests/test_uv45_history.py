@@ -256,15 +256,48 @@ class HistoricalImportSafetyTests(unittest.TestCase):
         probe = workflow.index("- name: Probe och kvalitetsgrind för varje år")
         full_import = workflow.index("- name: Importera de nio historikåren")
         validation = workflow.index("- name: Validera hela databasen")
+        artifact = workflow.index("- name: Ladda upp validerad databas före publicering")
         publication = workflow.index("- name: Publicera den validerade historikimporten")
         self.assertLess(backup, probe)
         self.assertLess(probe, full_import)
         self.assertLess(full_import, validation)
-        self.assertLess(validation, publication)
+        self.assertLess(validation, artifact)
+        self.assertLess(artifact, publication)
         self.assertIn("--limit 3", workflow[probe:full_import])
         self.assertIn("inputs.full_import_confirmed == true", workflow[full_import:publication])
         self.assertIn("--compare-uv90-snapshot", workflow)
         self.assertIn("tools/validate_uv45_history.py", workflow)
+
+    def test_workflow_preserves_validated_output_before_conflict_safe_push(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "importera-uv45-historik.yml").read_text(encoding="utf-8")
+        prepare = workflow.index("- name: Förbered verifierat före- och efter-import-artifact")
+        upload = workflow.index("- name: Ladda upp validerad databas före publicering")
+        publication = workflow.index("- name: Publicera den validerade historikimporten")
+        upload_block = workflow[prepare:publication]
+        publish_block = workflow[publication:]
+
+        self.assertLess(prepare, upload)
+        self.assertLess(upload, publication)
+        for required in (
+            'before="$RUNNER_TEMP/uv45-history-artifact/before-import"',
+            '"$before/data/ultravasan.sqlite"',
+            "after-import",
+            "data/ultravasan.sqlite",
+            "docs/data/ultravasan.json",
+            "docs/data/ultravasan-data.js",
+            "docs/data/manifest.json",
+            "reports/ultravasan45-*-import.json",
+            "reports/ultravasan45-*-probe.json",
+            "reports/uv45-history-validation",
+        ):
+            self.assertIn(required, workflow)
+        self.assertIn("if-no-files-found: error", upload_block)
+        self.assertIn("git fetch origin main:refs/remotes/origin/main", publish_block)
+        self.assertIn("git worktree add --detach", publish_block)
+        self.assertIn("git -C \"$publish_worktree\" diff --cached --name-only", publish_block)
+        self.assertIn("git -C \"$publish_worktree\" push origin HEAD:main", publish_block)
+        self.assertNotIn("git push --force", workflow)
+        self.assertNotIn("--force-with-lease", workflow)
 
     def test_quality_gate_accepts_missing_sex_only_for_neutral_class(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

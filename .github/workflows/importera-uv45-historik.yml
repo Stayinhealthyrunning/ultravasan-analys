@@ -63,16 +63,23 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Validera år, eventkoder och kontrolluppsättningar
+        shell: bash
         run: |
-          python tools/validate_uv45_history.py --config-only
+          set -euo pipefail
+          mkdir -p reports/uv45-history-validation
+          python tools/validate_uv45_history.py --config-only \
+            | tee reports/uv45-history-validation/configuration.json
           echo "Konfigurationen innehåller exakt de nio godkända historikåren."
 
       - name: Säkerhetskopiera databasen och UV90-läget
+        shell: bash
         run: |
-          mkdir -p "$RUNNER_TEMP/uv45-history-backup"
-          cp data/ultravasan.sqlite "$RUNNER_TEMP/uv45-history-backup/ultravasan-before-uv45-history.sqlite"
+          set -euo pipefail
+          before="$RUNNER_TEMP/uv45-history-artifact/before-import"
+          mkdir -p "$before/data"
+          cp data/ultravasan.sqlite "$before/data/ultravasan.sqlite"
           python tools/validate_uv45_history.py \
-            --write-uv90-snapshot "$RUNNER_TEMP/uv90-before-history.json"
+            --write-uv90-snapshot "$before/uv90-snapshot.json"
 
       - name: Probe och kvalitetsgrind för varje år
         shell: bash
@@ -108,7 +115,8 @@ jobs:
               exit 1
             fi
 
-            if ! python tools/validate_mika_probe.py --race "$race" --db "$db"; then
+            if ! python tools/validate_mika_probe.py --race "$race" --db "$db" \
+              | tee "reports/uv45-history-validation/probe-parser-$year.txt"; then
               echo "::error title=Parservalidering misslyckades för UV45 $year::$event har blockerande parserproblem."
               exit 1
             fi
@@ -117,7 +125,8 @@ jobs:
               --db "$db" \
               --race "$race" \
               --event-code "$event" \
-              --compare-uv90-snapshot "$snapshot"; then
+              --compare-uv90-snapshot "$snapshot" \
+              | tee "reports/uv45-history-validation/probe-history-$year.json"; then
               echo "::error title=Historikgrind misslyckades för UV45 $year::$event klarade inte kontroll- eller UV90-separeringen."
               exit 1
             fi
@@ -156,7 +165,8 @@ jobs:
 
             if ! python tools/validate_uv45_history.py \
               --race "$race" \
-              --event-code "$event"; then
+              --event-code "$event" \
+              | tee "reports/uv45-history-validation/import-$year.json"; then
               echo "::error title=Kvalitetsgrind misslyckades för UV45 $year::$event importeras inte vidare till publicering."
               exit 1
             fi
@@ -165,43 +175,136 @@ jobs:
 
       - name: Validera hela databasen och bygg webbdata
         if: ${{ success() && inputs.full_import_confirmed == true }}
+        shell: bash
         run: |
+          set -euo pipefail
           python tools/validate_uv45_history.py \
-            --compare-uv90-snapshot "$RUNNER_TEMP/uv90-before-history.json"
-          python tools/uvtool.py validate
-          python tools/uvtool.py export
+            --compare-uv90-snapshot "$RUNNER_TEMP/uv45-history-artifact/before-import/uv90-snapshot.json" \
+            | tee reports/uv45-history-validation/final-uv90.json
+          python tools/uvtool.py validate \
+            | tee reports/uv45-history-validation/final-database.txt
+          python tools/uvtool.py export \
+            | tee reports/uv45-history-validation/final-web-export.txt
           echo "Alla nio UV45-år är validerade och UV90 är semantiskt oförändrat."
+
+      - name: Förbered verifierat före- och efter-import-artifact
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          after="$RUNNER_TEMP/uv45-history-artifact/after-import"
+          mkdir -p \
+            "$after/data" \
+            "$after/docs/data" \
+            "$after/reports/uv45-history-validation"
+
+          cp data/ultravasan.sqlite "$after/data/ultravasan.sqlite"
+          cp docs/data/ultravasan.json "$after/docs/data/ultravasan.json"
+          cp docs/data/ultravasan-data.js "$after/docs/data/ultravasan-data.js"
+          cp docs/data/manifest.json "$after/docs/data/manifest.json"
+          cp reports/ultravasan45-*-import.json "$after/reports/"
+          cp reports/ultravasan45-*-probe.json "$after/reports/"
+          cp -R reports/uv45-history-validation/. "$after/reports/uv45-history-validation/"
+
+          test -s "$after/data/ultravasan.sqlite"
+          test -s "$after/docs/data/ultravasan.json"
+          test -s "$after/docs/data/ultravasan-data.js"
+          test -s "$after/docs/data/manifest.json"
+          while IFS='|' read -r year race event; do
+            [[ -z "$year" ]] && continue
+            test -s "$after/reports/ultravasan45-$year-import.json"
+            test -s "$after/reports/uv45-history-validation/import-$year.json"
+          done <<< "$HISTORY_RACES"
+
+      - name: Ladda upp validerad databas före publicering
+        if: ${{ success() && inputs.full_import_confirmed == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: uv45-history-validated-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 30
+          path: ${{ runner.temp }}/uv45-history-artifact
 
       - name: Publicera den validerade historikimporten
         if: ${{ success() && inputs.full_import_confirmed == true }}
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f \
-            data/ultravasan.sqlite \
-            docs/data/ultravasan.json \
-            docs/data/ultravasan-data.js \
-            docs/data/manifest.json \
-            reports/ultravasan45-20{14,15,16,17,18,19,22,23,24}-import.json
-          if git diff --cached --quiet; then
-            echo "Historikresultaten var redan aktuella; inga dubletter eller nya ändringar skapades."
-          else
-            git commit -m "Importera historiska Ultravasan 45-resultat"
-            git push origin main
-          fi
+          payload="$RUNNER_TEMP/uv45-history-artifact/after-import"
+          publish_worktree="$RUNNER_TEMP/uv45-history-publish"
 
-      - name: Spara backup och importrapporter
+          for attempt in 1 2 3; do
+            echo "Publiceringsförsök $attempt av 3: hämtar senaste origin/main."
+            git fetch origin main:refs/remotes/origin/main
+            git worktree remove --force "$publish_worktree" 2>/dev/null || true
+            rm -rf "$publish_worktree"
+            git worktree add --detach "$publish_worktree" origin/main
+
+            mkdir -p \
+              "$publish_worktree/data" \
+              "$publish_worktree/docs/data" \
+              "$publish_worktree/reports/uv45-history-validation"
+            cp "$payload/data/ultravasan.sqlite" "$publish_worktree/data/ultravasan.sqlite"
+            cp "$payload/docs/data/ultravasan.json" "$publish_worktree/docs/data/ultravasan.json"
+            cp "$payload/docs/data/ultravasan-data.js" "$publish_worktree/docs/data/ultravasan-data.js"
+            cp "$payload/docs/data/manifest.json" "$publish_worktree/docs/data/manifest.json"
+            cp "$payload"/reports/ultravasan45-*-import.json "$publish_worktree/reports/"
+            cp "$payload"/reports/ultravasan45-*-probe.json "$publish_worktree/reports/"
+            cp -R "$payload/reports/uv45-history-validation/." \
+              "$publish_worktree/reports/uv45-history-validation/"
+
+            git -C "$publish_worktree" add -f \
+              data/ultravasan.sqlite \
+              docs/data/ultravasan.json \
+              docs/data/ultravasan-data.js \
+              docs/data/manifest.json \
+              reports/ultravasan45-*-import.json \
+              reports/ultravasan45-*-probe.json \
+              reports/uv45-history-validation
+
+            while IFS= read -r changed; do
+              case "$changed" in
+                data/ultravasan.sqlite|docs/data/ultravasan.json|docs/data/ultravasan-data.js|docs/data/manifest.json|reports/ultravasan45-*-import.json|reports/ultravasan45-*-probe.json|reports/uv45-history-validation/*)
+                  ;;
+                *)
+                  echo "::error title=Otillåten publiceringskonflikt::Oväntad fil skulle ändras ovanpå origin/main: $changed"
+                  exit 1
+                  ;;
+              esac
+            done < <(git -C "$publish_worktree" diff --cached --name-only)
+
+            if git -C "$publish_worktree" diff --cached --quiet; then
+              echo "Historikresultaten är redan aktuella på senaste origin/main."
+              git worktree remove --force "$publish_worktree"
+              exit 0
+            fi
+
+            git -C "$publish_worktree" commit -m "Importera historiska Ultravasan 45-resultat"
+            if git -C "$publish_worktree" push origin HEAD:main; then
+              echo "Den validerade historikimporten publicerades ovanpå senaste origin/main."
+              git worktree remove --force "$publish_worktree"
+              exit 0
+            fi
+
+            echo "::warning title=origin/main ändrades under publiceringen::Hämtar senaste main och återapplicerar endast validerade datafiler."
+            git worktree remove --force "$publish_worktree"
+          done
+
+          echo "::error title=Publiceringen avbröts säkert::origin/main fortsatte ändras eller pushen misslyckades. Det verifierade artifactet är bevarat och ingen force-push gjordes."
+          exit 1
+
+      - name: Spara diagnostik och backup före import
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: uv45-historik-${{ github.run_id }}
+          name: uv45-history-diagnostics-${{ github.run_id }}
           if-no-files-found: warn
           retention-days: 30
           path: |
-            ${{ runner.temp }}/uv45-history-backup/ultravasan-before-uv45-history.sqlite
-            ${{ runner.temp }}/uv90-before-history.json
+            ${{ runner.temp }}/uv45-history-artifact/before-import
             ${{ runner.temp }}/uv45-probe-*.json
             reports/ultravasan45-*-probe.json
             reports/ultravasan45-*-import.json
-            docs/data/manifest.json
+            reports/uv45-history-validation
