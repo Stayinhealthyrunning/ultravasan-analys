@@ -48,13 +48,15 @@ assert.ok(css.includes('.pace-segment-label')&&css.includes('#genderRetentionCha
 
 // Simulator, percentiler, DNF-fördelning och könshistorik ska använda korrekt underlag och yta.
 assert.ok(appSource.includes('targetSimulatorSelections=new Map()'),'Simulatorn ska minnas aktiva val separat per lopp och år');
-assert.ok(appSource.includes("!['DNF','DNS','DSQ','STARTED','STARTAT'].includes(status)"),'Simulatorns snitt får endast använda fullföljande resultat');
+assert.ok(appSource.includes('isFinishedResult(r)&&r.overall_place'),'Simulatorns snitt får endast använda centralt klassificerade fullföljande resultat');
 assert.ok(appSource.includes('rows.reduce((sum,row)=>sum+Number(row.finish_seconds),0)/rows.length'),'Simulatorns default ska bygga på fullföljarnas medeltid');
 assert.ok(appSource.includes('Math.round(mean/120)*120'),'Simulatorns default ska avrundas till ett giltigt tvåminuterssteg med 00 sekunder');
 assert.ok(css.includes('.segment-lab{grid-column:span 7}.percentile-card{grid-column:span 5}'),'Percentiltrappan ska få större bredd på desktop');
 assert.ok(audienceSource.includes('dnf-bar-track')&&audienceSource.includes('dnf-bar-fill'),'Repet dras ska ha ett fullt spår med proportionell DNF-fyllnad');
-assert.ok(audienceSource.includes('rate:starters.length?pct(finishers.length,starters.length):null'),'Fullföljandegrad ska beräknas per år och kön utan falska nollvärden');
+assert.ok(audienceSource.includes('rate:summary.rate'),'Fullföljandegrad ska beräknas per år och kön av den centrala statusklassningen');
 assert.ok(audienceSource.includes('gender-history-rate-line')&&audienceSource.includes('gender-history-point'),'Historikens streckade serier ska ha interaktiva årspunkter');
-for(const value of ['startande · ${d.finishers} fullföljande','${d.dnf} DNF','% fullföljandegrad'])assert.ok(audienceSource.includes(value),`Historikens tooltip saknar ${value}`);
+for(const value of ['${d.starters} startande','${d.finishers} fullföljande','${d.dnf} DNF','${d.dsq} DSQ','${d.dns} DNS/ej start','% fullföljandegrad'])assert.ok(audienceSource.includes(value),`Historikens tooltip saknar ${value}`);
+assert.ok(html.includes('assets/result-status.js?v=20260714-status1'),'Den centrala statusklassningen ska laddas före analyserna');
+assert.ok(audienceSource.includes('window.ResultStatus.classify')&&appSource.includes('window.ResultStatus.classify'),'Översikt och fördjupade analyser ska dela statusklassning');
 
 console.log('OK: pacingreferens, klassfilter, analyslayout, simulator, DNF och könshistorik');
