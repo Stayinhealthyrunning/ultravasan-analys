@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'..');
 const storage=new Map();
 global.localStorage={getItem:key=>storage.has(key)?storage.get(key):null,setItem:(key,value)=>storage.set(key,String(value))};
 const units=require(path.join(root,'docs/assets/speed-units.js'));
+const analytics=require(path.join(root,'docs/assets/audience-analytics.js'));
 
 assert.strictEqual(units.DEFAULT_UNIT,'pace');
 assert.strictEqual(units.get(),'pace','min/km ska vara standard utan sparad inställning');
@@ -14,6 +15,13 @@ assert.strictEqual(units.formatPaceSeconds(347),'5:47 /km');
 assert.strictEqual(units.formatSpeedKmh(10.428),'10,4 km/h');
 assert.strictEqual(units.formatSpeed(3600/347,'pace'),'5:47 /km');
 assert.strictEqual(units.formatPace(347,'speed'),'10,4 km/h');
+assert.strictEqual(analytics.relativeToplistWidth(49.5,49.5),100);
+assert.ok(Math.abs(analytics.relativeToplistWidth(46.6,49.5)-94.14)<.01);
+assert.ok(Math.abs(analytics.relativeToplistWidth(44.3,49.5)-89.49)<.01);
+assert.ok(Math.abs(analytics.relativeToplistWidth(32.6,49.5)-65.86)<.01);
+assert.ok(analytics.relativeToplistWidth(60,49.5)<=100,'indexstapeln får aldrig överstiga 100 procent');
+assert.strictEqual(analytics.visibleCountBarHeight(0,100,300),0);
+assert.strictEqual(analytics.visibleCountBarHeight(1,1000,300),2,'positiv DNF ska alltid få en synlig stapel');
 units.set('speed');assert.strictEqual(units.get(),'speed','giltigt val ska sparas');
 storage.set(units.STORAGE_KEY,'yards');assert.strictEqual(units.get(),'pace','ogiltigt sparat val ska falla tillbaka till min/km');
 
@@ -37,7 +45,12 @@ assert.ok(audience.includes('interactive-chart-tooltip')&&audience.includes('wir
 assert.ok(!audience.includes('<text x="${x(valid.at(-1)?.i||0)+5}"'),'klippta slutetiketter ska vara borttagna');
 assert.ok(audience.includes('class-history-bar starters')&&audience.includes('class-history-bar dnf'));
 assert.ok(audience.includes('median ${fmtTime(d.med)}')&&!audience.includes('median ${fmtTime(d.med)} · DNF'),'linjens tooltip ska inte innehålla DNF');
+assert.ok(audience.includes('relativeToplistWidth(classIndexMetric(x),maxBarValue)'),'topplistans staplar ska normaliseras mot listans maxvärde');
+assert.ok(audience.includes('Median sluttid')&&audience.includes('Antal personer'),'klasshistoriken ska ha separata y-axlar');
+assert.ok(audience.includes('visibleCountBarHeight(d.dnf,maxN,plotHeight)'),'DNF-staplar ska behålla synlig minimihöjd');
 assert.ok(html.includes('Median, startande och DNF över åren'));
+assert.ok(css.includes('.percentile-card .panel-head h3{white-space:nowrap}'),'Percentiltrappan ska hållas på en rad');
+assert.ok(css.includes('.sex-segment-cell>div strong{display:inline-block;white-space:nowrap'),'fart och /km ska hållas på samma rad');
 
 for(const selector of ['#classCompareChart','#classHistoryChart','#segmentRanking','#fieldFlow','#hallOfFame','#raceFingerprint'])assert.ok(app.includes(`['${selector}'`),`förklarande infotext saknas för ${selector}`);
 

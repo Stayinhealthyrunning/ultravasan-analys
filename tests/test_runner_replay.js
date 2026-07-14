@@ -3,6 +3,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const replay=require('../docs/assets/runner-replay.js');
+const speedUnits=require('../docs/assets/speed-units.js');
 const media=require('../docs/assets/race-media.js');
 const registry=require('../data/routes/ultravasan90-routes.json');
 const config=require('../config/races.json');
@@ -26,6 +27,24 @@ const uv90Old=realModel('ultravasan90-2015',11994);
 const uv90New=realModel('ultravasan90-2025',1376);
 const uv45Current=realModel('ultravasan45-2025',13579);
 const uv90Dnf=realModel('ultravasan90-2015',11971);
+const uv90Motion=realModel('ultravasan90-2025',2832);
+
+// Hel- och delsträckefart räknas alltid från tidsskillnad och officiell distans.
+const olle=data.results.find(item=>item.id===1376),olleRace=data.races.find(item=>item.id===olle.race_id);
+assert.strictEqual(olle.name_as_published,'Meijer, Olle');
+assert.strictEqual(olle.finish_seconds,22043,'Olle Meijers sluttid ska vara 6:07:23');
+assert.ok(Math.abs(replay.wholeRacePace(olle,olleRace)-22043/92)<1e-9,'Helfart ska vara sluttid delat med 92,0 km');
+assert.strictEqual(replay.fmtPace(replay.wholeRacePace(olle,olleRace)),'4:00 /km','239,6 sek/km får aldrig visas som 3:60 /km');
+assert.strictEqual(speedUnits.formatPace(replay.wholeRacePace(olle,olleRace),'speed'),'15,0 km/h','Olles helfart ska konverteras med 3600 / sekunder per km');
+assert.strictEqual(replay.wholeRacePace({finish_seconds:null},{distance_km:92}),null,'DNF utan sluttid ska sakna helfart');
+const formulaRace={race_key:'ultravasan90-formula',distance_km:20},formulaRoute={points:[[0,0,0],[0,1,20]],elevation_profile:[[0,100],[20,100]]},formulaCheckpoints=[{checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},{checkpoint_key:'a',name:'A',sequence_no:1,distance_km:10},{checkpoint_key:'b',name:'B',sequence_no:2,distance_km:20}],formulaSplits=[{checkpoint_key:'a',sequence_no:1,elapsed_seconds:600,segment_seconds:9999,pace_seconds_per_km:999},{checkpoint_key:'b',sequence_no:2,elapsed_seconds:1500,segment_seconds:9999,pace_seconds_per_km:999}],formulaModel=replay.createModel({race:formulaRace,result:{status:'FINISHED',finish_seconds:1500},route:formulaRoute,raceCheckpoints:formulaCheckpoints,splits:formulaSplits});
+assert.deepStrictEqual(formulaModel.segments.map(segment=>segment.seconds),[600,900],'Delsträckstid ska vara skillnaden mellan två kumulativa kontrolltider');
+assert.deepStrictEqual(formulaModel.segments.map(segment=>segment.pace),[60,90],'Delsträckefart ska vara tidsskillnaden delat med kontrollernas distansskillnad');
+for(const model of [uv90New,uv90Motion,uv90Old,uv45Current,uv90Dnf])for(const segment of model.segments.filter(item=>item.passed)){
+  const start=model.anchors.find(anchor=>anchor.key===segment.from.key),end=model.anchors.find(anchor=>anchor.key===segment.to.key),elapsedDelta=end.time-start.time;
+  assert.strictEqual(segment.seconds,elapsedDelta,`${model.race.race_key}: ${segment.from.key}–${segment.to.key} använder inte skillnaden mellan kumulativa tider`);
+  assert.ok(Math.abs(segment.pace-elapsedDelta/segment.distance)<1e-9,`${model.race.race_key}: ${segment.from.key}–${segment.to.key} använder fel distans`);
+}
 
 assert.strictEqual(uv90Old.route.id,'ultravasan90-pre2023','Äldre UV90 måste välja äldre ruttversion');
 assert.strictEqual(uv90New.route.id,'ultravasan90-post2023','Ny UV90 måste välja ny ruttversion');
@@ -68,6 +87,7 @@ assert.strictEqual(replay.paceColor(fastest,paces).color,replay.PACE_COLORS[0]);
 assert.strictEqual(replay.paceColor(slowest,paces).color,replay.PACE_COLORS[4]);
 assert.strictEqual(replay.paceColor(null,paces).color,replay.NEUTRAL_COLOR);
 const renderedOld=replay.render(uv90Old);
+const renderedNew=replay.render(uv90New);
 const renderedUv45=replay.render(uv45Current);
 const firstColor=uv90Old.segments[0].color;
 assert.ok((renderedOld.match(new RegExp(firstColor,'g'))||[]).length>=2,'Samma segmentfärg ska användas på karta och höjdprofil');
@@ -77,6 +97,8 @@ assert.ok(renderedOld.includes('Interaktiv GPS-karta'),'Den centrala visualiseri
 assert.ok(renderedOld.includes('<option value="60s" selected>Hela loppet på 1 minut</option>'),'En minut ska vara standardhastighet');
 assert.ok(renderedOld.includes('data-map-action="zoom-in"')&&renderedOld.includes('data-map-action="zoom-out"')&&renderedOld.includes('data-map-action="fit"')&&renderedOld.includes('data-map-action="follow"'),'Kompletta och tangentbordsåtkomliga kartkontroller saknas');
 assert.ok(renderedOld.includes('aria-label="Zooma in på GPS-kartan"')&&renderedOld.includes('aria-label="Visa hela banan"')&&renderedOld.includes('aria-pressed="true"'),'Zoom- och följkontroller måste ha tillgängliga namn och tillstånd');
+assert.ok(!renderedOld.includes('runner-elevation-high'),'Separat GPX-baserad toppmarkör får inte finnas i höjdprofilen');
+assert.ok(renderedNew.includes('data-elevation-checkpoint="high_point"'),'Den officiella kontrollen Högsta punkten ska finnas kvar');
 
 // Zoom, panorering, helbana och följning ändrar bara kartvyn, aldrig distansmodellen.
 const fittedView=replay.fitMapView(),zoomedView=replay.zoomMapView(fittedView,2,{x:300,y:200});
@@ -158,6 +180,7 @@ assert.strictEqual(replay.stateAt(rankModel,15).lastKnownClassRank,1,'Klassplace
 assert.strictEqual(replay.stateAt(rankModel,20).lastKnownClassRank,2,'Klassplaceringen ska bytas först vid nästa verifierade passage');
 const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
+assert.ok(appSource.includes('wholeRacePace(r,race)'),'Profilhuvudets snittfart ska beräknas från sluttid och loppdistans');
 assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
 assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Återställning ska välja en minuts replay');
 assert.ok(replaySource.includes('this.progressDistanceKm')&&!replaySource.includes('this.distance='),'Replay ska använda en enda kontinuerlig global distansvariabel');
@@ -195,7 +218,7 @@ assert.ok(css.includes('@media(max-width:1180px)')&&css.includes('@media(max-wid
 assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'),'Reduced-motion-stöd saknas');
 assert.ok(!css.includes('.runner-replay-info{position:absolute'),'Liveinformationen får inte ligga som en stor overlay ovanpå kartan');
 assert.ok(css.includes('scrollbar-gutter:stable'),'Popupens scrollbarutrymme ska vara stabilt');
-assert.ok(css.includes('grid-auto-rows:60px')&&css.includes('height:60px'),'Dynamiska placeringsfält ska ha stabil radhöjd vid kontrollpassage');
+assert.ok(css.includes('grid-auto-rows:minmax(72px,auto)')&&css.includes('min-height:72px')&&!css.includes('.runner-replay-info dl div{box-sizing:border-box;contain'),'Dynamiska placeringsfält ska växa utan att klippa flerradig text');
 assert.ok(css.includes('border:1px solid transparent')&&css.includes('transition:border-color .18s,background-color .18s,box-shadow .18s'),'Aktivt delsträckekort får inte ändra mått eller animera layoutvärden');
 assert.ok(renderedOld.includes(`--pace-fast:${replay.PACE_COLORS[0]}`)&&renderedOld.includes(`--pace-even:${replay.PACE_COLORS[2]}`)&&renderedOld.includes(`--pace-slow:${replay.PACE_COLORS[4]}`),'Legenden ska återanvända segmentens färgkonfiguration');
 assert.ok(renderedOld.includes('Snabbare än eget snitt')&&renderedOld.includes('Nära eget snitt')&&renderedOld.includes('Långsammare än eget snitt'),'Gemensam textlegend saknas');
