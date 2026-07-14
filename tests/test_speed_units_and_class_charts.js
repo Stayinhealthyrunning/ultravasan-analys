@@ -51,6 +51,13 @@ assert.ok(audience.includes('visibleCountBarHeight(d.dnf,maxN,plotHeight)'),'DNF
 assert.ok(html.includes('Median, startande och DNF över åren'));
 assert.ok(css.includes('.percentile-card .panel-head h3{white-space:nowrap}'),'Percentiltrappan ska hållas på en rad');
 assert.ok(css.includes('.sex-segment-cell>div strong{display:inline-block;white-space:nowrap'),'fart och /km ska hållas på samma rad');
+assert.ok(html.includes('club-chart-card club-compare-card')&&html.includes('club-chart-card club-history-card'));
+assert.ok(audience.includes('club-compare-point')&&audience.includes('club-history-point'),'klubbdiagrammen ska ha interaktiva datapunkter');
+assert.ok(audience.includes('club-history-bar starters')&&audience.includes('club-history-bar finishers'),'klubbhistoriken ska ha interaktiva staplar');
+assert.ok(audience.includes('data-chart-tip')&&audience.includes('registrerade löpare'),'klubbjämförelsens tooltip ska redovisa underlaget');
+assert.ok(audience.includes("'Antal personer'")&&audience.includes("'Median sluttid'"),'klubbhistoriken ska ha två namngivna y-axlar');
+assert.ok(audience.includes('renderClubHistory(stats)'),'historiken ska följa samtliga valda klubbar och orter');
+assert.ok(css.includes('.club-chart{position:relative;height:390px!important'),'klubbdiagrammen ska använda kortens yta');
 
 for(const selector of ['#classCompareChart','#classHistoryChart','#segmentRanking','#fieldFlow','#hallOfFame','#raceFingerprint'])assert.ok(app.includes(`['${selector}'`),`förklarande infotext saknas för ${selector}`);
 
