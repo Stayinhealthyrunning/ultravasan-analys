@@ -87,10 +87,10 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
 .runner-replay-now-primary{display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.13)}
 .runner-replay-now-primary strong{font-size:1.8rem;line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
 .runner-replay-now-primary span{min-height:1.2em;font-size:.72rem;font-weight:800;color:var(--lime)}
-.runner-replay-info dl{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:60px;gap:1px 10px;margin:10px 0 0}
-.runner-replay-info dl div{box-sizing:border-box;contain:layout paint;min-width:0;height:60px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.runner-replay-info dl{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(72px,auto);gap:1px 12px;margin:10px 0 0}
+.runner-replay-info dl div{box-sizing:border-box;min-width:0;min-height:72px;padding:7px 0 10px;border-bottom:1px solid rgba(255,255,255,.1)}
 .runner-replay-info dt{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#abc5b9}
-.runner-replay-info dd{min-height:2.6em;margin:3px 0 0;overflow-wrap:anywhere;font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
+.runner-replay-info dd{margin:4px 0 0;overflow-wrap:anywhere;font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.35}
 
 .runner-replay-map-panel{display:flex;flex-direction:column;padding:10px;background:#f8faf6}
 .runner-replay-map-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:1px 3px 9px}
@@ -183,9 +183,6 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
 .runner-elevation-unavailable{display:flex;flex-direction:column;justify-content:center;min-height:105px;padding:20px;border:1px dashed #bbc9be;border-radius:14px;background:#f1f5ef;color:var(--muted);text-align:center}
 .runner-elevation-unavailable strong{color:var(--forest);font-size:.88rem}
 .runner-elevation-unavailable span{margin-top:5px;font-size:.7rem}
-.runner-elevation-high circle{fill:#d8e35d;stroke:#10241d;stroke-width:2}
-.runner-elevation-high text{font:850 9px/1 Inter,ui-sans-serif,system-ui;fill:#10241d;paint-order:stroke;stroke:#fff;stroke-width:3px}
-
 .runner-replay-segments{border-radius:0 0 18px 18px}
 .runner-replay-segment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .runner-replay-segment-card{box-sizing:border-box;contain:layout paint;display:grid;grid-template-columns:7px minmax(0,1fr) auto;align-items:center;gap:9px;min-width:0;min-height:68px;padding:10px;text-align:left;background:#f3f6f0;color:var(--ink);border:1px solid transparent;transition:border-color .18s,background-color .18s,box-shadow .18s}
