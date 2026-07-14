@@ -67,9 +67,29 @@ assert.strictEqual(replay.paceColor(fastest,paces).color,replay.PACE_COLORS[0]);
 assert.strictEqual(replay.paceColor(slowest,paces).color,replay.PACE_COLORS[4]);
 assert.strictEqual(replay.paceColor(null,paces).color,replay.NEUTRAL_COLOR);
 const renderedOld=replay.render(uv90Old);
+const renderedUv45=replay.render(uv45Current);
 const firstColor=uv90Old.segments[0].color;
 assert.ok((renderedOld.match(new RegExp(firstColor,'g'))||[]).length>=2,'Samma segmentfärg ska användas på karta och höjdprofil');
 assert.ok(renderedOld.includes('▲ snabbare · ● jämn · ▼ tuffare'),'Färg får inte vara enda informationsbärare');
+assert.ok(renderedOld.includes('runner-replay-dashboard')&&renderedOld.includes('runner-replay-now')&&renderedOld.includes('runner-replay-map-panel')&&renderedOld.includes('runner-replay-insights'),'Desktoplayouten ska ha liveinfo, central karta och insikter som tre separata delar');
+assert.ok(renderedOld.includes('Interaktiv GPS-karta'),'Den centrala visualiseringen ska beskrivas som en GPS-karta');
+assert.ok(renderedOld.includes('<option value="60s" selected>Hela loppet på 1 minut</option>'),'En minut ska vara standardhastighet');
+assert.ok(renderedOld.includes('data-map-action="zoom-in"')&&renderedOld.includes('data-map-action="zoom-out"')&&renderedOld.includes('data-map-action="fit"')&&renderedOld.includes('data-map-action="follow"'),'Kompletta och tangentbordsåtkomliga kartkontroller saknas');
+assert.ok(renderedOld.includes('aria-label="Zooma in på GPS-kartan"')&&renderedOld.includes('aria-label="Visa hela banan"')&&renderedOld.includes('aria-pressed="true"'),'Zoom- och följkontroller måste ha tillgängliga namn och tillstånd');
+
+// Zoom, panorering, helbana och följning ändrar bara kartvyn, aldrig distansmodellen.
+const fittedView=replay.fitMapView(),zoomedView=replay.zoomMapView(fittedView,2,{x:300,y:200});
+assert.ok(zoomedView.scale>fittedView.scale,'Zoom in ska ändra kartans skala');
+assert.strictEqual(replay.zoomMapView(zoomedView,1,{x:300,y:200}).scale,1,'Zoom ut till miniminivå ska visa hel banbredd');
+assert.deepStrictEqual(replay.fitMapView(),{scale:1,x:0,y:0,follow:true},'Visa hela banan ska återställa kartvyn och följningen');
+const followedView=replay.followMapView({...zoomedView,follow:true},{x:460,y:215});
+assert.ok(Math.abs(followedView.x+followedView.scale*460-460)<.001&&Math.abs(followedView.y+followedView.scale*215-215)<.001,'Följ löparen ska centrera markören vid inzoomning');
+assert.strictEqual(replay.panMapView(followedView,20,10).follow,false,'Manuell panorering ska pausa automatisk följning');
+
+// Mercatorprojektionen använder samma radianbaserade enhet för longitud och latitud.
+const mapProjection=replay.mapProjection(uv90Old.route),mapXs=mapProjection.points.map(point=>point.x),mapYs=mapProjection.points.map(point=>point.y),mapWidth=Math.max(...mapXs)-Math.min(...mapXs),mapHeight=Math.max(...mapYs)-Math.min(...mapYs);
+assert.ok(mapWidth>500,'GPS-rutten ska utnyttja kartans bredd');
+assert.ok(mapHeight>50,'GPS-ruttens nord-syd-form får inte pressas ihop till en rak distanslinje');
 
 // Karta, höjdprofil och informationsmodell använder samma distans.
 assert.ok(uv90Old.elevationProfile.length>100,'Verifierad äldre GPX ska ge höjdprofil');
@@ -88,6 +108,28 @@ const noElevation={...uv90New,route:{...uv90New.route,elevation_note:'Verifierad
 assert.ok(replay.render(noElevation).includes('Höjdprofil saknas'),'Saknad verifierad höjddata ska degradera tydligt');
 assert.ok(renderedOld.includes('data-replay-value="grade"')&&renderedOld.includes('data-replay-value="ascent-remaining"'),'Informationskortet ska visa lutning och återstående stigning');
 
+// Alla kontroller kommer från aktuell loppmodell och exponeras i höjdprofilen.
+for(const model of [uv90Old,uv90New,uv45Current,uv45Historical]){
+  const rendered=replay.render(model),checkpointNodes=(rendered.match(/data-elevation-checkpoint=/g)||[]).length;
+  assert.strictEqual(checkpointNodes,model.checkpoints.length,`${model.race.race_key}: samtliga kontroller ska finnas i höjdprofilen`);
+  for(const checkpoint of model.checkpoints)assert.ok(rendered.includes(`data-elevation-checkpoint="${checkpoint.key}"`),`${model.race.race_key}: ${checkpoint.name} saknas i höjdprofilen`);
+}
+
+// Slutlig och passerad klassplacering använder endast uttryckliga verifierade fält.
+assert.strictEqual(replay.formatClassPlace(12),'12');
+assert.strictEqual(replay.formatClassPlace(null),'Saknas');
+assert.strictEqual(replay.stateAt(uv90Old,15).lastKnownClassRank,null,'Klassplacering får inte härledas från totalplacering');
+const classRace=data.races.find(item=>item.race_key==='ultravasan90-2015'),classResult=data.results.find(item=>item.id===11994),classRoute=replay.routeForRace(registry,classRace),classCheckpoints=data.checkpoints.filter(item=>item.race_id===classRace.id),classSplits=data.splits.filter(item=>item.result_id===classResult.id).map((split,index)=>({...split,place_class:12-index})),classModel=replay.createModel({race:classRace,result:classResult,route:classRoute,raceCheckpoints:classCheckpoints,splits:classSplits});
+const afterFirstClassCheckpoint=replay.stateAt(classModel,classModel.anchors[1].distance+.5);
+assert.strictEqual(afterFirstClassCheckpoint.lastKnownClassRank,12,'Senast verifierade klassplacering ska användas mellan kontroller');
+assert.strictEqual(afterFirstClassCheckpoint.classRankIsExact,false,'Klassplacering får aldrig interpoleras mellan kontroller');
+const dnfRace=data.races.find(item=>item.race_key==='ultravasan90-2015'),dnfResult=data.results.find(item=>item.id===11971),dnfSplits=data.splits.filter(item=>item.result_id===dnfResult.id).map((split,index)=>({...split,place_class:30-index})),dnfClassModel=replay.createModel({race:dnfRace,result:dnfResult,route:classRoute,raceCheckpoints:classCheckpoints,splits:dnfSplits});
+assert.strictEqual(replay.stateAt(dnfClassModel,999).lastKnownClassRank,dnfClassModel.anchors.at(-1).classRank,'DNF ska behålla sista säkra klassplacering');
+assert.ok(renderedOld.includes('data-replay-value="class-rank"'),'Livepanelen ska ha separat klassplacering');
+const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
+assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
+assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Återställning ska välja en minuts replay');
+
 // Replay klampar korrekt vid mål respektive DNF:s sista säkra passage.
 assert.strictEqual(uv90New.finished,true);
 assert.strictEqual(replay.stateAt(uv90New,999).distance,uv90New.totalDistance);
@@ -105,8 +147,12 @@ assert.strictEqual(media.musicForRace(null),null,'Saknad loppidentitet får inte
 assert.strictEqual(replay.motionAllowed(true),false);
 assert.strictEqual(replay.motionAllowed(false),true);
 const css=fs.readFileSync(require.resolve('../docs/assets/runner-replay.css'),'utf8');
-assert.ok(css.includes('@media(max-width:640px)'),'Mobil layout saknas');
+assert.ok(css.includes('@media(max-width:1180px)')&&css.includes('@media(max-width:700px)'),'Tablet- eller mobillayout saknas');
 assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'),'Reduced-motion-stöd saknas');
+assert.ok(!css.includes('.runner-replay-info{position:absolute'),'Liveinformationen får inte ligga som en stor overlay ovanpå kartan');
+assert.ok(renderedOld.includes(`--pace-fast:${replay.PACE_COLORS[0]}`)&&renderedOld.includes(`--pace-even:${replay.PACE_COLORS[2]}`)&&renderedOld.includes(`--pace-slow:${replay.PACE_COLORS[4]}`),'Legenden ska återanvända segmentens färgkonfiguration');
+assert.ok(renderedOld.includes('Snabbare än eget snitt')&&renderedOld.includes('Nära eget snitt')&&renderedOld.includes('Långsammare än eget snitt'),'Gemensam textlegend saknas');
+assert.ok(renderedUv45.includes('data-elevation-checkpoint="mora_warning"'),'UV45:s Mora Förvarning ska finnas i höjdprofilen');
 assert.ok(renderedOld.includes('data-replay-scrubber')&&renderedOld.includes('aria-live="polite"'),'Tangentbordsreglage och live-status saknas');
 
 console.log('OK: interaktiv RunnerReplayModel för UV90, UV45, DNF, höjd, färg, musik och tillgänglighet');
