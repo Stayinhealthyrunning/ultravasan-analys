@@ -33,7 +33,7 @@ function boot(){
   if(!selected.length){const requested=Number(params.get('year')),requestedFamily=['uv90','uv45'].includes(params.get('race'))?params.get('race'):'uv90',familyRaces=app.data.races.filter(r=>mapRaceFamily(r)===requestedFamily),race=familyRaces.find(r=>r.id===requested||r.year===requested)||familyRaces.slice().sort((a,b)=>b.year-a.year)[0];selected=app.data.results.filter(r=>r.race_id===race?.id&&r.finish_seconds).sort((a,b)=>a.finish_seconds-b.finish_seconds).slice(0,3)}
   selected=selected.slice(0,5);if(!selected.length){showFatal('Det finns inga löpare att visa.');return}
   app.models=selected.map((r,i)=>buildModel(r,COLORS[i],i));
-  const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=is45?'assets/Ultravasan-45.mp3?v=20260713-multirace1':'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1';document.body.classList.toggle('race-uv45',is45);
+  const is45=app.models.every(m=>String(m.race?.race_key||'').startsWith('ultravasan45-'));const audio=$('#raceSoundtrack');if(audio)audio.src=window.RACE_MEDIA_CONFIG?.musicForRace(is45?'uv45':'uv90')||'';document.body.classList.toggle('race-uv45',is45);
   app.usedRoutes=[...new Map(app.models.map(m=>[m.route.id,m.route])).values()];
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;

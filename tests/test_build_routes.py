@@ -32,6 +32,20 @@ class RouteBuildTests(unittest.TestCase):
             self.assertEqual("UV45_20260610.kmz", uv45["source_file"])
             self.assertEqual(45.0, uv45["official_distance_km"])
             self.assertGreater(len(uv45["points"]), 1000)
+            self.assertEqual(
+                ["start", "lillsjon", "oxberg", "hokberg", "eldris", "mora_warning", "finish"],
+                [checkpoint["key"] for checkpoint in uv45["checkpoints"]],
+            )
+            old = registry["routes"]["ultravasan90-pre2023"]
+            current = registry["routes"]["ultravasan90-post2023"]
+            self.assertTrue(old["elevation_available"])
+            self.assertGreater(len(old["elevation_profile"]), 100)
+            self.assertEqual(0, old["elevation_profile"][0][0])
+            self.assertAlmostEqual(old["official_distance_km"], old["elevation_profile"][-1][0], places=3)
+            self.assertFalse(uv45["elevation_available"])
+            self.assertEqual([], uv45["elevation_profile"])
+            self.assertFalse(current["elevation_available"])
+            self.assertEqual([], current["elevation_profile"])
 
 
 if __name__ == "__main__":

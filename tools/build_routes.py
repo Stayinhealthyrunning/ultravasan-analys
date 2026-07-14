@@ -31,6 +31,7 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT_ROUTE_JSON = ROOT / "data/routes/ultravasan90-2026.json"
+CURRENT_KMZ = ROOT / "source/UV-90_20260610.kmz"
 OUT_JS = ROOT / "docs/data/ultravasan-routes.js"
 OUT_JSON = ROOT / "data/routes/ultravasan90-routes.json"
 EXACT_OLD_GPX = ROOT / "source/Ultravasan90-2014-2022.gpx"
@@ -81,6 +82,21 @@ def normalize_distance(points, official_distance):
     return normalized
 
 
+def build_elevation_profile(coords, points, max_samples=420):
+    """Return a compact [distance_km, elevation_m] profile when the source is trustworthy."""
+    if len(coords) != len(points) or len(coords) < 2:
+        return []
+    elevations = [float(point[2]) if len(point) > 2 and point[2] is not None else None for point in coords]
+    plausible = [value for value in elevations if value is not None and -50 <= value <= 1000]
+    if len(plausible) / len(elevations) < 0.95 or max(plausible, default=0) - min(plausible, default=0) < 5:
+        return []
+    step = max(1, math.ceil(len(points) / max_samples))
+    indices = list(range(0, len(points), step))
+    if indices[-1] != len(points) - 1:
+        indices.append(len(points) - 1)
+    return [[round(float(points[index][2]), 3), round(float(elevations[index]), 1)] for index in indices]
+
+
 def bounds(points):
     lats = [point[0] for point in points]
     lons = [point[1] for point in points]
@@ -103,7 +119,7 @@ def point_at_distance(points, distance_km):
 
 
 def read_gpx(path):
-    """Read trkpt/rtept coordinates from a GPX file, namespace agnostic."""
+    """Read trkpt/rtept coordinates and optional elevation, namespace agnostic."""
     root = ET.parse(path).getroot()
     coords = []
     for element in root.iter():
@@ -114,14 +130,18 @@ def read_gpx(path):
         lon = element.attrib.get("lon")
         if lat is None or lon is None:
             continue
-        coords.append([float(lat), float(lon)])
+        elevation = next(
+            (float(child.text) for child in element if child.tag.rsplit("}", 1)[-1].lower() == "ele" and child.text),
+            None,
+        )
+        coords.append([float(lat), float(lon), elevation])
     if len(coords) < 2:
         raise ValueError(f"{path.name} innehåller färre än två GPX-punkter")
     return coords
 
 
 def read_kmz(path):
-    """Read the longest KML coordinate sequence from a KMZ archive."""
+    """Read the longest KML coordinate sequence and its optional altitude."""
     with zipfile.ZipFile(path) as archive:
         kml_name = next((name for name in archive.namelist() if name.lower().endswith(".kml")), None)
         if not kml_name:
@@ -135,7 +155,8 @@ def read_kmz(path):
         for value in element.text.split():
             parts = value.split(",")
             if len(parts) >= 2:
-                coords.append([float(parts[1]), float(parts[0])])
+                altitude = float(parts[2]) if len(parts) >= 3 and parts[2] else None
+                coords.append([float(parts[1]), float(parts[0]), altitude])
         if len(coords) >= 2:
             sequences.append(coords)
     if not sequences:
@@ -144,13 +165,18 @@ def read_kmz(path):
 
 
 def build_uv45_route(config):
-    race = next((r for r in config.get("races", []) if str(r.get("race_key", "")).startswith("ultravasan45-")), None)
-    if not race:
+    uv45_races = [
+        race for race in config.get("races", [])
+        if str(race.get("race_key", "")).startswith("ultravasan45-")
+    ]
+    if not uv45_races:
         return None
+    race = max(uv45_races, key=lambda item: (int(item.get("year") or 0), str(item.get("race_key") or "")))
     coords = read_kmz(UV45_KMZ)
     points, raw_total = cumulative(coords)
     official_distance = float(race.get("distance_km") or 45.0)
     points = normalize_distance(points, official_distance)
+    elevation_profile = build_elevation_profile(coords, points)
     checkpoints = []
     for cp in sorted(race.get("checkpoints", []), key=lambda item: item["sequence_no"]):
         distance = float(cp.get("distance_km") or 0.0)
@@ -165,13 +191,20 @@ def build_uv45_route(config):
     return {
         "id": "ultravasan45-current",
         "name": "Ultravasan 45 – Oxberg till Mora",
-        "years": {"from": min(r["year"] for r in config["races"] if str(r.get("race_key", "")).startswith("ultravasan45-")), "to": 2099},
+        "years": {"from": min(r["year"] for r in uv45_races), "to": 2099},
         "official_distance_km": official_distance,
         "gps_distance_km": round(raw_total, 3),
         "point_count": len(points),
         "source_file": UV45_KMZ.name,
         "geometry_quality": "uploaded-gps",
         "geometry_note": "GPS-geometri från den uppladdade UV45-KMZ-filen. Distansaxeln är normaliserad till officiell distans.",
+        "elevation_available": bool(elevation_profile),
+        "elevation_note": (
+            "Höjddata extraherad reproducerbart från UV45-KMZ-filen."
+            if elevation_profile
+            else "KMZ-filens höjdkolumn är ofullständig och innehåller orimliga värden. Höjddata används därför inte."
+        ),
+        "elevation_profile": elevation_profile,
         "style": {"color": "#d28b22", "dashArray": None, "label": "Ultravasan 45"},
         "bounds": bounds(points),
         "checkpoints": checkpoints,
@@ -254,11 +287,21 @@ def main():
     config = json.loads(args.config.read_text(encoding="utf-8"))
 
     current = json.loads(CURRENT_ROUTE_JSON.read_text(encoding="utf-8"))
+    current_elevation_profile = []
+    if CURRENT_KMZ.exists():
+        current_coords = orient_like_current(read_kmz(CURRENT_KMZ), current["points"])
+        current_distance_points, _ = cumulative(current_coords)
+        current_distance_points = normalize_distance(
+            current_distance_points,
+            float(current["official_distance_km"]),
+        )
+        current_elevation_profile = build_elevation_profile(current_coords, current_distance_points)
 
     if EXACT_OLD_GPX.exists():
         coords = orient_like_current(read_gpx(EXACT_OLD_GPX), current["points"])
         old_points, raw_total = cumulative(coords)
         old_points = normalize_distance(old_points, OLD_TOTAL)
+        old_elevation_profile = build_elevation_profile(coords, old_points)
         geometry_quality = "verified-uploaded-gpx"
         geometry_note = (
             "GPS-geometri från den verifierade historiska filen "
@@ -272,6 +315,7 @@ def main():
                 "Verifierad äldre GPX saknas: source/Ultravasan90-2014-2022.gpx"
             )
         old_points, raw_total, join = build_fallback_old(current)
+        old_elevation_profile = []
         geometry_quality = "reference-reconstruction"
         geometry_note = (
             "Referenslagret använder 2022-ruttens publicerade längd och den gemensamma "
@@ -300,6 +344,13 @@ def main():
         ),
         "geometry_quality": geometry_quality,
         "geometry_note": geometry_note,
+        "elevation_available": bool(old_elevation_profile),
+        "elevation_note": (
+            "Höjddata extraherad reproducerbart från den verifierade historiska GPX-filen."
+            if old_elevation_profile
+            else "Den rekonstruerade referensrutten saknar verifierad höjddata."
+        ),
+        "elevation_profile": old_elevation_profile,
         "style": {"color": "#7c3aed", "dashArray": "10 8", "label": "2014–2022"},
         "bounds": bounds(old_points),
         "checkpoints": make_old_checkpoints(current, old_points),
@@ -311,6 +362,13 @@ def main():
         "years": {"from": 2023, "to": 2099},
         "geometry_quality": "uploaded-gps",
         "geometry_note": "GPS-geometri från den uppladdade KMZ-filen.",
+        "elevation_available": bool(current_elevation_profile),
+        "elevation_note": (
+            "Höjddata extraherad reproducerbart från den uppladdade UV90-KMZ-filen."
+            if current_elevation_profile
+            else "KMZ-filens höjdkolumn är ofullständig och innehåller orimliga värden. Höjddata används därför inte."
+        ),
+        "elevation_profile": current_elevation_profile,
         "style": {"color": "#176d53", "dashArray": None, "label": "2023–"},
         "historical_note": "Från 2023 lades en längre inledande sträckning och loppet blev cirka 92 km.",
     }
