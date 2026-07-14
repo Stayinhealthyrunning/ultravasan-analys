@@ -42,6 +42,9 @@ assert.ok(css.includes('.insight-grid>.position-card{order:6;grid-column:span 6!
 
 assert.ok(audience.includes('class-duel-point')&&audience.includes('tabindex="0"'));
 assert.ok(audience.includes('interactive-chart-tooltip')&&audience.includes('wireChartTooltips(el)'));
+assert.ok(audience.includes("'Högsta punkten':'HP'")&&audience.includes("'Mångsbodarna':'Mångs.'")&&audience.includes("'Mora Förvarning':'Mora förv.'"),'Klassduell ska använda konsekventa, loppspecifika checkpointförkortningar');
+assert.ok(audience.includes('compactSegmentLabel(pair)')&&audience.includes('rotate(-20'),'Klassduell ska visa kompakta etiketter med måttlig rotation');
+assert.ok(audience.includes('aria-label="${esc(full)}"')&&audience.includes('data-chart-tip="${esc(full)}"'),'fullständiga delsträckenamn ska finnas för hjälptext och tangentbordsfokus');
 assert.ok(!audience.includes('<text x="${x(valid.at(-1)?.i||0)+5}"'),'klippta slutetiketter ska vara borttagna');
 assert.ok(audience.includes('class-history-bar starters')&&audience.includes('class-history-bar dnf'));
 assert.ok(audience.includes('median ${fmtTime(d.med)}')&&!audience.includes('median ${fmtTime(d.med)} · DNF'),'linjens tooltip ska inte innehålla DNF');

@@ -68,6 +68,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const cpList=()=>state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no);
   const cleanCp=v=>String(v||'').replace('Mora mål','Mora').replace('Start Sälen','Start').trim();
   const segmentPairs=cps=>{let previous='Start';return cps.map(c=>{const pair={checkpoint:c,from:previous,to:cleanCp(c.name),label:`${cleanCp(previous)||'Start'} – ${cleanCp(c.name)}`};previous=c.name;return pair})};
+  const compactCheckpointName=value=>{
+    const name=cleanCp(value)||'Start',abbreviations={
+      'Högsta punkten':'HP','Mångsbodarna':'Mångs.','Evertsberg':'Evertsb.','Hökberg':'Hökb.','Mora Förvarning':'Mora förv.'
+    };
+    return abbreviations[name]||name;
+  };
+  const compactSegmentLabel=pair=>`${compactCheckpointName(pair.from)}–${compactCheckpointName(pair.to)}`;
   const segmentHeader=(from,to)=>`<span>${esc(cleanCp(from)||'Start')}</span><span>${esc(cleanCp(to))}</span>`;
   const splitRowsForResults=rows=>{const ids=new Set(rows.map(r=>r.id));return state.data.splits.filter(s=>ids.has(s.result_id))};
   const segmentSpeeds=(rows,seq)=>{const out=[];rows.forEach(r=>(advanced.splitsByResult.get(r.id)||[]).forEach(s=>{if(Number(s.sequence_no)===Number(seq)&&Number(s.pace_seconds_per_km)>0){const v=3600/Number(s.pace_seconds_per_km);if(Number.isFinite(v)&&v>0&&v<30)out.push(v)}}));return out};
@@ -289,11 +296,11 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
 
   function renderClassCompare(stats){
     const rows=stats.filter(x=>advanced.classSelection.includes(x.key)),el=document.querySelector('#classCompareChart'),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps);if(!rows.length){el.innerHTML='<div class="empty">Välj minst en klass.</div>';return}
-    const W=860,H=320,p={l:64,r:34,t:30,b:88},paceMode=currentSpeedUnit()==='pace',series=rows.map((g,gi)=>({key:g.key,color:CLASS_COLORS[gi%CLASS_COLORS.length],pts:cps.map(c=>safeMed(segmentSpeeds(g.rows,c.sequence_no)))})),displaySeries=series.map(s=>({...s,pts:s.pts.map(speed=>Number.isFinite(speed)?speedDisplayValue(speed):null),speeds:s.pts})),all=displaySeries.flatMap(s=>s.pts.filter(Number.isFinite));if(!all.length){el.innerHTML='<div class="empty">Mellantider saknas för valda klasser.</div>';return}
+    const W=860,H=300,p={l:64,r:34,t:30,b:66},paceMode=currentSpeedUnit()==='pace',series=rows.map((g,gi)=>({key:g.key,color:CLASS_COLORS[gi%CLASS_COLORS.length],pts:cps.map(c=>safeMed(segmentSpeeds(g.rows,c.sequence_no)))})),displaySeries=series.map(s=>({...s,pts:s.pts.map(speed=>Number.isFinite(speed)?speedDisplayValue(speed):null),speeds:s.pts})),all=displaySeries.flatMap(s=>s.pts.filter(Number.isFinite));if(!all.length){el.innerHTML='<div class="empty">Mellantider saknas för valda klasser.</div>';return}
     const min=Math.min(...all),max=Math.max(...all),x=i=>p.l+i*(W-p.l-p.r)/(cps.length-1||1),y=v=>paceMode?p.t+(v-min)*(H-p.t-p.b)/(max-min||1):p.t+(max-v)*(H-p.t-p.b)/(max-min||1);let out='';
     for(let i=0;i<=4;i++){const v=paceMode?min+(max-min)*i/4:max-(max-min)*i/4,yy=y(v);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:p.l-9,y:yy+4,'text-anchor':'end'},formatSpeedAxis(v))}
     displaySeries.forEach(s=>{const valid=s.pts.map((v,i)=>({v,speed:s.speeds[i],i})).filter(point=>Number.isFinite(point.v));out+=`<path class="class-duel-line" d="${valid.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${y(d.v)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3"/>`;valid.forEach(d=>{const tip=`${s.key} · ${pairs[d.i]?.label||cps[d.i]?.name}: ${formatSpeed(d.speed)}`,px=x(d.i),py=y(d.v);out+=`<circle class="interactive-chart-point class-duel-point" cx="${px}" cy="${py}" r="5.5" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${(px/W*100).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(tip)}</title></circle>`})});
-    pairs.forEach((pair,i)=>out+=svg('text',{x:x(i),y:H-34,'text-anchor':i===0?'start':'end',transform:`rotate(-32 ${x(i)} ${H-34})`,class:'class-duel-axis-label'},pair.label));
+    pairs.forEach((pair,i)=>{const px=x(i),py=H-22,full=pair.label,short=compactSegmentLabel(pair);out+=`<text x="${px}" y="${py}" text-anchor="${i===0?'start':i===pairs.length-1?'end':'middle'}" transform="rotate(-20 ${px} ${py})" class="class-duel-axis-label" tabindex="0" role="img" aria-label="${esc(full)}" data-chart-tip="${esc(full)}" data-chart-x="${Math.max(12,Math.min(88,px/W*100)).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(full)}</title>${esc(short)}</text>`});
     el.innerHTML=`<div class="class-chart-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.key)}</span>`).join('')}<span>${esc(window.SpeedUnits.unitLabel())}</span></div><div class="interactive-chart-tooltip" role="status" hidden></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Klassduell med interaktiva medianpunkter">${out}</svg>`;wireChartTooltips(el);
   }
   function renderClassIndex(){
