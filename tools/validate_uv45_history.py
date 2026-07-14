@@ -108,8 +108,11 @@ def collect_race_issues(conn: sqlite3.Connection, race_key: str, event_code: str
             issues.append(
                 f"{label}: kön saknas trots könsbärande klass {row['age_class']!r}."
             )
-        if not row["nationality"]:
-            issues.append(f"{label}: nationalitet saknas.")
+        source_nationality = uvtool.nationality_value_in_raw(row["raw_json"])
+        if not row["nationality"] and source_nationality:
+            issues.append(
+                f"{label}: nationalitet saknas trots källvärdet {source_nationality!r}."
+            )
         splits = conn.execute("""
             SELECT cp.race_id,cp.checkpoint_key,cp.sequence_no,sp.elapsed_seconds
             FROM splits sp JOIN checkpoints cp ON cp.id=sp.checkpoint_id

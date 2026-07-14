@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 import tempfile
@@ -106,6 +107,44 @@ class HistoricalParserRegressionTests(unittest.TestCase):
         self.assertIsNone(uvtool.sex_code(None, "Motion"))
         self.assertIsNone(uvtool.sex_code(None, None))
         self.assertIsNone(uvtool.sex_code(None, "Carmela"))
+
+    def test_exact_2024_northman_record_has_legitimately_missing_nationality(self) -> None:
+        parsed = uvtool.parse_detail_html(
+            observed_2015_detail(
+                name="Northman, Mikael", age_class="M45", status="I mål",
+                total_time="04:41:05",
+                splits=[
+                    ("Oxberg", "01:36:18"), ("Hökberg", "02:34:05"),
+                    ("Eldris", "03:40:02"), ("Mål", "04:41:05"),
+                ],
+            ),
+            "UL45_HCH8NDMR2401:HCH8NDMRA3894D",
+            "https://results.vasaloppet.se/2025/",
+            RACES["ultravasan45-2024"]["checkpoints"],
+        )
+        self.assertEqual("Northman, Mikael", parsed.name)
+        self.assertEqual("M45", parsed.age_class)
+        self.assertEqual("M", parsed.sex)
+        self.assertIsNone(parsed.nationality)
+        self.assertEqual("FINISHED", parsed.status)
+        self.assertEqual(4 * 3600 + 41 * 60 + 5, parsed.finish_seconds)
+        self.assertIsNone(uvtool.nationality_value_in_raw(parsed.raw))
+
+    def test_explicit_nationality_field_is_still_parsed(self) -> None:
+        html = observed_2015_detail(
+            name="Explicit Runner", age_class="M45", status="I mål",
+            total_time="04:00:00",
+            splits=[("Mål", "04:00:00")],
+        ).replace(
+            "<tr><th>Status</th>",
+            "<tr><th>Nationalitet</th><td>SWE</td></tr><tr><th>Status</th>",
+        )
+        parsed = uvtool.parse_detail_html(
+            html, "UL45_TEST:explicit-nationality", "https://example.invalid/",
+            RACES["ultravasan45-2024"]["checkpoints"],
+        )
+        self.assertEqual("SWE", parsed.nationality)
+        self.assertEqual("SWE", uvtool.nationality_value_in_raw(parsed.raw))
 
     def test_empty_club_city_never_becomes_the_label(self) -> None:
         html = """
@@ -268,6 +307,47 @@ class HistoricalImportSafetyTests(unittest.TestCase):
         self.assertEqual("F", uvtool.sex_code("Kvinna", None))
         self.assertEqual("mora_warning", RACES["ultravasan45-2025"]["checkpoints"][-2]["checkpoint_key"])
         self.assertEqual("smagan", RACES["ultravasan90-2025"]["checkpoints"][1]["checkpoint_key"])
+
+    def test_nationality_gate_uses_source_evidence_not_name_or_place(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            db = Path(temp) / "nationality.sqlite"
+            uvtool.init_db(db, ROOT / "config" / "races.json")
+            conn = uvtool.connect(db)
+            race = conn.execute("SELECT * FROM races WHERE race_key='ultravasan45-2024'").fetchone()
+            source = conn.execute("SELECT * FROM sources WHERE code='vasaloppet_mika'").fetchone()
+            checkpoints = RACES["ultravasan45-2024"]["checkpoints"]
+            missing = uvtool.ParsedResult(
+                source_result_id="UL45_HCH8NDMR2401:HCH8NDMRA3894D",
+                name="Northman, Mikael", sex="M", age_class="M45", nationality=None,
+                club="Stockholm", city="Mora", status="FINISHED", finish_seconds=16865,
+                splits=[
+                    {"checkpoint_key": "oxberg", "elapsed_seconds": 5778},
+                    {"checkpoint_key": "hokberg", "elapsed_seconds": 9245},
+                    {"checkpoint_key": "eldris", "elapsed_seconds": 13202},
+                    {"checkpoint_key": "mora", "elapsed_seconds": 16865},
+                ],
+                raw={
+                    "selector_values": {"nationality": None},
+                    "published_name_original": "Northman, Mikael",
+                },
+            )
+            uvtool.save_result(conn, race["id"], source["id"], 45.0, checkpoints, missing)
+            conn.commit()
+            issues = validate_uv45_history.collect_race_issues(
+                conn, "ultravasan45-2024", "UL45_HCH8NDMR2401"
+            )
+            self.assertFalse(any("nationalitet saknas" in issue for issue in issues), issues)
+
+            conn.execute(
+                "UPDATE results SET raw_json=? WHERE source_result_id=?",
+                (json.dumps({"selector_values": {"nationality": "SWE"}}), missing.source_result_id),
+            )
+            conn.commit()
+            issues = validate_uv45_history.collect_race_issues(
+                conn, "ultravasan45-2024", "UL45_HCH8NDMR2401"
+            )
+            self.assertTrue(any("nationalitet saknas trots källvärdet" in issue for issue in issues), issues)
+            conn.close()
 
 
 if __name__ == "__main__":

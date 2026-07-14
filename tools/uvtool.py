@@ -228,6 +228,31 @@ def clean_name_and_nationality(name: str | None, nationality: str | None = None)
     return clean_name, clean_nationality.upper() if clean_nationality else None
 
 
+def nationality_value_in_raw(raw: str | dict[str, Any] | None) -> str | None:
+    """Return a nationality that is visibly present in stored source fields.
+
+    A missing country is legitimate in older Mika pages.  Validators use this
+    evidence to distinguish source omissions from parser regressions, without
+    inferring nationality from a runner's name, club or city.
+    """
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (TypeError, ValueError):
+            return None
+    if not isinstance(raw, dict):
+        return None
+    for section in ("selector_values", "labeled_values"):
+        values = raw.get(section)
+        if isinstance(values, dict):
+            explicit = optional_source_value(values.get("nationality"))
+            if explicit:
+                return explicit
+    published_name = optional_source_value(raw.get("published_name_original"))
+    match = NATIONALITY_SUFFIX_RE.search(published_name or "")
+    return match.group(1).upper() if match else None
+
+
 def classify_club_city(value: str | None) -> tuple[str | None, str | None, str | None]:
     """Classify Mika's combined Klubb/Stad field conservatively.
 

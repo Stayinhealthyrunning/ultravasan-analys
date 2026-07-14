@@ -48,8 +48,11 @@ def collect_blockers(conn: sqlite3.Connection, config: dict, race_key: str, repo
             blockers.append(
                 f"{label}: kön saknas trots könsbärande klass {result['age_class']!r}."
             )
-        if not result["nationality"]:
-            blockers.append(f"{label}: nationalitet saknas.")
+        source_nationality = uvtool.nationality_value_in_raw(result["raw_json"])
+        if not result["nationality"] and source_nationality:
+            blockers.append(
+                f"{label}: nationalitet saknas trots källvärdet {source_nationality!r}."
+            )
         splits = conn.execute("""
             SELECT cp.checkpoint_key,cp.sequence_no,cp.distance_km,sp.elapsed_seconds
             FROM splits sp JOIN checkpoints cp ON cp.id=sp.checkpoint_id
