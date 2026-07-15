@@ -124,7 +124,7 @@ function renderFieldFlow(){
   const max=starters.length||1;
   el.innerHTML=`<div class="flow-summary"><strong>${starters.length.toLocaleString('sv-SE')} faktiska startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS är borttagna ur flödet. En senare passage innebär att löparen även räknas som passerad vid tidigare kontroller.</span></div><div class="flow-track">${stages.map((stage,i)=>{
     const next=stages[i+1],loss=next?Math.max(0,stage.n-next.n):0;
-    return `<div class="flow-stage"><div class="flow-node" style="--size:${Math.max(14,Math.sqrt(stage.n/max)*100)}%"><strong>${stage.n}</strong><span>${nEsc(stage.name)}</span></div>${next?`<div class="flow-link"><i></i>${loss?`<em>${loss} bröt före ${nEsc(next.name)}</em>`:'<em class="flow-zero">0 avhopp</em>'}</div>`:''}</div>`;
+    return `<div class="flow-stage"><div class="flow-node" style="--size:${Math.max(14,Math.sqrt(stage.n/max)*100)}%"><strong>${stage.n}</strong><span>${nEsc(stage.name)}</span></div>${next?`<div class="flow-link"><i></i>${loss?`<em><span>${loss}</span><small>bröt före ${nEsc(next.name)}</small></em>`:'<em class="flow-zero"><span>0</span><small>avhopp</small></em>'}</div>`:''}</div>`;
   }).join('')}</div>`;
 }
 function allHistories(){

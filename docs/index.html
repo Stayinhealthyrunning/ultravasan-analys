@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260714-units1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260715-ux1" rel="stylesheet"/>
 <link href="assets/runner-replay.css?v=20260714-stable1" rel="stylesheet"/>
 </head>
 <body>
@@ -133,14 +133,14 @@
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">FART GENOM LOPPET</p><h3>Medianfart per delsträcka</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderPace" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderPaceSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderPaceSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill" data-speed-unit-label>min/km</span></div></div><div class="chart world-chart" id="genderPaceChart"></div></article>
 <article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">PACING</p><h3>Fart jämfört med snittfarten i loppet</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderRetention" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderRetentionSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderRetentionSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">100 = snittfarten i loppet</span></div></div><div class="chart world-chart" id="genderRetentionChart"></div></article>
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">HISTORIK</p><h3>Deltagande och fullföljande över åren</h3></div><div class="chart-head-tools"><div class="sex-toggle-group" data-sex-control="genderHistory" aria-label="Välj vilka kön som ska visas"><label class="sex-toggle male"><input id="genderHistorySexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="genderHistorySexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">alla loppår</span></div></div><div class="chart world-chart" id="genderHistoryChart"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Vad sticker ut?</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
+<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">AUTOMATISKA INSIKTER</p><h3>Övrig statistik</h3></div></div><div class="insight-stack" id="genderInsights"></div></article>
 </div>
 </section>
 <section aria-label="Analys av åldersklasser" class="audience-world class-world" id="klasser">
 <div class="world-hero class-hero"><div><p class="eyebrow">KLASSLABBET</p><h2>Följ varje klass genom loppet</h2><p>Jämför åldersklasser, hitta klassernas starkaste delsträckor och se både klasspercentil och dominans mot klassmedianen.</p></div><div class="world-badge">Percentil inom år · kön · klass</div></div>
 <div class="class-cards" id="classCards"></div>
 <div class="world-grid class-lab-stack">
-<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fyra klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
+<article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSDUELL</p><h3>Välj upp till fem klasser</h3></div><span class="pill">klicka på klassbrickorna</span></div><div class="selector-chips" id="classChips"></div><div class="chart world-chart" id="classCompareChart"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">SÄLEN–MORA-INDEX</p><h3>Klassens starkaste prestationer</h3></div><span class="pill">dominans mot klassmedian</span></div><div class="metric-tabs class-index-tabs" id="classIndexTabs"></div><div class="index-ranking" id="classIndexTable"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">KLASSHISTORIK</p><h3>Median, startande och DNF över åren</h3></div><span class="pill">valda klasser</span></div><div class="chart world-chart class-history-chart" id="classHistoryChart"></div></article>
 <article class="panel world-card full"><div class="panel-head"><div><p class="eyebrow">FARTKARTA</p><h3>Klasser × delsträckor</h3></div><div class="chart-head-tools"><div class="unit-toggle-group" aria-label="Välj enhet i fartkartan"><label class="unit-toggle active"><input id="classHeatUnitPace" type="checkbox" checked> min/km</label><label class="unit-toggle"><input id="classHeatUnitSpeed" type="checkbox"> km/h</label></div><span class="pill" id="classHeatUnitLabel">median min/km</span></div></div><div class="class-heatmap-wrap" id="classHeatmap"></div></article>
@@ -210,7 +210,7 @@
 <div class="club-profile" id="clubProfile"></div>
 <div class="world-grid">
 <article class="panel world-card wide"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-TOPPEN</p><h3>Välj vad som ska premieras</h3></div></div><div class="metric-tabs" id="clubRankingTabs"></div><div class="club-rankings" id="clubRankings"></div></article>
-<article class="panel world-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-DNA</p><h3>Fem sidor av klubben</h3></div><span class="pill">relativt fältet</span></div><div class="club-dna" id="clubDna"></div></article>
+<article class="panel world-card club-dna-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-DNA</p><h3>Fem sidor av klubben</h3><p class="panel-subtitle">Varje rad förklarar vad måttet betyder; stapeln visar klubbens relativa nivå från 0 till 100.</p></div><span class="pill">relativt fältet</span></div><div class="club-dna" id="clubDna"></div></article>
 <article class="panel world-card wide club-chart-card club-compare-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-JÄMFÖRELSE</p><h3>Medianfart genom loppet</h3></div><span class="pill">upp till fyra klubbar/orter</span></div><div class="chart world-chart club-chart" id="clubCompareChart"></div></article>
 <article class="panel world-card club-chart-card club-history-card"><div class="panel-head"><div><p class="eyebrow">KLUBB/ORT-HISTORIK</p><h3>Starter, målgångar och median</h3></div></div><div class="chart world-chart club-chart" id="clubHistoryChart"></div></article>
 </div>
@@ -262,9 +262,9 @@
 <script src="assets/speed-units.js?v=20260714-units1"></script>
 <script src="assets/result-status.js?v=20260714-status1"></script>
 <script src="assets/race-media.js?v=20260714-replay1"></script>
-<script src="assets/runner-replay.js?v=20260714-units1"></script>
-<script src="assets/app.js?v=20260714-units1"></script>
-<script src="assets/nerdlab.js?v=20260714-units1"></script>
-<script src="assets/audience-analytics.js?v=20260714-units1"></script>
+<script src="assets/runner-replay.js?v=20260715-ux1"></script>
+<script src="assets/app.js?v=20260715-ux1"></script>
+<script src="assets/nerdlab.js?v=20260715-ux1"></script>
+<script src="assets/audience-analytics.js?v=20260715-ux1"></script>
 </body>
 </html>

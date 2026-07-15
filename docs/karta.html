@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Animerad kartjämförelse av 1–5 löpare i Ultravasan 90 eller Ultravasan 45.">
   <title>Kartduell – Ultravasan</title>
-  <link rel="stylesheet" href="assets/map.css?v=20260711-layout2">
+  <link rel="stylesheet" href="assets/map.css?v=20260715-elevation1">
 </head>
 <body class="map-page">
   <div id="map" aria-label="Karta över Ultravasan"></div>
@@ -43,6 +43,11 @@
     <span class="event-dot"></span><div id="eventText">Tryck på start för att spela upp loppet.</div>
   </section>
 
+  <section class="duel-elevation glass" id="duelElevation" aria-label="Höjdprofil för aktuell bana">
+    <div class="duel-elevation-head"><span>HÖJDPROFIL</span><strong id="duelElevationRoute">Aktuell bana</strong></div>
+    <svg id="duelElevationChart" viewBox="0 0 1200 94" role="img" aria-label="Höjdprofil med löparnas synkroniserade positioner"></svg>
+  </section>
+
   <section class="race-strip glass" id="raceStrip" aria-label="Löparnas position längs banan">
     <div class="strip-title"><span>0 km · Sälen</span><strong id="stripLeader">Start</strong><span id="stripFinishDistance">92 km · Mora</span></div>
     <div class="strip-track" id="stripTrack"></div>
@@ -61,8 +66,10 @@
     </div>
     <div class="play-options">
       <label>Hastighet<select id="speedSelect">
-        <option value="60">60×</option><option value="120">120×</option><option value="300" selected>300×</option>
-        <option value="600">600×</option><option value="1200">1200×</option><option value="2400">2400×</option>
+        <option value="30s">Hela loppet på 30 sekunder</option>
+        <option value="60s" selected>Hela loppet på 1 minut</option>
+        <option value="120s">Hela loppet på 2 minuter</option>
+        <option value="180s">Hela loppet på 3 minuter</option>
       </select></label>
       <label>Följ<select id="cameraMode">
         <option value="overview">Hela banan</option><option value="group" selected>Löpargruppen</option><option value="leader">Ledaren</option>
@@ -79,6 +86,6 @@
   <script src="data/ultravasan-routes.js?v=20260714-gpx1"></script>
   <script src="assets/speed-units.js?v=20260714-units1"></script>
   <script src="assets/race-media.js?v=20260714-replay1"></script>
-  <script src="assets/map.js?v=20260714-units1"></script>
+  <script src="assets/map.js?v=20260715-elevation1"></script>
 </body>
 </html>
