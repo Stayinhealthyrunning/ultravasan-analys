@@ -28,6 +28,9 @@ assert.strictEqual(finishBins.step,900,'sluttidshistogrammet ska använda exakta
 assert.deepStrictEqual(finishBins.bins.map(bin=>bin.count),[2,2,1],'en exakt kvartgräns ska konsekvent tillhöra nästa intervall');
 assert.deepStrictEqual(analytics.fixedFinishBins([quarter-1,quarter,quarter+1]).bins.map(bin=>bin.count),[1,2],'sekunden före och efter en kvartgräns ska hamna på varsin sida');
 assert.strictEqual(analytics.finishBinTime(quarter),'8:15','histogrametiketter ska sakna sekunder');
+const wideHistogram=analytics.finishHistogramGeometry(40);
+assert.ok(wideHistogram.barWidth<=28&&wideHistogram.barWidth<wideHistogram.cellWidth,'histogramstaplarna ska rymmas i en responsiv 1000-enhetersvy med synligt mellanrum');
+assert.ok(wideHistogram.barOffset>0,'histogramstaplarna ska centreras i respektive 15-minutersintervall');
 const clubs=[{key:'a',name:'Klubb A',rows:[{id:1,name_as_published:'Ada',finish_seconds:100},{id:2,name_as_published:'Bo',finish_seconds:200}]},{key:'b',name:'Ort B',rows:[{id:1,name_as_published:'Ada',finish_seconds:100},{id:3,name_as_published:'Cia',finish_seconds:150}]}];
 assert.deepStrictEqual(analytics.selectedClubProfiles(clubs,['b','a']).map(club=>club.key),['b','a'],'klubbprofiler ska följa urvalsordningen');
 assert.deepStrictEqual(analytics.selectedClubProfiles(clubs,['a']).map(club=>club.key),['a'],'borttagning ska räkna om visade profiler');
@@ -69,6 +72,10 @@ assert.ok(app.includes('15-minutersintervall från')&&audience.includes('15-minu
 assert.ok(audience.includes('renderClubProfiles(selected,stats)')&&audience.includes('mergedClubFinishers(clubs,20)'),'alla valda profiler och en gemensam snabbast-lista ska renderas');
 assert.ok(audience.includes('entry.clubNames.join')&&audience.includes('club-profile-summary'),'snabbast-listan ska visa klubb/ort intill löparen');
 assert.ok(html.includes('dynamics-head-tools')&&css.includes('.dynamics-head-tools .sex-toggle-group{flex-wrap:nowrap}'),'Loppets dynamik ska hålla Män och Kvinnor sida vid sida');
+assert.ok(html.includes('grid two overview-chart-row')&&html.includes('finish-distribution-card')&&html.includes('race-dynamics-card'),'översiktsdiagrammen ska ligga i samma dedikerade gridrad');
+assert.ok(css.includes('.grid.two.overview-chart-row{width:100%;max-width:100%;grid-template-columns:minmax(0,3.25fr) minmax(300px,1fr)'),'desktopgriden ska ge cirka 75/25 utan att lämna huvudcontainern');
+assert.ok(!app.includes('style="min-width:${W}px"')&&!audience.includes('style="min-width:${W}px"'),'histogrammets SVG får inte tvingas bredare än kortet på desktop');
+assert.ok(audience.includes("overviewPace?420:760")&&audience.includes("compactSegmentLabel({from:parts[0],to:parts[1]})"),'dynamikdiagrammet ska använda ett smalt viewBox och kompakta, läsbara segmentetiketter');
 assert.ok(html.includes('Median, startande och DNF över åren'));
 assert.ok(html.includes('Välj upp till fem klasser')&&audience.includes('advanced.classSelection.length<5'),'Klassduellen ska tillåta högst fem val');
 assert.ok(audience.includes('classSelectionInitialized')&&audience.includes('Inga klasser valda.'),'användaren ska kunna avmarkera alla klasser utan automatisk återställning');
