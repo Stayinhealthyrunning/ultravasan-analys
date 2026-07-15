@@ -3,6 +3,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const replay=require('../docs/assets/runner-replay.js');
+const mapDuel=require('../docs/assets/map.js');
 const speedUnits=require('../docs/assets/speed-units.js');
 const media=require('../docs/assets/race-media.js');
 const registry=require('../data/routes/ultravasan90-routes.json');
@@ -95,6 +96,8 @@ assert.ok(renderedOld.includes('▲ snabbare · ● jämn · ▼ tuffare'),'Fär
 assert.ok(renderedOld.includes('runner-replay-dashboard')&&renderedOld.includes('runner-replay-now')&&renderedOld.includes('runner-replay-map-panel')&&renderedOld.includes('runner-replay-insights'),'Desktoplayouten ska ha liveinfo, central karta och insikter som tre separata delar');
 assert.ok(renderedOld.includes('Interaktiv GPS-karta'),'Den centrala visualiseringen ska beskrivas som en GPS-karta');
 assert.ok(renderedOld.includes('<option value="60s" selected>Hela loppet på 1 minut</option>'),'En minut ska vara standardhastighet');
+const replaySpeedOptions=[...renderedOld.matchAll(/<option value="([^"]+)"[^>]*>(Hela loppet[^<]+)<\/option>/g)].map(match=>[match[1],match[2]]);
+assert.deepStrictEqual(replaySpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Loppreplay ska endast erbjuda de fyra fasta sluttiderna');
 assert.ok(renderedOld.includes('data-map-action="zoom-in"')&&renderedOld.includes('data-map-action="zoom-out"')&&renderedOld.includes('data-map-action="fit"')&&renderedOld.includes('data-map-action="follow"'),'Kompletta och tangentbordsåtkomliga kartkontroller saknas');
 assert.ok(renderedOld.includes('aria-label="Zooma in på GPS-kartan"')&&renderedOld.includes('aria-label="Visa hela banan"')&&renderedOld.includes('aria-pressed="true"'),'Zoom- och följkontroller måste ha tillgängliga namn och tillstånd');
 assert.ok(!renderedOld.includes('runner-elevation-high'),'Separat GPX-baserad toppmarkör får inte finnas i höjdprofilen');
@@ -222,7 +225,19 @@ assert.ok(css.includes('grid-auto-rows:minmax(72px,auto)')&&css.includes('min-he
 assert.ok(css.includes('border:1px solid transparent')&&css.includes('transition:border-color .18s,background-color .18s,box-shadow .18s'),'Aktivt delsträckekort får inte ändra mått eller animera layoutvärden');
 assert.ok(renderedOld.includes(`--pace-fast:${replay.PACE_COLORS[0]}`)&&renderedOld.includes(`--pace-even:${replay.PACE_COLORS[2]}`)&&renderedOld.includes(`--pace-slow:${replay.PACE_COLORS[4]}`),'Legenden ska återanvända segmentens färgkonfiguration');
 assert.ok(renderedOld.includes('Snabbare än eget snitt')&&renderedOld.includes('Nära eget snitt')&&renderedOld.includes('Långsammare än eget snitt'),'Gemensam textlegend saknas');
+assert.ok(renderedOld.includes('Jämnast tempo')&&!renderedOld.includes('Jämnaste följden'),'Prestationsinsikten ska använda den nya rubriken');
 assert.ok(renderedUv45.includes('data-elevation-checkpoint="mora_warning"'),'UV45:s Mora Förvarning ska finnas i höjdprofilen');
 assert.ok(renderedOld.includes('data-replay-scrubber')&&renderedOld.includes('aria-live="polite"'),'Tangentbordsreglage och live-status saknas');
+
+// Kartduellen använder samma fyra tidsval och en synkroniserad höjdprofil.
+const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapCss=fs.readFileSync(require.resolve('../docs/assets/map.css'),'utf8'),mapSource=fs.readFileSync(require.resolve('../docs/assets/map.js'),'utf8'),speedBlock=mapHtml.match(/<select id="speedSelect">([\s\S]*?)<\/select>/)?.[1]||'',duelSpeedOptions=[...speedBlock.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/g)].map(match=>[match[1],match[2].trim()]);
+assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
+assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
+assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
+assert.strictEqual(mapDuel.duelPlaybackRate(7200,'180s'),40,'treminutersvalet ska skala hela duellen till exakt tre minuter');
+assert.ok(Number.isFinite(mapDuel.elevationAtDistance(uv90New.route,30)),'Kartduellen ska interpolera höjd ur vald GPX-rutt');
+assert.ok(mapHtml.includes('id="duelElevationChart"')&&mapSource.includes('updateDuelElevation(states)'),'Kartduellen saknar synkroniserad höjdprofil');
+assert.ok(mapSource.includes('activeReferenceRoute(app.models,app.usedRoutes,app.registry)'),'Höjdprofilen ska välja samma års- och loppspecifika rutt som kartan');
+assert.ok(mapCss.includes('.duel-elevation-runner')&&mapCss.includes('.duel-elevation-checkpoint'),'Höjdprofilens löpare och kontroller saknar visuell styling');
 
 console.log('OK: interaktiv RunnerReplayModel för UV90, UV45, DNF, höjd, färg, musik och tillgänglighet');
