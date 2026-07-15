@@ -232,6 +232,9 @@ assert.ok(renderedOld.includes('data-replay-scrubber')&&renderedOld.includes('ar
 // Kartduellen använder samma fyra tidsval och en synkroniserad höjdprofil.
 const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapCss=fs.readFileSync(require.resolve('../docs/assets/map.css'),'utf8'),mapSource=fs.readFileSync(require.resolve('../docs/assets/map.js'),'utf8'),speedBlock=mapHtml.match(/<select id="speedSelect">([\s\S]*?)<\/select>/)?.[1]||'',duelSpeedOptions=[...speedBlock.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/g)].map(match=>[match[1],match[2].trim()]);
 assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
+assert.ok(/<option value="120s" selected>Hela loppet på 2 minuter<\/option>/.test(speedBlock),'Kartduellen ska öppnas med två minuter som standard');
+assert.ok(mapSource.includes("speed:'120s'")&&mapSource.includes("mode||'120s'"),'Kartduellens sessionsstandard och fallback ska vara två minuter');
+assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Individuell loppreplay ska fortsatt återställas till en minut');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'180s'),40,'treminutersvalet ska skala hela duellen till exakt tre minuter');
