@@ -26,7 +26,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamil
 if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',yearTimer:null,currentClubStats:[],clubSearchReady:false};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:''};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const resultStatus=r=>window.ResultStatus.classify(r,{hasSplit:advanced.splitEvidence.has(r?.id)});
@@ -261,7 +261,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function renderClassWorld(){
     const groups=classGroups(),stats=[...groups].map(([key,rows])=>{const st=rows.filter(isStarter),fin=rows.filter(isFinished);return{key,rows,starters:st.length,finishers:fin.length,rate:pct(fin.length,st.length),median:safeMed(fin.map(r=>r.finish_seconds)),dnf:pct(st.filter(isDnf).length,st.length),top10:quantile(fin.map(r=>r.finish_seconds),.1)}}).sort((a,b)=>compareClasses(a.key,b.key));
     const valid=stats.map(x=>x.key);advanced.classSelection=advanced.classSelection.filter(x=>valid.includes(x)).sort(compareClasses);if(!advanced.classSelectionInitialized){advanced.classSelection=stats.slice(0,4).map(x=>x.key).sort(compareClasses);advanced.classSelectionInitialized=true}
-    document.querySelector('#classCards').innerHTML=stats.map(x=>`<button class="class-stat-card ${advanced.classSelection.includes(x.key)?'selected':''} ${x.key.startsWith('W')?'female-class':'male-class'}" data-class="${esc(x.key)}"><span>${esc(x.key)}</span><strong>${x.starters}</strong><small>startande · ${x.rate}% i mål</small><em>median ${fmtTime(x.median)}</em></button>`).join('');document.querySelectorAll('.class-stat-card').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class));renderClassChips(stats);renderClassHeatmap(stats);renderClassCompare(stats);renderClassIndex();renderClassHistory();
+    document.querySelector('#classCards').innerHTML=stats.map(x=>`<button class="class-stat-card ${advanced.classSelection.includes(x.key)?'selected':''} ${x.key.startsWith('W')?'female-class':'male-class'}" data-class="${esc(x.key)}"><span>${esc(x.key)}</span><strong>${x.starters}</strong><small>startande · ${x.rate}% i mål</small><em>median ${fmtTime(x.median)}</em></button>`).join('');document.querySelectorAll('.class-stat-card').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class));renderClassChips(stats);renderClassHeatmap(stats);renderClassCompare(stats);renderClassIndex();renderClassHistory();renderClassEvolution();
   }
   function toggleClass(k){if(advanced.classSelection.includes(k))advanced.classSelection=advanced.classSelection.filter(x=>x!==k);else if(advanced.classSelection.length<5)advanced.classSelection.push(k);advanced.classSelection.sort(compareClasses);renderClassWorld()}
   function renderClassChips(stats){document.querySelector('#classChips').innerHTML=stats.map(x=>`<button class="selector-chip ${advanced.classSelection.includes(x.key)?'active':''}" data-class="${esc(x.key)}">${esc(x.key)} <small>${x.starters}</small></button>`).join('');document.querySelectorAll('#classChips .selector-chip').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class))}
@@ -415,6 +415,16 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     el.innerHTML=`<div class="class-chart-legend">${data.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.k)}</span>`).join('')}</div><div class="class-history-key"><span><i class="median"></i>Median · vänster axel</span><span><i class="starters"></i>Startande · höger axel</span><span><i class="dnf"></i>DNF · höger axel</span></div><div class="interactive-chart-tooltip" role="status" hidden></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Klasshistorik: median sluttid på vänster axel samt startande och DNF på höger axel">${out}${bars}${lines}</svg>`;wireChartTooltips(el);
   }
 
+  function renderClassEvolution(){
+    const el=document.querySelector('#classEvolutionChart'),api=window.ClassEvolution;if(!el||!api)return;
+    const filters=filterValues(),cacheKey=[state.raceFamily,filters.sex,filters.club,filters.status].join('|'),races=familyRaces().slice().sort((a,b)=>a.year-b.year);
+    let model=advanced.classEvolutionCache.get(cacheKey);
+    if(!model){model=api.aggregateClassHistory({races,results:filteredAcrossYears({ignoreClass:true}),getClass:r=>normClass(r.age_class),getGender:sexKey,isStarter,isFinished});advanced.classEvolutionCache.set(cacheKey,model)}
+    if(!advanced.classEvolutionController)advanced.classEvolutionController=api.createController(el,{playButton:document.querySelector('#classEvolutionPlay'),pauseButton:document.querySelector('#classEvolutionPause'),restartButton:document.querySelector('#classEvolutionRestart'),slider:document.querySelector('#classEvolutionSlider'),yearLabel:document.querySelector('#classEvolutionYear'),statusLabel:document.querySelector('#classEvolutionStatus')});
+    const raceName=state.raceFamily==='uv45'?'Ultravasan 45':'Ultravasan 90';
+    if(advanced.classEvolutionModel!==model){advanced.classEvolutionModel=model;advanced.classEvolutionKey=cacheKey;advanced.classEvolutionController.update({model,selectedClasses:advanced.classSelection,raceName})}else advanced.classEvolutionController.setSelected(advanced.classSelection);
+  }
+
   function clubBase(){return filteredCurrent({ignoreClub:true})}
   function clubStatsCurrent(){
     const map=new Map();clubBase().forEach(r=>{const k=advanced.clubKeyByResult.get(r.id);if(!k)return;if(!map.has(k))map.set(k,[]);map.get(k).push(r)});return [...map].map(([key,rows])=>makeClubStats(key,rows)).sort((a,b)=>b.starters-a.starters)
@@ -487,7 +497,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
