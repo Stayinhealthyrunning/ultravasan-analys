@@ -37,6 +37,7 @@ assert.strictEqual(m35_2015.finisherCount,2);
 assert.strictEqual(m35_2015.medianSpeedKmh,10.625);
 assert.strictEqual(m35_2015.participantDelta,1);
 assert.strictEqual(m35_2015.speedDelta,1.125);
+assert.strictEqual(m35_2015.paceDeltaSeconds,-40,'tempoförändringen ska beräknas i sekunder per kilometer');
 assert.ok(!model.points.some(point=>point.className==='W35'&&point.year===2014),'saknad klass får inte fyllas med påhittad data');
 assert.ok(!model.points.some(point=>point.className==='M50'&&point.year===2015),'klassluckor ska förbli tomma');
 
@@ -56,8 +57,15 @@ assert.ok(timing.pauseMs>=300&&timing.pauseMs<=600);
 assert.ok(timing.totalMs>=15000&&timing.totalMs<=25000,'full animation ska normalt ta 15–25 sekunder');
 assert.strictEqual(evolution.classColor('M35','M'),evolution.classColor('M35','M'),'klassfärg ska vara deterministisk');
 assert.notStrictEqual(evolution.classColor('M35','M'),evolution.classColor('W35','F'),'herr- och damklasser ska ha olika färgskalor');
+assert.strictEqual(evolution.speedToPace(12),5,'12 km/h ska motsvara 5:00 min/km');
+assert.strictEqual(evolution.formatPaceFromSpeed(9.5),'6:19 min/km');
+assert.strictEqual(evolution.formatPaceDelta(0),'0:00 min/km');
+const controller=Object.create(evolution.ClassEvolutionController.prototype);controller.model=model;controller.viewWidth=1000;
+assert.ok(controller._y(12)<controller._y(8),'snabbare tempo ska ligga högre när min/km-skalan är inverterad');
+assert.deepStrictEqual(controller._paceDomain(),controller._paceDomain(),'Y-domänen ska vara stabil och baseras på hela historikmodellen');
 const tooltip=evolution.pointTooltip(m35_2015,'Ultravasan 90','startande');
-assert.ok(tooltip.includes('10,63 km/h')&&tooltip.includes('8:30:00')&&tooltip.includes('+1 startande')&&tooltip.includes('+1,13 km/h'),'tooltip ska använda svenska tal, tid och förändringar');
+assert.ok(tooltip.includes('5:39 min/km')&&tooltip.includes('8:30:00')&&tooltip.includes('+1 startande')&&tooltip.includes('−0:40 min/km'),'tooltip ska använda svenskt tempo, tid och förändringar');
+assert.ok(!tooltip.includes('median 10,63 km/h'),'min/km ska vara tooltipens primära medianmått');
 
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const source=fs.readFileSync(path.join(root,'docs/assets/class-evolution.js'),'utf8');
@@ -69,6 +77,9 @@ assert.ok(audience.includes('selectedClasses:advanced.classSelection')&&audience
 assert.ok(source.includes('requestAnimationFrame(tick)')&&source.includes('cancelAnimationFrame(this.frame)'),'animationen ska använda och städa requestAnimationFrame');
 assert.ok(source.includes("matchMedia('(prefers-reduced-motion: reduce)')")&&source.includes('Reducerad rörelse'),'reducerad rörelse ska respekteras');
 assert.ok(source.includes('historyMax=moving?fromIndex:fromIndex-1'),'framtida spår får inte visas');
+assert.ok(source.includes("yTitle.textContent='Medianfart, min/km'")&&source.includes('formatPaceValue(value,false)'),'Y-axeln ska visa min/km');
+assert.ok(source.includes("class:'class-evolution-shadow',tabindex:'0',role:'img'")&&source.includes('this._bindTooltipTarget(shadow)'),'historiska skuggpunkter ska vara fokuserbara och återanvända tooltipen');
 assert.ok(css.includes('.class-evolution-chart{position:relative;width:100%;height:600px')&&css.includes('@media(max-width:620px)'),'diagrammet ska ha responsiva desktop- och mobilhöjder');
+assert.ok(css.includes('.class-evolution-shadow{pointer-events:auto;cursor:help'),'historiska skuggpunkter ska ta emot pekarinteraktion');
 
 console.log('OK: Gapminder-inspirerad klassutveckling, aggregation, animation, spår och tillgänglighet');
