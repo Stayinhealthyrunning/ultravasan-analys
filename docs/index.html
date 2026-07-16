@@ -7,7 +7,7 @@
 <meta content="Sälen-Mora splits – analysera din resa i Ultravasan från Sälen till Mora." name="description"/>
 <title>Sälen-Mora splits</title>
 <link href="assets/styles.css?v=20260715-ux1" rel="stylesheet"/>
-<link href="assets/runner-replay.css?v=20260714-stable1" rel="stylesheet"/>
+<link href="assets/runner-replay.css?v=20260716-livecompare5" rel="stylesheet"/>
 <link href="data:," rel="icon"/>
 </head>
 <body>
@@ -39,10 +39,10 @@
 <button class="nav-action" id="playYears" title="Spela loppåren i följd">▶ Spela år</button>
 <button class="nav-action" id="shareView" title="Kopiera en länk till aktuell vy">Dela vy</button>
 </div>
-</nav><section class="analysis-scope individual-scope panel" id="individual-analysis"><div><p class="eyebrow">INDIVIDUELL ANALYS</p><h2>Sök en löpare eller bygg en kartduell</h2><p>Valen här öppnar en individuell löparprofil eller jämför högst fem utvalda löpare. De påverkar inte diagrammen för hela startfältet längre ned.</p></div></section><section class="runner-lookup-panel panel"><div class="lookup-copy"><span class="scope-chip individual">Individuell profil</span><h3>Hitta en löpare</h3><p>Välj år eller sök i hela historiken. Klicka på ett namn för att öppna löparens resultat och mellantider.</p></div><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
+</nav><section class="analysis-scope individual-scope runner-lookup-panel individual-runner-panel panel" id="individual-analysis"><div class="individual-runner-copy"><p class="eyebrow">Individuell loppanalys</p><h2>Analysera en löpares lopp i realtid</h2><p>Välj år eller sök i hela historiken. Klicka på ett namn för att i realtid analysera löparens lopp, mellantider, placering totalt, placering mot klass samt få prestationsinsikter</p></div><div class="individual-runner-search"><h3>Hitta en löpare</h3><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
 <label>Sök löpare<input autocomplete="off" id="nameFilter" placeholder="Namn eller startnummer" type="search"/></label>
 <div class="main-runner-suggestions" hidden="" id="mainRunnerSuggestions"></div>
-</div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
+</div></div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
 <div class="compare-copy"><span class="scope-chip individual">Individuell jämförelse</span>
 <p class="eyebrow">ANIMERAD KARTDUELL</p>
 <h2>Se loppet utvecklas på kartan</h2>
@@ -97,13 +97,14 @@
 </div>
 <div class="insight-grid">
 <article class="panel insight-card wide placement-card">
-<div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div class="chart-head-tools placement-head-tools"><div class="sex-toggle-group" data-sex-control="placement" aria-label="Visa kön i placeringsmotorn"><label class="sex-toggle male"><input id="placementSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="placementSexF" type="checkbox" checked> Kvinnor</label></div><span class="pill">håll över punkterna</span></div></div>
+<div class="panel-head"><div><p class="eyebrow">PLACERINGSMOTOR</p><h3>Tid mot placering</h3></div><div class="chart-head-tools placement-head-tools"><div class="sex-toggle-group" data-sex-control="placement" aria-label="Visa kön i placeringsmotorn"><label class="sex-toggle male"><input id="placementSexM" type="checkbox" checked> Män</label><label class="sex-toggle female"><input id="placementSexF" type="checkbox" checked> Kvinnor</label></div><button class="placement-zoom-reset" id="placementZoomReset" type="button" disabled>Återställ zoom</button><span class="pill">dra över ett område för att zooma</span></div></div>
 <div class="chart compact-chart" id="placementScatter"></div>
 </article>
 <article class="panel insight-card target-card target-time-card">
 <p class="eyebrow">MÅLTIDSSIMULATOR</p><h3>Vad räcker tiden till?</h3>
 <div class="target-time" id="targetTimeLabel">–</div>
 <label class="target-select-wrap" for="targetTimeSelect"><span>Välj måltid (jämna minuter)</span><select aria-label="Välj måltid i jämna minuter" id="targetTimeSelect"></select></label>
+<aside class="target-medal-times" id="targetMedalTimes" aria-label="Aktuella prestationsmedaljtider för Ultravasan 90" hidden><strong>Prestationsmedalj Ultravasan 90</strong><span>Herrar under 10:00:00 <small>(max 09:59:59)</small></span><span>Damer under 11:36:00 <small>(max 11:35:59)</small></span></aside>
 <div class="target-result" id="targetTimeResult"></div>
 </article>
 <article class="panel insight-card dnf-card analysis-half-card">
@@ -264,10 +265,10 @@
 <script src="assets/speed-units.js?v=20260714-units1"></script>
 <script src="assets/result-status.js?v=20260714-status1"></script>
 <script src="assets/race-media.js?v=20260714-replay1"></script>
-<script src="assets/runner-replay.js?v=20260715-ux1"></script>
-<script src="assets/app.js?v=20260715-ux1"></script>
+<script src="assets/runner-replay.js?v=20260716-livecompare4"></script>
+<script src="assets/app.js?v=20260716-livecompare5"></script>
 <script src="assets/nerdlab.js?v=20260715-ux1"></script>
 <script src="assets/class-evolution.js?v=20260715-gapminder1"></script>
-<script src="assets/audience-analytics.js?v=20260715-ux1"></script>
+<script src="assets/audience-analytics.js?v=20260716-livecompare5"></script>
 </body>
 </html>
