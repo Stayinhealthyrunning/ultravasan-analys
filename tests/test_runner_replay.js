@@ -95,21 +95,34 @@ assert.ok((renderedOld.match(new RegExp(firstColor,'g'))||[]).length>=2,'Samma s
 assert.ok(renderedOld.includes('▲ snabbare · ● jämn · ▼ tuffare'),'Färg får inte vara enda informationsbärare');
 assert.ok(renderedOld.includes('runner-replay-dashboard')&&renderedOld.includes('runner-replay-now')&&renderedOld.includes('runner-replay-map-panel')&&renderedOld.includes('runner-replay-insights'),'Desktoplayouten ska ha liveinfo, central karta och insikter som tre separata delar');
 assert.ok(renderedOld.includes('Interaktiv GPS-karta'),'Den centrala visualiseringen ska beskrivas som en GPS-karta');
-assert.ok(renderedOld.includes('<option value="60s" selected>Hela loppet på 1 minut</option>'),'En minut ska vara standardhastighet');
+assert.ok(renderedOld.includes('<option value="120s" selected>Hela loppet på 2 minuter</option>'),'Två minuter ska vara standardhastighet');
 const replaySpeedOptions=[...renderedOld.matchAll(/<option value="([^"]+)"[^>]*>(Hela loppet[^<]+)<\/option>/g)].map(match=>[match[1],match[2]]);
 assert.deepStrictEqual(replaySpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Loppreplay ska endast erbjuda de fyra fasta sluttiderna');
 assert.ok(renderedOld.includes('data-map-action="zoom-in"')&&renderedOld.includes('data-map-action="zoom-out"')&&renderedOld.includes('data-map-action="fit"')&&renderedOld.includes('data-map-action="follow"'),'Kompletta och tangentbordsåtkomliga kartkontroller saknas');
 assert.ok(renderedOld.includes('aria-label="Zooma in på GPS-kartan"')&&renderedOld.includes('aria-label="Visa hela banan"')&&renderedOld.includes('aria-pressed="true"'),'Zoom- och följkontroller måste ha tillgängliga namn och tillstånd');
+assert.ok(renderedOld.includes('runner-replay-map-tiles')&&renderedOld.includes('https://tile.openstreetmap.org/'),'Löparkartan ska använda samma riktiga OpenStreetMap-bakgrund som Kartkampen');
+assert.ok(renderedOld.includes('runner-replay-rank-card')&&renderedOld.includes('data-replay-value="rank"><span>')&&renderedOld.includes('data-replay-value="class-rank"><span>'),'Placeringarnas etikett och värde ska ha separata block');
+assert.ok(renderedOld.includes('Banan i fäders spår för framtids segrar')&&!renderedOld.includes('Banan genom landskapet'),'Kartans rubrik ska använda den nya texten');
+assert.ok(renderedOld.includes('id="runnerReplayInsightsTab" aria-controls="runnerReplayInsightsPanel" aria-selected="true" tabindex="0"')&&renderedOld.includes('id="runnerReplayComparisonsTab" aria-controls="runnerReplayComparisonsPanel" aria-selected="false" tabindex="-1"'),'Insikter ska vara runner replay-standardflik');
+assert.ok(renderedOld.includes('data-analysis-panel="comparisons" hidden')&&!renderedOld.includes('data-analysis-panel="insights" hidden'),'Endast jämförelsepanelen ska vara dold i standardläget');
 assert.ok(!renderedOld.includes('runner-elevation-high'),'Separat GPX-baserad toppmarkör får inte finnas i höjdprofilen');
 assert.ok(renderedNew.includes('data-elevation-checkpoint="high_point"'),'Den officiella kontrollen Högsta punkten ska finnas kvar');
 
 // Zoom, panorering, helbana och följning ändrar bara kartvyn, aldrig distansmodellen.
 const fittedView=replay.fitMapView(),zoomedView=replay.zoomMapView(fittedView,2,{x:300,y:200});
 assert.ok(zoomedView.scale>fittedView.scale,'Zoom in ska ändra kartans skala');
+const initialUv90View=replay.initialMapView(uv90Old),initialUv45View=replay.initialMapView(uv45Current);
+assert.ok(replay.zoomMapView(initialUv90View,initialUv90View.scale*1.1).scale>initialUv90View.scale,'Zoom in får inte zooma ut från den nya standardvyn');
+assert.ok(initialUv90View.scale>1&&initialUv45View.scale>1,'UV90 och UV45 ska båda starta tydligt mer inzoomade än helbanevyn');
+assert.ok(Math.abs(uv90Old.segments.length/initialUv90View.scale-1.5)<.01&&Math.abs(uv45Current.segments.length/initialUv45View.scale-1.5)<.01,'Startvyn ska motsvara cirka 1,5 delsträckor');
 assert.strictEqual(replay.zoomMapView(zoomedView,1,{x:300,y:200}).scale,1,'Zoom ut till miniminivå ska visa hel banbredd');
 assert.deepStrictEqual(replay.fitMapView(),{scale:1,x:0,y:0,follow:true},'Visa hela banan ska återställa kartvyn och följningen');
 const followedView=replay.followMapView({...zoomedView,follow:true},{x:460,y:215});
 assert.ok(Math.abs(followedView.x+followedView.scale*460-460)<.001&&Math.abs(followedView.y+followedView.scale*215-215)<.001,'Följ löparen ska centrera markören vid inzoomning');
+const resumedView=replay.activateFollowMapView({...replay.fitMapView(),follow:false},initialUv90View.scale,{x:460,y:215});
+assert.strictEqual(resumedView.scale,initialUv90View.scale,'Följ löparen efter helbanevy ska återställa den etablerade följzoomen');
+assert.strictEqual(resumedView.follow,true,'Följ löparen efter helbanevy ska återaktivera följläget');
+assert.ok(Math.abs(resumedView.x+resumedView.scale*460-460)<.001&&Math.abs(resumedView.y+resumedView.scale*215-215)<.001,'Återaktiverad följning ska centrera aktuell löpare');
 assert.strictEqual(replay.panMapView(followedView,20,10).follow,false,'Manuell panorering ska pausa automatisk följning');
 
 // Mercatorprojektionen använder samma radianbaserade enhet för longitud och latitud.
@@ -185,7 +198,10 @@ const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8')
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
 assert.ok(appSource.includes('wholeRacePace(r,race)'),'Profilhuvudets snittfart ska beräknas från sluttid och loppdistans');
 assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
-assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Återställning ska välja en minuts replay');
+assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Återställning ska välja två minuters replay');
+assert.ok(replaySource.includes("const mode=this.speedSelect?.value||'120s'")&&replaySource.includes('Number(String(mode).slice(0,-1))||120'),'Replay-fallback ska vara två minuter');
+assert.ok(!replaySource.includes('this.fadeAudio(true)'),'Musiken får inte tonas ut automatiskt vid målgång');
+assert.ok(replaySource.includes('const normal=routeNormalAngle(this.model,distance),x=position[0],y=position[1]')&&!replaySource.includes("lane=key==='field'"),'Referensmarkörernas centrum ska sammanfalla med rutten utan sidooffset');
 assert.ok(replaySource.includes('this.progressDistanceKm')&&!replaySource.includes('this.distance='),'Replay ska använda en enda kontinuerlig global distansvariabel');
 assert.ok(!replaySource.includes('chart.outerHTML=renderElevation'),'ResizeObserver får inte ersätta höjdprofilens SVG');
 assert.ok(replaySource.includes('index!==this.activeSegmentIndex'),'Aktiva segmentklasser ska bara uppdateras när segmentet faktiskt byts');
@@ -234,7 +250,7 @@ const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapC
 assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
 assert.ok(/<option value="120s" selected>Hela loppet på 2 minuter<\/option>/.test(speedBlock),'Kartduellen ska öppnas med två minuter som standard');
 assert.ok(mapSource.includes("speed:'120s'")&&mapSource.includes("mode||'120s'"),'Kartduellens sessionsstandard och fallback ska vara två minuter');
-assert.ok(replaySource.includes("this.speedSelect.value='60s'"),'Individuell loppreplay ska fortsatt återställas till en minut');
+assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Individuell loppreplay ska återställas till två minuter');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'180s'),40,'treminutersvalet ska skala hela duellen till exakt tre minuter');

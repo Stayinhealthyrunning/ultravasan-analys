@@ -90,7 +90,7 @@ function renderPaceChart(){
 function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$$('#resultsBody tr[data-id]').forEach(tr=>tr.onclick=()=>openRunner(Number(tr.dataset.id)));$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
 function runnerRouteForRace(race){return window.RunnerReplay?.routeForRace(window.ULTRAVASAN_ROUTES,race)||null}
 function openRunner(id){
-  const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=state.data.splits.filter(x=>x.result_id===id).sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits});
+  const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=state.data.splits.filter(x=>x.result_id===id).sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus});
   const replay=model?window.RunnerReplay.render(model):'<div class="runner-map-empty">Loppreplay kunde inte startas. Mellantiderna visas nedan.</div>',clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven',classPlace=window.RunnerReplay?.formatClassPlace(r.class_place)||'Saknas',wholePace=window.RunnerReplay?.wholeRacePace(r,race);
   $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||'Ultravasan 90')}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div><section class="runner-map-section">${replay}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cleanCheckpointName(s.checkpoint_name))}</td><td>${s.distance_km??'–'} km</td><td class="time">${fmtTime(s.elapsed_seconds)}</td><td class="time">${fmtTime(s.segment_seconds)}</td><td class="time">${fmtPace(s.pace_seconds_per_km)}</td><td>${s.place_overall??'–'}</td></tr>`).join('')||'<tr><td colspan="6">Mellantider saknas</td></tr>'}</tbody></table></div></details></div>`;
   $('#runnerDialog').showModal();if(model)window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RACE_MEDIA_CONFIG);
@@ -98,23 +98,38 @@ function openRunner(id){
 
 const targetSimulatorSelections=new Map();
 const targetSimulatorKey=()=>`${state.raceFamily}:${state.raceId}`;
-function setupStatsControls(){const targetSelect=$('#targetTimeSelect');if(targetSelect)targetSelect.addEventListener('change',event=>{targetSimulatorSelections.set(targetSimulatorKey(),Number(event.target.value));renderTargetSimulator()});['placementSexM','placementSexF'].forEach(id=>$('#'+id)?.addEventListener('change',renderPlacementScatter))}
+const placementZoomState={signature:'',domain:null};
+const normalizeAppPlacementZoomRect=(start,current,bounds)=>{const clampX=value=>Math.max(bounds.left,Math.min(bounds.right,Number(value))),clampY=value=>Math.max(bounds.top,Math.min(bounds.bottom,Number(value))),x1=clampX(start.x),x2=clampX(current.x),y1=clampY(start.y),y2=clampY(current.y),left=Math.min(x1,x2),top=Math.min(y1,y2),right=Math.max(x1,x2),bottom=Math.max(y1,y2);return{left,top,right,bottom,width:right-left,height:bottom-top}};
+let cancelPlacementZoomDrag=()=>{};
+function stopPlacementZoomDrag(){const cancel=cancelPlacementZoomDrag;cancelPlacementZoomDrag=()=>{};cancel()}
+function resetPlacementZoom(){stopPlacementZoomDrag();placementZoomState.domain=null;renderPlacementScatter()}
+function setupStatsControls(){const targetSelect=$('#targetTimeSelect');if(targetSelect)targetSelect.addEventListener('change',event=>{targetSimulatorSelections.set(targetSimulatorKey(),Number(event.target.value));renderTargetSimulator()});['placementSexM','placementSexF'].forEach(id=>$('#'+id)?.addEventListener('change',renderPlacementScatter));$('#placementZoomReset')?.addEventListener('click',resetPlacementZoom)}
 function activeSplits(){const ids=new Set(state.filtered.map(r=>r.id));return state.data.splits.filter(s=>ids.has(s.result_id))}
 function renderStatistics(){renderPlacementScatter();renderDnfFunnel();renderSegmentHeatmap();renderOvertakes();renderYearTrend();renderPacingDNA();renderTargetSimulator()}
 function renderPlacementScatter(){
-  const el=$('#placementScatter');if(!el)return;
+  stopPlacementZoomDrag();const el=$('#placementScatter'),reset=$('#placementZoomReset');if(!el)return;
   const showM=$('#placementSexM')?.checked!==false,showF=$('#placementSexF')?.checked!==false;
-  if(!showM&&!showF){el.innerHTML='<div class="empty">Välj minst män eller kvinnor</div>';return}
+  if(!showM&&!showF){el.innerHTML='<div class="empty">Välj minst män eller kvinnor</div>';if(reset)reset.disabled=true;return}
   const sexOf=r=>{const s=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(s)?'F':['M','H'].includes(s)?'M':'U'};
   const rows=state.filtered.filter(r=>r.finish_seconds&&r.overall_place).filter(r=>(showM&&sexOf(r)==='M')||(showF&&sexOf(r)==='F'));
-  if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs för valt kön</div>';return}
-  const W=760,H=245,p={l:52,r:18,t:14,b:40},minT=Math.min(...rows.map(r=>r.finish_seconds)),maxT=Math.max(...rows.map(r=>r.finish_seconds)),maxP=Math.max(...rows.map(r=>r.overall_place));
-  const x=t=>p.l+(t-minT)*(W-p.l-p.r)/(maxT-minT||1),y=v=>p.t+(v-1)*(H-p.t-p.b)/(maxP-1||1);let out='';
-  for(let i=0;i<=4;i++){const yy=p.t+(H-p.t-p.b)*i/4,place=Math.round(1+(maxP-1)*i/4);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},String(place))}
-  for(let i=0;i<=4;i++){const t=minT+(maxT-minT)*i/4,xx=x(t);out+=svg('text',{x:xx,y:H-12,'text-anchor':'middle'},fmtTime(t).slice(0,-3))}
-  rows.forEach(r=>{const sex=sexOf(r),color=sex==='M'?'#2563eb':'#db2777',cx=x(r.finish_seconds),cy=y(r.overall_place),title=`${r.name_as_published} · ${sex==='M'?'Man':'Kvinna'} · ${fmtTime(r.finish_seconds)} · plats ${r.overall_place}`;out+=sex==='F'?`<path d="M${cx} ${cy-5} L${cx+5} ${cy} L${cx} ${cy+5} L${cx-5} ${cy} Z" fill="${color}" opacity=".75"><title>${esc(title)}</title></path>`:`<circle cx="${cx}" cy="${cy}" r="4.3" fill="${color}" opacity=".72"><title>${esc(title)}</title></circle>`});
+  if(rows.length<2){el.innerHTML='<div class="empty">Minst två placerade löpare behövs för valt kön</div>';if(reset)reset.disabled=true;return}
+  const W=760,H=245,p={l:52,r:18,t:14,b:40},full={minT:Math.min(...rows.map(r=>r.finish_seconds)),maxT:Math.max(...rows.map(r=>r.finish_seconds)),minP:1,maxP:Math.max(...rows.map(r=>r.overall_place))};
+  const signature=[state.raceId,showM,showF,rows.length,full.minT,full.maxT,full.maxP].join(':');if(placementZoomState.signature!==signature){placementZoomState.signature=signature;placementZoomState.domain=null}
+  const domain=placementZoomState.domain||full,x=t=>p.l+(t-domain.minT)*(W-p.l-p.r)/(domain.maxT-domain.minT||1),y=v=>p.t+(v-domain.minP)*(H-p.t-p.b)/(domain.maxP-domain.minP||1);let out='',marks='';
+  for(let i=0;i<=4;i++){const yy=p.t+(H-p.t-p.b)*i/4,place=Math.round(domain.minP+(domain.maxP-domain.minP)*i/4);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:7,y:yy+4},String(place))}
+  for(let i=0;i<=4;i++){const t=domain.minT+(domain.maxT-domain.minT)*i/4,xx=x(t);out+=svg('text',{x:xx,y:H-12,'text-anchor':'middle'},fmtTime(t).slice(0,-3))}
+  rows.filter(r=>r.finish_seconds>=domain.minT&&r.finish_seconds<=domain.maxT&&r.overall_place>=domain.minP&&r.overall_place<=domain.maxP).forEach(r=>{const sex=sexOf(r),color=sex==='M'?'#2563eb':'#db2777',cx=x(r.finish_seconds),cy=y(r.overall_place),title=`${r.name_as_published} · ${sex==='M'?'Man':'Kvinna'} · ${fmtTime(r.finish_seconds)} · plats ${r.overall_place}`,common=`class="placement-scatter-point" tabindex="0" role="img" aria-label="${esc(title)}"`;marks+=sex==='F'?`<path ${common} d="M${cx} ${cy-5} L${cx+5} ${cy} L${cx} ${cy+5} L${cx-5} ${cy} Z" fill="${color}" opacity=".75"><title>${esc(title)}</title></path>`:`<circle ${common} cx="${cx}" cy="${cy}" r="4.3" fill="${color}" opacity=".72"><title>${esc(title)}</title></circle>`});
   const legend=[showM?'<span class="inline-sex-legend"><i class="male"></i>Män</span>':'',showF?'<span class="inline-sex-legend"><i class="female"></i>Kvinnor</span>':''].filter(Boolean).join('');
-  el.innerHTML=`<div class="chart-inline-legend">${legend}</div><svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
+  el.innerHTML=`<div class="chart-inline-legend">${legend}${placementZoomState.domain?'<strong>Inzoomad vy</strong>':''}</div><svg viewBox="0 0 ${W} ${H}" aria-label="Tid mot placering. Dra över ett område för att zooma."><defs><clipPath id="placementScatterClip"><rect x="${p.l}" y="${p.t}" width="${W-p.l-p.r}" height="${H-p.t-p.b}"/></clipPath></defs>${out}<g clip-path="url(#placementScatterClip)"><rect class="placement-zoom-hit" x="${p.l}" y="${p.t}" width="${W-p.l-p.r}" height="${H-p.t-p.b}"/>${marks}<rect class="placement-zoom-selection" hidden/></g></svg>`;
+  if(reset)reset.disabled=!placementZoomState.domain;
+  const chart=el.querySelector('svg'),hit=el.querySelector('.placement-zoom-hit'),selection=el.querySelector('.placement-zoom-selection'),bounds={left:p.l,top:p.t,right:W-p.r,bottom:H-p.b};let drag=null;
+  const point=event=>{const rect=chart.getBoundingClientRect();return{x:Math.max(p.l,Math.min(W-p.r,(event.clientX-rect.left)*W/(rect.width||1))),y:Math.max(p.t,Math.min(H-p.b,(event.clientY-rect.top)*H/(rect.height||1)))}};
+  const drawSelection=current=>{const rect=normalizeAppPlacementZoomRect(drag,current,bounds);selection.setAttribute('x',rect.left);selection.setAttribute('y',rect.top);selection.setAttribute('width',rect.width);selection.setAttribute('height',rect.height);return rect},hideSelection=()=>selection.setAttribute('hidden',''),cancel=()=>{if(drag&&hit.hasPointerCapture?.(drag.pointerId))hit.releasePointerCapture(drag.pointerId);drag=null;hideSelection();document.removeEventListener('keydown',onKeyDown)},onKeyDown=event=>{if(event.key==='Escape'&&drag){event.preventDefault();cancel()}};
+  cancelPlacementZoomDrag=cancel;
+  hit?.addEventListener('pointerdown',event=>{if(event.button>0)return;event.preventDefault();drag={...point(event),pointerId:event.pointerId};hit.setPointerCapture?.(event.pointerId);selection.removeAttribute('hidden');drawSelection(drag);document.addEventListener('keydown',onKeyDown)});
+  hit?.addEventListener('pointermove',event=>{if(drag)drawSelection(point(event))});
+  const finish=event=>{if(!drag)return;const rect=drawSelection(point(event)),chartRect=chart.getBoundingClientRect(),minX=6*W/(chartRect.width||W),minY=6*H/(chartRect.height||H);cancel();if(rect.width<minX||rect.height<minY)return;const timeAt=px=>domain.minT+(px-p.l)*(domain.maxT-domain.minT)/(W-p.l-p.r),placeAt=py=>domain.minP+(py-p.t)*(domain.maxP-domain.minP)/(H-p.t-p.b);placementZoomState.domain={minT:timeAt(rect.left),maxT:timeAt(rect.right),minP:placeAt(rect.top),maxP:placeAt(rect.bottom)};renderPlacementScatter()};
+  hit?.addEventListener('pointerup',finish);hit?.addEventListener('pointercancel',cancel);hit?.addEventListener('dblclick',resetPlacementZoom);
 }
 function renderDnfFunnel(){
   const el=$('#dnfFunnel'),rows=state.filtered;
@@ -212,17 +227,18 @@ function renderPacingDNA(){
   const items=[['Hälften av sluttiderna',times.length?`${fmtTime(quantile(times,.25))}–${fmtTime(quantile(times,.75))}`:'–'],['Median män',fmtTime(median(men))],['Median kvinnor',fmtTime(median(women))],['Största klubb/ort',topClub?`${topClub[0]} · ${topClub[1]}`:'–']];el.innerHTML=items.map(([a,b])=>`<div class="dna-card"><span>${esc(a)}</span><strong>${esc(b)}</strong></div>`).join('');
 }
 function renderTargetSimulator(){
-  const select=$('#targetTimeSelect'),label=$('#targetTimeLabel'),out=$('#targetTimeResult');
+  const select=$('#targetTimeSelect'),label=$('#targetTimeLabel'),out=$('#targetTimeResult'),medal=$('#targetMedalTimes');
   if(!select||!label||!out)return;
+  if(medal)medal.hidden=state.raceFamily!=='uv90';
   const rows=state.filtered.filter(r=>isFinishedResult(r)&&r.overall_place).sort((a,b)=>a.finish_seconds-b.finish_seconds);
   if(!rows.length){label.textContent='–';out.innerHTML='<div><span>Underlag</span><strong>Saknas</strong></div>';select.disabled=true;select.innerHTML='';return}
   select.disabled=false;
   const min=rows[0].finish_seconds,max=rows[rows.length-1].finish_seconds;
-  const roundedMin=Math.floor(min/120)*120,roundedMax=Math.ceil(max/120)*120;
-  const mean=rows.reduce((sum,row)=>sum+Number(row.finish_seconds),0)/rows.length,defaultTime=Math.round(mean/120)*120,key=targetSimulatorKey(),prev=targetSimulatorSelections.get(key)??defaultTime;
+  const roundedMin=Math.floor(min/60)*60,roundedMax=Math.ceil(max/60)*60;
+  const mean=rows.reduce((sum,row)=>sum+Number(row.finish_seconds),0)/rows.length,defaultTime=Math.round(mean/60)*60,key=targetSimulatorKey(),prev=targetSimulatorSelections.get(key)??defaultTime;
   const options=[];
-  for(let t=roundedMin;t<=roundedMax;t+=120)options.push(t);
-  if(!options.length)options.push(Math.round(min/120)*120);
+  for(let t=roundedMin;t<=roundedMax;t+=60)options.push(t);
+  if(!options.length)options.push(Math.round(min/60)*60);
   let chosen=options.includes(prev)?prev:options.reduce((a,b)=>Math.abs(b-prev)<Math.abs(a-prev)?b:a,options[0]);
   const signature=options.join(',');
   if(select.dataset.signature!==signature){
@@ -329,8 +345,7 @@ function setupMainRunnerSearch(rebuild=false){
 
 const INFO_HELP_EXTENDED=[
   ['.analysis-nav','Navigera direkt till översikt, genusperspektiv, klassanalys, statistik för klubb/ort, löparlista eller kartduell. Den aktuella vyn kan delas med länken Dela vy.'],
-  ['#individual-analysis','Den individuella delen öppnar en löparprofil eller bygger en kartduell. Valen påverkar inte statistiken för hela startfältet.'],
-  ['.runner-lookup-panel','Välj ett specifikt år eller Alla år och sök sedan på namn eller startnummer. Året visas i varje sökförslag.'],
+  ['.individual-runner-panel','Välj ett specifikt år eller Alla år och sök på namn eller startnummer för att öppna löparens individuella loppanalys. Valet påverkar inte statistiken för hela startfältet.'],
   ['#overview','Filtrera lopp- och fältstatistiken efter år, kön, åldersklass, klubb/ort och status. Dessa filter påverkar alla efterföljande diagram och tabeller.'],
   ['.compare-panel','Välj en till fem löpare och öppna en separat kartvy. Officiella mellantider används som fasta hållpunkter och positionen beräknas mellan kontrollerna.'],
   ['.kpis article:nth-child(1)','Antalet resultat som återstår efter de filter du har valt.'],
