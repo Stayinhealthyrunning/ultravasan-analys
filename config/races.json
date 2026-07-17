@@ -94,6 +94,38 @@
       "partition_by_sex": true
     },
     {
+      "race_key": "ultravasan90-2016",
+      "race_family": "uv90",
+      "name": "Ultravasan 90",
+      "year": 2016,
+      "race_date": "2016-08-20",
+      "distance_km": 90.0,
+      "event_code": "UL90_9999991678885A00000004CC",
+      "result_year_path": 2017,
+      "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL90_9999991678885A00000004CC",
+      "page_url_template": "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2017/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_9999991678885A00000004CC",
+      "max_pages": 200,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        { "checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0 },
+        { "checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83 },
+        { "checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27 },
+        { "checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96 },
+        { "checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15 },
+        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73 },
+        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72 },
+        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61 },
+        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0 }
+      ],
+      "course_version": "pre2023",
+      "partition_by_sex": false,
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=list"
+      ]
+    },
+    {
       "race_key": "ultravasan45-2014",
       "race_family": "uv45",
       "name": "Ultravasan 45",
