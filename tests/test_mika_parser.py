@@ -26,7 +26,7 @@ def test_detail_parser():
     assert smagan["elapsed_seconds"]==3724
     assert smagan["reported_pace_seconds_per_km"]==405
     assert abs(smagan["speed_kmh"]-8.89)<0.001
-    assert smagan["place_overall"]==180
+    assert smagan["place_gender"]==180
 
 if __name__=="__main__":
     test_detail_parser()

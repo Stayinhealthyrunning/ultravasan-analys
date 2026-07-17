@@ -1,0 +1,300 @@
+{
+  "database_sha256": "1977bdc8156802bb96d663750e0b3ac407f44128cda78ab85f6c3ac1eb9beeea",
+  "web_json_sha256": "ba9469ed97e41c995fdb9797921684c22ddbd640dbedb1c0777b8c65146603c7",
+  "web_js_sha256": "00e1674c2e26be840c5e2252bb66150fb5cf020c2c04c9fdfcf7c3c26dd65d34",
+  "dry_run_summary": {
+    "list_entries_seen": 986,
+    "unique_idp": 986,
+    "detail_pages_parsed": 986,
+    "http_errors": 0,
+    "parser_errors": 0,
+    "status": {
+      "FINISHED": 745,
+      "DNS": 181,
+      "DNF": 58,
+      "UNKNOWN": 2
+    },
+    "matching": {
+      "safe_unique": 985,
+      "ambiguous": 0,
+      "conflicts": 1,
+      "unmatched": 0,
+      "per_level": {
+        "1": 985
+      }
+    },
+    "existing_results_without_official_match": 1,
+    "intended_splits": 6190,
+    "complete_finishers_official": 738,
+    "complete_finishers_enriched": 737,
+    "dnf_with_passages_official": 58,
+    "dnf_with_passages_enriched": 58,
+    "unknown_with_passages": 2,
+    "official_checkpoint_coverage": {
+      "smagan": 799,
+      "mangsbodarna": 805,
+      "risberg": 802,
+      "evertsberg": 788,
+      "oxberg": 766,
+      "hokberg": 748,
+      "eldris": 745,
+      "mora": 745
+    },
+    "intended_checkpoint_coverage": {
+      "smagan": 798,
+      "mangsbodarna": 804,
+      "risberg": 801,
+      "evertsberg": 787,
+      "oxberg": 765,
+      "hokberg": 747,
+      "eldris": 744,
+      "mora": 744
+    },
+    "source_records_created": 998,
+    "second_pass_noop": 6190,
+    "blocking_quality_issues": 0
+  },
+  "apply_first": {
+    "participants_reviewed": 986,
+    "safe_matches": 985,
+    "conflicts_skipped": 1,
+    "inserted": 6190,
+    "updated": 0,
+    "noop": 0,
+    "splits_after": 6190,
+    "source_records_created": 998,
+    "results_delta": 0,
+    "athletes_delta": 0,
+    "person_links_delta": 0
+  },
+  "apply_second": {
+    "participants_reviewed": 986,
+    "safe_matches": 985,
+    "conflicts_skipped": 1,
+    "inserted": 0,
+    "updated": 0,
+    "noop": 6190,
+    "splits_after": 6190,
+    "source_records_created": 0,
+    "results_delta": 0,
+    "athletes_delta": 0,
+    "person_links_delta": 0
+  },
+  "core_tables": {
+    "results": {
+      "before": 21172,
+      "after": 21172,
+      "byte_equivalent_rows": true
+    },
+    "athletes": {
+      "before": 14544,
+      "after": 14544,
+      "byte_equivalent_rows": true
+    },
+    "athlete_external_ids": {
+      "before": 17555,
+      "after": 17555,
+      "byte_equivalent_rows": true
+    },
+    "races": {
+      "before": 20,
+      "after": 20,
+      "byte_equivalent_rows": true
+    },
+    "checkpoints": {
+      "before": 145,
+      "after": 145,
+      "byte_equivalent_rows": true
+    },
+    "sources": {
+      "before": 7,
+      "after": 7,
+      "byte_equivalent_rows": true
+    }
+  },
+  "other_races_splits_unchanged": true,
+  "uv90_2016_splits_before": 0,
+  "uv90_2016_splits_after": 6190,
+  "checkpoint_coverage": {
+    "smagan": 798,
+    "mangsbodarna": 804,
+    "risberg": 801,
+    "evertsberg": 787,
+    "oxberg": 765,
+    "hokberg": 747,
+    "eldris": 744,
+    "mora": 744
+  },
+  "complete_checkpoint_series": 737,
+  "dnf_status_with_passages": 60,
+  "duplicates": [],
+  "estimated_splits": 0,
+  "invented_overall_or_class_places": 0,
+  "data_quality_issues": [],
+  "source_records": {
+    "list_pages": 12,
+    "participant_details": 986,
+    "referenced_by_splits": 804,
+    "bad_split_provenance": 0,
+    "absolute_cache_paths": 0
+  },
+  "representative_runners": [
+    {
+      "id": 11134,
+      "name_as_published": "Risa, Jarle",
+      "bib": "1006",
+      "age_class": "M40",
+      "status": "FINISHED",
+      "finish_seconds": 22309,
+      "overall_place": 1,
+      "gender_place": 1,
+      "class_place": 1,
+      "split_count": 8
+    },
+    {
+      "id": 11352,
+      "name_as_published": "Bard, Sarah",
+      "bib": "3015",
+      "age_class": "W21",
+      "status": "FINISHED",
+      "finish_seconds": 25654,
+      "overall_place": 20,
+      "gender_place": 2,
+      "class_place": 1,
+      "split_count": 8
+    },
+    {
+      "id": 11545,
+      "name_as_published": "Hermansson, Andreas",
+      "bib": "1025",
+      "age_class": "M21",
+      "status": "FINISHED",
+      "finish_seconds": 26280,
+      "overall_place": 22,
+      "gender_place": 20,
+      "class_place": 11,
+      "split_count": 8
+    },
+    {
+      "id": 11162,
+      "name_as_published": "Ammerlind, Evald",
+      "bib": "1629",
+      "age_class": "M50",
+      "status": "FINISHED",
+      "finish_seconds": 31419,
+      "overall_place": 102,
+      "gender_place": 88,
+      "class_place": 5,
+      "split_count": 8
+    },
+    {
+      "id": 11019,
+      "name_as_published": "Bergqvist, Åsa",
+      "bib": "3088",
+      "age_class": "W40",
+      "status": "FINISHED",
+      "finish_seconds": 37862,
+      "overall_place": 372,
+      "gender_place": 52,
+      "class_place": 17,
+      "split_count": 8
+    },
+    {
+      "id": 11169,
+      "name_as_published": "Askengren Berg, Annika",
+      "bib": "3014",
+      "age_class": "W55",
+      "status": "FINISHED",
+      "finish_seconds": 38725,
+      "overall_place": 416,
+      "gender_place": 65,
+      "class_place": 1,
+      "split_count": 8
+    },
+    {
+      "id": 11340,
+      "name_as_published": "Artursson, Karin",
+      "bib": "3149",
+      "age_class": "W50",
+      "status": "FINISHED",
+      "finish_seconds": 41202,
+      "overall_place": 512,
+      "gender_place": 83,
+      "class_place": 2,
+      "split_count": 8
+    },
+    {
+      "id": 11351,
+      "name_as_published": "Backlund, Magnus",
+      "bib": "1242",
+      "age_class": "M35",
+      "status": "FINISHED",
+      "finish_seconds": 46470,
+      "overall_place": 651,
+      "gender_place": 535,
+      "class_place": 104,
+      "split_count": 8
+    },
+    {
+      "id": 11324,
+      "name_as_published": "Andersén, Ingemar",
+      "bib": "1506",
+      "age_class": "M55",
+      "status": "FINISHED",
+      "finish_seconds": 53640,
+      "overall_place": 740,
+      "gender_place": 599,
+      "class_place": 16,
+      "split_count": 8
+    },
+    {
+      "id": 11161,
+      "name_as_published": "Alpsten, Moa",
+      "bib": "3037",
+      "age_class": "W21",
+      "status": "DNF",
+      "finish_seconds": null,
+      "overall_place": null,
+      "gender_place": null,
+      "class_place": null,
+      "split_count": 5
+    }
+  ],
+  "andreas_hermansson_splits": [
+    {
+      "checkpoint_key": "smagan",
+      "elapsed_seconds": 2476
+    },
+    {
+      "checkpoint_key": "mangsbodarna",
+      "elapsed_seconds": 6504
+    },
+    {
+      "checkpoint_key": "risberg",
+      "elapsed_seconds": 9716
+    },
+    {
+      "checkpoint_key": "evertsberg",
+      "elapsed_seconds": 13250
+    },
+    {
+      "checkpoint_key": "oxberg",
+      "elapsed_seconds": 17598
+    },
+    {
+      "checkpoint_key": "hokberg",
+      "elapsed_seconds": 20416
+    },
+    {
+      "checkpoint_key": "eldris",
+      "elapsed_seconds": 23539
+    },
+    {
+      "checkpoint_key": "mora",
+      "elapsed_seconds": 26280
+    }
+  ],
+  "integrity_check": "ok",
+  "foreign_key_issues": [],
+  "verified": true
+}

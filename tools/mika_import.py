@@ -56,6 +56,7 @@ class Fetcher:
         self.force = force
         self.session = uvtool.create_session()
         self._pw = self._browser = self._context = self._page = None
+        self.last_metadata: dict[str, Any] = {}
 
     def close(self) -> None:
         if self._context:
@@ -86,7 +87,14 @@ class Fetcher:
 
     def get(self, url: str, cache: Path) -> tuple[str, int, bool, str]:
         if cache.exists() and not self.force:
-            return cache.read_text(encoding="utf-8", errors="replace"), 200, True, "cache"
+            html = cache.read_text(encoding="utf-8", errors="replace")
+            self.last_metadata = {
+                "request_url": url, "final_url": url, "status": 200,
+                "content_type": "text/html; charset=utf-8",
+                "fetched_at": uvtool.utc_now(), "cache_path": str(cache),
+                "cache_hit": True, "mode": "cache",
+            }
+            return html, 200, True, "cache"
         cache.parent.mkdir(parents=True, exist_ok=True)
         last_error: Exception | None = None
         for attempt in range(1, 4):
@@ -95,6 +103,12 @@ class Fetcher:
                 if response.status_code == 403 and self.browser_fallback:
                     html, status = self._browser_html(url)
                     cache.write_text(html, encoding="utf-8")
+                    self.last_metadata = {
+                        "request_url": url, "final_url": url, "status": status,
+                        "content_type": "text/html; charset=utf-8",
+                        "fetched_at": uvtool.utc_now(), "cache_path": str(cache),
+                        "cache_hit": False, "mode": "browser",
+                    }
                     time.sleep(self.delay)
                     return html, status, False, "browser"
                 if response.status_code in {429, 500, 502, 503, 504}:
@@ -103,6 +117,13 @@ class Fetcher:
                 response.raise_for_status()
                 response.encoding = response.apparent_encoding or response.encoding or "utf-8"
                 cache.write_text(response.text, encoding="utf-8")
+                self.last_metadata = {
+                    "request_url": url, "final_url": response.url,
+                    "status": response.status_code,
+                    "content_type": response.headers.get("Content-Type"),
+                    "fetched_at": uvtool.utc_now(), "cache_path": str(cache),
+                    "cache_hit": False, "mode": "http",
+                }
                 time.sleep(self.delay)
                 return response.text, response.status_code, False, "http"
             except Exception as exc:
@@ -112,6 +133,12 @@ class Fetcher:
         if self.browser_fallback:
             html, status = self._browser_html(url)
             cache.write_text(html, encoding="utf-8")
+            self.last_metadata = {
+                "request_url": url, "final_url": url, "status": status,
+                "content_type": "text/html; charset=utf-8",
+                "fetched_at": uvtool.utc_now(), "cache_path": str(cache),
+                "cache_hit": False, "mode": "browser",
+            }
             time.sleep(self.delay)
             return html, status, False, "browser"
         raise RuntimeError(f"Kunde inte hämta {url}: {last_error}")
@@ -138,6 +165,176 @@ def extract_entries(html: str, base_url: str) -> list[dict[str, Any]]:
                     entry.setdefault(field, value)
             entry["list_text"] = uvtool.clean_text(container.get_text(" ", strip=True))
     return sorted(entries.values(), key=lambda x: x["idp"])
+
+
+def extract_event_candidates(html: str, path_year: int) -> list[dict[str, Any]]:
+    """Extract event codes with the catalogue year supplied by Mika's optgroup.
+
+    The catalogue select contains several years at once.  The option text is
+    often just ``Ultravasan 90``, so deriving the year from the option value is
+    unsafe for the historic opaque identifiers.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    candidates: list[dict[str, Any]] = []
+    for node in soup.select("option[value], a[href*='event=']"):
+        text = uvtool.clean_text(node.get_text(" ", strip=True)) or ""
+        value = node.get("value") or node.get("href") or ""
+        if "event=" in value:
+            event = parse_qs(urlparse(urljoin("https://results.vasaloppet.se/", value)).query).get("event", [None])[0]
+        else:
+            event = value
+        if not event or "ultravasan" not in uvtool.normalize(text) or not re.search(r"\b(?:45|90)\b", text):
+            continue
+        optgroup = node.find_parent("optgroup")
+        group_label = uvtool.clean_text(optgroup.get("label")) if optgroup else None
+        year_match = re.search(r"20\d{2}", group_label or text)
+        candidates.append({
+            "year": int(year_match.group()) if year_match else path_year,
+            "event_code": event,
+            "label": text,
+            "catalogue_group": group_label,
+        })
+    return candidates
+
+
+def validate_split_sequence(parsed: uvtool.ParsedResult, checkpoints: list[dict[str, Any]]) -> list[str]:
+    """Return validation errors for reported, non-estimated control times."""
+    order = {cp["checkpoint_key"]: cp["sequence_no"] for cp in checkpoints}
+    splits = sorted(parsed.splits or [], key=lambda item: order.get(item.get("checkpoint_key"), 10**9))
+    errors: list[str] = []
+    previous = 0
+    for split in splits:
+        elapsed = split.get("elapsed_seconds")
+        key = split.get("checkpoint_key")
+        if elapsed is None or elapsed <= 0:
+            errors.append(f"{key}: elapsed time is not positive")
+            continue
+        if elapsed <= previous:
+            errors.append(f"{key}: elapsed time is not strictly increasing")
+        if parsed.finish_seconds is not None and key != "mora" and elapsed > parsed.finish_seconds:
+            errors.append(f"{key}: elapsed time exceeds finish time")
+        previous = elapsed
+    mora = next((item for item in splits if item.get("checkpoint_key") == "mora"), None)
+    if parsed.status == "FINISHED" and parsed.finish_seconds is not None:
+        if not mora:
+            errors.append("mora: finish split is missing")
+        elif mora.get("elapsed_seconds") != parsed.finish_seconds:
+            errors.append("mora: split does not equal finish time")
+    return errors
+
+
+def require_separate_probe_db(probe_db: Path, production_db: Path = uvtool.DEFAULT_DB) -> None:
+    """Refuse to run a probe against the production SQLite database."""
+    if probe_db.expanduser().resolve() == production_db.expanduser().resolve():
+        raise ValueError("Probe database must be separate from the production database")
+
+
+def match_existing_result(conn: Any, race_id: int, parsed: uvtool.ParsedResult) -> dict[str, Any]:
+    """Match an official result uniquely without fuzzy names or time tolerances.
+
+    Level 1 requires an exact bib, exact normalized name and at least one
+    additional agreeing field. Levels 2 and 3 implement the documented exact
+    fallbacks. Contradictory strong fields stop matching instead of being
+    silently ignored.
+    """
+    rows = conn.execute(
+        """SELECT id,bib,name_as_published,finish_seconds,overall_place,age_class,
+                  nationality,club,city,sex,gender_place,class_place,status
+             FROM results WHERE race_id=?""",
+        (race_id,),
+    ).fetchall()
+    normalized_name = uvtool.normalize(parsed.name)
+
+    def equal(left: Any, right: Any, text: bool = False) -> bool:
+        return uvtool.normalize(left) == uvtool.normalize(right) if text else left == right
+
+    def comparisons(row: Any) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+        definitions = [
+            ("name", parsed.name, row["name_as_published"], True, True),
+            ("bib", parsed.bib, row["bib"], True, True),
+            ("finish_seconds", parsed.finish_seconds, row["finish_seconds"], False, True),
+            ("overall_place", parsed.overall_place, row["overall_place"], False, True),
+            ("age_class", parsed.age_class, row["age_class"], True, True),
+            ("sex", parsed.sex, row["sex"], True, True),
+            ("gender_place", parsed.gender_place, row["gender_place"], False, True),
+            ("class_place", parsed.class_place, row["class_place"], False, False),
+            # UNKNOWN means the official page only says e.g. "Startat". It
+            # is absence of a final classification, not a contradiction of a
+            # retained VasaNerd DNF status.
+            ("status", None if parsed.status == "UNKNOWN" else parsed.status, row["status"], True, True),
+            ("nationality", parsed.nationality, row["nationality"], True, False),
+            ("club", parsed.club, row["club"], True, False),
+            ("city", parsed.city, row["city"], True, False),
+        ]
+        matches: list[str] = []
+        deviations: list[dict[str, Any]] = []
+        critical: list[str] = []
+        for field, official, existing, is_text, is_critical in definitions:
+            if official is None or existing is None:
+                continue
+            if equal(official, existing, is_text):
+                matches.append(field)
+            else:
+                deviations.append({"field": field, "official": official, "existing": existing})
+                if is_critical:
+                    critical.append(field)
+        return matches, deviations, critical
+
+    def evaluate(method: str, level: int, candidates: list[Any], required: set[str], extra_required: bool = False) -> dict[str, Any] | None:
+        qualified: list[tuple[Any, list[str], list[dict[str, Any]]]] = []
+        candidate_details = []
+        for row in candidates:
+            matches, deviations, critical = comparisons(row)
+            extra = set(matches) - required - {"bib", "name"}
+            accepted = required.issubset(matches) and not critical and (not extra_required or bool(extra))
+            candidate_details.append({"result_id": row["id"], "matches": matches, "deviations": deviations, "critical_conflicts": critical})
+            if accepted:
+                qualified.append((row, matches, deviations))
+        if len(qualified) == 1:
+            row, matches, deviations = qualified[0]
+            return {
+                "status": "matched", "method": method, "level": level,
+                "result_id": row["id"], "candidate_count": len(candidates),
+                "verifying_fields": matches, "deviations": deviations,
+            }
+        if candidates:
+            return {
+                "status": "ambiguous" if len(qualified) > 1 or len(candidates) > 1 else "conflict",
+                "method": method, "level": level, "result_id": None,
+                "candidate_count": len(candidates), "qualified_count": len(qualified),
+                "candidate_details": candidate_details,
+            }
+        return None
+
+    if parsed.bib:
+        outcome = evaluate(
+            "exact-bib", 1,
+            [row for row in rows if uvtool.clean_text(row["bib"]) == uvtool.clean_text(parsed.bib)],
+            {"bib", "name"}, extra_required=True,
+        )
+        if outcome:
+            return outcome
+    if normalized_name and parsed.finish_seconds is not None:
+        outcome = evaluate(
+            "exact-name-finish", 2,
+            [row for row in rows if uvtool.normalize(row["name_as_published"]) == normalized_name and row["finish_seconds"] == parsed.finish_seconds],
+            {"name", "finish_seconds"},
+        )
+        if outcome:
+            return outcome
+    if normalized_name and parsed.overall_place is not None and parsed.age_class:
+        outcome = evaluate(
+            "exact-name-overall-class", 3,
+            [row for row in rows if uvtool.normalize(row["name_as_published"]) == normalized_name and row["overall_place"] == parsed.overall_place and uvtool.normalize(row["age_class"]) == uvtool.normalize(parsed.age_class)],
+            {"name", "overall_place", "age_class"},
+        )
+        if outcome:
+            return outcome
+    return {
+        "status": "unmatched", "method": None, "level": None,
+        "result_id": None, "candidate_count": 0,
+        "verifying_fields": [], "deviations": [],
+    }
 
 
 def apply_fallback(parsed: uvtool.ParsedResult, summary: dict[str, Any]) -> uvtool.ParsedResult:
@@ -342,20 +539,15 @@ def discover(args: argparse.Namespace) -> None:
             cache = raw_root / "catalogue" / f"events-{path_year}.html"
             html, status, cached, mode = fetcher.get(url, cache)
             soup = BeautifulSoup(html, "lxml")
-            candidates = []
-            for node in soup.select("option[value], a[href*='event=']"):
-                text = uvtool.clean_text(node.get_text(" ", strip=True)) or ""
-                value = node.get("value") or node.get("href") or ""
-                if "event=" in value:
-                    event = parse_qs(urlparse(urljoin(url, value)).query).get("event", [None])[0]
-                else:
-                    event = value
-                if event and "ultravasan" in uvtool.normalize(text) and re.search(r"\b(?:45|90)\b", text):
-                    candidates.append((event, text))
-            for event, text in candidates:
-                year_match = re.search(r"20\d{2}", text)
-                event_year = int(year_match.group()) if year_match else int(re.search(r"(\d{2})(?:\d{2})?$", event).group(1)) + 2000 if re.search(r"(\d{2})(?:\d{2})?$", event) else path_year
-                found[(event_year, event)] = {"year": event_year, "event_code": event, "label": text, "result_year_path": path_year, "catalogue_url": url, "mode": mode, "cached": cached, "status": status}
+            for candidate in extract_event_candidates(html, path_year):
+                event_year = candidate["year"]
+                event = candidate["event_code"]
+                item = {**candidate, "result_year_path": path_year, "catalogue_url": url, "mode": mode, "cached": cached, "status": status}
+                key = (event_year, event)
+                current = found.get(key)
+                expected_path = event_year + 1
+                if current is None or (path_year == expected_path and current["result_year_path"] != expected_path):
+                    found[key] = item
     finally:
         fetcher.close()
     result = sorted(found.values(), key=lambda x: (x["year"], x["event_code"]))

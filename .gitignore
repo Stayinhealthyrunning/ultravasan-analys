@@ -1,0 +1,21 @@
+# Local source caches and temporary work products
+/raw/
+/tmp/
+
+# Python and test caches
+__pycache__/
+*.py[cod]
+/.pytest_cache/
+
+# SQLite transient sidecars (the production .sqlite file remains tracked)
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# UV90 2016 intermediate diagnostics; keep only the final report and verification JSON
+/reports/ultravasan90-2016-official-probe.json
+/reports/ultravasan90-2016-official-full-dry-run.json
+/reports/ultravasan90-2016-official-full-dry-run.md
+/reports/ultravasan90-2016-official-apply-*.json
+/reports/ultravasan90-2016-official-apply-*.md
+/reports/ultravasan90-2016-official-enrichment-verification.md

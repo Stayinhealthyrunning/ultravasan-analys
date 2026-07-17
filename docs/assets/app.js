@@ -317,11 +317,11 @@ function renderCompareSelection(){
 const MAIN_SEARCH_LIMIT=14;
 function setupMainRunnerSearch(rebuild=false){
   const input=$('#nameFilter'),box=$('#mainRunnerSuggestions'),year=$('#mainSearchYear');
-  if(!input||!box||!year||input.dataset.suggestionsReady)return;
+  if(!input||!box||!year)return;
+  const populateYears=()=>{const races=familyRaces().slice().sort((a,b)=>b.year-a.year);year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');year.value='all'};
+  if(input.dataset.suggestionsReady){if(rebuild){populateYears();input.value='';box.hidden=true;box.innerHTML=''}return}
   input.dataset.suggestionsReady='1';
-  const races=familyRaces().slice().sort((a,b)=>b.year-a.year);
-  year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');
-  year.value='all';
+  populateYears();
   const rowsForYear=()=>year.value==='all'?familyResults():state.data.results.filter(r=>r.race_id===Number(year.value));
   const show=()=>{
     const q=input.value.trim().toLowerCase();

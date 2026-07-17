@@ -527,6 +527,12 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
     rows = list(soup.select("tr.split"))
     finish_rows = list(soup.select("tr.f-time_finish_brutto, tr.f-time_finish_netto, tr.f-time_finish, tr.finish"))
     for row in rows + finish_rows:
+        row_classes = set(row.get("class", []))
+        if "estimated" in row_classes or (row.select_one("strong") and "*" in row.get_text(" ", strip=True)):
+            # Mika publishes forward estimates for runners who have not
+            # reached later controls. They are explicitly marked with * and
+            # must never become official passages or a synthetic finish.
+            continue
         desc = _class_text(row, ["desc", "name", "split-name"])
         if row in finish_rows and not desc:
             desc = "Mora mål"
@@ -544,11 +550,16 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
         item.update({
             "source_label": desc,
             "elapsed_seconds": elapsed or 0,
-            "time_of_day": _class_text(row, ["daytime", "time_of_day", "timeofday"]),
-            "diff_seconds": parse_diff(_class_text(row, ["diff", "difference"])),
+            "time_of_day": _class_text(row, ["time_day", "daytime", "time_of_day", "timeofday"]),
+            # Mika labels the historic .diff column "Sträcktid"; it is the
+            # segment duration, not a difference behind another participant.
+            "segment_seconds": parse_time(_class_text(row, ["diff"])),
+            "diff_seconds": parse_diff(_class_text(row, ["difference"])),
             "reported_pace_seconds_per_km": parse_pace(_class_text(row, ["min_km", "minkm", "pace"])),
             "speed_kmh": parse_float(_class_text(row, ["kmh", "speed"])),
-            "place_overall": parse_int(_class_text(row, ["place", "rank", "placement"])),
+            # The generic "Plac." column on these pages follows the gender
+            # placement (at Mora it equals f-place_all), not total placement.
+            "place_gender": parse_int(_class_text(row, ["place", "rank", "placement"])),
             "raw_cells": [clean_text(c.get_text(" ", strip=True)) for c in row.find_all(["th", "td"], recursive=False)],
         })
 
@@ -569,6 +580,9 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
     for table in soup.select("table"):
         rows_text: list[list[str]] = []
         for tr in table.select("tr"):
+            tr_classes = set(tr.get("class", []))
+            if "estimated" in tr_classes or (tr.select_one("strong") and "*" in tr.get_text(" ", strip=True)):
+                continue
             cells = [clean_text(c.get_text(" ", strip=True)) or "" for c in tr.find_all(["th", "td"], recursive=False)]
             if cells:
                 rows_text.append(cells)
@@ -578,8 +592,9 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
         cp_col = next((i for i, h in enumerate(header) if any(w in h for w in ["kontroll", "checkpoint", "split", "station", "plats"])), 0)
         elapsed_candidates = [i for i, h in enumerate(header) if any(w in h for w in ["mellantid", "elapsed", "loptid", "race time", "time"])]
         time_col = elapsed_candidates[-1] if elapsed_candidates else None
-        tod_col = next((i for i, h in enumerate(header) if "time of day" in h or "klockslag" in h), None)
+        tod_col = next((i for i, h in enumerate(header) if "time of day" in h or "klockslag" in h or "klockan" in h), None)
         place_col = next((i for i, h in enumerate(header) if "plac" in h or "place" in h or "rank" in h), None)
+        segment_col = next((i for i, h in enumerate(header) if "stracktid" in h or "segment" in h or "leg time" in h), None)
         diff_col = next((i for i, h in enumerate(header) if "diff" in h or "efter" in h), None)
         pace_col = next((i for i, h in enumerate(header) if "min km" in h or "min/km" in h or "pace" in h), None)
         speed_col = next((i for i, h in enumerate(header) if "km h" in h or "km/h" in h or "speed" in h), None)
@@ -598,11 +613,13 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
             item.setdefault("source_label", cells[cp_col])
             item.setdefault("elapsed_seconds", elapsed or 0)
             if place_col is not None and place_col < len(cells):
-                item.setdefault("place_overall", parse_int(cells[place_col]))
+                item.setdefault("place_gender", parse_int(cells[place_col]))
             if tod_col is not None and tod_col < len(cells):
                 item.setdefault("time_of_day", clean_text(cells[tod_col]))
             if diff_col is not None and diff_col < len(cells):
                 item.setdefault("diff_seconds", parse_diff(cells[diff_col]))
+            if segment_col is not None and segment_col < len(cells):
+                item.setdefault("segment_seconds", parse_time(cells[segment_col]))
             if pace_col is not None and pace_col < len(cells):
                 item.setdefault("reported_pace_seconds_per_km", parse_pace(cells[pace_col]))
             if speed_col is not None and speed_col < len(cells):
@@ -612,6 +629,11 @@ def extract_split_tables(soup: BeautifulSoup, known_checkpoints: dict[str, dict[
 
 def parse_detail_html(html: str, source_result_id: str, source_url: str, checkpoints: list[dict[str, Any]]) -> ParsedResult:
     soup = BeautifulSoup(html, "lxml")
+    # Estimated future rows reuse ordinary Mika field classes and can
+    # otherwise leak into both finish selectors and split parsing. Remove
+    # them from the parse tree while retaining the untouched HTML as evidence.
+    for estimated_row in soup.select("tr.estimated"):
+        estimated_row.decompose()
     labeled = extract_labeled_values(soup)
     vals: dict[str, Any] = {}
     for field, selectors in FIELD_SELECTORS.items():
@@ -647,7 +669,12 @@ def parse_detail_html(html: str, source_result_id: str, source_url: str, checkpo
         gun = finish if gun is None or abs(gun - finish) > 60 else gun
         status = "FINISHED"
     if finish is not None and "mora" in cp_map and not any(s["checkpoint_key"] == "mora" for s in splits):
-        splits.append({"checkpoint_key": "mora", "elapsed_seconds": finish})
+        # Retain the historic convenience fallback, but mark it unmistakably
+        # as synthetic so evidence-only enrichment flows can reject it.
+        splits.append({
+            "checkpoint_key": "mora", "elapsed_seconds": finish,
+            "source_label": None, "is_synthetic": True, "is_estimated": True,
+        })
 
     original_name = clean_text(vals.get("name"))
     parsed_name, parsed_nationality = clean_name_and_nationality(original_name, vals.get("nationality"))

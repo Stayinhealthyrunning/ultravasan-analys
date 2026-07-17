@@ -1,5 +1,7 @@
 'use strict';
 const assert=require('assert');
+const fs=require('fs');
+const path=require('path');
 const {selectAudienceRace}=require('../docs/assets/audience-analytics.js');
 const {mixedRaceFamilyError,activeReferenceRoute,splitRouteDistance}=require('../docs/assets/map.js');
 
@@ -19,6 +21,9 @@ assert.ok(mixedRaceFamilyError([results[0],results[1]],races),'Mixed UV90/UV45 m
 assert.strictEqual(mixedRaceFamilyError([results[1],results[2]],races),null,'Different years in the same family remain comparable');
 const uv90Route={id:'uv90'},uv45Route={id:'uv45'};
 assert.strictEqual(activeReferenceRoute([{route:uv45Route}],[uv45Route],{default_route_id:'uv90',routes:{uv90:uv90Route}}),uv45Route,'Fallback and strip must use the selected UV45 route');
+
+const appSource=fs.readFileSync(path.join(__dirname,'../docs/assets/app.js'),'utf8');
+assert.ok(appSource.includes("if(input.dataset.suggestionsReady){if(rebuild){populateYears()"),'Main runner years must rebuild when switching UV90/UV45');
 assert.strictEqual(splitRouteDistance({distance_km:15.5},{distance_km:13.907}),15.5,'Historical UV45 must use the result year checkpoint distance, not the current route checkpoint');
 assert.strictEqual(splitRouteDistance({}, {distance_km:13.907}),13.907,'Route checkpoint remains a safe fallback when result distance is missing');
 console.log('OK: race URL and map-family separation');
