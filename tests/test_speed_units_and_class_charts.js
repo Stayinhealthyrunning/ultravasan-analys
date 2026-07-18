@@ -22,6 +22,12 @@ assert.ok(Math.abs(analytics.relativeToplistWidth(32.6,49.5)-65.86)<.01);
 assert.ok(analytics.relativeToplistWidth(60,49.5)<=100,'indexstapeln får aldrig överstiga 100 procent');
 assert.strictEqual(analytics.visibleCountBarHeight(0,100,300),0);
 assert.strictEqual(analytics.visibleCountBarHeight(1,1000,300),2,'positiv DNF ska alltid få en synlig stapel');
+assert.deepStrictEqual(analytics.fastestTenPercentAverage([]),{value:null,selectedCount:0,totalCount:0});
+assert.deepStrictEqual(analytics.fastestTenPercentAverage([8]),{value:8,selectedCount:1,totalCount:1},'minst en giltig löpare ska ingå');
+const fastestTen=analytics.fastestTenPercentAverage(Array.from({length:20},(_,index)=>index+1));
+assert.strictEqual(fastestTen.selectedCount,2,'den snabbaste tiondelen ska avrundas uppåt till hela löpare');
+assert.strictEqual(fastestTen.value,19.5,'de två högsta farterna ska medelvärdesbildas');
+assert.strictEqual(analytics.fastestTenPercentAverage(Array.from({length:11},(_,index)=>index+1)).selectedCount,2,'11 giltiga tider ska avrundas uppåt till två löpare');
 const quarter=8*3600+15*60,finishBins=analytics.fixedFinishBins([quarter,quarter+899,quarter+900,quarter+1799,quarter+1800]);
 assert.strictEqual(finishBins.start,quarter,'första intervallet ska börja på den kvart som innehåller första målgången');
 assert.strictEqual(finishBins.step,900,'sluttidshistogrammet ska använda exakta 15-minutersintervall');
@@ -47,6 +53,12 @@ const app=fs.readFileSync(path.join(root,'docs/assets/app.js'),'utf8');
 const nerd=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
 
 assert.ok(html.includes('id="speedUnitFilter"')&&html.includes('<option value="pace">min/km</option>'));
+assert.ok(html.includes('id="classHeatStatMedian"')&&html.includes('id="classHeatStatFastest10"'),'båda statistiklägena ska vara valbara');
+assert.ok(html.includes('id="classHeatStatMedian" type="button" aria-pressed="true"'),'Median ska vara standard');
+assert.ok(css.includes('.class-heatmap-unit-toggles,.class-heatmap-stat-toggles{display:flex;flex-direction:column'),'enheter och statistikval ska staplas lodrätt');
+assert.ok(audience.includes("advanced.classHeatStatistic=mode==='fastest10'?'fastest10':'median'")&&audience.includes("syncStatistic('fastest10');renderClassWorld()"),'statistikknapparna ska vara exklusiva och rita om fartkartan');
+assert.ok(html.includes('class="disclaimer-qr" src="assets/coffee-qr.png" alt="QR-kod"'),'friskrivningen ska visa QR-bilden anonymt');
+assert.ok(fs.existsSync(path.join(root,'docs/assets/coffee-qr.png')),'QR-asseten ska finnas i docs/assets');
 assert.ok(html.indexOf('assets/speed-units.js')<html.indexOf('assets/runner-replay.js'),'enhetsmodulen ska laddas före replay och app');
 assert.ok(app.includes("ultravasan:speed-unit-change")&&app.includes("renderAll()"),'enhetsbyte ska rita om vyn utan omladdning');
 
