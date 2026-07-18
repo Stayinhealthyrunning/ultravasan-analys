@@ -27,6 +27,7 @@ assert.deepStrictEqual(audience.normalizePlacementZoomRect({x:-50,y:180},{x:140,
 assert.strictEqual(audience.placementZoomDragLargeEnough({width:5.9,height:30},6,6),false,'En för smal oavsiktlig dragning får inte zooma');
 assert.strictEqual(audience.placementZoomDragLargeEnough({width:30,height:5.9},6,6),false,'En för låg oavsiktlig dragning får inte zooma');
 assert.strictEqual(audience.placementZoomDragLargeEnough({width:6,height:6},6,6),true,'En giltig sexpixelsdragning ska kunna zooma');
+assert.deepStrictEqual(audience.placementPlotBounds(780,255,{l:54,r:20,t:18,b:42}),{plot:{left:54,top:18,right:760,bottom:213},data:{left:62,top:26,right:752,bottom:205}},'Placeringspunkterna ska ha åtta SVG-pixlars luft innanför plotområdet');
 assert.ok(Math.abs(audience.speedIndex(aggregate*.92,aggregate)-92)<1e-9,'Index under 100 ska betyda långsammare än gruppens loppfart');
 assert.strictEqual(audience.aggregateSpeedKmh([{distanceKm:90,seconds:9*3600}]),null,'Ett ensamt resultat ska ge reservläge');
 assert.strictEqual(audience.aggregateSpeedKmh([{distanceKm:90,seconds:9*3600},{distanceKm:0,seconds:0}]),null,'Ogiltiga eller saknade tider får inte fylla minimiunderlaget');
@@ -64,6 +65,9 @@ assert.ok(audienceSource.includes('placementZoomState.domain=')&&audienceSource.
 assert.ok(audienceSource.includes("selection.removeAttribute('hidden')")&&audienceSource.includes("selection.setAttribute('hidden','')"),'SVG-markeringen ska visas och döljas med riktiga attribut');
 assert.ok(audienceSource.includes("event.key==='Escape'")&&audienceSource.includes("addEventListener('pointercancel',cancel)")&&audienceSource.includes('stopPlacementZoomDrag()'),'Zoommarkeringen ska avbrytas vid Escape, pointercancel och omrendering');
 assert.ok(audienceSource.includes('selection.setAttribute(\'x\',rect.left)')&&audienceSource.includes('minT:timeAt(rect.left)')&&audienceSource.includes('maxP:placeAt(rect.bottom)'),'Synlig markering och zoomdomän ska använda exakt samma rektangel');
+assert.ok(audienceSource.includes('placementZoomState.domain||full')&&audienceSource.includes('minP:1,maxP:Math.max'),'Ozoomad och återställd vy ska behålla hela verkliga placeringsdomänen');
+assert.ok(audienceSource.includes('bounds=dataBounds')&&audienceSource.includes('(px-dataBounds.left)')&&audienceSource.includes('(py-dataBounds.top)'),'Brush och domänkonvertering ska följa samma inre datagränser');
+assert.ok(appSource.includes('edgePadding=8')&&appSource.includes('bounds=dataBounds'),'Appens första rendering ska ha samma kantskydd som den slutliga analysrenderaren');
 assert.ok(replayCss.includes('fill:rgba(27,118,89,.16)')&&replayCss.includes('stroke:var(--green)')&&replayCss.includes('pointer-events:none')&&replayCss.includes('.placement-zoom-selection[hidden]{display:none}'),'Markeringslagret ska vara grönt, transparent och inte fånga pekhändelser');
 assert.ok(css.includes('.segment-lab{grid-column:span 7}.percentile-card{grid-column:span 5}'),'Percentiltrappan ska få större bredd på desktop');
 assert.ok(audienceSource.includes('dnf-bar-track')&&audienceSource.includes('dnf-bar-fill'),'Repet dras ska ha ett fullt spår med proportionell DNF-fyllnad');
