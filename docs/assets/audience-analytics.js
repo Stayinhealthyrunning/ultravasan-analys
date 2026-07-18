@@ -23,12 +23,13 @@ const normalizePlacementZoomRect=(start,current,bounds)=>{const clampX=value=>Ma
 const placementZoomDragLargeEnough=(rect,minWidth,minHeight=minWidth)=>Number(rect?.width)>=Number(minWidth)&&Number(rect?.height)>=Number(minHeight);
 const selectedClubProfiles=(stats,selection)=>(selection||[]).map(key=>(stats||[]).find(club=>club.key===key)).filter(Boolean);
 const mergedClubFinishers=(clubs,limit=20)=>{const byId=new Map();for(const club of clubs||[])for(const result of club?.rows||club?.top||[]){const finish=Number(result?.finish_seconds);if(!Number.isFinite(finish)||finish<=0)continue;const id=result?.id??result?.athlete_id;if(id==null)continue;const key=String(id),existing=byId.get(key);if(existing){if(!existing.clubNames.includes(club.name))existing.clubNames.push(club.name);if(finish<Number(existing.result.finish_seconds))existing.result=result}else byId.set(key,{result,clubNames:[club.name]})}return [...byId.values()].sort((a,b)=>Number(a.result.finish_seconds)-Number(b.result.finish_seconds)||String(a.result.name_as_published||'').localeCompare(String(b.result.name_as_published||''),'sv')).slice(0,Math.max(0,Number(limit)||0))};
-if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamily,selectAudienceRace,aggregateSpeedKmh,speedIndex,relativeToplistWidth,visibleCountBarHeight,fixedFinishBins,finishBinTime:audienceFinishBinTime,finishHistogramGeometry,normalizePlacementZoomRect,placementZoomDragLargeEnough,selectedClubProfiles,mergedClubFinishers};
+const fastestTenPercentAverage=values=>{const valid=(values||[]).map(Number).filter(value=>Number.isFinite(value)&&value>0).sort((a,b)=>b-a);if(!valid.length)return{value:null,selectedCount:0,totalCount:0};/* Avrunda uppåt till närmaste löpare så att minst 10 %, och alltid minst en giltig löpare, ingår. */const selectedCount=Math.max(1,Math.ceil(valid.length*.1)),selected=valid.slice(0,selectedCount);return{value:selected.reduce((sum,value)=>sum+value,0)/selectedCount,selectedCount,totalCount:valid.length}};
+if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamily,selectAudienceRace,aggregateSpeedKmh,speedIndex,relativeToplistWidth,visibleCountBarHeight,fixedFinishBins,finishBinTime:audienceFinishBinTime,finishHistogramGeometry,normalizePlacementZoomRect,placementZoomDragLargeEnough,selectedClubProfiles,mergedClubFinishers,fastestTenPercentAverage};
 
 if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:''};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:new Map(),splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',classHeatStatistic:'median',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:''};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const resultStatus=r=>window.ResultStatus.classify(r,{hasSplit:advanced.splitEvidence.has(r?.id)});
@@ -279,32 +280,37 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function toggleClass(k){if(advanced.classSelection.includes(k))advanced.classSelection=advanced.classSelection.filter(x=>x!==k);else if(advanced.classSelection.length<5)advanced.classSelection.push(k);advanced.classSelection.sort(compareClasses);renderClassWorld()}
   function renderClassChips(stats){document.querySelector('#classChips').innerHTML=stats.map(x=>`<button class="selector-chip ${advanced.classSelection.includes(x.key)?'active':''}" data-class="${esc(x.key)}">${esc(x.key)} <small>${x.starters}</small></button>`).join('');document.querySelectorAll('#classChips .selector-chip').forEach(b=>b.onclick=()=>toggleClass(b.dataset.class))}
   function setupClassHeatUnitControls(){
-    const pace=document.querySelector('#classHeatUnitPace'),speed=document.querySelector('#classHeatUnitSpeed');
-    if(!pace||!speed)return;
-    const sync=unit=>{advanced.classHeatUnit=unit;pace.checked=unit==='pace';speed.checked=unit==='speed';pace.closest('label')?.classList.toggle('active',unit==='pace');speed.closest('label')?.classList.toggle('active',unit==='speed');const label=document.querySelector('#classHeatUnitLabel');if(label)label.textContent=unit==='pace'?'median min/km':'median km/h'};
-    if(pace.dataset.unitReady){sync(currentSpeedUnit());return}
+    const pace=document.querySelector('#classHeatUnitPace'),speed=document.querySelector('#classHeatUnitSpeed'),medianButton=document.querySelector('#classHeatStatMedian'),fastestButton=document.querySelector('#classHeatStatFastest10');
+    if(!pace||!speed||!medianButton||!fastestButton)return;
+    const syncLabel=()=>{const label=document.querySelector('#classHeatUnitLabel');if(label)label.textContent=`${advanced.classHeatStatistic==='fastest10'?'snabbaste 10 %':'median'} ${advanced.classHeatUnit==='speed'?'km/h':'min/km'}`};
+    const sync=unit=>{advanced.classHeatUnit=unit;pace.checked=unit==='pace';speed.checked=unit==='speed';pace.closest('label')?.classList.toggle('active',unit==='pace');speed.closest('label')?.classList.toggle('active',unit==='speed');syncLabel()};
+    const syncStatistic=mode=>{advanced.classHeatStatistic=mode==='fastest10'?'fastest10':'median';medianButton.classList.toggle('active',advanced.classHeatStatistic==='median');fastestButton.classList.toggle('active',advanced.classHeatStatistic==='fastest10');medianButton.setAttribute('aria-pressed',String(advanced.classHeatStatistic==='median'));fastestButton.setAttribute('aria-pressed',String(advanced.classHeatStatistic==='fastest10'));syncLabel()};
+    if(pace.dataset.unitReady){sync(currentSpeedUnit());syncStatistic(advanced.classHeatStatistic);return}
     pace.dataset.unitReady='1';
     const apply=(unit,persist=true)=>{
       sync(unit);if(persist)window.SpeedUnits?.set?.(unit);
     };
     pace.addEventListener('change',()=>apply(pace.checked?'pace':'speed'));
     speed.addEventListener('change',()=>apply(speed.checked?'speed':'pace'));
-    sync(currentSpeedUnit());
+    medianButton.addEventListener('click',()=>{syncStatistic('median');renderClassWorld()});
+    fastestButton.addEventListener('click',()=>{syncStatistic('fastest10');renderClassWorld()});
+    sync(currentSpeedUnit());syncStatistic('median');
   }
   function renderClassHeatmap(stats){
     const el=document.querySelector('#classHeatmap'),rows=stats.slice().sort((a,b)=>compareClasses(a.key,b.key)),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps),values=[];
-    const unit=advanced.classHeatUnit||'pace';
-    rows.forEach(g=>cps.forEach(c=>{const v=segmentSpeeds(g.rows,c.sequence_no);if(v.length)values.push(safeMed(v))}));
+    const unit=advanced.classHeatUnit||'pace',mode=advanced.classHeatStatistic||'median';
+    const summarize=samples=>mode==='fastest10'?fastestTenPercentAverage(samples):{value:safeMed(samples),selectedCount:samples.length,totalCount:samples.length};
+    rows.forEach(g=>cps.forEach(c=>{const summary=summarize(segmentSpeeds(g.rows,c.sequence_no));if(Number.isFinite(summary.value))values.push(summary.value)}));
     if(!rows.length||!cps.length){el.innerHTML='<div class="empty">Klasser eller mellantider saknas.</div>';return}
     const lo=values.length?Math.min(...values):0,hi=values.length?Math.max(...values):1;
-    const display=med=>unit==='pace'?fmtHeatPace(med):med.toFixed(1);
+    const display=value=>unit==='pace'?fmtHeatPace(value):value.toFixed(1);
     const suffix=unit==='pace'?' min/km':' km/h';
     let html=`<div class="class-map-scroll"><div class="class-map-grid" style="--segment-count:${cps.length}"><div class="class-map-corner">Klass</div>${pairs.map(p=>`<div class="class-map-head segment-range-head">${segmentHeader(p.from,p.to)}</div>`).join('')}`;
     rows.forEach(g=>{
       html+=`<button class="class-map-class ${g.key.startsWith('W')?'female-text':'male-text'}" data-class="${esc(g.key)}">${esc(g.key)}</button>`;
       cps.forEach((c,i)=>{
-        const v=segmentSpeeds(g.rows,c.sequence_no),med=safeMed(v),t=med?(med-lo)/(hi-lo||1):0,hue=Math.round(45+105*t),light=Math.round(88-43*t),pair=pairs[i];
-        html+=`<div class="class-map-cell" style="background:hsl(${hue} 55% ${light}%)" title="${esc(g.key)} · ${esc(pair?.label||c.name)}: ${med?display(med)+suffix:'saknas'}">${med?display(med):'–'}</div>`;
+        const summary=summarize(segmentSpeeds(g.rows,c.sequence_no)),value=summary.value,t=value?(value-lo)/(hi-lo||1):0,hue=Math.round(45+105*t),light=Math.round(88-43*t),pair=pairs[i],sampleInfo=mode==='fastest10'?` · ${summary.selectedCount} av ${summary.totalCount} löpare`:'';
+        html+=`<div class="class-map-cell" style="background:hsl(${hue} 55% ${light}%)" title="${esc(g.key)} · ${esc(pair?.label||c.name)}: ${value?display(value)+suffix:'saknas'}${sampleInfo}">${value?display(value):'–'}</div>`;
       });
     });
     el.innerHTML=html+'</div></div>';

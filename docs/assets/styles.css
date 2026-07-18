@@ -404,7 +404,12 @@ html,body{max-width:100%;overflow-x:hidden}
 .unit-toggle{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:.67rem;font-weight:850;cursor:pointer;user-select:none;transition:.18s ease}
 .unit-toggle input{margin:0;accent-color:var(--green)}
 .unit-toggle.active{background:var(--forest);border-color:var(--forest);color:#fff;box-shadow:0 4px 12px rgba(13,76,58,.16)}
+.class-heatmap-controls{display:flex;align-items:stretch;gap:8px}.class-heatmap-unit-toggles,.class-heatmap-stat-toggles{display:flex;flex-direction:column;align-items:stretch;gap:6px}.class-heatmap-unit-toggles{flex-wrap:nowrap}.class-heatmap-controls .unit-toggle{justify-content:flex-start;min-height:30px;white-space:nowrap}.class-heatmap-stat-toggles button{appearance:none;text-align:left}
 @media(max-width:720px){.unit-toggle-group{width:100%}.unit-toggle{flex:1;justify-content:center;min-height:42px}}
+
+/* Diskret QR-layout bredvid friskrivningen, staplad utan overflow på små skärmar. */
+.disclaimer-content{display:flex;align-items:center;gap:16px;color:var(--muted);font-size:.83rem;line-height:1.65}.disclaimer-content p{margin:0}.disclaimer-qr{display:block;flex:0 0 auto;width:84px;height:84px;object-fit:contain;border-radius:8px}
+@media(max-width:720px){.class-heatmap-tools{align-items:flex-start}.class-heatmap-controls{width:auto}.class-heatmap-unit-toggles{width:auto}.class-heatmap-controls .unit-toggle{flex:none;justify-content:flex-start;min-height:36px}.disclaimer-content{align-items:flex-start;flex-direction:column}.disclaimer-qr{width:76px;height:76px}}
 
 
 /* Klasslabbet i fast vertikal ordning och enhetligt klubb/ort-val */
