@@ -189,6 +189,16 @@ class HistoricalConfigurationTests(unittest.TestCase):
         self.assertNotIn(2026, configured)
         self.assertIn(2025, configured)
 
+    def test_current_2025_race_uses_checkpoint_set_b_in_database_validation(self) -> None:
+        conn = uvtool.connect(ROOT / "data" / "ultravasan.sqlite")
+        issues = validate_uv45_history.collect_race_issues(
+            conn,
+            "ultravasan45-2025",
+            RACES["ultravasan45-2025"]["event_code"],
+        )
+        conn.close()
+        self.assertEqual([], issues)
+
 
 class HistoricalImportSafetyTests(unittest.TestCase):
     def test_uv45_save_is_idempotent_and_cannot_touch_uv90(self) -> None:
