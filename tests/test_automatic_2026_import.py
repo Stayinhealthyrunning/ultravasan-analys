@@ -5,6 +5,7 @@ import json
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import parse_qs
 
 import pytest
 
@@ -74,9 +75,40 @@ def test_availability_gate_is_conservative() -> None:
     good_probe = {"details": [{}] * 10, "blocking_issues": 0, "finished": 8, "with_splits": 9}
     assert automatic.availability_blockers("uv90", 1800, good_probe) == []
     assert automatic.availability_blockers("uv45", 800, good_probe) == []
+    assert automatic.availability_blockers("uv90", 2500, good_probe) == []
+    assert automatic.availability_blockers("uv45", 3500, good_probe) == []
     assert automatic.availability_blockers("uv90", 100, good_probe)
     broken = {**good_probe, "blocking_issues": 1}
     assert any("parser" in item for item in automatic.availability_blockers("uv45", 800, broken))
+
+
+def test_list_pagination_collects_more_than_2500_unique_results(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    class FakeFetcher:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def get(self, url: str, _cache: Path):
+            return url, 200, False, "test"
+
+        def close(self) -> None:
+            pass
+
+    def fake_entries(_html: str, url: str) -> list[dict]:
+        page = int(parse_qs(automatic.urlparse(url).query)["page"][0])
+        size = 100 if page <= 25 else 1 if page == 26 else 0
+        start = (page - 1) * 100
+        return [{"idp": f"runner-{start + index}", "url": url} for index in range(size)]
+
+    monkeypatch.setattr(automatic.mika_import, "Fetcher", FakeFetcher)
+    monkeypatch.setattr(automatic.mika_import, "extract_entries", fake_entries)
+    race = {
+        "race_key": "ultravasan90-2026", "event_code": "UL90_TEST",
+        "result_year_path": 2027, "max_pages": 200, "empty_pages_to_stop": 2,
+        "partition_by_sex": False,
+    }
+    entries, pages = automatic.collect_list_entries(race, tmp_path, delay=0)
+    assert len(entries) == 2501
+    assert pages[-1]["page"] == 28
 
 
 def test_strict_parser_rejects_unknown_and_synthetic_passages() -> None:

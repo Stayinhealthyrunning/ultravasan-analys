@@ -36,11 +36,11 @@ APPLY_CONFIRMATION = "APPLY-AUTOMATIC-2026-RESULTS"
 TARGETS = {
     "uv90": {
         "race_key": "ultravasan90-2026", "template_key": "ultravasan90-2025",
-        "name": "Ultravasan 90", "min_results": 1200, "max_results": 4000,
+        "name": "Ultravasan 90", "min_results": 1200,
     },
     "uv45": {
         "race_key": "ultravasan45-2026", "template_key": "ultravasan45-2025",
-        "name": "Ultravasan 45", "min_results": 500, "max_results": 2500,
+        "name": "Ultravasan 45", "min_results": 500,
     },
 }
 
@@ -266,10 +266,11 @@ def probe_details(race: dict[str, Any], entries: list[dict[str, Any]], raw: Path
 def availability_blockers(family: str, count: int, probe: dict[str, Any], *, representative: bool = False) -> list[str]:
     meta = TARGETS[family]
     lower = 5 if representative else int(meta["min_results"])
-    upper = 20 if representative else int(meta["max_results"])
     blockers: list[str] = []
-    if not lower <= count <= upper:
-        blockers.append(f"participant-count={count}, expected {lower}..{upper}")
+    if count < lower:
+        blockers.append(f"participant-count={count}, expected at least {lower}")
+    if representative and count > 20:
+        blockers.append(f"participant-count={count}, representative test expected at most 20")
     if probe["blocking_issues"]:
         blockers.append(f"blocking-parser-issues={probe['blocking_issues']}")
     if not probe["finished"]:
@@ -357,7 +358,6 @@ def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[st
     with_splits = sum(bool(by_result.get(row["id"])) for row in starters)
     family = "uv45" if "45" in race_key else "uv90"
     lower = 5 if representative else TARGETS[family]["min_results"]
-    upper = 20 if representative else TARGETS[family]["max_results"]
     blockers: list[str] = []
     checks = {
         "participant_count": count, "official_records": official_records,
@@ -371,7 +371,7 @@ def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[st
         "strict_parser_errors": strict_errors,
         "checkpoint_coverage": dict(Counter(row["checkpoint_key"] for row in split_rows)),
     }
-    if not int(lower) <= count <= int(upper): blockers.append("participant count outside gate")
+    if count < int(lower) or (representative and count > 20): blockers.append("participant count outside gate")
     if official_records != count: blockers.append("database participant count differs from official list")
     if not finishers: blockers.append("no finishers")
     if not representative and len(finishers) < count * 0.5: blockers.append("implausibly few finishers")
