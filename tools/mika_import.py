@@ -13,6 +13,7 @@ Commands:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import re
 import sys
@@ -221,6 +222,49 @@ def validate_split_sequence(parsed: uvtool.ParsedResult, checkpoints: list[dict[
         elif mora.get("elapsed_seconds") != parsed.finish_seconds:
             errors.append("mora: split does not equal finish time")
     return errors
+
+
+def validate_official_detail(
+    parsed: uvtool.ParsedResult,
+    html: str,
+    checkpoints: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    """Validate one detail page without inventing or retaining estimated splits."""
+    issues: list[dict[str, str]] = []
+    cp_map = {cp["checkpoint_key"]: cp for cp in checkpoints}
+    soup = BeautifulSoup(html, "lxml")
+    for row in soup.select("tr.split"):
+        desc = uvtool._class_text(row, ["desc", "name", "split-name"])
+        key = uvtool.checkpoint_key(desc)
+        if not key or key not in cp_map:
+            issues.append({"severity": "error", "code": "unknown-checkpoint", "message": repr(desc)})
+
+    official = [
+        split for split in parsed.splits or []
+        if not split.get("is_synthetic") and not split.get("is_estimated")
+    ]
+    if len(official) != len(parsed.splits or []):
+        issues.append({
+            "severity": "error", "code": "estimated-or-synthetic-split",
+            "message": "A non-official split was rejected",
+        })
+    parsed.splits = official
+    for message in validate_split_sequence(parsed, checkpoints):
+        issues.append({"severity": "error", "code": "invalid-split-sequence", "message": message})
+
+    keys = [split.get("checkpoint_key") for split in official]
+    for key, count in Counter(keys).items():
+        if count > 1:
+            issues.append({"severity": "error", "code": "duplicate-checkpoint", "message": str(key)})
+    expected = [cp["checkpoint_key"] for cp in checkpoints if cp["checkpoint_key"] != "start"]
+    if parsed.status == "FINISHED" and keys != expected:
+        issues.append({
+            "severity": "warning", "code": "incomplete-finisher-series",
+            "message": f"Observed {keys}; expected {expected}",
+        })
+    if parsed.status == "DNF" and "mora" in keys:
+        issues.append({"severity": "error", "code": "dnf-has-mora", "message": "DNF has a finish split"})
+    return issues
 
 
 def require_separate_probe_db(probe_db: Path, production_db: Path = uvtool.DEFAULT_DB) -> None:
@@ -501,9 +545,15 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
                 uvtool.record_source_page(conn, run_id, source["id"], race_row["id"], "participant_detail", idp, url, status, cache, html)
                 external_id = f"{race_cfg['event_code']}:{idp}"
                 parsed = apply_fallback(uvtool.parse_detail_html(html, external_id, url, checkpoints), entry)
+                quality_issues: list[dict[str, str]] = []
+                if getattr(args, "strict_official", False):
+                    quality_issues = validate_official_detail(parsed, html, checkpoints)
+                    blockers = [issue for issue in quality_issues if issue["severity"] == "error"]
+                    if blockers:
+                        raise ValueError("Strict official validation failed: " + json.dumps(blockers, ensure_ascii=False))
                 _, is_new = uvtool.save_result(conn, race_row["id"], source["id"], race_row["distance_km"], checkpoints, parsed)
                 inserted += int(is_new); updated += int(not is_new)
-                report["details"].append({"idp": idp, "name": parsed.name, "splits": len(parsed.splits or []), "status": parsed.status, "mode": mode, "cached": cached})
+                report["details"].append({"idp": idp, "name": parsed.name, "splits": len(parsed.splits or []), "status": parsed.status, "mode": mode, "cached": cached, "quality_issues": quality_issues})
                 print(f"[{index}/{len(items)}] {parsed.name}: {len(parsed.splits or [])} passager ({mode})")
             except Exception as exc:
                 warnings += 1
@@ -523,7 +573,7 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
         raise
     finally:
         fetcher.close(); conn.close()
-        report_path = ROOT / "reports" / f"{args.race}-{'probe' if probe else 'import'}.json"
+        report_path = getattr(args, "report", None) or ROOT / "reports" / f"{args.race}-{'probe' if probe else 'import'}.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"Importlogg: {report_path}")
@@ -568,6 +618,8 @@ def common(sub: argparse.ArgumentParser) -> None:
     sub.add_argument("--browser-fallback", action="store_true", help="Använd Playwright om vanlig HTTP blockeras")
     sub.add_argument("--max-pages", type=int, default=250)
     sub.add_argument("--limit", type=int, default=0)
+    sub.add_argument("--strict-official", action="store_true", help="Block unknown, estimated, synthetic or invalid passages")
+    sub.add_argument("--report", type=Path, help="Write the import report to this path")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -578,7 +630,7 @@ def parser() -> argparse.ArgumentParser:
     s = sub.add_parser("scrape", help="Importera hela loppet")
     common(s)
     d = sub.add_parser("discover", help="Sök eventkoder för Ultravasan 90 och 45")
-    d.add_argument("--path-years", type=int, nargs="+", default=[2026, 2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015, 2014])
+    d.add_argument("--path-years", type=int, nargs="+", default=[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015, 2014])
     d.add_argument("--raw", type=Path, default=uvtool.DEFAULT_RAW)
     d.add_argument("--delay", type=float, default=1.0)
     d.add_argument("--force", action="store_true")

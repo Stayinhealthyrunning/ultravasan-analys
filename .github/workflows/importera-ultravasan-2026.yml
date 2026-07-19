@@ -1,0 +1,281 @@
+name: Import official Ultravasan 2026 results
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Kontrollera 2026 eller simulera hela kedjan mot 2025"
+        required: true
+        default: check-2026
+        type: choice
+        options:
+          - check-2026
+          - simulate-2025
+      force_refresh:
+        description: "Ignorera Actions-körningens lokala HTTP-cache"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automatic-official-ultravasan-2026
+  cancel-in-progress: false
+
+jobs:
+  date-gate:
+    name: Kontrollera automatiseringsperiod
+    runs-on: ubuntu-latest
+    outputs:
+      active: ${{ steps.window.outputs.active }}
+      state: ${{ steps.window.outputs.state }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: window
+        name: Tillåt tidigast 16 augusti och högst en kontroll per dag
+        run: python tools/automatic_2026_import.py window --github-output "$GITHUB_OUTPUT"
+      - name: Sammanfatta datumgrinden
+        run: |
+          echo "Datumgrind (UTC): ${{ steps.window.outputs.state }}" >> "$GITHUB_STEP_SUMMARY"
+
+  simulate-2025:
+    name: Simulera officiell kedja mot 2025
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'simulate-2025'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installera import- och testberoenden
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - name: Kör representativ 2025-simulering utan produktionsskrivning
+        run: |
+          args=()
+          if [[ "${{ inputs.force_refresh }}" == "true" ]]; then args+=(--force); fi
+          python tools/automatic_2026_import.py simulate-2025 \
+            --work-db "$RUNNER_TEMP/automatic-2025.sqlite" \
+            --raw "$RUNNER_TEMP/automatic-2025-raw" \
+            --export-dir "$RUNNER_TEMP/automatic-2025-export" \
+            --report "$RUNNER_TEMP/automatic-2025-report/simulation.json" \
+            "${args[@]}"
+      - name: Kör riktade automationstester
+        run: |
+          python -m pytest -q tests/test_automatic_2026_import.py
+          node tests/test_dynamic_2026_frontend.js
+      - name: Spara simuleringsrapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-2025-simulation
+          path: ${{ runner.temp }}/automatic-2025-report/
+          if-no-files-found: warn
+          retention-days: 30
+
+  import-and-package:
+    name: Importera, validera och paketera 2026
+    needs: date-gate
+    if: >-
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && inputs.operation == 'check-2026')) &&
+      needs.date-gate.outputs.active == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.apply.outputs.changed || 'false' }}
+      uv90_results: ${{ steps.dry.outputs.uv90_results || steps.availability.outputs.uv90_results || '0' }}
+      uv45_results: ${{ steps.dry.outputs.uv45_results || steps.availability.outputs.uv45_results || '0' }}
+      splits: ${{ steps.dry.outputs.splits || '0' }}
+      commit_sha: ${{ steps.commit.outputs.commit_sha || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installera import- och testberoenden
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - id: availability
+        name: Upptäck event och kontrollera att båda officiella fälten är publicerade
+        run: |
+          args=()
+          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.force_refresh }}" == "true" ]]; then args+=(--force); fi
+          python tools/automatic_2026_import.py availability \
+            --raw "$RUNNER_TEMP/automatic-2026-raw" \
+            --generated-config "$RUNNER_TEMP/automatic-2026-config.json" \
+            --report "$RUNNER_TEMP/automatic-2026-report/availability.json" \
+            --github-output "$GITHUB_OUTPUT" \
+            "${args[@]}"
+      - name: Redovisa vänteläge utan att låtsas publicera
+        if: steps.availability.outputs.ready != 'true'
+        run: |
+          echo "## Ingen publicering" >> "$GITHUB_STEP_SUMMARY"
+          echo "Officiella UV90- och UV45-resultat för 2026 är ännu inte samtidigt kompletta." >> "$GITHUB_STEP_SUMMARY"
+          echo "UV90 listposter: ${{ steps.availability.outputs.uv90_results }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "UV45 listposter: ${{ steps.availability.outputs.uv45_results }}" >> "$GITHUB_STEP_SUMMARY"
+      - id: dry
+        name: Full dry-run i separat databas och andra idempotenskörning
+        if: steps.availability.outputs.ready == 'true'
+        run: |
+          python tools/automatic_2026_import.py full-dry-run \
+            --production-db data/ultravasan.sqlite \
+            --work-db "$RUNNER_TEMP/automatic-2026.sqlite" \
+            --generated-config "$RUNNER_TEMP/automatic-2026-config.json" \
+            --availability-report "$RUNNER_TEMP/automatic-2026-report/availability.json" \
+            --raw "$RUNNER_TEMP/automatic-2026-raw" \
+            --export-dir "$RUNNER_TEMP/automatic-2026-export" \
+            --report "$RUNNER_TEMP/automatic-2026-report/full-dry-run.json" \
+            --github-output "$GITHUB_OUTPUT"
+      - id: apply
+        name: Promota exakt den verifierade databasen och bygg webbexporter
+        if: steps.dry.outputs.ready == 'true'
+        run: |
+          python tools/automatic_2026_import.py apply \
+            --production-db data/ultravasan.sqlite \
+            --work-db "$RUNNER_TEMP/automatic-2026.sqlite" \
+            --generated-config "$RUNNER_TEMP/automatic-2026-config.json" \
+            --dry-run-report "$RUNNER_TEMP/automatic-2026-report/full-dry-run.json" \
+            --export-dir "$RUNNER_TEMP/automatic-2026-apply" \
+            --report reports/automatic-2026-import.json \
+            --confirmation APPLY-AUTOMATIC-2026-RESULTS \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Kör fullständiga tester och kvalitetsgrindar
+        if: steps.apply.outputs.changed == 'true'
+        run: |
+          python -m pytest -q
+          for test in tests/*.js; do node "$test"; done
+          python tools/uvtool.py validate
+          python tools/validate_uv45_history.py
+          python - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, str(Path('tools').resolve()))
+          import uvtool
+          with sqlite3.connect('data/ultravasan.sqlite') as conn:
+              integrity = conn.execute('PRAGMA integrity_check').fetchone()[0]
+              foreign_keys = conn.execute('PRAGMA foreign_key_check').fetchall()
+              duplicate_splits = conn.execute('SELECT COUNT(*) FROM (SELECT result_id,checkpoint_id,COUNT(*) n FROM splits GROUP BY 1,2 HAVING n>1)').fetchone()[0]
+              collisions = uvtool.collect_same_race_identity_collisions(conn)
+          print({'integrity': integrity, 'foreign_keys': len(foreign_keys), 'duplicate_splits': duplicate_splits, 'identity_collisions': len(collisions)})
+          if integrity != 'ok' or foreign_keys or duplicate_splits or collisions:
+              raise SystemExit('Databasens slutgrind misslyckades')
+          PY
+          git diff --check
+      - id: commit
+        name: Commit och push endast verkligt ändrad officiell data
+        if: steps.apply.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            config/races.json \
+            data/ultravasan.sqlite \
+            docs/data/manifest.json \
+            docs/data/ultravasan.json \
+            docs/data/ultravasan-data.js \
+            reports/automatic-2026-import.json
+          git diff --cached --check
+          git diff --cached --quiet && { echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          git commit -m "Import official Ultravasan 2026 results"
+          git push origin HEAD:main
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Paketera Pages från exakt publicerad arbetsyta
+        if: steps.apply.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Spara import- och kvalitetsrapporter
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-2026-import-${{ github.run_id }}
+          path: ${{ runner.temp }}/automatic-2026-report/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Sammanfatta verklig publiceringskandidat
+        if: steps.apply.outputs.changed == 'true'
+        run: |
+          echo "## Officiell 2026-import verifierad" >> "$GITHUB_STEP_SUMMARY"
+          echo "UV90-resultat: ${{ steps.dry.outputs.uv90_results }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "UV45-resultat: ${{ steps.dry.outputs.uv45_results }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "2026-splits: ${{ steps.dry.outputs.splits }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: ${{ steps.commit.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-pages:
+    name: Publicera verifierad 2026-data till GitHub Pages
+    needs: import-and-package
+    if: needs.import-and-package.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicera Pages-artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify-pages:
+    name: Verifiera att den nya datan verkligen är live
+    needs:
+      - import-and-package
+      - deploy-pages
+    if: needs.import-and-package.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.import-and-package.outputs.commit_sha }}
+      - name: Vänta in och jämför den publicerade datafilen
+        env:
+          PUBLIC_URL: https://stayinhealthyrunning.github.io/ultravasan-analys/
+        run: |
+          expected=$(sha256sum docs/data/ultravasan.json | cut -d' ' -f1)
+          for attempt in $(seq 1 20); do
+            if curl --fail --location --silent --show-error \
+              "$PUBLIC_URL/data/ultravasan.json?run=${GITHUB_RUN_ID}-${attempt}" \
+              --output "$RUNNER_TEMP/public-ultravasan.json"; then
+              actual=$(sha256sum "$RUNNER_TEMP/public-ultravasan.json" | cut -d' ' -f1)
+              if [[ "$actual" == "$expected" ]]; then
+                echo "Publicerad data är byteidentisk med committen."
+                break
+              fi
+            fi
+            if [[ "$attempt" == "20" ]]; then
+              echo "GitHub Pages visar inte den verifierade datafilen." >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          curl --fail --location --silent --show-error "$PUBLIC_URL?run=$GITHUB_RUN_ID" --output "$RUNNER_TEMP/index.html"
+          grep -q 'Ultravasan' "$RUNNER_TEMP/index.html"
+      - name: Slutlig SUCCESS-signal för GitHubs Actions-notifiering
+        run: |
+          echo "## Publicering klar" >> "$GITHUB_STEP_SUMMARY"
+          echo "UV90-resultat: ${{ needs.import-and-package.outputs.uv90_results }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "UV45-resultat: ${{ needs.import-and-package.outputs.uv45_results }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "2026-splits: ${{ needs.import-and-package.outputs.splits }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Publicerad URL: https://stayinhealthyrunning.github.io/ultravasan-analys/" >> "$GITHUB_STEP_SUMMARY"

@@ -186,7 +186,6 @@ class HistoricalConfigurationTests(unittest.TestCase):
         configured = {race["year"] for race in CONFIG["races"] if race.get("race_family") == "uv45"}
         self.assertNotIn(2020, configured)
         self.assertNotIn(2021, configured)
-        self.assertNotIn(2026, configured)
         self.assertIn(2025, configured)
 
     def test_current_2025_race_uses_checkpoint_set_b_in_database_validation(self) -> None:

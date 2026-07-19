@@ -21,7 +21,7 @@ HISTORY_EVENTS = {
     2023: "UL45_HCH8NDMR2301",
     2024: "UL45_HCH8NDMR2401",
 }
-EXCLUDED_HISTORY_YEARS = {2020, 2021, 2025, 2026}
+EXCLUDED_HISTORY_YEARS = {2020, 2021, 2025}
 CHECKPOINT_SET_A = ["start", "oxberg", "hokberg", "eldris", "mora"]
 CHECKPOINT_SET_B = ["start", "lillsjon", "oxberg", "hokberg", "eldris", "mora_warning", "mora"]
 CANONICAL_STATUSES = {"FINISHED", "DNF", "DNS", "DSQ", "UNKNOWN", "STARTADE INTE"}
@@ -56,7 +56,8 @@ def collect_config_issues(config: dict) -> list[str]:
         int(race.get("year")) for race in races.values()
         if race.get("race_family") == "uv45" and race.get("year") is not None
     }
-    forbidden = configured_uv45_years & {2020, 2021, 2026}
+    # 2026 is a current official import, not one of the bounded history years.
+    forbidden = configured_uv45_years & {2020, 2021}
     if forbidden:
         issues.append(f"Förbjudna UV45-år finns i konfigurationen: {sorted(forbidden)}.")
     return issues
