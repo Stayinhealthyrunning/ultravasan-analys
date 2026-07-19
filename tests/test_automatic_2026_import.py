@@ -116,6 +116,25 @@ def test_workflow_has_daily_schedule_explicit_pages_and_no_mail_code() -> None:
     assert "actions/deploy-pages@v4" in workflow
     assert "pages: write" in workflow and "id-token: write" in workflow
     assert "smtp" not in workflow.lower() and "sendmail" not in workflow.lower()
-    assert "automatic_2026_import.py window" in workflow
+    assert 'today="$(date -u +%F)"' in workflow
+    assert '[[ "$today" < "2026-08-16" ]]' in workflow
+    assert '[[ "$today" > "2026-09-15" ]]' in workflow
+    assert "Manuell simulate-2025 körs i ett separat read-only-jobb oavsett datum" in workflow
+    assert "github.event_name == 'workflow_dispatch' && inputs.operation == 'simulate-2025'" in workflow
+    assert "steps.availability.outputs.ready == 'true'" in workflow
+    assert "needs.date-gate.outputs.active == 'true'" in workflow
     assert "automatic_2026_import.py full-dry-run" in workflow
     assert "automatic_2026_import.py apply" in workflow
+
+
+def test_manual_2025_simulation_is_date_independent_and_cannot_publish() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "importera-ultravasan-2026.yml").read_text(encoding="utf-8")
+    date_gate = workflow[workflow.index("  date-gate:"):workflow.index("  simulate-2025:")]
+    simulation = workflow[workflow.index("  simulate-2025:"):workflow.index("  import-and-package:")]
+    assert "automatic_2026_import.py window" not in date_gate
+    assert "actions/checkout" not in date_gate
+    assert "contents: read" in simulation
+    assert '--work-db "$RUNNER_TEMP/automatic-2025.sqlite"' in simulation
+    assert "data/ultravasan.sqlite" not in simulation
+    assert "deploy-pages" not in simulation
+    assert "git push" not in simulation
