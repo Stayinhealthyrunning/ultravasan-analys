@@ -77,6 +77,7 @@ LABEL_MAP = {
 }
 
 CHECKPOINT_ALIASES = {
+    "hogsta punkten": "high_point", "högsta punkten": "high_point",
     "mora forvarning": "mora_warning", "mora förvarning": "mora_warning",
     "lillsjon": "lillsjon", "lillsjön": "lillsjon",
     "start": "start", "salen": "start", "sälen": "start",
@@ -879,6 +880,7 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
     cp_by_key = {c["checkpoint_key"]: c for c in checkpoints}
     last_elapsed = 0
     last_distance = 0.0
+    distance_basis_known = True
     ordered_splits = sorted(
         parsed.splits or [],
         key=lambda split: cp_by_key.get(split.get("checkpoint_key"), {}).get("sequence_no", 10**9),
@@ -894,8 +896,13 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         elapsed = split.get("elapsed_seconds")
         segment = elapsed - last_elapsed if elapsed is not None and elapsed >= last_elapsed else None
         dist = cp_row["distance_km"]
-        segment_dist = dist - last_distance if dist is not None else None
+        # An official timing row may have no published distance. Do not derive a
+        # misleading pace for it or for the following segment across that gap.
+        segment_dist = dist - last_distance if dist is not None and distance_basis_known else None
         segment_pace = segment / segment_dist if segment is not None and segment_dist and segment_dist > 0 else None
+        if segment_pace is None:
+            reported_pace = split.get("reported_pace_seconds_per_km")
+            segment_pace = reported_pace if reported_pace is not None and reported_pace > 0 else None
         conn.execute("""
           INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,segment_seconds,place_overall,place_gender,place_class,
             pace_seconds_per_km,reported_pace_seconds_per_km,speed_kmh,time_of_day,diff_seconds,status,is_estimated,raw_json)
@@ -913,6 +920,9 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
             last_elapsed = elapsed
         if dist is not None:
             last_distance = dist
+            distance_basis_known = True
+        else:
+            distance_basis_known = False
     return result_id, existing is None
 
 

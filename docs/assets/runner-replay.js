@@ -72,7 +72,7 @@
     return {color:PACE_COLORS[index],colorIndex:index,label:labels[index],icon:index<2?'▲':index>2?'▼':'●'};
   }
 
-  function normalizedCheckpoint(cp){return {key:String(cp.checkpoint_key||cp.key||'').toLowerCase(),name:cp.name||cp.short||cp.checkpoint_name||cp.checkpoint_key,short:cp.short||cleanName(cp.name||cp.checkpoint_name),sequence:Number(cp.sequence_no||0),distance:Number(cp.distance_km||0)}}
+  function normalizedCheckpoint(cp){return {key:String(cp.checkpoint_key||cp.key||'').toLowerCase(),name:cp.name||cp.short||cp.checkpoint_name||cp.checkpoint_key,short:cp.short||cleanName(cp.name||cp.checkpoint_name),sequence:Number(cp.sequence_no||0),distance:finite(cp.distance_km)?Number(cp.distance_km):null}}
   function splitForCheckpoint(splits,cp){return splits.find(s=>String(s.checkpoint_key||'').toLowerCase()===cp.key)||splits.find(s=>cleanName(s.checkpoint_name).toLowerCase()===cleanName(cp.name).toLowerCase())}
 
   function deriveClassPlacements(results=[],splits=[]){
