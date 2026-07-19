@@ -33,14 +33,41 @@ jobs:
     outputs:
       active: ${{ steps.window.outputs.active }}
       state: ${{ steps.window.outputs.state }}
+      reason: ${{ steps.window.outputs.reason }}
     steps:
-      - uses: actions/checkout@v4
       - id: window
         name: Tillåt tidigast 16 augusti och högst en kontroll per dag
-        run: python tools/automatic_2026_import.py window --github-output "$GITHUB_OUTPUT"
+        shell: bash
+        run: |
+          today="$(date -u +%F)"
+          if [[ "$today" < "2026-08-16" ]]; then
+            state="before-window"
+            active="false"
+            reason="Före 2026-08-16: ingen officiell 2026-import eller publicering körs."
+          elif [[ "$today" > "2026-09-15" ]]; then
+            state="after-window"
+            active="false"
+            reason="Efter 2026-09-15: den schemalagda 2026-kontrollen är avslutad."
+          else
+            state="active"
+            active="true"
+            reason="Datumet ligger inom kontrollperioden 2026-08-16–2026-09-15."
+          fi
+          echo "date_utc=$today" >> "$GITHUB_OUTPUT"
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          echo "active=$active" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
       - name: Sammanfatta datumgrinden
         run: |
           echo "Datumgrind (UTC): ${{ steps.window.outputs.state }}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.window.outputs.active }}" != "true" ]]; then
+            echo "## Ingen 2026-import" >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.window.outputs.reason }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Förklara manuellt simulationsläge
+        if: github.event_name == 'workflow_dispatch' && inputs.operation == 'simulate-2025'
+        run: |
+          echo "Manuell simulate-2025 körs i ett separat read-only-jobb oavsett datum och kan aldrig publicera data." >> "$GITHUB_STEP_SUMMARY"
 
   simulate-2025:
     name: Simulera officiell kedja mot 2025
