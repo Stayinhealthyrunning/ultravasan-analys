@@ -12,7 +12,9 @@ const nCompareClasses=(a,b)=>{const A=nClassInfo(a),B=nClassInfo(b);return A.sex
 function segmentClassOptions(rows){return [...new Set((rows||[]).map(r=>String(r?.age_class||'').trim()).filter(Boolean))].sort(nCompareClasses)}
 function filterRowsBySegmentClass(rows,selectedClass){const selected=String(selectedClass||'').trim();return selected?(rows||[]).filter(r=>String(r?.age_class||'')===selected):[...(rows||[])]}
 const activeRace=()=>state.data.races.find(r=>r.id===state.raceId);
-const splitMap=id=>new Map(state.data.splits.filter(s=>s.result_id===id).map(s=>[s.sequence_no,s]));
+const nSplitsForResult=id=>state.data.splitsByResult.get(id)||window.UltravasanDataIndex.EMPTY_SPLITS;
+const nSplitsForResults=rows=>window.UltravasanDataIndex.splitsForResults(state.data,rows);
+const splitMap=id=>new Map(nSplitsForResult(id).map(s=>[s.sequence_no,s]));
 const nSex=r=>{const x=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(x)?'F':['M','H'].includes(x)?'M':'U'};
 const nResultStatus=r=>globalThis.ResultStatus.classify(r,{hasSplit:state.data?.splitEvidence?.has(r?.id)});
 const nIsStarter=r=>nResultStatus(r).started;
@@ -67,7 +69,7 @@ function populateSegmentClassFilter(){
 }
 function renderCoverage(){
   const fr=familyRaces(),results=familyResults(),years=new Set(fr.filter(r=>results.some(x=>x.race_id===r.id)).map(r=>r.year));
-  const ids=new Set(results.map(r=>r.id)),resultIds=new Set(state.data.splits.filter(s=>ids.has(s.result_id)).map(s=>s.result_id)),coverage=results.length?resultIds.size/results.length:0;
+  const resultIds=results.filter(r=>nSplitsForResult(r.id).length).length,coverage=results.length?resultIds/results.length:0;
   const el=n$('#intelligenceCoverage');if(el)el.textContent=`${years.size} loppår · ${results.length.toLocaleString('sv-SE')} resultat · ${Math.round(coverage*100)} % med passager`;
 }
 function renderStories(){
@@ -111,9 +113,9 @@ function renderFieldFlow(){
   const el=n$('#fieldFlow');if(!el)return;
   const rows=state.filtered,dns=rows.filter(nIsDns),starters=rows.filter(nIsStarter);
   if(!starters.length){el.innerHTML='<div class="empty">Inga registrerade startande i urvalet.</div>';return}
-  const starterIds=new Set(starters.map(r=>r.id)),cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),lastSeq=cps.at(-1)?.sequence_no??0;
+  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),lastSeq=cps.at(-1)?.sequence_no??0;
   const maxSeq=new Map();
-  state.data.splits.filter(s=>starterIds.has(s.result_id)&&Number.isFinite(Number(s.sequence_no))).forEach(s=>maxSeq.set(s.result_id,Math.max(maxSeq.get(s.result_id)??-1,Number(s.sequence_no))));
+  starters.forEach(r=>nSplitsForResult(r.id).filter(s=>Number.isFinite(Number(s.sequence_no))).forEach(s=>maxSeq.set(r.id,Math.max(maxSeq.get(r.id)??-1,Number(s.sequence_no)))));
   starters.filter(nIsFinished).forEach(r=>maxSeq.set(r.id,lastSeq));
   const dnf=starters.filter(nIsDnf);
   const locatedDnf=dnf.filter(r=>maxSeq.has(r.id)).length;
@@ -175,7 +177,7 @@ function renderHallFallback(route){
 }
 async function openHallMap(resultId){
   const r=state.data.results.find(x=>x.id===resultId),race=r&&state.data.races.find(x=>x.id===r.race_id),route=race&&runnerRouteForRace(race),dialog=n$('#hallMapDialog');if(!r||!race||!route||!dialog)return;
-  const splits=state.data.splits.filter(s=>s.result_id===r.id).sort((a,b)=>a.sequence_no-b.sequence_no),splitKey=k=>k==='finish'?'mora':k,byKey=new Map(splits.map(s=>[String(s.checkpoint_key||'').toLowerCase(),s])),cps=route.checkpoints||[];
+  const splits=nSplitsForResult(r.id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),splitKey=k=>k==='finish'?'mora':k,byKey=new Map(splits.map(s=>[String(s.checkpoint_key||'').toLowerCase(),s])),cps=route.checkpoints||[];
   n$('#hallMapTitle').textContent=`${r.name_as_published} · Ultravasan ${race.year}`;
   n$('#hallMapSubtitle').textContent=`${nTime(r.finish_seconds)} · plats ${r.overall_place??'–'} · ${r.age_class||'klass saknas'}`;
   n$('#hallSegmentLegend').innerHTML=cps.slice(1).map((c,i)=>{const prev=cps[i],a=i===0?null:byKey.get(splitKey(prev.key)),b=byKey.get(splitKey(c.key)),seconds=b?.elapsed_seconds!=null?Number(b.elapsed_seconds)-Number(a?.elapsed_seconds||0):null,gain=a?.place_overall&&b?.place_overall?Number(a.place_overall)-Number(b.place_overall):null;return `<div class="hall-segment-item"><i style="background:${HALL_SEGMENT_COLORS[i%HALL_SEGMENT_COLORS.length]}"></i><span><strong>${nEsc(prev.short||prev.name)} → ${nEsc(c.short||c.name)}</strong><small>${nTime(seconds)}${gain!=null?` · ${gain>0?'+':''}${gain} platser`:''}</small></span></div>`}).join('');
@@ -198,7 +200,7 @@ async function openHallMap(resultId){
 function renderFingerprint(){
   const el=n$('#raceFingerprint');if(!el)return;const race=activeRace(),current=state.filtered.filter(nIsFinished),all=familyResults().filter(nIsFinished),raceMed=nMedian(current.map(r=>r.finish_seconds)),histMed=nMedian(all.map(r=>r.finish_seconds));
   if(!raceMed||!histMed){el.innerHTML='<div class="empty">Historik behövs för index</div>';return}
-  const splitIds=new Set(current.map(r=>r.id)),pace=state.data.splits.filter(s=>splitIds.has(s.result_id)&&s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km),familyIds=new Set(familyResults().map(r=>r.id)),allPace=state.data.splits.filter(s=>familyIds.has(s.result_id)&&s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km);
+  const pace=nSplitsForResults(current).filter(s=>s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km),allPace=nSplitsForResults(familyResults()).filter(s=>s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km);
   const starters=state.filtered.filter(nIsStarter),dnf=starters.filter(nIsDnf).length/(starters.length||1),allResults=familyResults(),allStarters=allResults.filter(nIsStarter),allDnf=allStarters.filter(nIsDnf).length/(allStarters.length||1),women=starters.filter(r=>r.sex==='F').length/(starters.length||1),allWomen=allStarters.filter(r=>r.sex==='F').length/(allStarters.length||1);
   const metrics=[['Svårighetsgrad',raceMed/histMed*100],['Fartnivå',allPace.length&&pace.length?nMedian(allPace)/nMedian(pace)*100:100],['DNF-belastning',allDnf?dnf/allDnf*100:100],['Kvinnorepresentation',allWomen?women/allWomen*100:100],['Fältstorlek',state.filtered.length/(allResults.length/(familyRaces().length||1)||1)*100]];
   el.innerHTML=metrics.map(([name,v])=>`<div class="finger-row"><span>${nEsc(name)}</span><div><i style="width:${Math.max(4,Math.min(100,v/1.6))}%"></i><b style="left:${Math.max(4,Math.min(96,v/1.6))}%"></b></div><strong>${Math.round(v)}</strong></div>`).join('')+`<p class="microcopy">${race.year}: över 100 betyder mer av egenskapen än genomsnittet i importerad historik.</p>`;
