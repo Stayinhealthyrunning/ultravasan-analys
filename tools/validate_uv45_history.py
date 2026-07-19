@@ -24,7 +24,7 @@ HISTORY_EVENTS = {
 EXCLUDED_HISTORY_YEARS = {2020, 2021, 2025, 2026}
 CHECKPOINT_SET_A = ["start", "oxberg", "hokberg", "eldris", "mora"]
 CHECKPOINT_SET_B = ["start", "lillsjon", "oxberg", "hokberg", "eldris", "mora_warning", "mora"]
-CANONICAL_STATUSES = {"FINISHED", "DNF", "DNS", "DSQ", "UNKNOWN"}
+CANONICAL_STATUSES = {"FINISHED", "DNF", "DNS", "DSQ", "UNKNOWN", "STARTADE INTE"}
 
 
 def collect_config_issues(config: dict) -> list[str]:
@@ -96,6 +96,7 @@ def collect_race_issues(conn: sqlite3.Connection, race_key: str, event_code: str
     if not rows:
         issues.append(f"Inga Mika-resultat finns för {race_key}.")
         return issues
+    expected_checkpoints = CHECKPOINT_SET_B if int(race["year"]) == 2025 else CHECKPOINT_SET_A
     expected_prefix = f"{event_code}:"
     if any(not row["source_result_id"].startswith(expected_prefix) for row in rows):
         issues.append(f"{race_key} innehåller resultat från fel eventkod.")
@@ -121,7 +122,7 @@ def collect_race_issues(conn: sqlite3.Connection, race_key: str, event_code: str
         if any(split["race_id"] != race["id"] for split in splits):
             issues.append(f"{label}: mellantid är kopplad till ett annat lopp.")
         keys = [split["checkpoint_key"] for split in splits]
-        if any(key not in CHECKPOINT_SET_A for key in keys):
+        if any(key not in expected_checkpoints for key in keys):
             issues.append(f"{label}: oväntad UV45-kontroll {keys}.")
         sequences = [split["sequence_no"] for split in splits]
         if any(a >= b for a, b in zip(sequences, sequences[1:])):

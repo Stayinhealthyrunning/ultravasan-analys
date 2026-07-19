@@ -770,7 +770,47 @@ def record_source_page(conn: sqlite3.Connection, import_run_id: int, source_id: 
     """, (import_run_id, source_id, race_id, record_type, external_id, url, status, sha, str(cache_reference)))
 
 
-def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, source_id: int) -> int:
+def _same_performance_identity(parsed: ParsedResult, existing: sqlite3.Row) -> bool:
+    """Require race-specific evidence before two source rows share an athlete."""
+    comparisons = {
+        "bib": (parsed.bib, existing["bib"]),
+        "age_class": (parsed.age_class, existing["age_class"]),
+        "status": (parsed.status, existing["status"]),
+        "finish_seconds": (parsed.finish_seconds, existing["finish_seconds"]),
+    }
+    for left, right in comparisons.values():
+        if left not in (None, "") and right not in (None, "") and str(left) != str(right):
+            return False
+    bib_match = parsed.bib not in (None, "") and str(parsed.bib) == str(existing["bib"])
+    finish_match = parsed.finish_seconds is not None and parsed.finish_seconds == existing["finish_seconds"]
+    class_match = parsed.age_class not in (None, "") and parsed.age_class == existing["age_class"]
+    status_match = parsed.status not in (None, "", "UNKNOWN") and parsed.status == existing["status"]
+    return (bib_match and (finish_match or class_match or status_match)) or (finish_match and class_match)
+
+
+def _candidate_is_safe_for_race(
+    conn: sqlite3.Connection,
+    athlete_id: int,
+    race_id: int,
+    source_id: int,
+    parsed: ParsedResult,
+) -> bool:
+    same_race = conn.execute(
+        "SELECT source_id,source_result_id,bib,age_class,status,finish_seconds FROM results WHERE race_id=? AND athlete_id=?",
+        (race_id, athlete_id),
+    ).fetchall()
+    if not same_race:
+        return True
+    # A second result identifier from the same official source is a distinct
+    # race performance. Name equality must never collapse those participants.
+    if any(row["source_id"] == source_id and row["source_result_id"] != parsed.source_result_id for row in same_race):
+        return False
+    # Cross-source rows may represent the same performance, but only when
+    # race-specific fields provide deterministic evidence beyond the name.
+    return any(_same_performance_identity(parsed, row) for row in same_race)
+
+
+def find_or_create_athlete(conn: sqlite3.Connection, race_id: int, parsed: ParsedResult, source_id: int) -> int:
     ext = conn.execute("SELECT athlete_id FROM athlete_external_ids WHERE source_id=? AND external_id=?", (source_id, parsed.source_result_id)).fetchone()
     if ext:
         return ext[0]
@@ -785,7 +825,12 @@ def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, sourc
         compatible = []
     else:
         candidates = conn.execute("SELECT * FROM athletes WHERE normalized_name=?", (norm,)).fetchall()
-        compatible = [c for c in candidates if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"]) and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])]
+        compatible = [
+            c for c in candidates
+            if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"])
+            and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])
+            and _candidate_is_safe_for_race(conn, c["id"], race_id, source_id, parsed)
+        ]
     if len(compatible) == 1:
         athlete_id = compatible[0]["id"]
     else:
@@ -802,7 +847,7 @@ def find_or_create_athlete(conn: sqlite3.Connection, parsed: ParsedResult, sourc
 
 
 def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance_km: float | None, checkpoints: list[dict[str, Any]], parsed: ParsedResult, store_raw: bool = True) -> tuple[int, bool]:
-    athlete_id = find_or_create_athlete(conn, parsed, source_id)
+    athlete_id = find_or_create_athlete(conn, race_id, parsed, source_id)
     existing = conn.execute("SELECT id FROM results WHERE race_id=? AND source_id=? AND source_result_id=?", (race_id, source_id, parsed.source_result_id)).fetchone()
     pace = parsed.finish_seconds / distance_km if parsed.finish_seconds and distance_km else None
     data = {
@@ -1041,8 +1086,97 @@ def percentiles(values: list[int]) -> dict[str, int | None]:
     return {"p10": p(.10), "p25": p(.25), "median": p(.5), "p75": p(.75), "p90": p(.90)}
 
 
+class IdentityCollisionError(RuntimeError):
+    """Raised when distinct same-source race performances would be merged."""
+
+
+IDENTITY_CONFLICT_FIELDS = ("bib", "age_class", "status", "finish_seconds", "overall_place")
+
+
+def collect_same_race_identity_collisions(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    rows = conn.execute("""
+      SELECT race.id race_id,race.race_key,race.year,res.athlete_id,a.canonical_name,
+             res.source_id,src.code source_code,res.id result_id,res.name_as_published,
+             res.bib,res.age_class,res.status,res.finish_seconds,res.overall_place,
+             res.source_result_id,COUNT(sp.id) split_count,ae.id external_link_id
+      FROM results res
+      JOIN races race ON race.id=res.race_id
+      JOIN athletes a ON a.id=res.athlete_id
+      JOIN sources src ON src.id=res.source_id
+      LEFT JOIN splits sp ON sp.result_id=res.id
+      LEFT JOIN athlete_external_ids ae
+        ON ae.athlete_id=res.athlete_id AND ae.source_id=res.source_id AND ae.external_id=res.source_result_id
+      WHERE EXISTS (
+        SELECT 1 FROM results other
+        WHERE other.race_id=res.race_id AND other.athlete_id=res.athlete_id
+          AND other.id<>res.id
+      )
+      GROUP BY res.id
+      ORDER BY race.year,res.athlete_id,src.code,COALESCE(ae.id,res.id),res.id
+    """).fetchall()
+    grouped: dict[tuple[int, int], list[dict[str, Any]]] = {}
+    for row in rows:
+        item = dict(row)
+        grouped.setdefault((item["race_id"], item["athlete_id"]), []).append(item)
+    collisions: list[dict[str, Any]] = []
+    for items in grouped.values():
+        conflicting_fields = []
+        for field in IDENTITY_CONFLICT_FIELDS:
+            values = {item.get(field) for item in items if item.get(field) not in (None, "", "UNKNOWN")}
+            if len(values) > 1:
+                conflicting_fields.append(field)
+        source_counts: dict[int, int] = {}
+        for item in items:
+            source_counts[item["source_id"]] = source_counts.get(item["source_id"], 0) + 1
+        duplicate_source_identity = any(count > 1 for count in source_counts.values())
+        if not conflicting_fields and not duplicate_source_identity:
+            continue
+        first = items[0]
+        source_ids = sorted(source_counts)
+        source_codes = sorted({item["source_code"] for item in items})
+        collisions.append({
+            "race_id": first["race_id"],
+            "race_key": first["race_key"],
+            "year": first["year"],
+            "athlete_id": first["athlete_id"],
+            "canonical_name": first["canonical_name"],
+            "source_id": source_ids[0] if len(source_ids) == 1 else None,
+            "source_ids": source_ids,
+            "source_code": source_codes[0] if len(source_codes) == 1 else None,
+            "source_codes": source_codes,
+            "conflicting_fields": conflicting_fields,
+            "results": items,
+        })
+    return collisions
+
+
+def format_identity_collision_error(collisions: list[dict[str, Any]]) -> str:
+    lines = [f"Export stoppad: {len(collisions)} motstridiga same-race-identitetskollisioner."]
+    for collision in collisions:
+        lines.append(
+            f"{collision['race_key']} ({collision['year']}), athlete_id={collision['athlete_id']}, "
+            f"namn={collision['canonical_name']}, source={','.join(collision['source_codes'])}"
+        )
+        for result in collision["results"]:
+            lines.append(
+                "  result_id={result_id}, bib={bib}, status={status}, source_result_id={source_result_id}".format(**result)
+            )
+    return "\n".join(lines)
+
+
+def assert_no_same_race_identity_collisions(conn: sqlite3.Connection) -> None:
+    collisions = collect_same_race_identity_collisions(conn)
+    if collisions:
+        raise IdentityCollisionError(format_identity_collision_error(collisions))
+
+
 def export_web(args: argparse.Namespace) -> None:
     conn = connect(args.db)
+    try:
+        assert_no_same_race_identity_collisions(conn)
+    except Exception:
+        conn.close()
+        raise
     races = [dict(r) for r in conn.execute("SELECT * FROM races ORDER BY year")]
     checkpoints = [dict(r) for r in conn.execute("SELECT * FROM checkpoints ORDER BY race_id,sequence_no")]
 
@@ -1213,6 +1347,12 @@ def collect_validation_issues(conn: sqlite3.Connection, config: dict[str, Any]) 
       SELECT race_id,source_id,source_result_id,COUNT(*) n FROM results GROUP BY 1,2,3 HAVING n>1
     """).fetchall()
     issues += [f"Duplicerat källresultat: {dict(d)}" for d in duplicates]
+    identity_collisions = collect_same_race_identity_collisions(conn)
+    issues += [
+        f"Same-race identity collision: {collision['race_key']} athlete_id={collision['athlete_id']} "
+        f"result_id={','.join(str(result['result_id']) for result in collision['results'])}"
+        for collision in identity_collisions
+    ]
     cross_race_splits = conn.execute("""
       SELECT sp.result_id,r.race_id result_race_id,cp.race_id checkpoint_race_id
       FROM splits sp
