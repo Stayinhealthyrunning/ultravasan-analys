@@ -108,15 +108,60 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83 },
-        { "checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27 },
-        { "checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96 },
-        { "checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
       ],
       "course_version": "pre2023",
       "partition_by_sex": false,
@@ -140,11 +185,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -168,11 +238,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -196,11 +291,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -224,11 +344,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -252,11 +397,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -280,11 +450,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -308,11 +503,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -336,11 +556,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -364,11 +609,36 @@
       "max_pages": 200,
       "empty_pages_to_stop": 2,
       "checkpoints": [
-        { "checkpoint_key": "start", "name": "Start Oxberg", "sequence_no": 0, "distance_km": 0.0 },
-        { "checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 1, "distance_km": 15.5 },
-        { "checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 2, "distance_km": 24.7 },
-        { "checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 3, "distance_km": 34.8 },
-        { "checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 4, "distance_km": 45.0 }
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0
+        }
       ],
       "course_version": "uv45-legacy-2014-2024",
       "partition_by_sex": false,
@@ -441,6 +711,162 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=search",
         "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=list"
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2026",
+      "race_family": "uv90",
+      "name": "Ultravasan 90",
+      "year": 2026,
+      "race_date": "2026-08-15",
+      "distance_km": 92.0,
+      "event_code": "UL90_HCH8NDMR2601",
+      "result_year_path": 2027,
+      "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL90_HCH8NDMR2601",
+      "page_url_template": "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2027/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_HCH8NDMR2601",
+      "max_pages": 250,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 9.2
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 23.7
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 35.0
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 47.1
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 62.2
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 71.4
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.8
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 9,
+          "distance_km": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 10,
+          "distance_km": 92.0
+        }
+      ],
+      "course_version": "post2023",
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&num_results=100&pid=list"
+      ],
+      "partition_by_sex": true,
+      "notes": "Event code discovered from the official Mika catalogue; import is quality-gated."
+    },
+    {
+      "race_key": "ultravasan45-2026",
+      "race_family": "uv45",
+      "name": "Ultravasan 45",
+      "year": 2026,
+      "race_date": "2026-08-15",
+      "distance_km": 45.0,
+      "event_code": "UL45_HCH8NDMR2601",
+      "result_year_path": 2027,
+      "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL45_HCH8NDMR2601",
+      "page_url_template": "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&pid=search",
+      "detail_url_template": "https://results.vasaloppet.se/2027/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2601",
+      "max_pages": 250,
+      "empty_pages_to_stop": 2,
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "lillsjon",
+          "name": "Lillsjön",
+          "sequence_no": 1,
+          "distance_km": 2.25
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 2,
+          "distance_km": 13.907
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 3,
+          "distance_km": 23.976
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 4,
+          "distance_km": 33.317
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 5,
+          "distance_km": 44.3
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 6,
+          "distance_km": 45.0
+        }
+      ],
+      "course_version": "uv45-current",
+      "partition_by_sex": true,
+      "notes": "Event code discovered from the official Mika catalogue; import is quality-gated.",
+      "page_url_templates": [
+        "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=search",
+        "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=list"
       ]
     }
   ]

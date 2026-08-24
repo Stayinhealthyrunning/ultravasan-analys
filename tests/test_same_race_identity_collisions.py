@@ -117,7 +117,7 @@ def test_production_database_has_no_same_race_identity_collisions() -> None:
     conn = uvtool.connect(ROOT / "data" / "ultravasan.sqlite")
     collisions = uvtool.collect_same_race_identity_collisions(conn)
     assert collisions == []
-    assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 21_172
+    assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 24_422
     conn.close()
 
 
@@ -148,7 +148,7 @@ def test_anna_forslund_2025_and_robert_andersson_2015_are_separate_in_database()
 def test_web_export_keeps_collision_cases_and_status_evidence_separate() -> None:
     payload = json.loads((ROOT / "docs" / "data" / "ultravasan.json").read_text(encoding="utf-8"))
     races = {race["race_key"]: race["id"] for race in payload["races"]}
-    assert len(payload["results"]) == 21_172
+    assert len(payload["results"]) == 24_422
 
     anna = [
         row for row in payload["results"]

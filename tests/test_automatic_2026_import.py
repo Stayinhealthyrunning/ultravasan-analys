@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import sys
 from datetime import date
 from pathlib import Path
@@ -12,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 import automatic_2026_import as automatic  # noqa: E402
+import automatic_import_schedule as schedule  # noqa: E402
 import mika_import  # noqa: E402
 import uvtool  # noqa: E402
 
@@ -30,7 +32,26 @@ def test_schedule_window_is_closed_on_race_day_and_after_deadline() -> None:
     assert automatic.schedule_state(date(2026, 8, 15)) == "before-window"
     assert automatic.schedule_state(date(2026, 8, 16)) == "active"
     assert automatic.schedule_state(date(2026, 9, 15)) == "active"
-    assert automatic.schedule_state(date(2026, 9, 16)) == "after-window"
+    assert automatic.schedule_state(date(2027, 8, 21), 2027) == "before-window"
+    assert automatic.schedule_state(date(2027, 8, 22), 2027) == "active"
+
+
+def test_schedule_stops_after_completed_year_and_reactivates_for_next_year(tmp_path: Path) -> None:
+    db = tmp_path / "schedule.sqlite"
+    with sqlite3.connect(db) as conn:
+        conn.executescript("""
+          CREATE TABLE races(id INTEGER PRIMARY KEY, race_key TEXT);
+          CREATE TABLE sources(id INTEGER PRIMARY KEY, code TEXT);
+          CREATE TABLE results(race_id INTEGER, source_id INTEGER);
+          INSERT INTO sources VALUES(1, 'vasaloppet_mika');
+          INSERT INTO races VALUES(1, 'ultravasan90-2026');
+          INSERT INTO races VALUES(2, 'ultravasan45-2026');
+        """)
+        conn.executemany("INSERT INTO results VALUES(?, 1)", [(1,)] * 1200 + [(2,)] * 500)
+    assert schedule.schedule_decision(date(2026, 8, 24), db)["state"] == "already-complete"
+    assert schedule.schedule_decision(date(2027, 8, 21), db)["state"] == "already-complete"
+    next_year = schedule.schedule_decision(date(2027, 8, 22), db)
+    assert next_year["active"] is True and next_year["target_year"] == 2027
 
 
 def test_generated_2026_config_is_official_separate_and_not_visible_early() -> None:
@@ -75,6 +96,8 @@ def test_availability_gate_is_conservative() -> None:
     assert automatic.availability_blockers("uv90", 1800, good_probe) == []
     assert automatic.availability_blockers("uv45", 800, good_probe) == []
     assert automatic.availability_blockers("uv90", 100, good_probe)
+    assert automatic.availability_blockers("uv90", 2501, good_probe) == []
+    assert automatic.availability_blockers("uv45", 3500, good_probe) == []
     broken = {**good_probe, "blocking_issues": 1}
     assert any("parser" in item for item in automatic.availability_blockers("uv45", 800, broken))
 
@@ -116,25 +139,49 @@ def test_workflow_has_daily_schedule_explicit_pages_and_no_mail_code() -> None:
     assert "actions/deploy-pages@v4" in workflow
     assert "pages: write" in workflow and "id-token: write" in workflow
     assert "smtp" not in workflow.lower() and "sendmail" not in workflow.lower()
-    assert 'today="$(date -u +%F)"' in workflow
-    assert '[[ "$today" < "2026-08-16" ]]' in workflow
-    assert '[[ "$today" > "2026-09-15" ]]' in workflow
+    assert "automatic_import_schedule.py --db data/ultravasan.sqlite" in workflow
+    assert "target_year" in workflow
     assert "Manuell simulate-2025 körs i ett separat read-only-jobb oavsett datum" in workflow
     assert "github.event_name == 'workflow_dispatch' && inputs.operation == 'simulate-2025'" in workflow
     assert "steps.availability.outputs.ready == 'true'" in workflow
     assert "needs.date-gate.outputs.active == 'true'" in workflow
     assert "automatic_2026_import.py full-dry-run" in workflow
     assert "automatic_2026_import.py apply" in workflow
+    assert "APPLY-AUTOMATIC-OFFICIAL-RESULTS" in workflow
 
 
 def test_manual_2025_simulation_is_date_independent_and_cannot_publish() -> None:
     workflow = (ROOT / ".github" / "workflows" / "importera-ultravasan-2026.yml").read_text(encoding="utf-8")
     date_gate = workflow[workflow.index("  date-gate:"):workflow.index("  simulate-2025:")]
     simulation = workflow[workflow.index("  simulate-2025:"):workflow.index("  import-and-package:")]
-    assert "automatic_2026_import.py window" not in date_gate
-    assert "actions/checkout" not in date_gate
+    assert "automatic_import_schedule.py" in date_gate
+    assert "actions/checkout" in date_gate
     assert "contents: read" in simulation
     assert '--work-db "$RUNNER_TEMP/automatic-2025.sqlite"' in simulation
     assert "data/ultravasan.sqlite" not in simulation
     assert "deploy-pages" not in simulation
     assert "git push" not in simulation
+
+
+def test_list_pagination_collects_more_than_6000_unique_results(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    class FakeFetcher:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def get(self, url, cache):
+            return "unused", 200, False, "http"
+
+        def close(self) -> None:
+            pass
+
+    def fake_entries(html, url):
+        page = int(url.split("page=")[1].split("&")[0])
+        size = 100 if page <= 60 else 1 if page == 61 else 0
+        return [{"idp": f"idp-{page}-{index}", "url": url} for index in range(size)]
+
+    monkeypatch.setattr(mika_import, "Fetcher", FakeFetcher)
+    monkeypatch.setattr(mika_import, "extract_entries", fake_entries)
+    race = {"race_key": "ultravasan90-2026", "event_code": "UL90_TEST", "max_pages": 250, "empty_pages_to_stop": 2}
+    entries, pages = automatic.collect_list_entries(race, tmp_path, 0)
+    assert len(entries) == 6001
+    assert pages[-1]["page"] == 63
