@@ -7,6 +7,7 @@
   const SVG_W=920,SVG_H=430,MAP_PAD=42;
   const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.35;
   const MIN_REFERENCE_SIZE=5,MEDAL_MIN_SIZE=20,MEDAL_SIDE_SIZE=40;
+  const overallPlacementCache=new WeakMap();
   const classPlacementCache=new WeakMap();
   const referenceProfileCache=new WeakMap();
   const PACE_COLORS=['#176d53','#31906d','#d0a62d','#d97835','#8f4967'];
@@ -74,6 +75,30 @@
 
   function normalizedCheckpoint(cp){return {key:String(cp.checkpoint_key||cp.key||'').toLowerCase(),name:cp.name||cp.short||cp.checkpoint_name||cp.checkpoint_key,short:cp.short||cleanName(cp.name||cp.checkpoint_name),sequence:Number(cp.sequence_no||0),distance:finite(cp.distance_km)?Number(cp.distance_km):null}}
   function splitForCheckpoint(splits,cp){return splits.find(s=>String(s.checkpoint_key||'').toLowerCase()===cp.key)||splits.find(s=>cleanName(s.checkpoint_name).toLowerCase()===cleanName(cp.name).toLowerCase())}
+
+  function deriveOverallPlacements(results=[],splits=[]){
+    if(overallPlacementCache.has(splits))return overallPlacementCache.get(splits);
+    const byResult=new Map(results.map(result=>[String(result.id),result])),groups=new Map(),lookup=new Map();
+    for(const split of splits){
+      const result=byResult.get(String(split.result_id)),checkpoint=String(split.checkpoint_key||'').trim().toLowerCase(),estimated=split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true';
+      if(!result||!checkpoint||estimated||!finite(split.elapsed_seconds)||Number(split.elapsed_seconds)<0)continue;
+      const key=`${result.race_id}|${checkpoint}`;
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push({split,resultId:String(result.id),time:Number(split.elapsed_seconds),checkpoint});
+    }
+    for(const entries of groups.values()){
+      entries.sort((a,b)=>a.time-b.time||a.resultId.localeCompare(b.resultId,undefined,{numeric:true}));
+      let previousTime=null,rank=0;
+      entries.forEach((entry,index)=>{
+        if(previousTime===null||entry.time!==previousTime)rank=index+1;
+        previousTime=entry.time;
+        if(!finite(entry.split.place_overall))entry.split.place_overall=rank;
+        lookup.set(`${entry.resultId}|${entry.checkpoint}`,Number(entry.split.place_overall));
+      });
+    }
+    overallPlacementCache.set(splits,lookup);
+    return lookup;
+  }
 
   function deriveClassPlacements(results=[],splits=[]){
     if(classPlacementCache.has(splits))return classPlacementCache.get(splits);
@@ -319,7 +344,7 @@
           </div>
         </aside>
         <section class="runner-replay-map-panel" aria-labelledby="runnerReplayMapTitle">
-          <div class="runner-replay-map-heading"><div><p class="eyebrow">GPS-RUTT</p><h4 id="runnerReplayMapTitle">Banan i fäders spår för framtids segrar</h4></div><span>${esc(model.route?.source_year||model.race?.year||'')} · ${fmtDistance(model.totalDistance)}</span></div>
+          <div class="runner-replay-map-heading"><div><p class="eyebrow">GPS-RUTT</p><h4 id="runnerReplayMapTitle">Banan i fäders spår för framtids segrar</h4></div><span>${esc(model.race?.year||model.route?.source_year||'')} · ${fmtDistance(model.totalDistance)}</span></div>
           ${comparisonControls(model)}
           ${renderMap(model)}
           <div class="runner-replay-audio-note" data-replay-audio-note hidden></div>
@@ -428,5 +453,5 @@
   function stopActive(){if(activeController){activeController.destroy();activeController=null}}
   function motionAllowed(prefersReducedMotion){return !Boolean(prefersReducedMotion)}
 
-  return {PACE_COLORS,NEUTRAL_COLOR,DEFAULT_VOLUME,MIN_REFERENCE_SIZE,MEDAL_MIN_SIZE,REFERENCE_META,MEDAL_CONFIG,comparisonPreferences,sexCategory,medalConfigForRace,routeForRace,pointAtDistance,terrainAtDistance,elevationAtDistance,elevationProjection,paceColor,deriveClassPlacements,completeProfilesForRace,buildReferenceProfiles,medianReference,selectMedalCandidates,medalTimeForRace,weightedMedian,gapAtDistance,formatGap,routeNormalAngle,createModel,wholeRacePace,stateAt,timeAtDistance,distanceAtTime,buildInsights,mapProjection,fitMapView,initialMapView,zoomMapView,panMapView,followMapView,activateFollowMapView,formatClassPlace,render,mount,stopActive,motionAllowed,fmtTime,fmtPace,cleanName};
+  return {PACE_COLORS,NEUTRAL_COLOR,DEFAULT_VOLUME,MIN_REFERENCE_SIZE,MEDAL_MIN_SIZE,REFERENCE_META,MEDAL_CONFIG,comparisonPreferences,sexCategory,medalConfigForRace,routeForRace,pointAtDistance,terrainAtDistance,elevationAtDistance,elevationProjection,paceColor,deriveOverallPlacements,deriveClassPlacements,completeProfilesForRace,buildReferenceProfiles,medianReference,selectMedalCandidates,medalTimeForRace,weightedMedian,gapAtDistance,formatGap,routeNormalAngle,createModel,wholeRacePace,stateAt,timeAtDistance,distanceAtTime,buildInsights,mapProjection,fitMapView,initialMapView,zoomMapView,panMapView,followMapView,activateFollowMapView,formatClassPlace,render,mount,stopActive,motionAllowed,fmtTime,fmtPace,cleanName};
 });
