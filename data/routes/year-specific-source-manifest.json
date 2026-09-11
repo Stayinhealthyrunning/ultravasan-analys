@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-11",
+  "status": "preparation_only_not_used_by_production",
+  "provenance_policy": [
+    "official_organiser_file",
+    "official_or_itra_edition_route",
+    "organiser_derived_route",
+    "validated_race_day_participant_gpx",
+    "organiser_confirmed_same_course_reuse",
+    "documented_era_fallback"
+  ],
+  "route_editions": {
+    "uv90": {
+      "2014": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2015": {"status": "strong_participant_candidate", "exact_for_race_year": false, "candidates": [{"kind": "participant_route", "url": "https://www.plotaroute.com/route/2311120", "note": "Ultravasan90-2015-JB; validate before use"}]},
+      "2016": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2017": {"status": "needs_acquisition", "exact_for_race_year": false, "course_change": "organiser-confirmed ~3 km reroute between Krangasen and Eldris"},
+      "2018": {"status": "strong_itra_candidate", "exact_for_race_year": false, "candidates": [{"kind": "itra_trace", "url": "https://tracedetrail.fr/en/trace/51602", "distance_km": 90.5}], "same_course_evidence": "organiser states no course changes in 2018 relative to 2017"},
+      "2019": {"status": "strong_candidate", "exact_for_race_year": false, "course_change": "organiser-confirmed ~3 km reroute before Mangsbodarna", "candidates": [{"kind": "participant_route", "url": "https://www.plotaroute.com/route/2311126"}]},
+      "2020": {"status": "no_normal_race", "exact_for_race_year": false, "note": "Hemmavasan; do not create normal Salen-Mora route edition"},
+      "2021": {"status": "needs_acquisition_elite_only", "exact_for_race_year": false, "note": "Real elite-only Ultravasan 90 edition confirmed by Vasaloppet"},
+      "2022": {"status": "source_in_repository", "exact_for_race_year": true, "source_file": "data/routes/Ultravasan 90 2022.gpx", "source_kind": "organiser_derived_route", "source_url": "https://www.plotaroute.com/route/1942022", "note": "Source page says route is based on organiser KMZ supplied 2022-06-16"},
+      "2023": {"status": "strong_candidate", "exact_for_race_year": false, "course_change": "major organiser-confirmed start reroute; course extended to about 92 km", "candidates": [{"kind": "participant_or_organiser_derived_route", "url": "https://www.plotaroute.com/route/2311089"}, {"kind": "participant_or_organiser_derived_route", "url": "https://www.plotaroute.com/route/2356968"}]},
+      "2024": {"status": "source_in_repository", "exact_for_race_year": true, "source_file": "data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx", "source_kind": "organiser_derived_race_day_corrected", "candidates": [{"kind": "itra_trace", "url": "https://tracedetrail.fr/fr/trace/267129", "distance_km": 92.15}, {"kind": "organiser_derived_race_day_corrected", "url": "https://www.plotaroute.com/mobile/route/2710347"}], "course_change": "~1 km change after highest point plus temporary Bjornnarvet detour instead of Axi kvarn"},
+      "2025": {"status": "organiser_confirmed_same_course_as_2024", "exact_for_race_year": true, "reuse_source_year": 2024, "note": "Vasaloppet explicitly states no course changes in 2025; acquire race-day participant GPX for independent verification/elevation if possible"},
+      "2026": {"status": "official_geometry_plus_participant_barometric_reference", "exact_for_race_year": true, "geometry": {"source_file": "source/UV-90_20260610.kmz", "source_kind": "official_organiser_file", "source_url": "https://vasaloppet.se/lopning/ultravasan-90/", "official_distance_km": 92.0}, "elevation_reference": {"source_kind": "validated_race_day_participant_gpx", "stored_in_repository": false, "sha256": "636036befdbed9b91635ae38fb4815f0223d459c455d15fa9db0392235f9d11f", "point_count": 32175, "elevation_coverage_pct": 100.0, "min_elevation_m": 168.4, "max_elevation_m": 525.8, "raw_polyline_km": 93.6433675887, "max_adjacent_gap_m": 10.924, "note": "Use as barometric elevation reference after alignment/map-matching to official geometry; do not replace official geometry with raw wearable track"}, "course_change": "return to regular route via Axi kvarn/Bjornarvet after temporary roadworks detour; flow improvements near early trail section"}
+    },
+    "uv45": {
+      "2014": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2015": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2016": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2017": {"status": "needs_acquisition", "exact_for_race_year": false, "note": "shared late-course geometry affected by 2017 UV90 course change"},
+      "2018": {"status": "strong_itra_candidate", "exact_for_race_year": false, "candidates": [{"kind": "itra_trace", "url": "https://tracedetrail.fr/en/trace/51603", "distance_km": 44.2, "validation_note": "Trace page start-place label is inconsistent; verify endpoints before use"}]},
+      "2019": {"status": "strong_itra_candidate", "exact_for_race_year": false, "candidates": [{"kind": "itra_trace", "url": "https://tracedetrail.fr/en/trace/75784", "distance_km": 44.3}]},
+      "2020": {"status": "no_normal_race", "exact_for_race_year": false, "note": "Hemmavasan"},
+      "2021": {"status": "needs_acquisition_elite_only", "exact_for_race_year": false, "note": "Real elite-only Ultravasan 45 edition confirmed by Vasaloppet"},
+      "2022": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2023": {"status": "needs_acquisition", "exact_for_race_year": false},
+      "2024": {"status": "strong_itra_candidate", "exact_for_race_year": false, "candidates": [{"kind": "itra_trace", "url": "https://tracedetrail.fr/fr/trace/267130", "distance_km": 44.1}], "course_change": "temporary Bjornarvet detour instead of Axi kvarn also affected UV45"},
+      "2025": {"status": "organiser_confirmed_same_course_as_2024", "exact_for_race_year": true, "reuse_source_year": 2024},
+      "2026": {"status": "source_in_repository", "exact_for_race_year": true, "geometry": {"source_file": "source/UV45_20260610.kmz", "source_kind": "official_organiser_file", "source_url": "https://vasaloppet.se/lopning/ultravasan-45/", "official_distance_km": 45.0}, "course_change": "return to regular route via Axi kvarn after temporary roadworks detour"}
+    }
+  }
+}
