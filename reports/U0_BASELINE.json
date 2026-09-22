@@ -1,0 +1,2219 @@
+{
+  "schema_version": 1,
+  "phase": "U0",
+  "source": {
+    "git_commit": "f9d889ccb3fbb35ffa55e6fe10d3a2ad7b0ab766",
+    "branch": "main"
+  },
+  "files": {
+    "database": {
+      "path": "data/ultravasan.sqlite",
+      "bytes": 62918656,
+      "sha256": "fff9367a432186f2cab5de2a9263d67fa4dcf981a8144c1337d0948177734f8c"
+    },
+    "web_json": {
+      "path": "docs/data/ultravasan.json",
+      "bytes": 42102175,
+      "sha256": "dd5db56f3bfc35a37630bdf1814c7dc7a65b296c04056ee338a57e99b380e771"
+    },
+    "web_javascript": {
+      "path": "docs/data/ultravasan-data.js",
+      "bytes": 42102200,
+      "sha256": "f0008eea4a32fb2c6f54abd2df8f0a104cf81ff0705774e1dcfb0019b24fb9d3"
+    },
+    "manifest": {
+      "path": "docs/data/manifest.json",
+      "bytes": 125,
+      "sha256": "d311151b049dd76fb9d0aec767251eced10d588a40c496351c04074616a2c777"
+    },
+    "route_sources": [
+      {
+        "path": "data/routes/Ultravasan 90 2022.gpx",
+        "bytes": 248439,
+        "sha256": "3e954433ee8233faff65ecb5eb6c9863ba599e2d05ca6faa40c2e7b5f7f4248d"
+      },
+      {
+        "path": "data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx",
+        "bytes": 503744,
+        "sha256": "3c2f8e1461c9c0292a52ffa9c3e4c1301083b368fb73fca6073bd6ddcb92aad7"
+      },
+      {
+        "path": "data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx",
+        "bytes": 305517,
+        "sha256": "c7258e3ff9a399361f1ef894d2c6d7642f733a2696fad09f34f35697a2408f3f"
+      },
+      {
+        "path": "source/UV-90_20260610.kmz",
+        "bytes": 51416,
+        "sha256": "a42ed1384e0a7a3e93119a1e868b5a6e0820773d5bd30aeda02c899f827293d0"
+      },
+      {
+        "path": "source/UV45_20260610.kmz",
+        "bytes": 21995,
+        "sha256": "387005d334dfb0df149eca141c609211c0ab4410987602f40f6628bc5b38f2ba"
+      },
+      {
+        "path": "source/Ultravasan90-2014-2022-reference.gpx",
+        "bytes": 134182,
+        "sha256": "9485eb71fb46290015355dd8f61188e8bcb6d6fbd0bf7a7de1663a6fdc6daef2"
+      },
+      {
+        "path": "source/Ultravasan90-2014-2022.gpx",
+        "bytes": 248439,
+        "sha256": "0063baa3a2181370c0fa7ce43a0836ac025760effe0d3bc3fb4c6c8ff9d687c4"
+      }
+    ]
+  },
+  "totals": {
+    "race_editions": 22,
+    "checkpoints": 163,
+    "results": 24422,
+    "splits": 139910,
+    "athletes": 16594,
+    "referenced_athletes": 16594,
+    "external_identities": 20805,
+    "sources": 7
+  },
+  "statuses": {
+    "DNF": 1327,
+    "DNS": 4013,
+    "FINISHED": 18967,
+    "STARTADE INTE": 113,
+    "UNKNOWN": 2
+  },
+  "splits_by_result_status": [
+    {
+      "status": "DNF",
+      "splits": 5952
+    },
+    {
+      "status": "DNS",
+      "splits": 7
+    },
+    {
+      "status": "FINISHED",
+      "splits": 133951
+    },
+    {
+      "status": "STARTADE INTE",
+      "splits": 0
+    },
+    {
+      "status": "UNKNOWN",
+      "splits": 0
+    }
+  ],
+  "external_identities_by_source": [
+    {
+      "source": "vasaloppet_mika",
+      "external_ids": 11234,
+      "athletes": 8961
+    },
+    {
+      "source": "vasanerd",
+      "external_ids": 9571,
+      "athletes": 9571
+    }
+  ],
+  "checks": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "orphan_rows": {
+      "checkpoints_without_race": 0,
+      "results_without_race": 0,
+      "results_without_athlete": 0,
+      "results_without_source": 0,
+      "splits_without_result": 0,
+      "splits_without_checkpoint": 0,
+      "external_ids_without_athlete": 0,
+      "external_ids_without_source": 0
+    },
+    "duplicate_result_keys": 0,
+    "duplicate_split_keys": 0,
+    "same_race_athlete_groups": 0,
+    "finished_without_finish_seconds": 0,
+    "non_finished_with_finish_seconds": 0,
+    "dnf_dns_with_finish_checkpoint": 0
+  },
+  "editions": [
+    {
+      "race_key": "ultravasan45-2014",
+      "database_id": 12,
+      "name": "Ultravasan 45",
+      "year": 2014,
+      "race_date": "2014-08-23",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_000017167888590000000399",
+      "result_year_path": 2015,
+      "results": 583,
+      "splits": 1717,
+      "unique_athletes": 583,
+      "statuses": {
+        "DNF": 7,
+        "DNS": 148,
+        "FINISHED": 428
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 583
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 10
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 1707
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2014",
+      "database_id": 7,
+      "name": "Ultravasan 90",
+      "year": 2014,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 914,
+      "splits": 5877,
+      "unique_athletes": 914,
+      "statuses": {
+        "DNF": 52,
+        "DNS": 153,
+        "FINISHED": 709
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 914
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 217
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 5660
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2015",
+      "database_id": 13,
+      "name": "Ultravasan 45",
+      "year": 2015,
+      "race_date": "2015-08-22",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_9999991678885A000000043D",
+      "result_year_path": 2016,
+      "results": 527,
+      "splits": 1595,
+      "unique_athletes": 527,
+      "statuses": {
+        "DNF": 8,
+        "DNS": 124,
+        "FINISHED": 394,
+        "UNKNOWN": 1
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 527
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 19
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 1576
+        },
+        {
+          "status": "UNKNOWN",
+          "splits": 0
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2015",
+      "database_id": 10,
+      "name": "Ultravasan 90",
+      "year": 2015,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1240,
+      "splits": 6883,
+      "unique_athletes": 1240,
+      "statuses": {
+        "DNF": 72,
+        "DNS": 347,
+        "FINISHED": 821
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1240
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 327
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 6556
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2016",
+      "database_id": 14,
+      "name": "Ultravasan 45",
+      "year": 2016,
+      "race_date": "2016-08-20",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_9999991678885A00000004CB",
+      "result_year_path": 2017,
+      "results": 743,
+      "splits": 2296,
+      "unique_athletes": 743,
+      "statuses": {
+        "DNF": 17,
+        "DNS": 159,
+        "FINISHED": 567
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 743
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 29
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 2267
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2016",
+      "database_id": 9,
+      "name": "Ultravasan 90",
+      "year": 2016,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 986,
+      "splits": 6190,
+      "unique_athletes": 986,
+      "statuses": {
+        "DNF": 60,
+        "DNS": 181,
+        "FINISHED": 745
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 986
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 245
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 5945
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2017",
+      "database_id": 15,
+      "name": "Ultravasan 45",
+      "year": 2017,
+      "race_date": "2017-08-19",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_9999991678885A0000000620",
+      "result_year_path": 2018,
+      "results": 726,
+      "splits": 2256,
+      "unique_athletes": 726,
+      "statuses": {
+        "DNF": 13,
+        "DNS": 153,
+        "FINISHED": 560
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 726
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 18
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 2238
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2017",
+      "database_id": 3,
+      "name": "Ultravasan 90",
+      "year": 2017,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1019,
+      "splits": 6762,
+      "unique_athletes": 1019,
+      "statuses": {
+        "DNF": 103,
+        "DNS": 120,
+        "FINISHED": 796
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1019
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 414
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 6348
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2018",
+      "database_id": 16,
+      "name": "Ultravasan 45",
+      "year": 2018,
+      "race_date": "2018-08-18",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_9999991678885B00000006D3",
+      "result_year_path": 2019,
+      "results": 984,
+      "splits": 3176,
+      "unique_athletes": 984,
+      "statuses": {
+        "DNF": 11,
+        "DNS": 182,
+        "FINISHED": 791
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 984
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 17
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 3159
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2018",
+      "database_id": 2,
+      "name": "Ultravasan 90",
+      "year": 2018,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1166,
+      "splits": 8086,
+      "unique_athletes": 1166,
+      "statuses": {
+        "DNF": 64,
+        "DNS": 124,
+        "FINISHED": 978
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1166
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 268
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 7818
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2019",
+      "database_id": 17,
+      "name": "Ultravasan 45",
+      "year": 2019,
+      "race_date": "2019-08-17",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_9999991678885C0000000709",
+      "result_year_path": 2020,
+      "results": 1117,
+      "splits": 3744,
+      "unique_athletes": 1117,
+      "statuses": {
+        "DNF": 12,
+        "DNS": 174,
+        "FINISHED": 931
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 1117
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 20
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 3724
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2019",
+      "database_id": 4,
+      "name": "Ultravasan 90",
+      "year": 2019,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1350,
+      "splits": 9360,
+      "unique_athletes": 1350,
+      "statuses": {
+        "DNF": 101,
+        "DNS": 131,
+        "FINISHED": 1118
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1350
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 432
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 8928
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2022",
+      "database_id": 18,
+      "name": "Ultravasan 45",
+      "year": 2022,
+      "race_date": "2022-08-20",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_HCH8NDMR2201",
+      "result_year_path": 2023,
+      "results": 937,
+      "splits": 2470,
+      "unique_athletes": 937,
+      "statuses": {
+        "DNF": 12,
+        "DNS": 313,
+        "FINISHED": 612
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 937
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 22
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 2448
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2022",
+      "database_id": 6,
+      "name": "Ultravasan 90",
+      "year": 2022,
+      "race_date": null,
+      "distance_km": 90.0,
+      "course_version": "pre2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1654,
+      "splits": 9298,
+      "unique_athletes": 1654,
+      "statuses": {
+        "DNF": 134,
+        "DNS": 430,
+        "FINISHED": 1090
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1654
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 585
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 8713
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2023",
+      "database_id": 19,
+      "name": "Ultravasan 45",
+      "year": 2023,
+      "race_date": "2023-08-19",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_HCH8NDMR2301",
+      "result_year_path": 2024,
+      "results": 688,
+      "splits": 2329,
+      "unique_athletes": 688,
+      "statuses": {
+        "DNF": 9,
+        "DNS": 101,
+        "FINISHED": 578
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 688
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 17
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 2312
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2023",
+      "database_id": 5,
+      "name": "Ultravasan 90",
+      "year": 2023,
+      "race_date": null,
+      "distance_km": 92.0,
+      "course_version": "post2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1355,
+      "splits": 10303,
+      "unique_athletes": 1355,
+      "statuses": {
+        "DNF": 114,
+        "DNS": 162,
+        "FINISHED": 1079
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1355
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 592
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 9711
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 10.84,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 25.34,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 36.4,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 48.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 63.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 72.67,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.81,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 9,
+          "distance_km": 92.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2024",
+      "database_id": 20,
+      "name": "Ultravasan 45",
+      "year": 2024,
+      "race_date": "2024-08-17",
+      "distance_km": 45.0,
+      "course_version": "uv45-legacy-2014-2024",
+      "event_code": "UL45_HCH8NDMR2401",
+      "result_year_path": 2025,
+      "results": 808,
+      "splits": 2771,
+      "unique_athletes": 808,
+      "statuses": {
+        "DNF": 7,
+        "DNS": 110,
+        "FINISHED": 690,
+        "UNKNOWN": 1
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 808
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 11
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 2760
+        },
+        {
+          "status": "UNKNOWN",
+          "splits": 0
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 1,
+          "distance_km": 15.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 2,
+          "distance_km": 24.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 3,
+          "distance_km": 34.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 4,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2024",
+      "database_id": 8,
+      "name": "Ultravasan 90",
+      "year": 2024,
+      "race_date": null,
+      "distance_km": 92.0,
+      "course_version": "post2023",
+      "event_code": null,
+      "result_year_path": null,
+      "results": 1592,
+      "splits": 12195,
+      "unique_athletes": 1592,
+      "statuses": {
+        "DNF": 102,
+        "DNS": 192,
+        "FINISHED": 1298
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1592
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 515
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 11680
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 10.84,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 25.34,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 36.4,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 48.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 63.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 72.67,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.81,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 9,
+          "distance_km": 92.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2025",
+      "database_id": 11,
+      "name": "Ultravasan 45",
+      "year": 2025,
+      "race_date": "2025-08-16",
+      "distance_km": 45.0,
+      "course_version": "uv45-current",
+      "event_code": "UL45_HCH8NDMR2501",
+      "result_year_path": 2026,
+      "results": 871,
+      "splits": 4523,
+      "unique_athletes": 871,
+      "statuses": {
+        "DNF": 9,
+        "FINISHED": 749,
+        "STARTADE INTE": 113
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 871
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 29
+        },
+        {
+          "status": "FINISHED",
+          "splits": 4494
+        },
+        {
+          "status": "STARTADE INTE",
+          "splits": 0
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "lillsjon",
+          "name": "Lillsjön",
+          "sequence_no": 1,
+          "distance_km": 2.25,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 2,
+          "distance_km": 13.907,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 3,
+          "distance_km": 23.976,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 4,
+          "distance_km": 33.317,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 5,
+          "distance_km": 44.3,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 6,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2025",
+      "database_id": 1,
+      "name": "Ultravasan 90",
+      "year": 2025,
+      "race_date": "2025-08-16",
+      "distance_km": 92.0,
+      "course_version": "post2023",
+      "event_code": "UL90_HCH8NDMR2501",
+      "result_year_path": 2026,
+      "results": 1912,
+      "splits": 14521,
+      "unique_athletes": 1912,
+      "statuses": {
+        "DNF": 159,
+        "DNS": 231,
+        "FINISHED": 1522
+      },
+      "sources": [
+        {
+          "source": "vasanerd",
+          "results": 1912
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 823
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 13698
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 10.84,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 25.34,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 36.4,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 48.73,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 63.5,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 72.67,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.81,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 9,
+          "distance_km": 92.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan45-2026",
+      "database_id": 22,
+      "name": "Ultravasan 45",
+      "year": 2026,
+      "race_date": "2026-08-15",
+      "distance_km": 45.0,
+      "course_version": "uv45-current",
+      "event_code": "UL45_HCH8NDMR2601",
+      "result_year_path": 2027,
+      "results": 917,
+      "splits": 4393,
+      "unique_athletes": 917,
+      "statuses": {
+        "DNF": 19,
+        "DNS": 174,
+        "FINISHED": 724
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 917
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 49
+        },
+        {
+          "status": "DNS",
+          "splits": 0
+        },
+        {
+          "status": "FINISHED",
+          "splits": 4344
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Oxberg",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "lillsjon",
+          "name": "Lillsjön",
+          "sequence_no": 1,
+          "distance_km": 2.25,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 2,
+          "distance_km": 13.907,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 3,
+          "distance_km": 23.976,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 4,
+          "distance_km": 33.317,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 5,
+          "distance_km": 44.3,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 6,
+          "distance_km": 45.0,
+          "elevation_m": null
+        }
+      ]
+    },
+    {
+      "race_key": "ultravasan90-2026",
+      "database_id": 21,
+      "name": "Ultravasan 90",
+      "year": 2026,
+      "race_date": "2026-08-15",
+      "distance_km": 92.0,
+      "course_version": "post2023",
+      "event_code": "UL90_HCH8NDMR2601",
+      "result_year_path": 2027,
+      "results": 2333,
+      "splits": 19165,
+      "unique_athletes": 2333,
+      "statuses": {
+        "DNF": 242,
+        "DNS": 304,
+        "FINISHED": 1787
+      },
+      "sources": [
+        {
+          "source": "vasaloppet_mika",
+          "results": 2333
+        }
+      ],
+      "splits_by_result_status": [
+        {
+          "status": "DNF",
+          "splits": 1293
+        },
+        {
+          "status": "DNS",
+          "splits": 7
+        },
+        {
+          "status": "FINISHED",
+          "splits": 17865
+        }
+      ],
+      "checkpoints": [
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": null,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 9.2,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 23.7,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 35.0,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 47.1,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 62.2,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 71.4,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.8,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 9,
+          "distance_km": null,
+          "elevation_m": null
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 10,
+          "distance_km": 92.0,
+          "elevation_m": null
+        }
+      ]
+    }
+  ],
+  "web_export": {
+    "schema_version": 1,
+    "generated_at": "2026-08-24T09:45:03+00:00",
+    "counts": {
+      "races": 22,
+      "checkpoints": 163,
+      "results": 24422,
+      "splits": 139910,
+      "stats": 22,
+      "sources": 7
+    },
+    "manifest": {
+      "generated_at": "2026-08-24T09:45:03+00:00",
+      "races": 22,
+      "results": 24422,
+      "splits": 139910,
+      "bytes": 42102175
+    },
+    "parity": {
+      "race_ids_equal": true,
+      "result_ids_equal": true,
+      "split_keys_equal": true,
+      "json_and_javascript_payload_equal": true,
+      "manifest_counts_equal": true
+    }
+  }
+}
