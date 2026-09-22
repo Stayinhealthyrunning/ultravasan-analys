@@ -1,9 +1,10 @@
 'use strict';
 (function(root,factory){
-  const api=factory();
+  const contracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):root.RaceContracts;
+  const api=factory(contracts);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.RunnerReplay=api;
-})(typeof window!=='undefined'?window:globalThis,function(){
+})(typeof window!=='undefined'?window:globalThis,function(contracts){
   const SVG_W=920,SVG_H=430,MAP_PAD=42;
   const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.35;
   const MIN_REFERENCE_SIZE=5,MEDAL_MIN_SIZE=20,MEDAL_SIDE_SIZE=40;
@@ -30,19 +31,13 @@
   const fmtDistance=v=>`${Number(v||0).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:1})} km`;
   const formatClassPlace=value=>finite(value)&&Number(value)>0?String(Math.trunc(Number(value))):'Saknas';
   const median=values=>{const a=values.filter(finite).map(Number).sort((a,b)=>a-b);if(!a.length)return null;const i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2};
-  const raceFamily=r=>String(r?.race_key||'').startsWith('ultravasan45-')?'uv45':'uv90';
+  const raceFamily=r=>contracts.familyForRace(r);
   const sexCategory=result=>{const value=String(typeof result==='string'?result:result?.sex||'').trim().toUpperCase();return ['F','W','K','D','KVINNA'].includes(value)?'F':['M','H','MAN'].includes(value)?'M':null};
-  const medalConfigForRace=(race,resultOrSex)=>{const sex=sexCategory(resultOrSex);if(raceFamily(race)!=='uv90'||!sex)return null;const era=Number(race?.year)<2023?'pre2023':'post2023',config=MEDAL_CONFIG[era]?.[sex];return config?{...config,sex,era}:null};
+  const medalConfigForRace=(race,resultOrSex)=>{const sex=sexCategory(resultOrSex);if(raceFamily(race)!=='uv90'||!sex)return null;const era=contracts.medalProfileForRace(race),config=MEDAL_CONFIG[era]?.[sex];return config?{...config,sex,era}:null};
   const medalTimeForRace=(race,resultOrSex)=>medalConfigForRace(race,resultOrSex)?.seconds??null;
   const weightedMedian=entries=>{const values=(entries||[]).filter(entry=>finite(entry?.value)&&finite(entry?.weight)&&Number(entry.weight)>0).map(entry=>({value:Number(entry.value),weight:Number(entry.weight)})).sort((a,b)=>a.value-b.value);if(!values.length)return null;const half=values.reduce((sum,item)=>sum+item.weight,0)/2;let total=0;for(const item of values){total+=item.weight;if(total>=half)return item.value}return values.at(-1).value};
 
-  function routeForRace(registry,race){
-    if(!registry||!race)return null;
-    const specific=(registry.route_for_race||[]).find(rule=>String(race.race_key||'').startsWith(rule.race_key_prefix||'')&&(!rule.year_from||race.year>=rule.year_from)&&(!rule.year_to||race.year<=rule.year_to));
-    if(specific)return registry.routes?.[specific.route_id]||null;
-    const byYear=(registry.route_for_year||[]).find(rule=>race.year>=rule.from&&race.year<=rule.to);
-    return registry.routes?.[byYear?.route_id||registry.default_route_id]||null;
-  }
+  const routeForRace=(registry,race)=>contracts.routeForRace(registry,race);
 
   function pointAtDistance(points,distance){
     if(!Array.isArray(points)||!points.length)return null;
@@ -164,7 +159,7 @@
     const config=medalConfigForRace(race,sex),limit=config?.seconds,meta=REFERENCE_META.medal;if(!config||!finite(limit))return null;
     let pool=currentProfiles.filter(profile=>sexCategory(profile.result)===sex),source='current-year',years=[Number(race.year)];
     if(pool.length<MEDAL_MIN_SIZE&&dataset){
-      const currentEra=config.era,comparable=(dataset.races||[]).filter(candidate=>raceFamily(candidate)==='uv90'&&(Number(candidate.year)<2023?'pre2023':'post2023')===currentEra),requiredKeys=checkpoints.map(cp=>cp.key);
+      const currentEra=config.era,comparable=(dataset.races||[]).filter(candidate=>raceFamily(candidate)==='uv90'&&contracts.medalProfileForRace(candidate)===currentEra),requiredKeys=checkpoints.map(cp=>cp.key);
       pool=[];years=[];
       for(const candidateRace of comparable){const candidateCheckpoints=(dataset.checkpoints||[]).filter(cp=>String(cp.race_id)===String(candidateRace.id)),built=completeProfilesForRace({race:candidateRace,raceCheckpoints:candidateCheckpoints,results:dataset.results||[],splits:dataset.splits||[],statusApi}),sameSex=built.profiles.filter(profile=>sexCategory(profile.result)===sex&&requiredKeys.every(key=>finite(profile.timesByKey[key])));for(const profile of sameSex)pool.push({...profile,times:requiredKeys.map(key=>profile.timesByKey[key])});if(sameSex.length)years.push(Number(candidateRace.year))}
       source='comparable-years';
@@ -194,8 +189,8 @@
   function createModel({race,result,route,raceCheckpoints=[],splits=[],dataset=null,statusApi=null}){
     const checkpoints=raceCheckpoints.map(normalizedCheckpoint).filter(cp=>finite(cp.distance)).sort((a,b)=>a.sequence-b.sequence||a.distance-b.distance);
     const totalDistance=Number(race?.distance_km||route?.official_distance_km||checkpoints.at(-1)?.distance||0);
-    if(!checkpoints.length)checkpoints.push({key:'start',name:raceFamily(race)==='uv45'?'Start Oxberg':'Start Sälen',short:'Start',sequence:0,distance:0},{key:'finish',name:'Mora mål',short:'Mora',sequence:1,distance:totalDistance});
-    if(checkpoints[0].distance>0)checkpoints.unshift({key:'start',name:raceFamily(race)==='uv45'?'Start Oxberg':'Start Sälen',short:'Start',sequence:-1,distance:0});
+    if(!checkpoints.length)checkpoints.push({key:'start',name:contracts.family(raceFamily(race))?.start_name||'Start',short:'Start',sequence:0,distance:0},{key:'finish',name:'Mora mål',short:'Mora',sequence:1,distance:totalDistance});
+    if(checkpoints[0].distance>0)checkpoints.unshift({key:'start',name:contracts.family(raceFamily(race))?.start_name||'Start',short:'Start',sequence:-1,distance:0});
     const orderedSplits=splits.slice().sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
     const anchors=[{distance:0,time:0,rank:null,classRank:null,name:checkpoints[0].name,key:checkpoints[0].key,kind:'start'}];
     for(const cp of checkpoints.slice(1)){

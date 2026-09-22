@@ -6,9 +6,9 @@ Python-installation behövs för normal användning.
 
 ## Två lopp i samma analysverktyg
 
-Startsidan har en mjuk växlare mellan **Ultravasan 90** (standard) och **Ultravasan 45**. Varje lopp har egen rubrikbild, egna loppår, egna resultatfilter, egna analyser, egen GPS-rutt och egen musik i kartduellen. Data hålls åtskilda med loppnycklarna `ultravasan90-ÅR` och `ultravasan45-ÅR`.
+Startsidan har en mjuk växlare mellan **Ultravasan 90** (standard) och **Ultravasan 45**. Varje lopp har egen rubrikbild, egna loppår, egna resultatfilter, egna analyser, egen GPS-rutt och egen musik i kartduellen. Familj och kartreferens slås upp explicit per loppnyckel i `docs/data/race-catalog.json`; namn, prefix, årtal och distans avgör inte valet.
 
-Ultravasan 45-rutten byggs från `source/UV45_20260610.kmz`. Den konfigurerade kontrollmodellen är Start Oxberg, Oxberg efter inledningsslingan, Hökberg, Eldris och Mora. `tools/mika_import.py discover` söker nu eventkoder för både 90 och 45 km. När rätt eventkod har lagts in i `config/races.json` fungerar samma probe-, fullimport-, validerings- och exportflöde för båda loppen.
+Ultravasan 45 visas med GPX-spåret `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`. Äldre utgåvor behåller sin historiska kontrollmodell; kartspåret är en gemensam visningsreferens. `tools/mika_import.py discover` söker eventkoder för både 90 och 45 km. Importadaptrarna migreras vidare i kommande U1-etapper.
 
 ## Öppna verktyget
 
@@ -33,6 +33,24 @@ fungerar från en vanlig `file://`-adress.
 Den medföljande resultatdatabasen innehåller 22 loppår, 24 422 resultat och
 139 910 mellantider. Den exakta U0-baslinjen inför Ultravasan Analys 2.0 finns i
 `reports/U0_BASELINE.json` och verifieras automatiskt i CI.
+
+U1:s explicita event-, familje- och bankontrakt beskrivs i
+[`reports/U1_EVENT_COURSE_CONTRACTS.md`](reports/U1_EVENT_COURSE_CONTRACTS.md).
+`config/races.json` tilldelar utgåvorna fem låsta ban-/kontrollmodeller från
+`config/course_versions.json`. För att bygga och verifiera katalogen:
+
+```bash
+python tools/race_contracts.py
+python tools/race_contracts.py --check --base-ref origin/main
+```
+
+En publicerad banversion får inte få nytt innehåll under samma ID. Skapa ett nytt
+ID och lägg till dess fingeravtryck i `config/course_version_lock.json` när
+geometri, kontrollmodell, ankare eller segment ändras. Gamla versioner behålls.
+Katalogen ska regenereras efter ändrad utgåvetilldelning; CI stoppar inaktuella
+exporter och ändrade versionslås. Befintliga resultatfiler migreras inte av detta
+kommando. Fullständig RaceEdition, SourceBinding och CompetitionCapabilities
+återstår i U1.
 
 
 ## Historisk engångsimport från VasaNerd

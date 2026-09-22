@@ -1325,9 +1325,6 @@ def validation_rule_for_race(config: dict[str, Any], race: sqlite3.Row | dict[st
     families = config.get("race_families", {})
     if family_key and family_key in families:
         return families[family_key].get("validation", {})
-    for family in families.values():
-        if race_key.startswith(str(family.get("race_key_prefix") or "\0")):
-            return family.get("validation", {})
     return {}
 
 
