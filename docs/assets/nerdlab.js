@@ -153,11 +153,6 @@ function renderHall(){
 
 
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];
-function hallRouteForYear(year){
-  const reg=window.ULTRAVASAN_ROUTES;if(!reg)return null;
-  const rule=(reg.route_for_year||[]).find(x=>year>=x.from&&year<=x.to);
-  return reg.routes?.[rule?.route_id||reg.default_route_id]||null;
-}
 function ensureHallLeaflet(){
   if(window.L)return Promise.resolve(true);
   return new Promise(resolve=>{

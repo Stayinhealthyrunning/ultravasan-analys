@@ -1,23 +1,50 @@
 {
+  "event": {
+    "event_key": "ultravasan",
+    "name": "Ultravasan",
+    "product_title": "Ultravasan Analys",
+    "storage_namespace": "ultravasan"
+  },
   "race_families": {
     "uv90": {
       "race_key_prefix": "ultravasan90-",
       "validation": {
         "finish_seconds_min": 14400,
         "finish_seconds_max": 86400
-      }
+      },
+      "event_key": "ultravasan",
+      "label": "Ultravasan 90",
+      "start_name": "Start Sälen",
+      "presentation": {
+        "hero": "assets/salen-mora-header.png?v=20260713-multirace1",
+        "alt": "Sälen-Mora Splits – analysera din resa i Ultravasan 90 från Sälen till Mora",
+        "title": "Sälen-Mora splits"
+      },
+      "music": "assets/Eldspar-till-Mora.mp3?v=20260713-multirace1"
     },
     "uv45": {
       "race_key_prefix": "ultravasan45-",
       "validation": {
         "finish_seconds_min": 5400,
         "finish_seconds_max": 54000
-      }
+      },
+      "event_key": "ultravasan",
+      "label": "Ultravasan 45",
+      "start_name": "Start Oxberg",
+      "presentation": {
+        "hero": "assets/oxberg-mora-header.png?v=20260713-multirace1",
+        "alt": "Oxberg-Mora Splits – analysera din resa i Ultravasan 45 från Oxberg till Mora",
+        "title": "Oxberg-Mora splits"
+      },
+      "music": "assets/Ultravasan-45.mp3?v=20260713-multirace1"
     }
   },
   "races": [
     {
       "race_key": "ultravasan90-2014",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2014,
@@ -40,6 +67,9 @@
     },
     {
       "race_key": "ultravasan90-2015",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2015,
@@ -62,6 +92,9 @@
     },
     {
       "race_key": "ultravasan90-2017",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2017,
@@ -84,6 +117,9 @@
     },
     {
       "race_key": "ultravasan90-2018",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2018,
@@ -106,6 +142,9 @@
     },
     {
       "race_key": "ultravasan90-2019",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2019,
@@ -128,6 +167,9 @@
     },
     {
       "race_key": "ultravasan90-2022",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2022,
@@ -150,6 +192,9 @@
     },
     {
       "race_key": "ultravasan90-2023",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-2023-2025-v1",
+      "medal_profile": "post2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2023,
@@ -173,6 +218,9 @@
     },
     {
       "race_key": "ultravasan90-2024",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-2023-2025-v1",
+      "medal_profile": "post2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2024,
@@ -196,6 +244,9 @@
     },
     {
       "race_key": "ultravasan90-2025",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-2023-2025-v1",
+      "medal_profile": "post2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2025,
@@ -273,6 +324,9 @@
     },
     {
       "race_key": "ultravasan90-2016",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-pre2023-v1",
+      "medal_profile": "pre2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2016,
@@ -350,6 +404,9 @@
     },
     {
       "race_key": "ultravasan45-2014",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2014,
@@ -403,6 +460,9 @@
     },
     {
       "race_key": "ultravasan45-2015",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2015,
@@ -456,6 +516,9 @@
     },
     {
       "race_key": "ultravasan45-2016",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2016,
@@ -509,6 +572,9 @@
     },
     {
       "race_key": "ultravasan45-2017",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2017,
@@ -562,6 +628,9 @@
     },
     {
       "race_key": "ultravasan45-2018",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2018,
@@ -615,6 +684,9 @@
     },
     {
       "race_key": "ultravasan45-2019",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2019,
@@ -668,6 +740,9 @@
     },
     {
       "race_key": "ultravasan45-2022",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2022,
@@ -721,6 +796,9 @@
     },
     {
       "race_key": "ultravasan45-2023",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2023,
@@ -774,6 +852,9 @@
     },
     {
       "race_key": "ultravasan45-2024",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2014-2024-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2024,
@@ -827,6 +908,9 @@
     },
     {
       "race_key": "ultravasan45-2025",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2025-2026-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2025,
@@ -893,6 +977,9 @@
     },
     {
       "race_key": "ultravasan90-2026",
+      "event_key": "ultravasan",
+      "course_version_id": "uv90-2026-v1",
+      "medal_profile": "post2023",
       "race_family": "uv90",
       "name": "Ultravasan 90",
       "year": 2026,
@@ -983,6 +1070,9 @@
     },
     {
       "race_key": "ultravasan45-2026",
+      "event_key": "ultravasan",
+      "course_version_id": "uv45-2025-2026-v1",
+      "medal_profile": null,
       "race_family": "uv45",
       "name": "Ultravasan 45",
       "year": 2026,

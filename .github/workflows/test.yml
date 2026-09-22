@@ -13,6 +13,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -28,6 +30,11 @@ jobs:
 
       - name: Verifiera U0 golden master
         run: python tools/u0_baseline.py --check
+
+      - name: Verifiera loppkontrakt och publicerade banversioner
+        env:
+          CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python tools/race_contracts.py --check --base-ref "$CONTRACT_BASE_REF"
 
       - name: Kör Python-tester
         run: python -m pytest -q

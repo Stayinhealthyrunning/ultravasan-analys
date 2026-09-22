@@ -54,6 +54,17 @@ for (let attempt = 0; attempt < 100; attempt++) {
 }
 if (!ready) throw new Error("Local application did not finish loading");
 
+const contractChecks = await evaluate(`(() => {
+  const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA;
+  return {
+    editions:data.races.length===Object.keys(contracts.catalog.editions).length,
+    routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
+    families:data.races.every(race=>raceFamilyOf(race)===contracts.familyForRace(race)),
+    unknown:window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,{race_key:'ultravasan90-2099',year:2025})===null,
+    immutable:Object.isFrozen(contracts.catalog.editions),
+  };
+})()`);
+
 const initial = await evaluate(`(() => {
   const data=window.ULTRAVASAN_DATA;
   const race=data.races.find(item=>item.id===9);
@@ -117,7 +128,7 @@ async function openRunnerCase(item) {
   const setup = await evaluate(`(() => {
     const data=window.ULTRAVASAN_DATA,result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
     const dialog=document.querySelector('#runnerDialog');if(dialog?.open)dialog.close();
-    const family=race.race_key.startsWith('ultravasan45-')?'45':'90';document.querySelector('#raceSwitch'+family)?.click();
+    const family=window.RaceContracts.familyForRace(race)==='uv45'?'45':'90';document.querySelector('#raceSwitch'+family)?.click();
     return {family,raceKey:race.race_key,year:race.year};
   })()`);
   await delay(650);
@@ -145,7 +156,30 @@ async function openRunnerCase(item) {
 const caseResults = [];
 for (const item of additionalCases) caseResults.push(await openRunnerCase(item));
 
+// Open the standalone map through shared URLs, without a session-data shortcut.
+const mapCases=[];
+for(const item of [additionalCases[2],additionalCases[4]]){
+  await command('Page.navigate',{url:'http://127.0.0.1:8765/karta.html?runners='+item.id});
+  let loaded=false;
+  for(let attempt=0;attempt<150;attempt++){
+    if(await evaluate("Boolean(document.querySelector('#mapLoading')?.classList.contains('hidden'))")){loaded=true;break}
+    await delay(100);
+  }
+  const state=loaded?await evaluate(`(() => ({
+    raceKey:app.models[0]?.race?.race_key,
+    family:window.RaceContracts.familyForRace(app.models[0]?.race),
+    route:app.models[0]?.route?.id,
+    expected:window.RaceContracts.courseForRace(app.models[0]?.race)?.display_route_id,
+    audio:document.querySelector('#raceSoundtrack')?.getAttribute('src'),
+    expectedAudio:window.RACE_MEDIA_CONFIG.musicForRace(app.models[0]?.race),
+    note:document.querySelector('#courseNote')?.textContent,
+  }))()`):null;
+  mapCases.push({item,loaded,state,verified:loaded&&state.raceKey===item.label&&state.route===state.expected&&state.audio===state.expectedAudio&&state.note.includes('kartspår')});
+}
+
 const checks = {
+  contracts:Object.values(contractChecks).every(Boolean),
+  maps:mapCases.length===2&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
   result: initial.result?.bib === "1025" && initial.result?.finish_seconds === 26280 && initial.result?.overall_place === 22,
@@ -158,7 +192,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

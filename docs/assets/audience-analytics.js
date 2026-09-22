@@ -1,6 +1,7 @@
 'use strict';
 /* Sälen–Mora Splits: genusperspektiv, klasser, klubbar och mobil interaktion. */
-const audienceRaceFamily=r=>String(r?.race_key||'').startsWith('ultravasan45-')?'uv45':String(r?.race_key||'').startsWith('ultravasan90-')?'uv90':null;
+const audienceContracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):window.RaceContracts;
+const audienceRaceFamily=r=>audienceContracts.familyForRace(r);
 function selectAudienceRace(races,family,year){
   const sameFamily=(races||[]).filter(r=>audienceRaceFamily(r)===family).sort((a,b)=>Number(b.year)-Number(a.year));
   if(!sameFamily.length)return null;
