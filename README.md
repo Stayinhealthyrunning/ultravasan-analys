@@ -30,8 +30,9 @@ fungerar från en vanlig `file://`-adress.
 - SQLite-databas med källspårning,
 - GitHub Actions för import, validering, export och kostnadsfri publicering.
 
-Den medföljande resultatdatabasen är en tydligt märkt förhandsdatabas med 20 officiella
-topplaceringar från 2025. Full import görs online enligt nedan.
+Den medföljande resultatdatabasen innehåller 22 loppår, 24 422 resultat och
+139 910 mellantider. Den exakta U0-baslinjen inför Ultravasan Analys 2.0 finns i
+`reports/U0_BASELINE.json` och verifieras automatiskt i CI.
 
 
 ## Historisk engångsimport från VasaNerd
@@ -162,14 +163,12 @@ Ange år, datum, eventkod, resultatsidans årssökväg och officiell distans. F�
   `source/UV-90_20260610.kmz`,
 - `ultravasan90-pre2023` – 90,173 km, ett lokalt referenslager för 2014–2022.
 
-Den äldre publika 2022-rutten uppges vara skapad från arrangörens KMZ från
-2022-06-16 och ha längden 90,173 km. Eftersom den ursprungliga koordinatfilen inte
-kunde paketeras automatiskt har projektet en tydligt märkt
-`reference-reconstruction`: den gemensamma huvuddelen följer det moderna GPS-spåret,
-med den äldre kortare starten rekonstruerad. När en verifierad historisk fil hittas laddas den upp i GitHub med exakt namnet
-`source/Ultravasan90-2014-2022.gpx`. Arbetsflödet **Bygg om kartans banlager**
-startar då automatiskt och ersätter referensgeometrin utan någon kodändring. Den
-medföljande `source/Ultravasan90-2014-2022-reference.gpx` skrivs bara som reserv.
+Verifierad historisk GPX finns nu både som
+`source/Ultravasan90-2014-2022.gpx` och som den reproducerbara primärkällan
+`data/routes/Ultravasan 90 2022.gpx`. Den äldre
+`source/Ultravasan90-2014-2022-reference.gpx` bevaras endast som dokumenterad
+reserv. Alla aktuella ruttkällor och deras SHA-256-hashar ingår i
+`reports/U0_BASELINE.json`.
 
 Kartvyn väljer automatiskt rätt rutt per år. Om löpare från båda perioderna jämförs
 visas båda lagren, separata linjestilar och årsmärke på varje löpare. Ställningen
@@ -226,10 +225,11 @@ DITT-NAMN.github.io/andra-verktyg/
 Lokalt i projektet finns:
 
 ```text
-python tests/test_mika_parser.py
+python -m pip install -r requirements-test.txt
+python tools/u0_baseline.py --check
+python -m pytest -q
 python tools/uvtool.py validate
-python tools/uvtool.py export
 ```
 
-GitHub-arbetsflödet kör kontrollerna online. SQLite-integritet, JavaScript-syntax, HTML-struktur, Mika-parsern och
-VasaNerd-adapterns två stödda grundformat har kontrollerats i levererat paket.
+GitHub-arbetsflödet `Tests` kör golden master, hela Python-sviten, samtliga
+JavaScript-tester och syntaxkontroll på varje push och pull request.
