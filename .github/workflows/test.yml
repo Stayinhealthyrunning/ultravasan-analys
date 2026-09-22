@@ -1,0 +1,91 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installera Python-beroenden
+        run: python -m pip install -r requirements-test.txt
+
+      - name: Verifiera U0 golden master
+        run: python tools/u0_baseline.py --check
+
+      - name: Kör Python-tester
+        run: python -m pytest -q
+
+      - name: Kontrollera JavaScript-syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            node --check "$file"
+          done < <(find docs/assets tests tools -type f \( -name "*.js" -o -name "*.mjs" \) | sort)
+
+      - name: Kör JavaScript-tester
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            node "$file"
+          done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installera Chromium
+        run: |
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Kör verkligt browserflöde
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory docs >"$RUNNER_TEMP/ultravasan-http.log" 2>&1 &
+          browser_path="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          "$browser_path" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --remote-debugging-port=9223 \
+            --user-data-dir="$RUNNER_TEMP/ultravasan-chromium" \
+            http://127.0.0.1:8765/ >"$RUNNER_TEMP/ultravasan-browser.log" 2>&1 &
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null
+          node tools/verify_local_browser.mjs
