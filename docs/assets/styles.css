@@ -507,3 +507,44 @@ html,body{max-width:100%;overflow-x:hidden}
 @media(max-width:980px){.class-evolution-toolbar{grid-template-columns:1fr auto}.class-evolution-slider-label{grid-column:1/-1}.class-evolution-chart{height:520px;min-height:460px}.class-evolution-card .panel-head>div:first-child{max-width:none}}
 @media(max-width:620px){.class-evolution-toolbar{grid-template-columns:1fr;padding:12px}.class-evolution-actions,.class-evolution-year,.class-evolution-slider-label,.class-evolution-legend{grid-column:1}.class-evolution-actions button{flex:1;min-width:88px}.class-evolution-year{grid-template-columns:auto 1fr;gap:10px;align-items:baseline}.class-evolution-slider-label{grid-template-columns:1fr}.class-evolution-chart{height:455px;min-height:420px}.class-evolution-chart text{font-size:11px}.class-evolution-watermark{font-size:60px!important}.class-evolution-tooltip{position:sticky;left:50%!important;top:6px!important;max-width:calc(100% - 20px);transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.class-evolution-bubble circle{transition:none!important}.class-evolution-trail,.class-evolution-live-trail{transition:none!important}}
+
+
+/* ===== U5 Runner Analysis 2.0: Journey + verifierad historik ===== */
+.runner-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:22px 0 10px}
+.runner-section-head h3{margin:2px 0 0;font-size:1.08rem;color:var(--forest)}
+.runner-journey{margin:20px 0 24px;min-width:0}
+.runner-journey-track{display:flex;gap:10px;overflow-x:auto;padding:3px 2px 12px;scrollbar-gutter:stable;scroll-snap-type:x proximity}
+.runner-journey-stop{position:relative;flex:0 0 188px;min-width:0;padding:14px 13px 12px 18px;border:1px solid var(--line);border-radius:14px;background:#fbfcf8;scroll-snap-align:start}
+.runner-journey-stop:before{content:"";position:absolute;left:-11px;top:25px;width:11px;height:2px;background:#cad5cc}
+.runner-journey-stop:first-child:before{display:none}
+.runner-journey-dot{position:absolute;left:7px;top:20px;width:7px;height:7px;border-radius:50%;background:#176d53;box-shadow:0 0 0 3px #e5eee7}
+.runner-journey-stop.estimated .runner-journey-dot{background:#b88718;box-shadow:0 0 0 3px #fff1d6}
+.runner-journey-stop.missing .runner-journey-dot{background:#8a9690;box-shadow:0 0 0 3px #edf1ee}
+.runner-journey-stop-head{display:flex;justify-content:space-between;align-items:flex-start;gap:7px;padding-left:2px}
+.runner-journey-stop-head strong{font-size:.75rem;color:var(--ink);line-height:1.25}
+.runner-journey-stop-head span{white-space:nowrap;color:var(--muted);font-size:.61rem}
+.runner-journey-stop p{margin:9px 0 5px;color:var(--ink);font-size:.67rem;line-height:1.45}
+.runner-journey-stop small{display:block;color:var(--muted);font-size:.61rem;margin-bottom:7px}
+.runner-journey-stop em,.journey-quality{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:3px 7px;border-radius:99px;background:#e5eee7;color:#176d53;font-style:normal;font-size:.56rem;font-weight:800}
+.runner-journey-stop.estimated em,.journey-quality.estimated{background:#fff1d6;color:#91600f}
+.runner-journey-stop.missing em,.journey-quality.missing{background:#edf1ee;color:#68746e}
+.runner-journey-stop.start em,.journey-quality.start{background:#eef3ec;color:var(--forest)}
+.runner-history-note{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:12px 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:#f5f7f2;color:var(--muted)}
+.runner-history-note>strong,.runner-history-note>div>strong{color:var(--forest);font-size:.72rem}
+.runner-history-note>span,.runner-history-note>div>small{font-size:.62rem;line-height:1.4}
+.runner-history-note.verified{align-items:flex-start;background:#f1f7f2}
+.runner-history-note.verified>div:first-child{min-width:155px}
+.runner-history-years{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.runner-history-years>span{display:flex;gap:5px;align-items:baseline;padding:5px 8px;border-radius:9px;background:#fff;border:1px solid rgba(16,36,29,.08)}
+.runner-history-years strong{font-size:.67rem;color:var(--forest)}
+.runner-history-years small{font-size:.58rem;color:var(--muted)}
+.split-table .journey-missing{opacity:.7}
+.split-table .journey-estimated{background:#fffaf0}
+
+@media(max-width:720px){
+  .runner-section-head{align-items:flex-start}
+  .runner-journey-track{margin-right:-12px;padding-right:12px}
+  .runner-journey-stop{flex-basis:170px}
+  .runner-history-note,.runner-history-note.verified{display:grid;grid-template-columns:1fr}
+  .runner-history-years{justify-content:flex-start}
+}
