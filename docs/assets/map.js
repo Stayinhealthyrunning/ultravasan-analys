@@ -43,29 +43,7 @@ async function ensureRaceData(){
     ?window.UltravasanDataLoader.loadForResultIds(ids,preferred)
     :window.UltravasanDataLoader.loadFamily(preferred);
 }
-const LEAFLET_VENDOR_ROOT='vendor/leaflet-1.9.4';
-function ensureLeaflet(){
-  if(window.L)return Promise.resolve();
-  setLoading('Förbereder karta och banlager…');
-  return new Promise(resolve=>{
-    if(!document.querySelector('link[data-ultravasan-leaflet]')){
-      const css=document.createElement('link');
-      css.rel='stylesheet';
-      css.href=`${LEAFLET_VENDOR_ROOT}/leaflet.css`;
-      css.dataset.ultravasanLeaflet='1.9.4';
-      document.head.appendChild(css);
-    }
-    const script=document.createElement('script');
-    let done=false;
-    const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};
-    script.src=`${LEAFLET_VENDOR_ROOT}/leaflet.js`;
-    script.dataset.ultravasanLeaflet='1.9.4';
-    script.onload=finish;
-    script.onerror=finish;
-    document.head.appendChild(script);
-    const timer=setTimeout(finish,2200);
-  });
-}
+function ensureLeaflet(){return mapEngine.ensureLeaflet({onStatus:setLoading})}
 
 
 function raceForResult(result){return app.data.races.find(r=>r.id===result.race_id)}
