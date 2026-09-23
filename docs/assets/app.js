@@ -17,10 +17,10 @@ const segmentRangeLabel=(from,to)=>`${cleanCheckpointName(from)||'Start'} – ${
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
 const quantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),p=(b.length-1)*q,l=Math.floor(p),h=Math.ceil(p);return b[l]+(b[h]-b[l])*(p-l)};
 
-const raceFamilyOf=r=>window.RaceContracts.familyForRace(r);
+const raceFamilyOf=r=>window.RaceUI.familyKey(r);
 const familyRaces=()=>state.data.races.filter(r=>raceFamilyOf(r)===state.raceFamily);
 const familyResults=()=>{const ids=new Set(familyRaces().map(r=>r.id));return state.data.results.filter(r=>ids.has(r.race_id))};
-const raceUi=Object.fromEntries(Object.entries(window.RaceContracts.catalog.families).map(([key,family])=>[key,family.presentation]));
+const raceUi=window.RaceUI.presentations;
 let raceSwitchBusy=false,raceSwitchHasError=false;
 function populateRaceYears(){const races=familyRaces().slice().sort((a,b)=>b.year-a.year),year=$('#yearFilter');year.innerHTML=races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value)||races[0]?.id||null}
 function waitForRacePaint(){return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
