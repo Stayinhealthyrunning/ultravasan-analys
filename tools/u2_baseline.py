@@ -22,6 +22,15 @@ DEFAULT_MANIFEST = ROOT / "docs" / "data" / "manifest.json"
 DEFAULT_BASELINE = ROOT / "reports" / "U2_BASELINE.json"
 
 
+def comparable_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Ignore SQLite container bytes; logical payload digests are the U2 invariant."""
+    value = json.loads(json.dumps(snapshot))
+    database = value.get("files", {}).get("database")
+    if isinstance(database, dict):
+        database["sha256"] = "<sqlite-container-informational>"
+    return value
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -231,7 +240,7 @@ def verify(expected_path: Path) -> int:
         for issue in issues:
             print("-", issue, file=sys.stderr)
         return 2
-    if actual == expected:
+    if comparable_snapshot(actual) == comparable_snapshot(expected):
         print(
             "U2-baseline verifierad: "
             f"{actual['totals']['results']} resultat, "
