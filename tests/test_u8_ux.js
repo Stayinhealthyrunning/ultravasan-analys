@@ -28,6 +28,7 @@ assert.ok(app.includes("updateAnalysisGuide();renderHistogram"),'metodstatus ska
 
 assert.ok(app.includes('tabindex="0" role="button" aria-label="Öppna loppanalys för'),'resultatrader ska vara tangentbordsfokuserbara');
 assert.ok(app.includes("event.key==='Enter'||event.key===' '"),'resultatrader ska kunna öppnas med Enter och blanksteg');
+assert.ok(app.includes("$('#resultsBody tr[data-id]').forEach"),'tangentbordsbindningen ska iterera över alla resultatrader, inte anropa forEach på querySelector');
 assert.ok(css.includes('#resultsBody tr[role="button"]:focus-visible'),'tangentbordsfokus på resultatrader ska vara visuellt tydligt');
 
 assert.ok(app.includes("popupId='info-popup-'")&&app.includes("setAttribute('aria-controls',popupId)")&&app.includes("setAttribute('aria-describedby',popupId)"),'informationsknappar ska vara explicit kopplade till sin tooltip');
