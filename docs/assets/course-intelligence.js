@@ -294,15 +294,17 @@
         });
       }
       const available=Object.values(components).filter(component=>component.percentile!==null);
-      const eligible=segment.field?.sufficient_sample===true&&available.length>=2;
-      const score=eligible?round(available.reduce((sum,item)=>sum+item.percentile,0)/available.length,1):null;
+      const eligible=segment.field?.sufficient_sample===true&&available.length===definitions.length;
+      const score=eligible?round(available.reduce((sum,item)=>sum+item.percentile,0)/definitions.length,1):null;
       return {
         ...segment,
         difficulty:Object.freeze({
           score,
           relative_scope:'selected-race-course-version',
-          component_weighting:'equal-available-components',
+          component_weighting:'equal-four-components',
+          required_components:definitions.length,
           evidence_components:available.length,
+          complete_evidence:eligible,
           components:Object.freeze(components),
         }),
       };
