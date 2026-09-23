@@ -194,10 +194,10 @@ const rankRace={race_key:'ultravasan45-test',distance_km:20},rankRoute={points:[
 assert.strictEqual(replay.stateAt(rankModel,5).lastKnownClassRank,null,'Klassplacering får inte visas före första kontrollen');
 assert.strictEqual(replay.stateAt(rankModel,15).lastKnownClassRank,1,'Klassplacering får inte interpoleras eller bytas före nästa kontroll');
 assert.strictEqual(replay.stateAt(rankModel,20).lastKnownClassRank,2,'Klassplaceringen ska bytas först vid nästa verifierade passage');
-const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
+const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),adapterSource=fs.readFileSync(require.resolve('../docs/assets/data-adapter.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
 assert.ok(appSource.includes('wholeRacePace(r,race)'),'Profilhuvudets snittfart ska beräknas från sluttid och loppdistans');
-assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
+assert.ok(adapterSource.includes('deriveClassPlacements(data.results,data.splits)')&&appSource.includes('UltravasanDataAdapter.hydrate'),'Passageplaceringarna ska byggas och cachas av den gemensamma DataAdapter-hydreringen');
 assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Återställning ska välja två minuters replay');
 assert.ok(replaySource.includes("const mode=this.speedSelect?.value||'120s'")&&replaySource.includes('Number(String(mode).slice(0,-1))||120'),'Replay-fallback ska vara två minuter');
 assert.ok(!replaySource.includes('this.fadeAudio(true)'),'Musiken får inte tonas ut automatiskt vid målgång');
