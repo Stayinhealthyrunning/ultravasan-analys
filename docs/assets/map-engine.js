@@ -1,9 +1,9 @@
 'use strict';
 (function(root,factory){
-  const api=factory();
+  const api=factory(root);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.UltravasanMapEngine=api;
-})(typeof window!=='undefined'?window:globalThis,function(){
+})(typeof window!=='undefined'?window:globalThis,function(root){
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const clamp=(value,min,max)=>Math.max(Number(min),Math.min(Number(max),Number(value)||0));
 
