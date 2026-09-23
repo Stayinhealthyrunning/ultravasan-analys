@@ -212,6 +212,7 @@ assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: local favorites'),'fa
 assert.ok(/assets\/styles\.css\?v=20260923-(?:u5c|u6[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favoriternas appgeneration ska bevaras och aktuell UI-CSS ska vara cache-bustad');
 
 const courseIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/course-intelligence.js'),'utf8');
+const nerdSource=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
 assert.ok(indexHtml.includes('assets/course-intelligence.js?v=20260923-u6'),'huvudytan ska ladda U6 Course Intelligence');
 assert.ok(indexHtml.indexOf('assets/map-engine.js')<indexHtml.indexOf('assets/course-intelligence.js'),'MapEngine ska laddas före Course Intelligence');
 assert.ok(indexHtml.indexOf('assets/charts.js')<indexHtml.indexOf('assets/course-intelligence.js'),'Charts ska laddas före Course Intelligence');
@@ -219,7 +220,7 @@ assert.ok(indexHtml.indexOf('assets/course-intelligence.js')<indexHtml.indexOf('
 assert.ok(indexHtml.includes('id="courseIntelligenceRows"')&&indexHtml.includes('id="courseSegmentNarrative"'),'Race Intelligence Lab ska innehålla U6 segmenttabell och berättelse');
 assert.ok(nerdSource.includes('renderCourseIntelligence()')&&nerdSource.includes('selectCourseSegment'),'NerdLab ska drivas av gemensam Course Intelligence-segmentstate');
 assert.ok(nerdSource.includes('syncLegacySegmentLab(segment)'),'U6-segmentval ska synka befintligt Delsträckelabb');
-assert.ok(courseIntelligenceSource.includes("relative_scope:'selected-race-course-version'")&&courseIntelligenceSource.includes("component_weighting:'equal-four-components'")&&courseIntelligenceSource.includes('available.length===definitions.length'),'Difficulty-kontraktet ska kräva samma fyra komponenter och vara explicit relativt');
+assert.ok(courseIntelligenceSource.includes("relative_scope:'selected-race-course-version'")&&courseIntelligenceSource.includes("component_weighting:'equal-four-components'")&&courseIntelligenceSource.includes('completeEvidence=segment=>')&&courseIntelligenceSource.includes('available.length===definitions.length'),'Difficulty-kontraktet ska kräva samma kompletta fyrkomponentspopulation och vara explicit relativt');
 
 assert.ok(nerdSource.includes('renderCourseRouteView(model,selected)')&&nerdSource.includes('renderCourseElevationView(model,selected)')&&nerdSource.includes('renderCoursePaceView(model,selected)'),'U6 ska rendera karta, höjd och fart från samma valda segment');
 assert.ok(nerdSource.includes("querySelectorAll?.('[data-course-segment]')")&&nerdSource.includes('selectCourseSegment(node.dataset.courseSegment)'),'alla Course Intelligence-vyer ska använda samma segment-eventkontrakt');
