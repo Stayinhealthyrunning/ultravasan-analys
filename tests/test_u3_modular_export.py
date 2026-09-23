@@ -55,12 +55,14 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     config = tiny_config()
     catalog = uvtool.write_modular_web_data(payload, tmp_path, config)
     assert catalog["mode"] == "modular"
-    assert catalog["result_family"] == {"10": "uv90", "20": "uv45"}
-    assert catalog["result_edition"] == {"10": "uv90-a", "20": "uv45-a"}
+    assert "result_family" not in catalog
+    assert catalog["result_edition"] == {"10": 1, "20": 2}
     assert catalog["families"]["uv90"]["results"] == 1
     assert catalog["families"]["uv45"]["splits"] == 1
-    assert catalog["editions"]["uv90-a"]["results"] == 1
-    assert catalog["editions"]["uv45-a"]["splits"] == 1
+    assert catalog["editions"]["1"]["race_key"] == "uv90-a"
+    assert catalog["editions"]["1"]["results"] == 1
+    assert catalog["editions"]["2"]["race_key"] == "uv45-a"
+    assert catalog["editions"]["2"]["splits"] == 1
 
     summary = u3_modularize.validate(payload, tmp_path, config)
     assert summary["results"] == 2
