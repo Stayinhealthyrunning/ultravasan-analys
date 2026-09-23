@@ -41,6 +41,7 @@ OLD_PRIMARY_GPX = ROOT / "data/routes/Ultravasan 90 2022.gpx"
 CURRENT_PRIMARY_GPX = ROOT / "data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx"
 UV45_PRIMARY_GPX = ROOT / "data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx"
 RACE_CONFIG = ROOT / "config/races.json"
+COURSE_CONFIG = ROOT / "config/course_versions.json"
 OLD_TOTAL = 90.173
 OLD_SOURCE = "https://www.plotaroute.com/route/1942022"
 POINT_SCHEMA = [
@@ -454,26 +455,29 @@ def verified_route(
     return route
 
 
-def build_uv45_route(config):
-    uv45_races = [
-        race for race in config.get("races", [])
-        if str(race.get("race_key", "")).startswith("ultravasan45-")
-    ]
-    if not uv45_races:
+def build_uv45_route(course_config):
+    route_id = "ultravasan45-current"
+    model_id = course_config.get("route_build_models", {}).get(route_id)
+    model = course_config.get("courses", {}).get(model_id)
+    if not model:
         return None
-    race = max(uv45_races, key=lambda item: (int(item.get("year") or 0), str(item.get("race_key") or "")))
+    if model.get("race_family") != "uv45" or model.get("display_route_id") != route_id:
+        raise ValueError(f"Invalid explicit route build model {model_id!r} for {route_id}")
+    checkpoints = model.get("checkpoint_catalog") or []
+    if not checkpoints:
+        raise ValueError(f"Route build model {model_id!r} has no checkpoint catalog")
     if UV45_PRIMARY_GPX.exists():
         try:
             route = verified_route(
-                route_id="ultravasan45-current",
+                route_id=route_id,
                 name="Ultravasan 45 – Oxberg till Mora",
-                years={"from": min(r["year"] for r in uv45_races), "to": 2099},
-                official_distance=float(race.get("distance_km") or 45.0),
+                years={"from": 2014, "to": 2099},
+                official_distance=float(checkpoints[-1]["distance_km"]),
                 source_path=UV45_PRIMARY_GPX,
                 source_year=2026,
                 race_family="uv45",
                 style={"color": "#d28b22", "dashArray": None, "label": "Ultravasan 45"},
-                checkpoints=race.get("checkpoints", []),
+                checkpoints=checkpoints,
                 expected_start=[61.1263, 14.17957],
                 expected_finish=[61.006997, 14.542826],
             )
@@ -604,10 +608,12 @@ def main():
         help="Avbryt om source/Ultravasan90-2014-2022.gpx saknas",
     )
     parser.add_argument("--config", type=Path, default=RACE_CONFIG)
+    parser.add_argument("--course-config", type=Path, default=COURSE_CONFIG)
     parser.add_argument("--out-json", type=Path, default=OUT_JSON)
     parser.add_argument("--out-js", type=Path, default=OUT_JS)
     args = parser.parse_args()
     config = json.loads(args.config.read_text(encoding="utf-8"))
+    course_config = json.loads(args.course_config.read_text(encoding="utf-8"))
 
     current = json.loads(CURRENT_ROUTE_JSON.read_text(encoding="utf-8"))
     old = None
@@ -695,22 +701,24 @@ def main():
             "elevation_available": bool(current_elevation_profile), "elevation_profile": current_elevation_profile,
             "style": {"color": "#176d53", "dashArray": None, "label": "2023–"},
         }
-    uv45 = build_uv45_route(config)
+    uv45 = build_uv45_route(course_config)
     routes = {old["id"]: old, post["id"]: post}
-    route_for_race = [
-        {"race_key_prefix": "ultravasan90-", "year_from": 2014, "year_to": 2022, "route_id": old["id"]},
-        {"race_key_prefix": "ultravasan90-", "year_from": 2023, "year_to": 2099, "route_id": post["id"]},
-    ]
     if uv45:
         routes[uv45["id"]] = uv45
-        route_for_race.insert(0, {"race_key_prefix": "ultravasan45-", "route_id": uv45["id"]})
+    courses = course_config.get("courses", {})
+    route_for_edition = {}
+    for race in config.get("races", []):
+        race_key = race.get("race_key")
+        course_id = race.get("course_version_id")
+        course = courses.get(course_id)
+        if not race_key or not course:
+            raise ValueError(f"RaceEdition {race_key!r} has unknown CourseVersion {course_id!r}")
+        route_id = course.get("display_route_id")
+        if route_id not in routes:
+            raise ValueError(f"CourseVersion {course_id!r} has unknown display route {route_id!r}")
+        route_for_edition[race_key] = route_id
     registry = {
-        "default_route_id": post["id"],
-        "route_for_year": [
-            {"from": 2014, "to": 2022, "route_id": old["id"]},
-            {"from": 2023, "to": 2099, "route_id": post["id"]},
-        ],
-        "route_for_race": route_for_race,
+        "route_for_edition": route_for_edition,
         "routes": routes,
     }
 
@@ -720,7 +728,7 @@ def main():
     args.out_js.write_text(
         "window.ULTRAVASAN_ROUTES = "
         + json.dumps(registry, ensure_ascii=False, separators=(",", ":"))
-        + ";\nwindow.ULTRAVASAN_ROUTE = window.ULTRAVASAN_ROUTES.routes[window.ULTRAVASAN_ROUTES.default_route_id];\n",
+        + ";\n",
         encoding="utf-8",
     )
     print(f"Skrev {args.out_json} och {args.out_js}: {', '.join(routes)}")

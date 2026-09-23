@@ -22,7 +22,7 @@ def discovered(family: str) -> dict:
     distance = "90" if family == "uv90" else "45"
     return {
         "year": 2026,
-        "event_code": f"UL{distance}_NEW_OFFICIAL_2026",
+        "event_code": f"UL{distance}_HCH8NDMR2601",
         "label": f"Ultravasan {distance}",
         "result_year_path": 2027,
     }
@@ -36,7 +36,7 @@ def test_schedule_window_is_closed_on_race_day_and_after_deadline() -> None:
     assert automatic.schedule_state(date(2027, 8, 22), 2027) == "active"
 
 
-def test_schedule_stops_after_completed_year_and_reactivates_for_next_year(tmp_path: Path) -> None:
+def test_schedule_stops_after_completed_year_and_blocks_unconfigured_next_year(tmp_path: Path) -> None:
     db = tmp_path / "schedule.sqlite"
     with sqlite3.connect(db) as conn:
         conn.executescript("""
@@ -51,7 +51,20 @@ def test_schedule_stops_after_completed_year_and_reactivates_for_next_year(tmp_p
     assert schedule.schedule_decision(date(2026, 8, 24), db)["state"] == "already-complete"
     assert schedule.schedule_decision(date(2027, 8, 21), db)["state"] == "already-complete"
     next_year = schedule.schedule_decision(date(2027, 8, 22), db)
-    assert next_year["active"] is True and next_year["target_year"] == 2027
+    assert next_year["active"] is False and next_year["target_year"] == 2027
+    assert next_year["state"] == "not-configured"
+
+
+def test_schedule_requires_explicit_mika_bindings_before_network_gate(tmp_path: Path) -> None:
+    config = uvtool.load_config(uvtool.DEFAULT_CONFIG)
+    for race in config["races"]:
+        if race["race_family"] == "uv45" and race["year"] == 2026:
+            race["source_bindings"] = []
+    target = tmp_path / "races.json"
+    target.write_text(json.dumps(config), encoding="utf-8")
+    assert schedule.target_keys(target, 2026) == {}
+    decision = schedule.schedule_decision(date(2026, 8, 22), tmp_path / "missing.sqlite", target)
+    assert decision["state"] == "not-configured" and decision["active"] is False
 
 
 def test_generated_2026_config_is_official_separate_and_not_visible_early() -> None:
@@ -64,7 +77,7 @@ def test_generated_2026_config_is_official_separate_and_not_visible_early() -> N
     assert len({race["event_code"] for race in races}) == 2
     assert all(Path(automatic.urlparse(race["official_url"]).path).parts[1] == "2027" for race in races)
     assert all(automatic.urlparse(race["official_url"]).hostname == automatic.OFFICIAL_HOST for race in races)
-    assert next(race for race in races if race["race_family"] == "uv90")["course_version"] == "post2023"
+    assert next(race for race in races if race["race_family"] == "uv90")["course_version_id"] == "uv90-2026-v1"
     assert next(race for race in races if race["race_family"] == "uv45")["course_version"] == "uv45-current"
     uv90 = next(race for race in races if race["race_family"] == "uv90")
     assert [checkpoint["checkpoint_key"] for checkpoint in uv90["checkpoints"]] == [
@@ -83,12 +96,24 @@ def test_event_guards_reject_wrong_year_elite_and_shared_event() -> None:
         automatic.configured_targets(base, {"uv90": wrong, "uv45": discovered("uv45")})
     elite = discovered("uv45")
     elite["label"] = "Ultravasan 45 Elit"
-    with pytest.raises(ValueError, match="Elite"):
+    with pytest.raises(ValueError, match="label differs"):
         automatic.configured_targets(base, {"uv90": discovered("uv90"), "uv45": elite})
     shared = discovered("uv45")
     shared["event_code"] = discovered("uv90")["event_code"]
-    with pytest.raises(ValueError, match="same event"):
+    with pytest.raises(ValueError, match="explicit binding"):
         automatic.configured_targets(base, {"uv90": discovered("uv90"), "uv45": shared})
+
+
+def test_future_year_without_preconfigured_editions_is_blocked() -> None:
+    base = uvtool.load_config(uvtool.DEFAULT_CONFIG)
+    future = {
+        family: {**discovered(family), "year": 2027,
+                 "event_code": f"UL{'90' if family == 'uv90' else '45'}_HCH8NDMR2701",
+                 "result_year_path": 2028}
+        for family in automatic.TARGETS
+    }
+    with pytest.raises(ValueError, match="explicitly configured"):
+        automatic.configured_targets(base, future, year=2027)
 
 
 def test_availability_gate_is_conservative() -> None:

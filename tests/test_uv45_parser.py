@@ -165,12 +165,12 @@ class UV45SafetyTests(unittest.TestCase):
             finally:
                 os.chdir(original)
 
-    def test_verified_main_event_wins_generic_and_elite_candidates(self) -> None:
-        race = {"race_key": "ultravasan45-2025", "name": "Ultravasan 45", "year": 2025}
+    def test_exact_configured_main_event_wins_generic_and_elite_candidates(self) -> None:
+        race = UV45
         candidates = [
             {"year": 2025, "event_code": "UL45_9999991678885A000000043D", "label": "Ultravasan 45", "result_year_path": 2026},
             {"year": 2025, "event_code": "UL4E_9999991678887600000007BZ", "label": "Ultravasan 45 Elit", "result_year_path": 2026},
-            {"year": 2025, "event_code": "UL45_HCH8NDMR2501", "label": "Ultravasan 45", "result_year_path": 2025},
+            {"year": 2025, "event_code": "UL45_HCH8NDMR2501", "label": "Ultravasan 45", "result_year_path": 2026},
         ]
         selected = configure_discovered_event.select_discovered_event("ultravasan45-2025", race, candidates)
         self.assertEqual("UL45_HCH8NDMR2501", selected["event_code"])

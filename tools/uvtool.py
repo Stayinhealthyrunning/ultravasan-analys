@@ -294,6 +294,11 @@ def load_config(path: Path) -> dict[str, Any]:
 
 
 def upsert_catalogue(conn: sqlite3.Connection, config: dict[str, Any]) -> None:
+    try:
+        from .source_bindings import validate_config
+    except ImportError:
+        from source_bindings import validate_config
+    validate_config(config)
     sources = [
         ("vasaloppet_mika", "Vasaloppets officiella resultattjänst", "https://results.vasaloppet.se/", "html", "Publika resultatsidor; kontrollera publiceringsvillkor innan vidarepublicering."),
         ("vasaloppet_media", "Vasaloppets mediaexport", "https://media.vasaloppet.se/", "csv", "Officiell rapport/export."),
@@ -311,6 +316,8 @@ def upsert_catalogue(conn: sqlite3.Connection, config: dict[str, Any]) -> None:
           ON CONFLICT(code) DO UPDATE SET name=excluded.name,base_url=excluded.base_url,source_type=excluded.source_type,terms_note=excluded.terms_note
         """, sources)
         for race in config.get("races", []):
+            if race.get("data_status") != "available":
+                continue
             values = {**{"race_date": None, "distance_km": None, "event_code": None,
                          "result_year_path": None, "official_url": None,
                          "course_version": None, "notes": None}, **race}

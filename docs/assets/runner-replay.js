@@ -33,11 +33,11 @@
   const median=values=>{const a=values.filter(finite).map(Number).sort((a,b)=>a-b);if(!a.length)return null;const i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2};
   const raceFamily=r=>contracts.familyForRace(r);
   const sexCategory=result=>{const value=String(typeof result==='string'?result:result?.sex||'').trim().toUpperCase();return ['F','W','K','D','KVINNA'].includes(value)?'F':['M','H','MAN'].includes(value)?'M':null};
-  const medalConfigForRace=(race,resultOrSex)=>{const sex=sexCategory(resultOrSex);if(raceFamily(race)!=='uv90'||!sex)return null;const era=contracts.medalProfileForRace(race),config=MEDAL_CONFIG[era]?.[sex];return config?{...config,sex,era}:null};
+  const medalConfigForRace=(race,resultOrSex)=>{const sex=sexCategory(resultOrSex);if(!contracts.supports(race,'medal')||!sex)return null;const era=contracts.medalProfileForRace(race),config=MEDAL_CONFIG[era]?.[sex];return config?{...config,sex,era}:null};
   const medalTimeForRace=(race,resultOrSex)=>medalConfigForRace(race,resultOrSex)?.seconds??null;
   const weightedMedian=entries=>{const values=(entries||[]).filter(entry=>finite(entry?.value)&&finite(entry?.weight)&&Number(entry.weight)>0).map(entry=>({value:Number(entry.value),weight:Number(entry.weight)})).sort((a,b)=>a.value-b.value);if(!values.length)return null;const half=values.reduce((sum,item)=>sum+item.weight,0)/2;let total=0;for(const item of values){total+=item.weight;if(total>=half)return item.value}return values.at(-1).value};
 
-  const routeForRace=(registry,race)=>contracts.routeForRace(registry,race);
+  const routeForRace=(registry,race)=>contracts.supports(race,'replay')?contracts.routeForRace(registry,race):null;
 
   function pointAtDistance(points,distance){
     if(!Array.isArray(points)||!points.length)return null;
@@ -182,7 +182,7 @@
       class:ageClass?medianReference({id:'class',profiles,checkpoints,filter:profile=>String(profile.result.age_class||'').trim()===ageClass,label:meta.class.label,icon:meta.class.icon,color:meta.class.color,details:`Klass ${ageClass} · ${race.year}`}):{...empty.class,message:'Klass saknas'},
       sex:sex?medianReference({id:'sex',profiles,checkpoints,filter:profile=>sexCategory(profile.result)===sex,label:meta.sex.label,icon:sexIcon,color:sexColor,details:`${sex==='M'?'Män':'Kvinnor'} · ${race.year}`,sex}):{...empty.sex,message:'Kön saknas eller är okänt'}
     };
-    if(family==='uv90'&&sex)references.medal=medalReference({race,sex,checkpoints,currentProfiles:profiles,dataset,statusApi});
+    if(contracts.supports(race,'medal')&&sex)references.medal=medalReference({race,sex,checkpoints,currentProfiles:profiles,dataset,statusApi});
     cache.set(cacheKey,references);return references;
   }
 

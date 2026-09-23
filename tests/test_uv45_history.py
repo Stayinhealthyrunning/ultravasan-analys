@@ -348,7 +348,7 @@ class HistoricalImportSafetyTests(unittest.TestCase):
         self.assertEqual("M", uvtool.sex_code("Man", None))
         self.assertEqual("F", uvtool.sex_code("Kvinna", None))
         self.assertEqual("mora_warning", RACES["ultravasan45-2025"]["checkpoints"][-2]["checkpoint_key"])
-        self.assertEqual("smagan", RACES["ultravasan90-2025"]["checkpoints"][1]["checkpoint_key"])
+        self.assertEqual("high_point", RACES["ultravasan90-2025"]["checkpoints"][1]["checkpoint_key"])
 
     def test_nationality_gate_uses_source_evidence_not_name_or_place(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -85,20 +85,14 @@ class CatalogueInitTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             db_path = Path(temp) / "rollback.sqlite"
             bad_config = Path(temp) / "bad-races.json"
-            config = {
-                "races": [{
-                    "race_key": "broken-2025", "name": "Broken", "year": 2025,
-                    "checkpoints": [
-                        {"checkpoint_key": "a", "name": "A", "sequence_no": 0},
-                        {"checkpoint_key": "b", "name": "B", "sequence_no": 0},
-                    ],
-                }]
-            }
+            config = uvtool.load_config(uvtool.DEFAULT_CONFIG)
+            broken_key = config["races"][0]["race_key"]
+            config["races"][0]["checkpoints"][1]["sequence_no"] = 0
             bad_config.write_text(json.dumps(config), encoding="utf-8")
             with self.assertRaises(sqlite3.IntegrityError):
                 uvtool.init_db(db_path, bad_config)
             conn = uvtool.connect(db_path)
-            self.assertIsNone(conn.execute("SELECT id FROM races WHERE race_key='broken-2025'").fetchone())
+            self.assertIsNone(conn.execute("SELECT id FROM races WHERE race_key=?", (broken_key,)).fetchone())
             self.assertEqual(0, conn.execute("SELECT COUNT(*) FROM checkpoints").fetchone()[0])
             conn.close()
 

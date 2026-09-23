@@ -1,35 +1,28 @@
 {
-  "default_route_id": "ultravasan90-post2023",
-  "route_for_year": [
-    {
-      "from": 2014,
-      "to": 2022,
-      "route_id": "ultravasan90-pre2023"
-    },
-    {
-      "from": 2023,
-      "to": 2099,
-      "route_id": "ultravasan90-post2023"
-    }
-  ],
-  "route_for_race": [
-    {
-      "race_key_prefix": "ultravasan45-",
-      "route_id": "ultravasan45-current"
-    },
-    {
-      "race_key_prefix": "ultravasan90-",
-      "year_from": 2014,
-      "year_to": 2022,
-      "route_id": "ultravasan90-pre2023"
-    },
-    {
-      "race_key_prefix": "ultravasan90-",
-      "year_from": 2023,
-      "year_to": 2099,
-      "route_id": "ultravasan90-post2023"
-    }
-  ],
+  "route_for_edition": {
+    "ultravasan90-2014": "ultravasan90-pre2023",
+    "ultravasan90-2015": "ultravasan90-pre2023",
+    "ultravasan90-2017": "ultravasan90-pre2023",
+    "ultravasan90-2018": "ultravasan90-pre2023",
+    "ultravasan90-2019": "ultravasan90-pre2023",
+    "ultravasan90-2022": "ultravasan90-pre2023",
+    "ultravasan90-2023": "ultravasan90-post2023",
+    "ultravasan90-2024": "ultravasan90-post2023",
+    "ultravasan90-2025": "ultravasan90-post2023",
+    "ultravasan90-2016": "ultravasan90-pre2023",
+    "ultravasan45-2014": "ultravasan45-current",
+    "ultravasan45-2015": "ultravasan45-current",
+    "ultravasan45-2016": "ultravasan45-current",
+    "ultravasan45-2017": "ultravasan45-current",
+    "ultravasan45-2018": "ultravasan45-current",
+    "ultravasan45-2019": "ultravasan45-current",
+    "ultravasan45-2022": "ultravasan45-current",
+    "ultravasan45-2023": "ultravasan45-current",
+    "ultravasan45-2024": "ultravasan45-current",
+    "ultravasan45-2025": "ultravasan45-current",
+    "ultravasan90-2026": "ultravasan90-post2023",
+    "ultravasan45-2026": "ultravasan45-current"
+  },
   "routes": {
     "ultravasan90-pre2023": {
       "id": "ultravasan90-pre2023",

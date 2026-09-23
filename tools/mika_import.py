@@ -26,6 +26,10 @@ import requests
 from bs4 import BeautifulSoup
 
 import uvtool
+try:
+    from . import source_bindings
+except ImportError:
+    import source_bindings
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -431,11 +435,12 @@ def start_run(conn, race_row, source_row) -> int:
 
 
 def execute(args: argparse.Namespace, probe: bool) -> None:
-    uvtool.init_db(args.db, args.config)
     config = uvtool.load_config(args.config)
-    race_cfg = uvtool.get_race_config(config, args.race)
-    if not race_cfg.get("event_code"):
-        raise SystemExit("Loppet saknar event_code. Kör discover först eller fyll i config/races.json.")
+    try:
+        race_cfg = source_bindings.provider_race_config(config, args.race, "mika")
+    except source_bindings.SourceBindingError as error:
+        raise SystemExit(str(error)) from error
+    uvtool.init_db(args.db, args.config)
     conn = uvtool.connect(args.db)
     race_row = conn.execute("SELECT * FROM races WHERE race_key=?", (args.race,)).fetchone()
     source = conn.execute("SELECT * FROM sources WHERE code='vasaloppet_mika'").fetchone()

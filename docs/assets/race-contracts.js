@@ -21,6 +21,8 @@
   const courseForRace=race=>own(snapshot.courses,editionForRace(race)?.course_version_id);
   const routeForRace=(registry,race)=>own(registry?.routes||{},courseForRace(race)?.display_route_id);
   const medalProfileForRace=race=>editionForRace(race)?.medal_profile??null;
+  const capabilitiesForRace=race=>editionForRace(race)?.capabilities??null;
+  const supports=(race,capability)=>capabilitiesForRace(race)?.[capability]===true;
   function assertKnownRaces(races){for(const race of races||[])if(!editionForRace(race))throw new Error(`Loppet saknar kontrakt: ${race?.race_key||'okänt'}`)}
-  return Object.freeze({catalog:snapshot,create,editionForRace,familyForRace,family,courseForRace,routeForRace,medalProfileForRace,assertKnownRaces});
+  return Object.freeze({catalog:snapshot,create,editionForRace,familyForRace,family,courseForRace,routeForRace,medalProfileForRace,capabilitiesForRace,supports,assertKnownRaces});
 });
