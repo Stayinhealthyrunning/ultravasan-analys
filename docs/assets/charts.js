@@ -5,7 +5,10 @@
   if(root)root.UltravasanCharts=api;
 })(typeof window!=='undefined'?window:globalThis,function(){
   function numeric(values){
-    return (values||[]).map(Number).filter(Number.isFinite);
+    return (values||[])
+      .filter(value=>value!==null&&value!==undefined&&value!=='')
+      .map(Number)
+      .filter(Number.isFinite);
   }
 
   function median(values){
