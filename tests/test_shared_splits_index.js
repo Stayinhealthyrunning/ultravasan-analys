@@ -190,7 +190,7 @@ assert.ok(appSource.includes('renderRunnerJourney(profile)')&&appSource.includes
 assert.ok(appSource.includes('renderRunnerVerifiedHistory(profile)'),'dialogen ska exponera verifierad historik utan namnmatchning');
 assert.ok(!appSource.includes('splits.map(s=>'),'den detaljerade mellantidstabellen får inte återgå till egen ad hoc-splitrendering');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Journey')&&stylesSourceU5.includes('.runner-journey-track'),'Journey ska ha egen responsiv layout');
-assert.ok(/assets\/styles\.css\?v=20260923-u6[a-z]*/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'U6 får föra gemensam CSS-generation framåt utan att ändra U5-appens JavaScript-generation');
+assert.ok(/assets\/styles\.css\?v=20260923-(?:u6[a-z]*|u7[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'senare UI-etapper får föra gemensam CSS-generation framåt utan att ändra U5-appens JavaScript-generation');
 
 assert.ok(indexHtml.includes('id="compareH2HButton"')&&indexHtml.includes('id="headToHeadDialog"'),'U5 ska exponera Head-to-head från befintligt löparurval');
 assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'),'Head-to-head UI ska använda RunnerAnalysis-modellen');
@@ -209,7 +209,7 @@ assert.ok(appSource.includes('function openRunnerFavorite(key)')&&appSource.incl
 assert.ok(runnerFavoritesSource.includes("STORAGE_KEY='ultravasan-runner-favorites-v1'")&&runnerFavoritesSource.includes('MAX_ITEMS=40'),'favoritlagret ska vara lokalt, versionsstyrt och begränsat');
 assert.ok(!runnerFavoritesSource.includes('person_key')&&!runnerFavoritesSource.includes('identityKey'),'favoriter får inte skapa eget personidentitetsantagande');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: local favorites'),'favorit-UI ska ha egen responsiv U5-layout');
-assert.ok(/assets\/styles\.css\?v=20260923-(?:u5c|u6[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favoriternas appgeneration ska bevaras och aktuell UI-CSS ska vara cache-bustad');
+assert.ok(/assets\/styles\.css\?v=20260923-(?:u5c|u6[a-z]*|u7[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favoriternas appgeneration ska bevaras och aktuell UI-CSS ska vara cache-bustad');
 
 const courseIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/course-intelligence.js'),'utf8');
 const nerdSource=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
@@ -233,3 +233,18 @@ assert.ok(courseIntelligenceSource.includes("source:historicalShare!==null?'hist
 assert.ok(stylesSourceU5.includes('.course-plan-source.distance-fallback')&&stylesSourceU5.includes('.course-plan-source.unavailable'),'loppplanens evidenskälla ska vara visuellt synlig');
 assert.ok(nerdSource.includes('COURSE_INTELLIGENCE_METHOD_HELP')&&nerdSource.includes('Fyra komponenter används med lika vikt')&&nerdSource.includes('Display-rutten kan vara en verifierad GPX från ett referensår'),'U6:s (i)-förklaring ska beskriva metod, komponenter och display-ruttens begränsning');
 assert.ok(nerdSource.includes('COURSE_PLAN_METHOD_HELP')&&nerdSource.includes('bara historiska fullföljare från exakt samma CourseVersion')&&nerdSource.includes('ingen resttid fördelas genom gissning'),'U6:s loppplan ska ha en utförlig metodförklaring och explicit anti-gissningsregel');
+
+const historyIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/history-intelligence.js'),'utf8');
+const classEvolutionSourceU7=fs.readFileSync(path.join(root,'docs/assets/class-evolution.js'),'utf8');
+const audienceSourceU7=fs.readFileSync(path.join(root,'docs/assets/audience-analytics.js'),'utf8');
+assert.ok(indexHtml.includes('assets/history-intelligence.js?v=20260923-u7'),'huvudytan ska ladda U7 History Intelligence');
+assert.ok(indexHtml.indexOf('assets/history-engine.js')<indexHtml.indexOf('assets/history-intelligence.js')&&indexHtml.indexOf('assets/history-intelligence.js')<indexHtml.indexOf('assets/nerdlab.js'),'U7 History Intelligence ska ligga ovanpå U2 och före historik-UI');
+assert.ok(historyIntelligenceSource.includes('history.groupHistories')&&historyIntelligenceSource.includes('history.comparableSeries'),'U7 ska återanvända U2:s identitets- och jämförbarhetsmotor');
+assert.ok(historyIntelligenceSource.includes("scope:'whole-course-comparable-race-medians'")&&historyIntelligenceSource.includes('performanceYears.length>=minReferenceYears'),'fingeravtryckets prestationsreferens ska byggas av jämförbara loppårsnormaler');
+assert.ok(historyIntelligenceSource.includes("group.verified_person===true")&&historyIntelligenceSource.includes("mode==='improved'")&&historyIntelligenceSource.includes("mode==='consistent'"),'flerårig Hall of Fame ska kräva verifierad personidentitet');
+assert.ok(nerdSource.includes('nHistoryIntelligence?.hallOfFame')&&nerdSource.includes('nHistoryIntelligence?.fingerprint')&&nerdSource.includes('nHistoryIntelligence?.personHistory'),'U7-UI ska använda gemensam History Intelligence i alla tre Race Intelligence-historikytor');
+assert.ok(nerdSource.includes('HISTORY_ARCHIVE_METHOD_HELP')&&nerdSource.includes('HISTORY_HALL_METHOD_HELP')&&nerdSource.includes('HISTORY_FINGERPRINT_METHOD_HELP')&&nerdSource.includes('CLASS_HISTORY_METHOD_HELP'),'alla U7-historikytor ska ha utförlig metodförklaring');
+assert.ok(classEvolutionSourceU7.includes('comparisonBreaks')&&classEvolutionSourceU7.includes('class-evolution-course-break')&&classEvolutionSourceU7.includes('from.comparisonKey!==to.comparisonKey'),'Klassutveckling ska bryta farttrend och animation vid CourseVersion-gräns');
+assert.ok(audienceSourceU7.includes('comparisonKeyForRace:historyComparisonKey')&&audienceSourceU7.includes('comparableHistoryRuns(valid,years)'),'klassvyerna ska använda samma U7-jämförbarhetsnyckel');
+assert.ok(stylesSourceU5.includes('U7 Historik 2.0')&&stylesSourceU5.includes('.history-series')&&stylesSourceU5.includes('.class-evolution-course-break'),'U7:s jämförbarhetsgränser ska vara synliga i UI');
+assert.ok(indexHtml.includes('assets/nerdlab.js?v=20260923-u7')&&indexHtml.includes('assets/class-evolution.js?v=20260923-u7')&&indexHtml.includes('assets/audience-analytics.js?v=20260923-u7'),'U7:s historik-UI-assets ska cache-bustas tillsammans');
