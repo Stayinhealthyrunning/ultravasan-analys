@@ -5,6 +5,8 @@
   if(root)root.UltravasanDataLoader=api;
 })(typeof window!=='undefined'?window:globalThis,function(root){
   const familyCache=new Map();
+  const familyCoreCache=new Map();
+  const familySplitCache=new Map();
   const editionCache=new Map();
   let legacyPromise=null;
 
@@ -76,7 +78,7 @@
     return spec;
   }
 
-  async function loadModularFamily(family){
+  async function loadOldModularFamily(family){
     family=normalizeFamily(family);
     if(familyCache.has(family))return familyCache.get(family);
     const globals=root.ULTRAVASAN_DATA_FAMILIES||(root.ULTRAVASAN_DATA_FAMILIES={});
@@ -101,6 +103,67 @@
       await loadScript(spec.js);
       if(!globals[family])throw new Error(`Datamodulen för ${family} laddades utan payload.`);
       return globals[family];
+    })();
+    familyCache.set(family,promise);
+    try{return await promise}catch(error){familyCache.delete(family);throw error}
+  }
+
+  async function loadFamilyPart(family,partKey,cache,globalName,label){
+    family=normalizeFamily(family);
+    if(cache.has(family))return cache.get(family);
+    const spec=familySpec(family)?.[partKey];
+    if(!spec)throw new Error(`Datakatalogen saknar ${label} för ${family}.`);
+    const globals=root[globalName]||(root[globalName]={});
+    if(globals[family]){
+      cache.set(family,Promise.resolve(globals[family]));
+      return globals[family];
+    }
+    const promise=(async()=>{
+      const canFetch=typeof location==='undefined'||location.protocol!=='file:';
+      if(canFetch&&spec.json){
+        try{
+          const data=await fetchJson(spec.json);
+          globals[family]=data;
+          return data;
+        }catch(error){
+          if(!spec.js)throw error;
+          console.warn?.(`JSON för ${family} ${label} kunde inte läsas; använder offline-JavaScript.`,error);
+        }
+      }
+      if(!spec.js)throw new Error(`Ingen ${label}-modul angiven för ${family}.`);
+      await loadScript(spec.js);
+      if(!globals[family])throw new Error(`${label}-modulen för ${family} laddades utan payload.`);
+      return globals[family];
+    })();
+    cache.set(family,promise);
+    try{return await promise}catch(error){cache.delete(family);throw error}
+  }
+
+  async function loadModularFamilyCore(family){
+    const spec=familySpec(family);
+    if(!spec.core)return loadOldModularFamily(family);
+    return loadFamilyPart(family,'core',familyCoreCache,'ULTRAVASAN_DATA_FAMILY_CORES','coredata');
+  }
+
+  async function loadModularFamilySplits(family){
+    const spec=familySpec(family);
+    if(!spec.split_data)return loadOldModularFamily(family);
+    return loadFamilyPart(family,'split_data',familySplitCache,'ULTRAVASAN_DATA_FAMILY_SPLITS','splitdata');
+  }
+
+  async function loadModularFamily(family){
+    family=normalizeFamily(family);
+    const spec=familySpec(family);
+    if(!spec.core||!spec.split_data)return loadOldModularFamily(family);
+    if(familyCache.has(family))return familyCache.get(family);
+    const promise=(async()=>{
+      const [core,splitData]=await Promise.all([
+        loadModularFamilyCore(family),
+        loadModularFamilySplits(family),
+      ]);
+      const merged=mergeDatasets([core,splitData]);
+      merged.meta={...(core.meta||{}),data_scope:{kind:'race-family',race_family:family,data_parts:['core','splits']}};
+      return merged;
     })();
     familyCache.set(family,promise);
     try{return await promise}catch(error){familyCache.delete(family);throw error}
@@ -139,6 +202,11 @@
     })();
     editionCache.set(editionKey,promise);
     try{return await promise}catch(error){editionCache.delete(editionKey);throw error}
+  }
+
+  async function loadFamilyCore(family){
+    if(catalog().mode!=='modular')return loadLegacy();
+    return loadModularFamilyCore(family);
   }
 
   async function loadFamily(family){
@@ -203,8 +271,8 @@
   }
 
   function clearCaches(){
-    familyCache.clear();editionCache.clear();legacyPromise=null;
+    familyCache.clear();familyCoreCache.clear();familySplitCache.clear();editionCache.clear();legacyPromise=null;
   }
 
-  return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadFamily,loadForResultIds,clearCaches};
+  return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadFamilyCore,loadFamily,loadForResultIds,clearCaches};
 });
