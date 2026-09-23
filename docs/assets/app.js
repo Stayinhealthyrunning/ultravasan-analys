@@ -71,10 +71,17 @@ function setupRaceSwitch(){
 const hydrateData=d=>{if(d?.__ultravasanHydrated)return d;window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});Object.defineProperty(d,'__ultravasanHydrated',{value:true,enumerable:false});return d};
 const dataPhaseOf=d=>d?.meta?.data_scope?.kind==='race-family-core'?'core':'full';
 function activateDataset(data,phase=dataPhaseOf(data)){state.data=hydrateData(data);state.dataPhase=phase;window.ULTRAVASAN_ACTIVE_DATA=state.data;window.ULTRAVASAN_CORE_READY=true;window.ULTRAVASAN_SPLITS_READY=phase==='full';const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||(window.ULTRAVASAN_DATA_PHASE_EVENTS=[]);events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length});if(events.length>20)events.shift();window.dispatchEvent(new CustomEvent('ultravasan:data-activated',{detail:{phase,family:state.raceFamily,data:state.data}}));return state.data}
+const familyFullLoads=new Map();
 async function ensureActiveFamilyFull(family=state.raceFamily,rerender=true){
   if(state.raceFamily===family&&state.dataPhase==='full')return state.data;
-  const full=await window.UltravasanDataLoader.loadFamily(family);
+  let pending=familyFullLoads.get(family);
+  if(!pending){
+    pending=window.UltravasanDataLoader.loadFamily(family).finally(()=>familyFullLoads.delete(family));
+    familyFullLoads.set(family,pending);
+  }
+  const full=await pending;
   if(state.raceFamily!==family)return full;
+  if(state.dataPhase==='full')return state.data;
   activateDataset(full,'full');setSplitLoading(false);
   if(rerender&&state.raceId)renderAll();
   window.dispatchEvent(new CustomEvent('ultravasan:splits-ready',{detail:{family}}));
