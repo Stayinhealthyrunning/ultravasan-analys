@@ -212,6 +212,61 @@ function renderPaceChart(){
 }
 function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$$('#resultsBody tr[data-id]').forEach(tr=>tr.onclick=()=>openRunner(Number(tr.dataset.id)));$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
 function runnerRouteForRace(race){return window.RunnerReplay?.routeForRace(window.ULTRAVASAN_ROUTES,race)||null}
+function runnerJourneyQuality(row){
+  if(row.source==='start')return{label:'Start',className:'start'};
+  if(row.source==='finish-result')return{label:'Verifierad måltid',className:'exact'};
+  if(row.source==='split'&&row.exact)return{label:'Verifierad passage',className:'exact'};
+  if(row.source==='estimated-split')return{label:'Beräknad passage',className:'estimated'};
+  return{label:'Passage saknas',className:'missing'};
+}
+function renderRunnerJourney(profile){
+  const rows=profile?.journey?.rows||[];
+  if(!rows.length)return'';
+  const cards=rows.map(row=>{
+    const quality=runnerJourneyQuality(row),distance=row.distance_km==null?'–':`${Number(row.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:1})} km`;
+    const detail=row.source==='start'
+      ?'Loppet börjar här'
+      :row.elapsed_seconds==null
+        ?'Ingen säker tid i källan'
+        :`${fmtTime(row.elapsed_seconds)} · ${row.segment_seconds==null?'delsträcka saknas':fmtTime(row.segment_seconds)} · ${fmtPace(row.pace_seconds_per_km)}`;
+    const places=[
+      row.place_overall!=null?`totalt ${row.place_overall}`:null,
+      row.place_class!=null?`klass ${row.place_class}`:null
+    ].filter(Boolean).join(' · ');
+    return `<article class="runner-journey-stop ${quality.className}">
+      <span class="runner-journey-dot" aria-hidden="true"></span>
+      <div class="runner-journey-stop-head"><strong>${esc(cleanCheckpointName(row.checkpoint_name))}</strong><span>${esc(distance)}</span></div>
+      <p>${esc(detail)}</p>
+      ${places?`<small>${esc(places)}</small>`:''}
+      <em>${esc(quality.label)}</em>
+    </article>`;
+  }).join('');
+  return `<section class="runner-journey" aria-label="Loppets Journey">
+    <div class="runner-section-head"><div><p class="eyebrow">JOURNEY</p><h3>Loppet kontroll för kontroll</h3></div><span class="pill">${profile.journey.recorded_rows}/${rows.length} tider</span></div>
+    <div class="runner-journey-track">${cards}</div>
+  </section>`;
+}
+function renderRunnerVerifiedHistory(profile){
+  const history=profile?.history;
+  if(!history?.verified_person){
+    return '<aside class="runner-history-note"><strong>Flerårshistorik</strong><span>Visas bara när personidentiteten är verifierad mellan loppen.</span></aside>';
+  }
+  const rows=history.rows||[];
+  if(rows.length<2)return'';
+  const items=rows.map(result=>{
+    const race=state.data.races.find(item=>String(item.id)===String(result.race_id));
+    const family=race?window.RaceUI.labelFor(race):'Ultravasan';
+    return `<span><strong>${race?.year||'–'}</strong><small>${esc(family)} · ${result.finish_seconds?fmtTime(result.finish_seconds):esc(result.status||'–')}</small></span>`;
+  }).join('');
+  return `<aside class="runner-history-note verified"><div><strong>Verifierad flerårshistorik</strong><small>${rows.length} matchade resultat · tider jämförs bara när CourseVersion tillåter det</small></div><div class="runner-history-years">${items}</div></aside>`;
+}
+function renderRunnerJourneyTable(profile){
+  const rows=(profile?.journey?.rows||[]).filter(row=>row.source!=='start');
+  return rows.map(row=>{
+    const quality=runnerJourneyQuality(row);
+    return `<tr class="journey-${quality.className}"><td>${esc(cleanCheckpointName(row.checkpoint_name))}</td><td>${row.distance_km==null?'–':Number(row.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:1})+' km'}</td><td class="time">${fmtTime(row.elapsed_seconds)}</td><td class="time">${fmtTime(row.segment_seconds)}</td><td class="time">${fmtPace(row.pace_seconds_per_km)}</td><td>${row.place_overall??'–'}</td><td><span class="journey-quality ${quality.className}">${esc(quality.label)}</span></td></tr>`;
+  }).join('')||'<tr><td colspan="7">Mellantider saknas</td></tr>';
+}
 async function openRunner(id){
   const initial=state.data.results.find(x=>x.id===id);if(!initial)return;const family=state.raceFamily,dialog=$('#runnerDialog');
   if(state.dataPhase!=='full'){
@@ -220,9 +275,10 @@ async function openRunner(id){
     try{await ensureActiveFamilyFull(family,true)}catch(error){console.error(error);$('#runnerDetail').innerHTML='<div class="runner-detail"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
     if(state.raceFamily!==family)return;
   }
-  const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=splitsForResult(id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus});
+  const profile=window.RunnerAnalysis?.profileForResult(state.data,id);if(!profile)return;
+  const r=profile.result,race=profile.race,splits=splitsForResult(id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus});
   const replay=model?window.RunnerReplay.render(model):'<div class="runner-map-empty">Loppreplay kunde inte startas. Mellantiderna visas nedan.</div>',clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven',classPlace=window.RunnerReplay?.formatClassPlace(r.class_place)||'Saknas',wholePace=window.RunnerReplay?.wholeRacePace(r,race);
-  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||'Ultravasan 90')}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div><section class="runner-map-section">${replay}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cleanCheckpointName(s.checkpoint_name))}</td><td>${s.distance_km??'–'} km</td><td class="time">${fmtTime(s.elapsed_seconds)}</td><td class="time">${fmtTime(s.segment_seconds)}</td><td class="time">${fmtPace(s.pace_seconds_per_km)}</td><td>${s.place_overall??'–'}</td></tr>`).join('')||'<tr><td colspan="6">Mellantider saknas</td></tr>'}</tbody></table></div></details></div>`;
+  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||window.RaceUI.labelFor(race))}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div>${renderRunnerVerifiedHistory(profile)}${renderRunnerJourney(profile)}<section class="runner-map-section">${replay}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th><th>Kvalitet</th></tr></thead><tbody>${renderRunnerJourneyTable(profile)}</tbody></table></div></details></div>`;
   if(!dialog.open)dialog.showModal();if(model)window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RaceMedia);
 }
 
@@ -384,6 +440,70 @@ function renderTargetSimulator(){
 }
 
 
+function runnerH2HLabel(result){
+  const race=state.data.races.find(item=>String(item.id)===String(result?.race_id));
+  return `${esc(result?.name_as_published||'Okänd löpare')}<small>${race?.year||'–'} · ${esc(window.RaceUI.labelFor(race))}</small>`;
+}
+function runnerH2HSegmentLabel(analysis,segment){
+  const first=analysis.results?.[0],journey=first?window.RunnerAnalysis.journeyForResult(state.data,first.id):null;
+  const byKey=new Map((journey?.rows||[]).map(row=>[row.checkpoint_key,cleanCheckpointName(row.checkpoint_name)]));
+  return `${esc(byKey.get(segment.from)||segment.from)} → ${esc(byKey.get(segment.to)||segment.to)}`;
+}
+function renderHeadToHead(analysis){
+  const detail=$('#headToHeadDetail');if(!detail)return;
+  if(!analysis?.available){
+    detail.innerHTML='<div class="head-to-head-shell"><p class="eyebrow">HEAD-TO-HEAD</p><h2>Jämförelsen kan inte byggas</h2><p class="head-to-head-method">Välj minst två löpare från samma loppfamilj.</p></div>';
+    return;
+  }
+  const resultById=new Map(analysis.results.map(result=>[String(result.id),result]));
+  const versionText=analysis.same_course_version?'Samma CourseVersion':analysis.whole_course_comparable?'Explicit jämförbara CourseVersions':'Olika CourseVersions';
+  let finishHtml='';
+  if(analysis.whole_course_comparable){
+    finishHtml=analysis.finish_ranking.map(row=>{
+      const result=resultById.get(String(row.result_id));
+      const gap=row.gap_seconds>0?`+${fmtTime(row.gap_seconds)}`:'Ledare';
+      return `<article class="h2h-finish-card"><span class="h2h-rank">${row.rank}</span><div><strong>${runnerH2HLabel(result)}</strong><em>${fmtTime(row.finish_seconds)}</em></div><small>${gap}</small></article>`;
+    }).join('');
+  }else{
+    finishHtml=analysis.results.map(result=>`<article class="h2h-finish-card not-comparable"><span class="h2h-rank">–</span><div><strong>${runnerH2HLabel(result)}</strong><em>${fmtTime(result.finish_seconds)}</em></div><small>Ingen direkt ranking</small></article>`).join('');
+  }
+
+  const headers=analysis.results.map(result=>`<th>${runnerH2HLabel(result)}</th>`).join('');
+  const segmentRows=analysis.segments.map(segment=>{
+    const cells=analysis.results.map(result=>{
+      const entry=segment.entries.find(item=>String(item.result_id)===String(result.id));
+      if(!segment.comparable)return '<td class="h2h-not-comparable">Ej jämförbart</td>';
+      if(!entry?.exact||entry.segment_seconds==null)return '<td class="h2h-missing">Saknas</td>';
+      const gap=entry.gap_seconds>0?`<small>+${fmtTime(entry.gap_seconds)}</small>`:'<small>snabbast</small>';
+      return `<td><strong>${fmtTime(entry.segment_seconds)}</strong>${gap}</td>`;
+    }).join('');
+    return `<tr class="${segment.comparable?'':'not-comparable'}"><th>${runnerH2HSegmentLabel(analysis,segment)}</th>${cells}</tr>`;
+  }).join('');
+
+  const method=analysis.whole_course_comparable
+    ?'Sluttid och gap visas eftersom de valda loppen har en CourseVersion som kontraktet tillåter att jämföra.'
+    :'Sluttiderna visas som källvärden, men ranking och gap är avstängda eftersom CourseVersion-kontraktet inte tillåter en direkt hel-loppsjämförelse.';
+  detail.innerHTML=`<div class="head-to-head-shell">
+    <header class="head-to-head-head"><div><p class="eyebrow">HEAD-TO-HEAD</p><h2>Löpare mot löpare</h2><p>${analysis.results.length} valda löpare · ${esc(window.RaceUI.labelFor(analysis.family))}</p></div><span class="pill ${analysis.whole_course_comparable?'':'warning'}">${esc(versionText)}</span></header>
+    <p class="head-to-head-method">${esc(method)}</p>
+    <section class="h2h-finish-grid" aria-label="Sluttidsjämförelse">${finishHtml}</section>
+    <section class="h2h-segments"><div class="runner-section-head"><div><p class="eyebrow">DELSTRÄCKOR</p><h3>Kontroll till kontroll</h3></div></div>
+      <div class="table-wrap"><table class="h2h-table"><thead><tr><th>Delsträcka</th>${headers}</tr></thead><tbody>${segmentRows||'<tr><td colspan="6">Inga gemensamma segment att jämföra.</td></tr>'}</tbody></table></div>
+    </section>
+  </div>`;
+}
+async function openHeadToHead(){
+  if(compareState.selected.length<2)return;
+  const family=state.raceFamily;
+  if(state.dataPhase!=='full'){
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Head-to-head kunde inte ladda mellantider',error);return}
+    if(state.raceFamily!==family)return;
+  }
+  const ids=compareState.selected.map(result=>result.id);
+  const analysis=window.RunnerAnalysis?.headToHead(state.data,ids);
+  renderHeadToHead(analysis);
+  const dialog=$('#headToHeadDialog');if(dialog&&!dialog.open)dialog.showModal();
+}
 const compareState={raceId:null,selected:[]};
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const MAP_LOCAL_PREFIX='ultravasan-map-data-v3:';
@@ -411,6 +531,58 @@ async function openMapWithRunners(selected){
   if(win){try{win.opener=null}catch{}}else location.href=url;
 }
 window.openUltravasanMap=openMapWithRunners;
+function headToHeadRunnerLabel(result){
+  const race=state.data.races.find(item=>String(item.id)===String(result?.race_id));
+  return `${result?.name_as_published||'Okänd löpare'} · ${race?.year||'–'}`;
+}
+function renderHeadToHead(model){
+  if(!model?.available){
+    const reasons={
+      'need-two-runners':'Välj minst två löpare för head-to-head.',
+      'mixed-race-family':'Head-to-head kräver löpare från samma loppfamilj.',
+      'missing-race-data':'Jämförelsen saknar nödvändigt loppunderlag.'
+    };
+    return `<div class="head-to-head-shell"><header><p class="eyebrow">HEAD-TO-HEAD</p><h2>Jämförelsen kan inte visas</h2><p>${esc(reasons[model?.reason]||'Jämförelsen saknar tillräckligt underlag.')}</p></header></div>`;
+  }
+  const byId=new Map(model.results.map(result=>[String(result.id),result]));
+  const finish=model.whole_course_comparable
+    ?`<section class="h2h-finish"><div class="runner-section-head"><div><p class="eyebrow">MÅLGÅNG</p><h3>Sluttid och gap</h3></div><span class="pill">jämförbar CourseVersion</span></div><div class="h2h-finish-grid">${model.finish_ranking.map(row=>{
+      const result=byId.get(String(row.result_id));
+      return `<article><strong>${esc(headToHeadRunnerLabel(result))}</strong><span>${fmtTime(row.finish_seconds)}</span><small>${row.gap_seconds===0?'Snabbast':`+${fmtTime(row.gap_seconds)}`}</small></article>`;
+    }).join('')}</div></section>`
+    :`<aside class="h2h-warning"><strong>Sluttider jämförs inte direkt.</strong><span>De valda löparna tillhör olika CourseVersions utan explicit jämförelsegrupp. Tiderna visas därför inte som vinnare/gap.</span></aside>`;
+
+  const comparableSegments=model.segments.filter(segment=>segment.comparable);
+  const segments=comparableSegments.length
+    ?`<section class="h2h-segments"><div class="runner-section-head"><div><p class="eyebrow">DELSTRÄCKOR</p><h3>Gap på jämförbara segment</h3></div><span class="pill">${comparableSegments.length} segment</span></div><div class="h2h-segment-list">${comparableSegments.map(segment=>{
+      const rows=segment.entries.map(entry=>{
+        const result=byId.get(String(entry.result_id));
+        const value=entry.segment_seconds==null||!entry.exact
+          ?'<span class="h2h-missing">säker tid saknas</span>'
+          :`<span>${fmtTime(entry.segment_seconds)} · ${fmtPace(entry.pace_seconds_per_km)}</span><small>${entry.gap_seconds===0?'Bäst på segmentet':entry.gap_seconds==null?'':`+${fmtTime(entry.gap_seconds)}`}</small>`;
+        return `<div class="h2h-segment-runner"><strong>${esc(headToHeadRunnerLabel(result))}</strong>${value}</div>`;
+      }).join('');
+      return `<article class="h2h-segment"><header><strong>${esc(cleanCheckpointName(segment.from))} → ${esc(cleanCheckpointName(segment.to))}</strong></header>${rows}</article>`;
+    }).join('')}</div></section>`
+    :'<aside class="h2h-warning"><strong>Inga jämförbara delsträckor.</strong><span>CourseVersion-kontrakten öppnar inte något gemensamt segment för de valda resultaten.</span></aside>';
+
+  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">HEAD-TO-HEAD</p><h2>${model.results.length} löpare sida vid sida</h2><p>Jämförelsen använder endast verifierade lopp- och segmentkontrakt. Olika banversioner får inte ett artificiellt tidsövertag.</p></header>${finish}${segments}</div>`;
+}
+async function openHeadToHead(){
+  if(compareState.selected.length<2)return;
+  const family=state.raceFamily,dialog=$('#headToHeadDialog'),detail=$('#headToHeadDetail');
+  if(!dialog||!detail)return;
+  if(state.dataPhase!=='full'){
+    detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Laddar mellantider för head-to-head…</div></div>';
+    if(!dialog.open)dialog.showModal();
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Head-to-head kunde inte ladda mellantider',error);detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
+    if(state.raceFamily!==family)return;
+  }
+  const ids=compareState.selected.map(result=>result.id);
+  const model=window.RunnerAnalysis?.headToHead(state.data,ids);
+  detail.innerHTML=renderHeadToHead(model);
+  if(!dialog.open)dialog.showModal();
+}
 function setupMapCompare(rebuild=false){
   const year=$('#compareYear'),races=familyRaces().slice().sort((a,b)=>b.year-a.year);
   year.innerHTML='<option value="all">Alla år</option>'+races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');
@@ -420,6 +592,7 @@ function setupMapCompare(rebuild=false){
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
+  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;const h2hDialog=$('#headToHeadDialog'),h2hClose=$('#headToHeadDialog .dialog-close');if(h2hDialog&&h2hClose)h2hClose.onclick=()=>h2hDialog.close();
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
@@ -445,7 +618,7 @@ function removeCompareRunner(id){compareState.selected=compareState.selected.fil
 function hideCompareSuggestions(){const box=$('#runnerSuggestions');if(box)box.hidden=true}
 function renderCompareSelection(){
   const box=$('#selectedCompareRunners');box.innerHTML=compareState.selected.length?compareState.selected.map((r,i)=>`<button class="runner-chip" data-id="${r.id}" title="Ta bort ${esc(r.name_as_published)}"><span>${i+1}. ${esc(r.name_as_published)} · ${state.data.races.find(x=>x.id===r.race_id)?.year||''}${r.bib?' #'+esc(r.bib):''}</span><span>×</span></button>`).join(''):'<span class="selection-empty">Inga löpare valda ännu · välj upp till fem</span>';
-  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
+  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h)h2h.disabled=compareState.selected.length<2;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
   const routeIds=compareState.selected.map(r=>window.RaceContracts.courseForRace(state.data.races.find(x=>x.id===r.race_id))?.display_route_id).filter(Boolean),mixed=new Set(routeIds).size>1,warning=$('#courseComparisonWarning');if(warning)warning.hidden=!mixed;
 }
 

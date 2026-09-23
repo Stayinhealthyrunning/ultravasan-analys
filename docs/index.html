@@ -15,7 +15,7 @@
 <meta content="Analysera resultat, mellantider, fart och loppförlopp för Ultravasan 90 och Ultravasan 45." name="twitter:description"/>
 <meta content="https://stayinhealthyrunning.github.io/ultravasan-analys/assets/salen-mora-header.png" name="twitter:image"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260715-ux1" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260923-u5b" rel="stylesheet"/>
 <link href="assets/runner-replay.css?v=20260716-livecompare5" rel="stylesheet"/>
 <link href="data:," rel="icon"/>
 </head>
@@ -64,7 +64,7 @@
 <div class="runner-suggestions" hidden="" id="runnerSuggestions"></div>
 </div>
 <div class="selected-runners" id="selectedCompareRunners"><span class="selection-empty">Inga löpare valda ännu</span></div><p class="course-comparison-warning" hidden="" id="courseComparisonWarning">Från 2023 förändrades bansträckningen så exakta jämförelser är inte möjliga.</p>
-<button class="compare-map-button" disabled="" id="compareMapButton">Jämför på karta <span>→</span></button>
+<div class="compare-actions"><button class="secondary compare-h2h-button" disabled="" id="compareH2HButton">Head-to-head</button><button class="compare-map-button" disabled="" id="compareMapButton">Jämför på karta <span>→</span></button></div>
 </div>
 </section><section class="analysis-scope field-scope panel" id="overview"><div><p class="eyebrow">LOPP- OCH FÄLTSTATISTIK</p><h2>Hela loppet och det valda startfältet</h2><p>Filtren nedan påverkar alla efterföljande diagram, klassanalyser, klubbanalyser och resultatlistan. De påverkas inte av löparna som valts till kartduellen.</p></div><span class="scope-chip field">Hela urvalet</span></section><section aria-label="Filter" class="toolbar panel">
 <label>År<select id="yearFilter"></select></label>
@@ -259,6 +259,10 @@
 <button aria-label="Stäng" class="dialog-close">×</button>
 <div id="runnerDetail"></div>
 </dialog>
+<dialog id="headToHeadDialog" class="head-to-head-dialog">
+<button aria-label="Stäng jämförelsen" class="dialog-close">×</button>
+<div id="headToHeadDetail"></div>
+</dialog>
 <dialog class="hall-map-dialog" id="hallMapDialog">
 <button aria-label="Stäng kartan" class="dialog-close">×</button>
 <div class="hall-map-shell">
@@ -285,8 +289,9 @@
 <script src="assets/data-adapter.js?v=20260923-u4"></script>
 <script src="assets/app-state.js?v=20260923-u4"></script>
 <script src="assets/charts.js?v=20260923-u4"></script>
-<script src="assets/app.js?v=20260923-u4b"></script>
 <script src="assets/history-engine.js?v=20260923-u2"></script>
+<script src="assets/runner-analysis.js?v=20260923-u5"></script>
+<script src="assets/app.js?v=20260923-u5b"></script>
 <script src="assets/nerdlab.js?v=20260923-u2"></script>
 <script src="assets/class-evolution.js?v=20260715-gapminder1"></script>
 <script src="assets/audience-analytics.js?v=20260922-u1"></script>

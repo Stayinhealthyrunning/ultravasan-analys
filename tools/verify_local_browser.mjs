@@ -157,6 +157,9 @@ const dialog = await evaluate(`(() => {
     open:document.querySelector('#runnerDialog')?.open,
     text:root?.innerText||'',
     replay:Boolean(root?.querySelector('[data-runner-replay]')),
+    journey:Boolean(root?.querySelector('.runner-journey')),
+    journeyStops:root?.querySelectorAll('.runner-journey-stop').length||0,
+    journeyMissing:root?.querySelectorAll('.runner-journey-stop.missing').length||0,
     segmentCards:root?.querySelectorAll('[data-segment-card]').length||0,
     checkpointMarkers:root?.querySelectorAll('.runner-replay-checkpoint').length||0,
     scrubberMax:Number(root?.querySelector('[data-replay-scrubber]')?.max||0),
@@ -230,9 +233,11 @@ async function openRunnerCase(item) {
     const root=document.querySelector('#runnerDetail');
     return {open:document.querySelector('#runnerDialog')?.open||false,replay:Boolean(root?.querySelector('[data-runner-replay]')),
       map:Boolean(root?.querySelector('.runner-replay-map svg')),segments:root?.querySelectorAll('[data-segment-card]').length||0,
+      journey:Boolean(root?.querySelector('.runner-journey')),journeyStops:root?.querySelectorAll('.runner-journey-stop').length||0,
+      journeyMissing:root?.querySelectorAll('.runner-journey-stop.missing').length||0,
       comparisons:root?.querySelectorAll('[data-comparison-toggle]').length||0,text:(root?.innerText||'').slice(0,500)};
   })()`);
-  return {item,setup,search,suggestion:suggestionResult,view,verified:Boolean(search.yearAvailable&&suggestionResult.found&&view.open&&view.replay&&view.map&&view.segments>0&&view.comparisons>=2)};
+  return {item,setup,search,suggestion:suggestionResult,view,verified:Boolean(search.yearAvailable&&suggestionResult.found&&view.open&&view.replay&&view.journey&&view.journeyStops>1&&view.map&&view.segments>0&&view.comparisons>=2)};
 }
 
 const uv90Cases=await representativeCases([
@@ -269,6 +274,50 @@ const uv45Progressive=await evaluate(`(() => {
 const uv45Cases=uv45Loaded?await representativeCases([['ultravasan45-2016','finisher']]):[null];
 caseResults.push(await openRunnerCase(uv45Cases[0]));
 const additionalCases=[...uv90Cases,...uv45Cases];
+
+// U5 Head-to-head reuses the existing compare selection.
+// First return from the UV45 browser case to a fully hydrated UV90 family.
+// Then verify a same-CourseVersion pair and an old/new course pair.
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#raceSwitch90')?.click()");
+const uv90Reloaded=await waitForActiveFamily('uv90');
+await evaluate(`(() => {
+  const year=document.querySelector('#compareYear');
+  if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
+  compareState.selected=[];
+  addCompareRunner(${uv90Cases[2]?.id||0});
+  addCompareRunner(${uv90Cases[3]?.id||0});
+  document.querySelector('#compareH2HButton')?.click();
+})()`);
+await delay(250);
+const h2hComparable=await evaluate(`(() => ({
+  open:document.querySelector('#headToHeadDialog')?.open||false,
+  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
+  segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
+  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
+}))()`);
+
+const changedCourseId=await evaluate(`(() => {
+  const data=window.ULTRAVASAN_ACTIVE_DATA;
+  const race=data.races.find(item=>item.race_key==='ultravasan90-2024');
+  return data.results.find(item=>item.race_id===race?.id&&item.status==='FINISHED'&&Number(item.finish_seconds)>0)?.id||null;
+})()`);
+await evaluate(`(() => {
+  const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
+  compareState.selected=[];
+  addCompareRunner(${uv90Cases[2]?.id||0});
+  addCompareRunner(${changedCourseId});
+  document.querySelector('#compareH2HButton')?.click();
+})()`);
+await delay(250);
+const h2hChangedCourse=await evaluate(`(() => ({
+  open:document.querySelector('#headToHeadDialog')?.open||false,
+  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
+  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
+}))()`);
+await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
 
 // Open the standalone map through shared URLs, without a session-data shortcut.
 // These navigations verify that result_id -> edition routing loads only the
@@ -335,14 +384,16 @@ const checks = {
   result: initial.result?.bib === "1025" && initial.result?.finish_seconds === 26280 && initial.result?.overall_place === 22,
   splits: initial.splitCount === 8 && initial.checkpointKeys.join(",") === "smagan,mangsbodarna,risberg,evertsberg,oxberg,hokberg,eldris,mora",
   search: suggestion.hidden === false && suggestion.id === "11545" && suggestion.text.includes("Hermansson, Andreas") && suggestion.text.includes("2016"),
-  dialog: dialog.open && dialog.replay && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
+  dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
+  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

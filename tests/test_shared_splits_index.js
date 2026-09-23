@@ -173,5 +173,29 @@ assert.ok(appSource.includes('window.RaceMedia'),'huvudappen ska använda kanoni
 assert.ok(mapSource.includes("require('./race-media.js')")&&mapSource.includes('mapRaceMedia.applyAudioSource'),'kartduellen ska använda samma U4 RaceMedia');
 assert.ok(!appSource.includes('window.RACE_MEDIA_CONFIG'),'huvudappen får inte återgå till legacy-aliaset');
 assert.ok(raceMediaSourceU4.includes('root.RaceMedia=api;root.RACE_MEDIA_CONFIG=api'),'legacy media-alias ska endast exponeras från RaceMedia för bakåtkompatibilitet');
-assert.ok(indexHtml.includes('assets/race-media.js?v=20260923-u4b')&&indexHtml.includes('assets/app.js?v=20260923-u4b'),'huvudytan ska cache-busta ändrade U4.9-assets');
+assert.ok(indexHtml.includes('assets/race-media.js?v=20260923-u4b')&&/assets\/app\.js\?v=20260923-(?:u4b|u5[a-z]*)/.test(indexHtml),'huvudytan ska behålla RaceMedia-cachekey och cache-busta aktuell app-version');
 assert.ok(mapHtml.includes('assets/map-engine.js?v=20260923-u4b')&&mapHtml.includes('assets/race-media.js?v=20260923-u4b')&&mapHtml.includes('assets/map.js?v=20260923-u4b'),'kartytan ska cache-busta ändrade U4.8/U4.9-assets');
+
+
+const runnerAnalysisSource=fs.readFileSync(path.join(root,'docs/assets/runner-analysis.js'),'utf8');
+assert.ok(indexHtml.includes('assets/runner-analysis.js?v=20260923-u5'),'huvudytan ska ladda U5 RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/history-engine.js')<indexHtml.indexOf('assets/runner-analysis.js'),'HistoryEngine ska laddas före RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/runner-analysis.js'),'DataIndex ska laddas före RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/runner-analysis.js')<indexHtml.indexOf('assets/app.js'),'RunnerAnalysis ska laddas före huvudappen');
+assert.ok(runnerAnalysisSource.includes("require('./history-engine.js')")&&runnerAnalysisSource.includes("require('./data-index.js')"),'RunnerAnalysis ska återanvända U2 HistoryEngine och U4 DataIndex');
+
+const stylesSourceU5=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
+assert.ok(appSource.includes('window.RunnerAnalysis?.profileForResult(state.data,id)'),'löparens dialog ska byggas från U5 RunnerAnalysis-profilen');
+assert.ok(appSource.includes('renderRunnerJourney(profile)')&&appSource.includes('renderRunnerJourneyTable(profile)'),'dialogen ska återanvända samma Journey-modell för översikt och tabell');
+assert.ok(appSource.includes('renderRunnerVerifiedHistory(profile)'),'dialogen ska exponera verifierad historik utan namnmatchning');
+assert.ok(!appSource.includes('splits.map(s=>'),'den detaljerade mellantidstabellen får inte återgå till egen ad hoc-splitrendering');
+assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Journey')&&stylesSourceU5.includes('.runner-journey-track'),'Journey ska ha egen responsiv layout');
+assert.ok(/assets\/styles\.css\?v=20260923-u5[a-z]*/.test(indexHtml)&&/assets\/app\.js\?v=20260923-u5[a-z]*/.test(indexHtml),'U5 UI-assets ska cache-bustas tillsammans');
+
+assert.ok(indexHtml.includes('id="compareH2HButton"')&&indexHtml.includes('id="headToHeadDialog"'),'U5 ska exponera Head-to-head från befintligt löparurval');
+assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'),'Head-to-head UI ska använda RunnerAnalysis-modellen');
+assert.ok(appSource.includes('function renderHeadToHead(model)')&&appSource.includes('whole_course_comparable'),'UI ska respektera CourseVersion-jämförbarhet');
+assert.ok(appSource.includes("$$('.runner-chip').forEach"),'alla valda löparchips ska ha fungerande borttagning');
+assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Head-to-head'),'Head-to-head ska ha responsiv U5-layout');
+
+assert.ok(appSource.includes("h2hClose.onclick=()=>h2hDialog.close()"),'Head-to-head-dialogen ska ha fungerande stängknapp');
