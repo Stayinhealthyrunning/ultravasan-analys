@@ -13,8 +13,9 @@ const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
 const mapContracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):window.RaceContracts;
+const mapRaceUi=typeof module==='object'&&module.exports?require('./race-ui.js'):window.RaceUI;
 const mapDataAdapter=typeof module==='object'&&module.exports?require('./data-adapter.js'):window.UltravasanDataAdapter;
-const mapRaceFamily=r=>mapContracts.familyForRace(r);
+const mapRaceFamily=r=>mapRaceUi.familyKey(r);
 function mixedRaceFamilyError(results,races){const selected=(results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id)));if(selected.some(family=>family===null))return 'Loppkontrakt saknas för någon av de valda löparna.';const families=[...new Set(selected)];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
 function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||null}
 function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
@@ -56,8 +57,7 @@ function boot(){
   app.usedRoutes=[...new Map(app.models.map(m=>[m.route.id,m.route])).values()];
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;
-  const years=[...new Set(app.models.map(m=>m.race.year))].sort();
-  const families=[...new Set(app.models.map(m=>mapRaceFamily(m.race)))];const label=families.length===1?mapContracts.family(families[0])?.label:mapContracts.catalog.event.name;$('#raceTitle').textContent=years.length===1?`${label} ${years[0]}`:`${label} · ${years.join(', ')}`;
+  $('#raceTitle').textContent=mapRaceUi.selectionTitle(app.models.map(model=>model.race));
   $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km · kartspår ${esc(r.source_year)}</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
   $('#stripLeader').textContent='Start';const distances=[...new Set(app.usedRoutes.map(r=>Number(r.official_distance_km).toFixed(0)))];$('#stripFinishDistance').textContent=`${distances.join('/')} km · Mora`;
@@ -68,7 +68,7 @@ function showFatal(message){$('#mapLoading').innerHTML=`<p><strong>Kartjämföre
 function buildModel(result,color,index){
   const race=raceForResult(result);if(!race)throw new Error(`Loppår saknas för ${result.name_as_published||result.id}.`);const route=routeForRace(race);if(!route||!Array.isArray(route.points)||route.points.length<2)throw new Error(`Banlager saknas för ${race.year}.`);const routeCp=new Map((route.checkpoints||[]).map(c=>[c.key,c]));
   const raw=(app.data.splitsByResult.get(result.id)||window.UltravasanDataIndex.EMPTY_SPLITS).filter(s=>Number.isFinite(s.elapsed_seconds)).sort((a,b)=>a.elapsed_seconds-b.elapsed_seconds);
-  const startName=mapContracts.family(mapRaceFamily(race))?.start_name||route.checkpoints?.[0]?.name||'Start';
+  const startName=mapRaceUi.startNameFor(race)||route.checkpoints?.[0]?.name||'Start';
   let anchors=[{time:0,distance:0,name:startName,exact:true,kind:'start'}];
   for(const s of raw){
     if(s.elapsed_seconds<=0)continue;const cp=routeCp.get(s.checkpoint_key);const dist=splitRouteDistance(s,cp);
