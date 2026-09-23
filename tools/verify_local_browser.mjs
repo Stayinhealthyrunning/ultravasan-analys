@@ -276,9 +276,11 @@ caseResults.push(await openRunnerCase(uv45Cases[0]));
 const additionalCases=[...uv90Cases,...uv45Cases];
 
 // U5 Head-to-head reuses the existing compare selection.
-// First verify a same-CourseVersion pair, then verify that an old/new course pair
-// does not manufacture a whole-course ranking.
+// First return from the UV45 browser case to a fully hydrated UV90 family.
+// Then verify a same-CourseVersion pair and an old/new course pair.
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#raceSwitch90')?.click()");
+const uv90Reloaded=await waitForActiveFamily('uv90');
 await evaluate(`(() => {
   compareState.selected=[];
   addCompareRunner(${uv90Cases[2]?.id||0});
@@ -384,12 +386,12 @@ const checks = {
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
