@@ -239,6 +239,33 @@ const u8Keyboard=await evaluate(`(() => {
   return {open,textLength:text.length};
 })()`);
 
+const originalViewport=await evaluate(`({width:window.innerWidth,height:window.innerHeight})`);
+const viewportSpecs=[
+  {width:390,height:844,maxOverflow:2,guideColumns:1},
+  {width:900,height:900,maxOverflow:2,guideColumns:2},
+  {width:1536,height:1024,maxOverflow:2,guideColumns:4},
+];
+const u9Viewports=[];
+for(const spec of viewportSpecs){
+  await command("Emulation.setDeviceMetricsOverride",{width:spec.width,height:spec.height,deviceScaleFactor:1,mobile:false});
+  await delay(140);
+  const measured=await evaluate(`(() => {
+    const grid=document.querySelector('.analysis-guide-grid');
+    const columns=grid?getComputedStyle(grid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length:0;
+    return {
+      innerWidth:window.innerWidth,
+      documentWidth:document.documentElement.scrollWidth,
+      bodyWidth:document.body.scrollWidth,
+      overflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-window.innerWidth,
+      guideColumns:columns,
+      mainVisible:Boolean(document.querySelector('#mainContent')),
+    };
+  })()`);
+  u9Viewports.push({...spec,...measured,verified:measured.overflow<=spec.maxOverflow&&measured.guideColumns===spec.guideColumns&&measured.mainVisible});
+}
+await command("Emulation.setDeviceMetricsOverride",{width:originalViewport.width,height:originalViewport.height,deviceScaleFactor:1,mobile:false});
+await delay(100);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -580,6 +607,7 @@ const checks = {
     u8Ux.activeNav==='klasser'&&u8Ux.infoLinked&&u8Ux.keyboardRows>0&&
     u8Keyboard.open&&u8Keyboard.textLength>50
   ),
+  responsiveFreeze:u9Viewports.length===3&&u9Viewports.every(item=>item.verified),
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -596,7 +624,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
