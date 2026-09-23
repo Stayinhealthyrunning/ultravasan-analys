@@ -127,6 +127,12 @@ const replayProgress = await evaluate(`(() => ({
   time:document.querySelector('#runnerDetail [data-replay-value="time"]')?.textContent||''
 }))()`);
 
+const additionalRaceIds = await evaluate(`(() => ['ultravasan90-2015','ultravasan90-2016','ultravasan90-2017','ultravasan45-2016'].map(key=>window.ULTRAVASAN_DATA.races.find(race=>race.race_key===key)?.id).filter(Boolean))()`);
+for(const raceId of additionalRaceIds){
+  await evaluate(`window.ensureUltravasanRaceData?.(${Number(raceId)})`);
+}
+await delay(350);
+
 const additionalCases = await evaluate(`(() => {
   const data=window.ULTRAVASAN_DATA,counts=new Map();
   data.splits.forEach(split=>counts.set(split.result_id,(counts.get(split.result_id)||0)+1));
