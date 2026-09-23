@@ -43,6 +43,16 @@ jobs:
           CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python tools/race_contracts.py --check --base-ref "$CONTRACT_BASE_REF"
 
+      - name: Verifiera U3 modulär webbdata mot monoliten
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/u3_modularize.py \
+            --source docs/data/ultravasan.json \
+            --output-dir "$RUNNER_TEMP/u3-data" \
+            --write --check \
+            --report "$RUNNER_TEMP/u3-modular-report.json"
+
       - name: Audita U2 legacy-identiteter read-only
         shell: bash
         run: |
