@@ -157,6 +157,9 @@ const dialog = await evaluate(`(() => {
     open:document.querySelector('#runnerDialog')?.open,
     text:root?.innerText||'',
     replay:Boolean(root?.querySelector('[data-runner-replay]')),
+    journey:Boolean(root?.querySelector('.runner-journey')),
+    journeyStops:root?.querySelectorAll('.runner-journey-stop').length||0,
+    journeyMissing:root?.querySelectorAll('.runner-journey-stop.missing').length||0,
     segmentCards:root?.querySelectorAll('[data-segment-card]').length||0,
     checkpointMarkers:root?.querySelectorAll('.runner-replay-checkpoint').length||0,
     scrubberMax:Number(root?.querySelector('[data-replay-scrubber]')?.max||0),
@@ -230,9 +233,11 @@ async function openRunnerCase(item) {
     const root=document.querySelector('#runnerDetail');
     return {open:document.querySelector('#runnerDialog')?.open||false,replay:Boolean(root?.querySelector('[data-runner-replay]')),
       map:Boolean(root?.querySelector('.runner-replay-map svg')),segments:root?.querySelectorAll('[data-segment-card]').length||0,
+      journey:Boolean(root?.querySelector('.runner-journey')),journeyStops:root?.querySelectorAll('.runner-journey-stop').length||0,
+      journeyMissing:root?.querySelectorAll('.runner-journey-stop.missing').length||0,
       comparisons:root?.querySelectorAll('[data-comparison-toggle]').length||0,text:(root?.innerText||'').slice(0,500)};
   })()`);
-  return {item,setup,search,suggestion:suggestionResult,view,verified:Boolean(search.yearAvailable&&suggestionResult.found&&view.open&&view.replay&&view.map&&view.segments>0&&view.comparisons>=2)};
+  return {item,setup,search,suggestion:suggestionResult,view,verified:Boolean(search.yearAvailable&&suggestionResult.found&&view.open&&view.replay&&view.journey&&view.journeyStops>1&&view.map&&view.segments>0&&view.comparisons>=2)};
 }
 
 const uv90Cases=await representativeCases([
@@ -335,7 +340,7 @@ const checks = {
   result: initial.result?.bib === "1025" && initial.result?.finish_seconds === 26280 && initial.result?.overall_place === 22,
   splits: initial.splitCount === 8 && initial.checkpointKeys.join(",") === "smagan,mangsbodarna,risberg,evertsberg,oxberg,hokberg,eldris,mora",
   search: suggestion.hidden === false && suggestion.id === "11545" && suggestion.text.includes("Hermansson, Andreas") && suggestion.text.includes("2016"),
-  dialog: dialog.open && dialog.replay && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
+  dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
