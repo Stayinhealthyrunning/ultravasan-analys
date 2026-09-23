@@ -46,7 +46,7 @@ assert.throws(()=>contracts.create(other),/Ogiltigt loppkontrakt/);
 
 // Same resolver and generated catalog also work through the browser globals.
 const browser={window:{}};
-for(const file of ['../docs/data/race-catalog.js','../docs/assets/race-contracts.js','../docs/assets/runner-replay.js','../docs/assets/race-media.js'])vm.runInNewContext(fs.readFileSync(require.resolve(file),'utf8'),browser);
+for(const file of ['../docs/data/race-catalog.js','../docs/assets/race-contracts.js','../docs/assets/map-engine.js','../docs/assets/playback.js','../docs/assets/runner-replay.js','../docs/assets/race-media.js'])vm.runInNewContext(fs.readFileSync(require.resolve(file),'utf8'),browser);
 assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-current');
 assert.strictEqual(browser.window.RACE_MEDIA_CONFIG.familyForRace({race_key:'ultravasan90-2022',name:'45'}),'uv90');
 assert.strictEqual(browser.window.RaceContracts.courseForRace('ultravasan90-2026').checkpoint_catalog.find(cp=>cp.checkpoint_key==='high_point').distance_km,null);
