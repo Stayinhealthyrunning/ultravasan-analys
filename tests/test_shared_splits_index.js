@@ -76,15 +76,20 @@ const indexHtml=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const mapHtml=fs.readFileSync(path.join(root,'docs/karta.html'),'utf8');
 for(const html of [indexHtml,mapHtml]){
   assert.ok(html.includes('assets/data-index.js'),'båda applikationsytorna ska ladda samma indexmodul');
+  assert.ok(html.includes('assets/data-adapter.js'),'båda applikationsytorna ska ladda U4 DataAdapter');
   assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
   assert.ok(html.includes('data/ultravasan-data-catalog.js'),'båda applikationsytorna ska ladda datakatalogen');
 }
 assert.ok(indexHtml.indexOf('data/ultravasan-data-catalog.js')<indexHtml.indexOf('assets/data-loader.js'),'katalogen ska laddas före DataLoader');
 assert.ok(indexHtml.indexOf('assets/data-loader.js')<indexHtml.indexOf('assets/app.js'),'DataLoader ska laddas före appen');
-assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/app.js'),'indexmodulen ska laddas före appen');
+assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/data-adapter.js'),'indexmodulen ska laddas före DataAdapter');
+assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/data-adapter.js'),'loppkontrakten ska laddas före DataAdapter');
+assert.ok(indexHtml.indexOf('assets/data-adapter.js')<indexHtml.indexOf('assets/app.js'),'DataAdapter ska laddas före appen');
 assert.ok(mapHtml.indexOf('data/ultravasan-data-catalog.js')<mapHtml.indexOf('assets/data-loader.js'),'kartvyn ska läsa katalogen före DataLoader');
 assert.ok(mapHtml.indexOf('assets/data-loader.js')<mapHtml.indexOf('assets/map.js'),'kartvyn ska läsa DataLoader före kartduellen');
-assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/map.js'),'indexmodulen ska laddas före kartduellen');
+assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans indexmodul ska laddas före DataAdapter');
+assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans loppkontrakt ska laddas före DataAdapter');
+assert.ok(mapHtml.indexOf('assets/data-adapter.js')<mapHtml.indexOf('assets/map.js'),'DataAdapter ska laddas före kartduellen');
 
 for(const file of ['app.js','audience-analytics.js','nerdlab.js','map.js']){
   const source=fs.readFileSync(path.join(root,'docs/assets',file),'utf8');
@@ -92,3 +97,11 @@ for(const file of ['app.js','audience-analytics.js','nerdlab.js','map.js']){
 }
 
 console.log('OK: gemensamt splitsByResult-index bevarar splits, replay och aggregat exakt');
+
+
+const appSource=fs.readFileSync(path.join(root,'docs/assets/app.js'),'utf8');
+const mapSource=fs.readFileSync(path.join(root,'docs/assets/map.js'),'utf8');
+assert.ok(appSource.includes('UltravasanDataAdapter.hydrate'),'huvudappen ska hydrera genom gemensam DataAdapter');
+assert.ok(mapSource.includes("require('./data-adapter.js')")&&mapSource.includes('mapDataAdapter.hydrate'),'kartappen ska hydrera genom samma DataAdapter');
+assert.ok(!appSource.includes('const rr=new Map(d.results.map'),'huvudappen får inte återinföra egen split/checkpoint-hydrering');
+assert.ok(!mapSource.includes('const rr=new Map(d.results.map'),'kartappen får inte återinföra egen split/checkpoint-hydrering');
