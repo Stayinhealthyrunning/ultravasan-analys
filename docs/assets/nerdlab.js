@@ -113,6 +113,78 @@ function courseNarrative(segment){
   if(Number.isFinite(Number(field.dnf_exit_rate_pct)))clauses.push(`${Number(field.dnf_exit_rate_pct).toLocaleString('sv-SE',{maximumFractionDigits:1})} % DNF-exit bland registrerade segmententréer`);
   return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Difficulty är relativ inom valt lopp/CourseVersion och är inte ett absolut banbetyg.</small></div>`;
 }
+function courseSvgProjector(points,width=620,height=250,padding=18){
+  const valid=(points||[]).filter(point=>Number.isFinite(Number(point?.[0]))&&Number.isFinite(Number(point?.[1])));
+  if(!valid.length)return null;
+  const meanLat=valid.reduce((sum,point)=>sum+Number(point[0]),0)/valid.length;
+  const factor=Math.cos(meanLat*Math.PI/180);
+  const projected=valid.map(point=>({x:Number(point[1])*factor,y:Number(point[0])}));
+  const minX=Math.min(...projected.map(point=>point.x)),maxX=Math.max(...projected.map(point=>point.x));
+  const minY=Math.min(...projected.map(point=>point.y)),maxY=Math.max(...projected.map(point=>point.y));
+  const spanX=Math.max(1e-9,maxX-minX),spanY=Math.max(1e-9,maxY-minY);
+  return point=>{
+    const x=Number(point[1])*factor,y=Number(point[0]);
+    return [padding+(x-minX)/spanX*(width-padding*2),height-padding-(y-minY)/spanY*(height-padding*2)];
+  };
+}
+function courseSvgPath(points,project){
+  if(!project||!points?.length)return'';
+  const step=Math.max(1,Math.ceil(points.length/650)),sample=points.filter((_,index)=>index%step===0);
+  if(sample.at(-1)!==points.at(-1))sample.push(points.at(-1));
+  return sample.map((point,index)=>{const [x,y]=project(point);return `${index?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`}).join(' ');
+}
+function bindCourseSegmentClicks(root){
+  root?.querySelectorAll?.('[data-course-segment]').forEach(node=>{
+    node.onclick=()=>selectCourseSegment(node.dataset.courseSegment);
+    node.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCourseSegment(node.dataset.courseSegment)}};
+  });
+}
+function renderCourseRouteView(model,selected){
+  const el=n$('#courseRouteView');if(!el)return;
+  const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race);
+  if(!route?.points?.length){el.innerHTML='<div class="course-view-empty">Verifierad display-rutt saknas för denna CourseVersion.</div>';return}
+  const width=620,height=250,project=courseSvgProjector(route.points,width,height),base=courseSvgPath(route.points,project);
+  const paths=model.segments.map(segment=>{
+    if(!Number.isFinite(Number(segment.display_from_km))||!Number.isFinite(Number(segment.display_to_km)))return'';
+    const points=globalThis.UltravasanMapEngine.routeSlice(route,segment.display_from_km,segment.display_to_km);
+    const d=courseSvgPath(points,project);if(!d)return'';
+    return `<path d="${d}" class="course-route-segment ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0"><title>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</title></path>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>BANÖVERSIKT</span><strong>Klicka på en delsträcka</strong></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Course Intelligence banöversikt"><path d="${base}" class="course-route-base"></path>${paths}</svg>`;
+  bindCourseSegmentClicks(el);
+}
+function renderCourseElevationView(model,selected){
+  const el=n$('#courseElevationView');if(!el)return;
+  const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race),profile=route?.elevation_profile||[];
+  if(!profile.length){el.innerHTML='<div class="course-view-empty">Verifierad höjdprofil saknas för denna display-rutt.</div>';return}
+  const width=620,height=250,padX=20,padTop=30,padBottom=28,maxDistance=Number(profile.at(-1)?.[0]||1);
+  const elevations=profile.map(point=>Number(point[1])).filter(Number.isFinite),minE=Math.min(...elevations),maxE=Math.max(...elevations),span=Math.max(1,maxE-minE);
+  const x=distance=>padX+Number(distance)/maxDistance*(width-padX*2),y=elevation=>height-padBottom-(Number(elevation)-minE)/span*(height-padTop-padBottom);
+  const step=Math.max(1,Math.ceil(profile.length/600)),sample=profile.filter((point,index)=>index%step===0&&Number.isFinite(Number(point[1])));
+  if(sample.at(-1)!==profile.at(-1)&&Number.isFinite(Number(profile.at(-1)?.[1])))sample.push(profile.at(-1));
+  const path=sample.map((point,index)=>`${index?'L':'M'}${x(point[0]).toFixed(1)},${y(point[1]).toFixed(1)}`).join(' ');
+  const overlays=model.segments.map(segment=>{
+    if(!Number.isFinite(Number(segment.display_from_km))||!Number.isFinite(Number(segment.display_to_km)))return'';
+    const x1=x(segment.display_from_km),x2=x(segment.display_to_km),left=Math.min(x1,x2),w=Math.max(2,Math.abs(x2-x1));
+    return `<rect x="${left.toFixed(1)}" y="${padTop}" width="${w.toFixed(1)}" height="${height-padTop-padBottom}" class="course-elevation-hit ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0"><title>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</title></rect>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>HÖJDPROFIL</span><strong>${Math.round(minE)}–${Math.round(maxE)} m</strong></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Höjdprofil med valbara Course Intelligence-segment"><path d="${path}" class="course-elevation-line"></path>${overlays}</svg>`;
+  bindCourseSegmentClicks(el);
+}
+function renderCoursePaceView(model,selected){
+  const el=n$('#coursePaceView');if(!el)return;
+  const values=model.segments.map(segment=>segment.field?.median_pace_seconds_per_km).filter(value=>Number.isFinite(Number(value))).map(Number);
+  if(!values.length){el.innerHTML='<div class="course-view-empty">Minst fem exakta finisherpassager krävs för fartfördelningen.</div>';return}
+  const min=Math.min(...values),max=Math.max(...values),span=Math.max(1,max-min);
+  const rows=model.segments.map(segment=>{
+    const value=segment.field?.median_pace_seconds_per_km,width=Number.isFinite(Number(value))?20+(Number(value)-min)/span*80:0;
+    const spread=segment.field?.sufficient_sample?`${nPace(segment.field.q25_pace_seconds_per_km)}–${nPace(segment.field.q75_pace_seconds_per_km)}`:'underlag saknas';
+    return `<button type="button" class="course-pace-row ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" ${width?'':'disabled'}><span>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</span><i><b style="width:${width}%"></b></i><strong>${Number.isFinite(Number(value))?nPace(value):'–'}</strong><small>${nEsc(spread)}</small></button>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>FARTFÖRDELNING</span><strong>Median · Q25–Q75</strong></div><div class="course-pace-list">${rows}</div>`;
+  bindCourseSegmentClicks(el);
+}
+
 function renderCourseIntelligence(existingModel=null){
   const rowsEl=n$('#courseIntelligenceRows'),summary=n$('#courseIntelligenceSummary'),version=n$('#courseIntelligenceVersion'),narrative=n$('#courseSegmentNarrative');
   if(!rowsEl||!summary||!version||!narrative)return;
@@ -138,10 +210,10 @@ function renderCourseIntelligence(existingModel=null){
     return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(range)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td><td>${difficulty.score==null?'–':`<strong>${difficulty.score}</strong><small>#${difficulty.rank}/${difficulty.segment_count_ranked}</small>`}</td></tr>`;
   }).join('');
   narrative.innerHTML=courseNarrative(selected);
-  n$('[data-course-segment]').forEach(row=>{
-    row.onclick=()=>selectCourseSegment(row.dataset.courseSegment);
-    row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCourseSegment(row.dataset.courseSegment)}};
-  });
+  renderCourseRouteView(model,selected);
+  renderCourseElevationView(model,selected);
+  renderCoursePaceView(model,selected);
+  bindCourseSegmentClicks(rowsEl);
 }
 
 function renderStories(){
