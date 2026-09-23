@@ -44,16 +44,29 @@ jobs:
         run: python tools/race_contracts.py --check --base-ref "$CONTRACT_BASE_REF"
 
       - name: Audita U2 legacy-identiteter read-only
-        run: python tools/u2_identity_audit.py --expect-u0-audit --report "$RUNNER_TEMP/u2-identity-audit.json"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f reports/U2_BASELINE.json ]; then
+            python tools/u2_identity_audit.py --expect-u0-audit --report "$RUNNER_TEMP/u2-identity-audit.json"
+          else
+            echo "U2-baseline finns; legacy-auditen är historisk."
+          fi
 
       - name: Provkör U2-identitetsmigration på databaskopia
+        shell: bash
         run: |
-          python tools/u2_identity_migration.py \
-            --copy-from data/ultravasan.sqlite \
-            --db "$RUNNER_TEMP/u2-migrated.sqlite" \
-            --apply \
-            --confirm MIGRATE-U2-IDENTITY \
-            --report "$RUNNER_TEMP/u2-identity-migration.json"
+          set -euo pipefail
+          if [ ! -f reports/U2_BASELINE.json ]; then
+            python tools/u2_identity_migration.py \
+              --copy-from data/ultravasan.sqlite \
+              --db "$RUNNER_TEMP/u2-migrated.sqlite" \
+              --apply \
+              --confirm MIGRATE-U2-IDENTITY \
+              --report "$RUNNER_TEMP/u2-identity-migration.json"
+          else
+            python tools/u2_identity_migration.py --db data/ultravasan.sqlite
+          fi
 
       - name: Kör Python-tester
         run: python -m pytest -q
