@@ -67,3 +67,23 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     uv45 = json.loads((tmp_path / "ultravasan-uv45.json").read_text(encoding="utf-8"))
     assert uv90["results"] == [payload["results"][0]]
     assert uv45["results"] == [payload["results"][1]]
+
+
+def test_export_auto_detects_activated_modular_catalog(tmp_path: Path) -> None:
+    output = tmp_path / "ultravasan.json"
+    assert uvtool.resolve_modular_output_dir(output, None) is None
+
+    (tmp_path / "ultravasan-data-catalog.json").write_text(
+        json.dumps({"schema_version": 1, "mode": "legacy"}),
+        encoding="utf-8",
+    )
+    assert uvtool.resolve_modular_output_dir(output, None) is None
+
+    (tmp_path / "ultravasan-data-catalog.json").write_text(
+        json.dumps({"schema_version": 1, "mode": "modular"}),
+        encoding="utf-8",
+    )
+    assert uvtool.resolve_modular_output_dir(output, None) == tmp_path
+
+    explicit = tmp_path / "other"
+    assert uvtool.resolve_modular_output_dir(output, explicit) == explicit
