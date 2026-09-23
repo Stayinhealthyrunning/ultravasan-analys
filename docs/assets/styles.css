@@ -619,3 +619,43 @@ html,body{max-width:100%;overflow-x:hidden}
   .runner-favorite-toggle{justify-self:start;margin-right:0}
   .runner-favorites-list{max-height:150px}
 }
+
+
+/* ===== U6 Course Intelligence ===== */
+.course-intelligence-card{margin:18px 0 20px;overflow:hidden}
+.course-intelligence-card .panel-subtitle{max-width:760px}
+.course-intelligence-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0 16px}
+.course-intelligence-summary article{display:grid;gap:3px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#f8faf6}
+.course-intelligence-summary span{font-size:.58rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.course-intelligence-summary strong{font-size:.72rem;line-height:1.3;color:var(--forest)}
+.course-intelligence-summary em{font-size:.69rem;font-style:normal;font-weight:800;color:var(--ink)}
+.course-intelligence-views{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin:0 0 12px}
+.course-route-view,.course-elevation-view,.course-pace-view{min-height:210px;border:1px solid var(--line);border-radius:14px;background:#fbfcf9;overflow:hidden}
+.course-view-empty{height:100%;min-height:210px;display:grid;place-items:center;padding:18px;text-align:center;color:var(--muted);font-size:.68rem}
+.course-segment-narrative{margin:10px 0 14px;padding:13px 15px;border-radius:13px;background:#10241d;color:#f3f7f2}
+.course-segment-narrative .eyebrow{color:#a9c9b7}
+.course-segment-narrative h4{margin:2px 0 5px;font-size:.92rem}
+.course-segment-narrative p{margin:0;font-size:.68rem;line-height:1.5;color:#eef5f0}
+.course-segment-narrative small{display:block;margin-top:5px;font-size:.58rem;color:#b9cabf}
+.course-intelligence-table-wrap{max-height:410px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.course-intelligence-table{min-width:930px}
+.course-intelligence-table thead th{position:sticky;top:0;z-index:1;background:#f2f5ef}
+.course-intelligence-table tbody tr{cursor:pointer;transition:background .12s ease,box-shadow .12s ease}
+.course-intelligence-table tbody tr:hover,.course-intelligence-table tbody tr:focus{background:#f1f7f2;outline:none}
+.course-intelligence-table tbody tr.selected{background:#e7f1e9;box-shadow:inset 3px 0 #176d53}
+.course-intelligence-table tbody tr.course-segment-unavailable{background:#fafafa;color:#77817c}
+.course-intelligence-table td:first-child{min-width:195px}
+.course-intelligence-table td strong{display:block;font-size:.68rem}
+.course-intelligence-table td small{display:block;margin-top:2px;color:var(--muted);font-size:.55rem}
+.course-intelligence-table td{font-size:.64rem;white-space:nowrap}
+.course-intelligence-table td:last-child strong{font-size:.78rem;color:var(--forest)}
+
+@media(max-width:980px){
+  .course-intelligence-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .course-intelligence-views{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .course-intelligence-summary{grid-template-columns:1fr}
+  .course-intelligence-card{margin-left:-2px;margin-right:-2px}
+  .course-intelligence-table-wrap{margin-left:-4px;margin-right:-4px}
+}
