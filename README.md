@@ -45,6 +45,12 @@ Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på
 eller ett äldre `athlete_id`. Tidsutveckling mellan utgåvor kräver dessutom
 explicit jämförbara CourseVersion-kontrakt.
 
+U3:s modulära webbdatakontrakt finns i
+[`reports/U3_MODULAR_DATA_SPEC.md`](reports/U3_MODULAR_DATA_SPEC.md).
+Startsidan laddar efter U3 bootstrap + resultatindex + aktiv RaceEdition och
+hämtar övriga splits först när de behövs. Den kompletta monoliten behålls som
+fallback och offline-återställning.
+
 Den verifierade legacy-auditen och den reversibla migrationsplanen finns i
 [`reports/U2_LEGACY_IDENTITY_MIGRATION.md`](reports/U2_LEGACY_IDENTITY_MIGRATION.md).
 Före produktionsmigrering verifierar CI den historiska U0-golden mastern och
