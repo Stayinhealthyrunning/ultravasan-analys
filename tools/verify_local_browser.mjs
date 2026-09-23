@@ -52,7 +52,21 @@ for (let attempt = 0; attempt < 100; attempt++) {
   }
   await delay(100);
 }
-if (!ready) throw new Error("Local application did not finish loading");
+if (!ready) {
+  const diagnostics = await evaluate(`(() => ({
+    loadingClass:document.querySelector('#loading')?.className,
+    loadingText:document.querySelector('#loading')?.innerText,
+    hasLoader:Boolean(window.UltravasanDataLoader),
+    hasBootstrap:Boolean(window.ULTRAVASAN_BOOTSTRAP),
+    hasHistory:Boolean(window.ULTRAVASAN_HISTORY_INDEX),
+    hasMonolith:Boolean(window.ULTRAVASAN_DATA),
+    stateType:typeof state,
+    stateData:typeof state!=='undefined'&&Boolean(state.data),
+    loaderStatus:window.UltravasanDataLoader?.status?.(),
+  }))()`);
+  console.error(JSON.stringify({diagnostics,browserErrors,networkErrors},null,2));
+  throw new Error("Local application did not finish loading");
+}
 
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null);
