@@ -1270,10 +1270,13 @@ def write_modular_web_data(
     expected_edition_stems = {
         f"ultravasan-edition-{race['race_key']}" for race in payload["races"]
     }
-    for pattern in ("ultravasan-edition-*.json", "ultravasan-edition-*.js"):
-        for existing in output_dir.glob(pattern):
-            if existing.stem not in expected_edition_stems:
-                existing.unlink()
+    for existing in output_dir.glob("ultravasan-edition-*.json"):
+        if existing.stem not in expected_edition_stems:
+            existing.unlink()
+    # U3.3 edition transport is JSON-only. Remove JS artifacts even for still
+    # valid race keys if an earlier development export created them.
+    for existing in output_dir.glob("ultravasan-edition-*.js"):
+        existing.unlink()
 
     total_results = len(payload["results"])
     total_splits = len(payload["splits"])
