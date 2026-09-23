@@ -128,14 +128,19 @@ const scored=intelligence.applyDifficultyIndex([
   {key:'easy',terrain:{ascent_m_per_km:2},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:-5,pace_iqr_seconds_per_km:8,dnf_exit_rate_pct:0}},
   {key:'middle',terrain:{ascent_m_per_km:8},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:5,pace_iqr_seconds_per_km:16,dnf_exit_rate_pct:2}},
   {key:'hard',terrain:{ascent_m_per_km:20},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:20,pace_iqr_seconds_per_km:30,dnf_exit_rate_pct:8}},
+  {key:'partial',terrain:{ascent_m_per_km:null},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:12,pace_iqr_seconds_per_km:22,dnf_exit_rate_pct:4}},
   {key:'thin',terrain:{ascent_m_per_km:50},field:{sufficient_sample:false,median_pacing_loss_seconds_per_km:null,pace_iqr_seconds_per_km:null,dnf_exit_rate_pct:10}},
 ]);
 assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.score,100);
 assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.rank,1);
 assert.strictEqual(scored.find(row=>row.key==='middle').difficulty.score,50);
 assert.strictEqual(scored.find(row=>row.key==='easy').difficulty.score,0);
+assert.strictEqual(scored.find(row=>row.key==='partial').difficulty.score,null,'alla fyra Difficulty-komponenter ska krävas för jämförbar poäng');
+assert.strictEqual(scored.find(row=>row.key==='partial').difficulty.complete_evidence,false);
 assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.score,null,'svag timing-evidens får inte få Course Difficulty-poäng');
 assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.rank,null);
+assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.component_weighting,'equal-four-components');
+assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.required_components,4);
 assert.strictEqual(intelligence.percentileRank([1,2,3],2),.5);
 
 const realScores=model.segments.filter(segment=>segment.difficulty.score!==null);
