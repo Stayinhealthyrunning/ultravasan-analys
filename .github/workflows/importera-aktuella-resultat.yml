@@ -126,6 +126,7 @@ jobs:
             docs/data/ultravasan.json \
             docs/data/ultravasan-data.js \
             docs/data/manifest.json \
+            docs/data/u3 \
             reports/discovered-ultravasan-events.json \
             reports/${{ inputs.race }}-probe.json \
             reports/${{ inputs.race }}-import.json
