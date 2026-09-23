@@ -44,6 +44,14 @@ U2:s identitets- och historikkontrakt finns i
 Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på namn
 eller ett äldre `athlete_id`. Tidsutveckling mellan utgåvor kräver dessutom
 explicit jämförbara CourseVersion-kontrakt.
+
+Den verifierade legacy-auditen och den reversibla migrationsplanen finns i
+[`reports/U2_LEGACY_IDENTITY_MIGRATION.md`](reports/U2_LEGACY_IDENTITY_MIGRATION.md).
+Före produktionsmigrering verifierar CI den historiska U0-golden mastern och
+provkör hela identitetsmigrationen på en databaskopia. När migrationen senare
+appliceras via det manuellt bekräftade arbetsflödet `Migrera U2-identiteter`
+skapas `reports/U2_BASELINE.json`, som därefter blir aktiv golden master medan
+U0-baslinjen behålls oförändrad som historiskt bevis.
 `config/races.json` tilldelar utgåvorna fem låsta ban-/kontrollmodeller från
 `config/course_versions.json`. För att bygga och verifiera katalogen:
 

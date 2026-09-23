@@ -12,6 +12,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import u0_baseline  # noqa: E402
 
+U2_BASELINE = ROOT / "reports" / "U2_BASELINE.json"
+
 
 class U0BaselineTests(unittest.TestCase):
     @classmethod
@@ -19,6 +21,7 @@ class U0BaselineTests(unittest.TestCase):
         cls.expected = json.loads(u0_baseline.DEFAULT_BASELINE.read_text(encoding="utf-8"))
         cls.actual = u0_baseline.build_snapshot(cls.expected["source"]["git_commit"])
 
+    @unittest.skipIf(U2_BASELINE.exists(), "U0 exact file baseline is historical after U2 migration")
     def test_checked_in_data_matches_golden_master(self) -> None:
         self.assertEqual(self.expected, self.actual)
 
