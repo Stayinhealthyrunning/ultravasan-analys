@@ -104,7 +104,7 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             raise RuntimeError(f"Catalog count mismatch for {family}")
 
     if set(catalog.get("editions", {})) != {
-        race["race_key"] for race in source["races"]
+        str(int(race["id"])) for race in source["races"]
     }:
         raise RuntimeError("Catalog edition set differs from monolith")
 
@@ -115,7 +115,8 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
 
     for race in source["races"]:
         race_key = race["race_key"]
-        spec = catalog["editions"][race_key]
+        edition_key = str(int(race["id"]))
+        spec = catalog["editions"][edition_key]
         chunk_path = output_dir / Path(spec["json"]).name
         js_path = output_dir / Path(spec["js"]).name
         if not chunk_path.exists() or not js_path.exists():
@@ -149,7 +150,7 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
 
         expected_js = (
             "window.ULTRAVASAN_DATA_EDITIONS=window.ULTRAVASAN_DATA_EDITIONS||{};"
-            f"window.ULTRAVASAN_DATA_EDITIONS[{json.dumps(race_key)}]="
+            f"window.ULTRAVASAN_DATA_EDITIONS[{json.dumps(edition_key)}]="
             + json.dumps(chunk, ensure_ascii=False, separators=(",", ":"))
             + ";\n"
         )
@@ -158,6 +159,8 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
 
         if spec["race_id"] != int(race["id"]):
             raise RuntimeError(f"Catalog race_id mismatch for {race_key}")
+        if spec["race_key"] != race_key:
+            raise RuntimeError(f"Catalog race_key mismatch for {race_key}")
         if spec["race_family"] != family:
             raise RuntimeError(f"Catalog race_family mismatch for {race_key}")
         if spec["results"] != len(chunk["results"]) or spec["splits"] != len(chunk["splits"]):
@@ -182,14 +185,12 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     if merged_splits != source_splits:
         raise RuntimeError("Modular split payload differs from monolith")
 
-    expected_result_family = {}
-    expected_result_edition = {}
-    for result_id, result in source_results.items():
-        race = source_races[int(result["race_id"])]
-        expected_result_family[str(result_id)] = race_family_by_key[race["race_key"]]
-        expected_result_edition[str(result_id)] = race["race_key"]
-    if catalog.get("result_family") != expected_result_family:
-        raise RuntimeError("result_family routing index differs from race contracts")
+    expected_result_edition = {
+        str(result_id): int(result["race_id"])
+        for result_id, result in source_results.items()
+    }
+    if "result_family" in catalog:
+        raise RuntimeError("result_family is redundant once result_edition is available")
     if catalog.get("result_edition") != expected_result_edition:
         raise RuntimeError("result_edition routing index differs from race rows")
 
