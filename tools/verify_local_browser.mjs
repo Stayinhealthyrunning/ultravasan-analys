@@ -224,11 +224,15 @@ async function waitForActiveFamily(family,requireSplits=true){
   for(let attempt=0;attempt<450;attempt++){
     const active=await evaluate(`(() => {
       const data=window.ULTRAVASAN_ACTIVE_DATA;
-      if(!data?.races?.length)return {family:null,splitsReady:false};
+      if(!data?.races?.length)return {family:null,phase:null,splits:0};
       const families=[...new Set(data.races.map(r=>window.RaceContracts.familyForRace(r)))];
-      return {family:families.length===1?families[0]:families.join(','),splitsReady:Boolean(window.ULTRAVASAN_SPLITS_READY)};
+      return {
+        family:families.length===1?families[0]:families.join(','),
+        phase:state?.dataPhase||null,
+        splits:data.splits?.length||0
+      };
     })()`);
-    if(active.family===family&&(!requireSplits||active.splitsReady))return true;
+    if(active.family===family&&(!requireSplits||(active.phase==='full'&&active.splits>0)))return true;
     await delay(100);
   }
   return false;
