@@ -5,6 +5,7 @@
   if(root)root.UltravasanDataLoader=api;
 })(typeof window!=='undefined'?window:globalThis,function(root){
   const familyCache=new Map();
+  const initialFamilyCache=new Map();
   const familyCoreCache=new Map();
   const familySplitCache=new Map();
   const familyShellCache=new Map();
@@ -243,31 +244,37 @@
     const spec=familySpec(family);
     const canFetch=typeof location==='undefined'||location.protocol!=='file:';
     const key=String(editionKey??spec.default_race_id??'');
-    if(!canFetch||!spec.shell||!key||!catalog()?.editions?.[key]?.core){
-      return loadModularFamilyCore(family);
-    }
-    try{
-      const [shell,editionCore]=await Promise.all([
-        loadModularFamilyShell(family),
-        loadModularEditionCore(key),
-      ]);
-      const merged=mergeDatasets([shell,editionCore]);
-      const edition=catalog().editions[key];
-      merged.meta={
-        ...(shell.meta||{}),
-        data_scope:{
-          kind:'race-family-active-core',
-          race_family:family,
-          race_id:Number(key),
-          race_key:edition?.race_key||null,
-          data_parts:['shell','edition-core']
-        }
-      };
-      return merged;
-    }catch(error){
-      console.warn?.(`Aktivt loppår för ${family} kunde inte laddas; använder family core.`,error);
-      return loadModularFamilyCore(family);
-    }
+    const cacheKey=`${family}:${key||'fallback'}`;
+    if(initialFamilyCache.has(cacheKey))return initialFamilyCache.get(cacheKey);
+    const promise=(async()=>{
+      if(!canFetch||!spec.shell||!key||!catalog()?.editions?.[key]?.core){
+        return loadModularFamilyCore(family);
+      }
+      try{
+        const [shell,editionCore]=await Promise.all([
+          loadModularFamilyShell(family),
+          loadModularEditionCore(key),
+        ]);
+        const merged=mergeDatasets([shell,editionCore]);
+        const edition=catalog().editions[key];
+        merged.meta={
+          ...(shell.meta||{}),
+          data_scope:{
+            kind:'race-family-active-core',
+            race_family:family,
+            race_id:Number(key),
+            race_key:edition?.race_key||null,
+            data_parts:['shell','edition-core']
+          }
+        };
+        return merged;
+      }catch(error){
+        console.warn?.(`Aktivt loppår för ${family} kunde inte laddas; använder family core.`,error);
+        return loadModularFamilyCore(family);
+      }
+    })();
+    initialFamilyCache.set(cacheKey,promise);
+    try{return await promise}catch(error){initialFamilyCache.delete(cacheKey);throw error}
   }
 
   async function loadFamilyCore(family){
@@ -337,7 +344,7 @@
   }
 
   function clearCaches(){
-    familyCache.clear();familyCoreCache.clear();familySplitCache.clear();familyShellCache.clear();editionCoreCache.clear();editionCache.clear();legacyPromise=null;
+    familyCache.clear();initialFamilyCache.clear();familyCoreCache.clear();familySplitCache.clear();familyShellCache.clear();editionCoreCache.clear();editionCache.clear();legacyPromise=null;
   }
 
   return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadInitialFamily,loadFamilyCore,loadFamily,loadForResultIds,clearCaches};
