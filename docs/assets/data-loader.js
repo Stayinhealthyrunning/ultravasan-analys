@@ -82,6 +82,23 @@
     })();
     return corePromise;
   }
+  function hydrateEditionSplits(data,splits){
+    const resultRace=new Map((data.results||[]).map(result=>[result.id,result.race_id]));
+    const checkpoints=new Map((data.checkpoints||[]).map(cp=>[`${cp.race_id}|${cp.checkpoint_key}`,cp]));
+    return (splits||[]).map(split=>{
+      const cp=checkpoints.get(`${resultRace.get(split.result_id)}|${split.checkpoint_key}`);
+      if(cp){
+        split.checkpoint_name=cp.name;
+        split.sequence_no=Number(cp.sequence_no);
+        split.distance_km=cp.distance_km==null?null:Number(cp.distance_km);
+      }else{
+        if(split.sequence_no!=null)split.sequence_no=Number(split.sequence_no);
+        if(split.distance_km!=null)split.distance_km=Number(split.distance_km);
+      }
+      if(split.is_estimated==null)split.is_estimated=0;
+      return split;
+    });
+  }
   async function ensureEdition(raceId){
     const data=await loadCore();
     const id=Number(raceId);
@@ -94,7 +111,8 @@
       const globalName=editionGlobal(entry);
       const bundle=await readJsonOrScript(entry.json,entry.js,globalName);
       if(Number(bundle.race_id)!==id)throw new Error(`Fel edition bundle: väntade ${id}, fick ${bundle.race_id}`);
-      root.UltravasanDataIndex?.appendSplits?.(data,bundle.splits||[]);
+      const hydrated=hydrateEditionSplits(data,bundle.splits||[]);
+      root.UltravasanDataIndex?.appendSplits?.(data,hydrated);
       data.loadedRaceIds.add(id);
       if(root&&typeof root.dispatchEvent==='function'){
         root.dispatchEvent(new CustomEvent('ultravasan:edition-loaded',{detail:{raceId:id,splitCount:(bundle.splits||[]).length}}));
