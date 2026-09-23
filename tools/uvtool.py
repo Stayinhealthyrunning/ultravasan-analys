@@ -1246,17 +1246,19 @@ def write_modular_web_data(
     *,
     public_prefix: str = "data/",
 ) -> dict[str, Any]:
-    """Write race-family chunks plus a small browser routing catalogue.
+    """Write deterministic race-family and race-edition browser chunks.
 
+    Family chunks back the main analysis/history surface. Edition chunks are the
+    finer U3 transport used by direct map links and multi-edition duels so one
+    selected runner never forces the browser to download an entire race family.
     The legacy monolith remains the canonical parity source during U3 rollout.
-    Each modular family payload keeps the exact public result/split rows for its
-    editions; only transport/storage is changed.
     """
     family_by_race_key = {
         race["race_key"]: race.get("race_family")
         for race in config.get("races", [])
         if race.get("race_family")
     }
+    race_by_id = {int(race["id"]): race for race in payload["races"]}
     family_by_race_id: dict[int, str] = {}
     for race in payload["races"]:
         family = family_by_race_key.get(race["race_key"])
@@ -1267,6 +1269,11 @@ def write_modular_web_data(
     output_dir.mkdir(parents=True, exist_ok=True)
     total_results = len(payload["results"])
     total_splits = len(payload["splits"])
+    global_totals = {
+        "races": len(payload["races"]),
+        "results": total_results,
+        "splits": total_splits,
+    }
     catalog: dict[str, Any] = {
         "schema_version": 1,
         "mode": "modular",
@@ -1276,32 +1283,94 @@ def write_modular_web_data(
             "json": public_prefix + "ultravasan.json",
             "js": public_prefix + "ultravasan-data.js",
         },
-        "totals": {
-            "races": len(payload["races"]),
-            "results": total_results,
-            "splits": total_splits,
-        },
+        "totals": global_totals,
         "families": {},
+        "editions": {},
         "result_family": {},
+        "result_edition": {},
     }
 
     results_by_family: dict[str, list[dict[str, Any]]] = {"uv90": [], "uv45": []}
+    results_by_race: dict[int, list[dict[str, Any]]] = {
+        race_id: [] for race_id in race_by_id
+    }
     for result in payload["results"]:
-        family = family_by_race_id[int(result["race_id"])]
+        race_id = int(result["race_id"])
+        family = family_by_race_id[race_id]
+        race_key = race_by_id[race_id]["race_key"]
         results_by_family[family].append(result)
+        results_by_race[race_id].append(result)
         catalog["result_family"][str(result["id"])] = family
+        catalog["result_edition"][str(result["id"])] = race_key
 
     result_family_lookup = {
         int(result["id"]): family
         for family, rows in results_by_family.items()
         for result in rows
     }
+    result_race_lookup = {
+        int(result["id"]): int(result["race_id"])
+        for result in payload["results"]
+    }
     splits_by_family: dict[str, list[dict[str, Any]]] = {"uv90": [], "uv45": []}
+    splits_by_race: dict[int, list[dict[str, Any]]] = {
+        race_id: [] for race_id in race_by_id
+    }
     for split in payload["splits"]:
-        family = result_family_lookup.get(int(split["result_id"]))
-        if family is None:
+        result_id = int(split["result_id"])
+        family = result_family_lookup.get(result_id)
+        race_id = result_race_lookup.get(result_id)
+        if family is None or race_id is None:
             raise RuntimeError(f"Split references unknown public result {split['result_id']}")
         splits_by_family[family].append(split)
+        splits_by_race[race_id].append(split)
+
+    def scoped_payload(
+        *,
+        scope: dict[str, Any],
+        race_ids: set[int],
+        results: list[dict[str, Any]],
+        splits: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return {
+            "meta": {
+                **payload["meta"],
+                "data_scope": scope,
+                "global_totals": global_totals,
+            },
+            "races": [race for race in payload["races"] if int(race["id"]) in race_ids],
+            "checkpoints": [
+                checkpoint for checkpoint in payload["checkpoints"]
+                if int(checkpoint["race_id"]) in race_ids
+            ],
+            "results": results,
+            "splits": splits,
+            "stats": {
+                key: value for key, value in payload["stats"].items()
+                if int(key) in race_ids
+            },
+            "sources": payload["sources"],
+        }
+
+    def write_chunk(
+        *,
+        stem: str,
+        global_name: str,
+        global_key: str,
+        chunk_payload: dict[str, Any],
+    ) -> tuple[Path, Path]:
+        compact = json.dumps(chunk_payload, ensure_ascii=False, separators=(",", ":"))
+        json_path = output_dir / f"{stem}.json"
+        js_path = output_dir / f"{stem}.js"
+        json_path.write_text(compact, encoding="utf-8")
+        js_path.write_text(
+            f"window.{global_name}=window.{global_name}||{{}};"
+            f"window.{global_name}[{json.dumps(global_key)}]="
+            + compact
+            + ";\n",
+            encoding="utf-8",
+        )
+        return json_path, js_path
 
     for family in ("uv90", "uv45"):
         race_ids = {
@@ -1310,46 +1379,60 @@ def write_modular_web_data(
         }
         family_results = results_by_family[family]
         family_splits = splits_by_family[family]
-        family_payload = {
-            "meta": {
-                **payload["meta"],
-                "data_scope": {"kind": "race-family", "race_family": family},
-                "global_totals": {
-                    "races": len(payload["races"]),
-                    "results": total_results,
-                    "splits": total_splits,
-                },
-            },
-            "races": [race for race in payload["races"] if int(race["id"]) in race_ids],
-            "checkpoints": [
-                checkpoint for checkpoint in payload["checkpoints"]
-                if int(checkpoint["race_id"]) in race_ids
-            ],
-            "results": family_results,
-            "splits": family_splits,
-            "stats": {
-                key: value for key, value in payload["stats"].items()
-                if int(key) in race_ids
-            },
-            "sources": payload["sources"],
-        }
-        compact = json.dumps(family_payload, ensure_ascii=False, separators=(",", ":"))
+        family_payload = scoped_payload(
+            scope={"kind": "race-family", "race_family": family},
+            race_ids=race_ids,
+            results=family_results,
+            splits=family_splits,
+        )
         stem = f"ultravasan-{family}"
-        json_path = output_dir / f"{stem}.json"
-        js_path = output_dir / f"{stem}.js"
-        json_path.write_text(compact, encoding="utf-8")
-        js_path.write_text(
-            "window.ULTRAVASAN_DATA_FAMILIES=window.ULTRAVASAN_DATA_FAMILIES||{};"
-            f"window.ULTRAVASAN_DATA_FAMILIES[{json.dumps(family)}]="
-            + compact
-            + ";\n",
-            encoding="utf-8",
+        json_path, js_path = write_chunk(
+            stem=stem,
+            global_name="ULTRAVASAN_DATA_FAMILIES",
+            global_key=family,
+            chunk_payload=family_payload,
         )
         catalog["families"][family] = {
             "race_ids": sorted(race_ids),
             "races": len(race_ids),
             "results": len(family_results),
             "splits": len(family_splits),
+            "json": public_prefix + json_path.name,
+            "js": public_prefix + js_path.name,
+            "json_bytes": json_path.stat().st_size,
+            "js_bytes": js_path.stat().st_size,
+        }
+
+    for race in payload["races"]:
+        race_id = int(race["id"])
+        race_key = race["race_key"]
+        family = family_by_race_id[race_id]
+        edition_results = results_by_race[race_id]
+        edition_splits = splits_by_race[race_id]
+        edition_payload = scoped_payload(
+            scope={
+                "kind": "race-edition",
+                "race_family": family,
+                "race_key": race_key,
+                "race_id": race_id,
+            },
+            race_ids={race_id},
+            results=edition_results,
+            splits=edition_splits,
+        )
+        stem = f"ultravasan-edition-{race_key}"
+        json_path, js_path = write_chunk(
+            stem=stem,
+            global_name="ULTRAVASAN_DATA_EDITIONS",
+            global_key=race_key,
+            chunk_payload=edition_payload,
+        )
+        catalog["editions"][race_key] = {
+            "race_id": race_id,
+            "year": race.get("year"),
+            "race_family": family,
+            "results": len(edition_results),
+            "splits": len(edition_splits),
             "json": public_prefix + json_path.name,
             "js": public_prefix + js_path.name,
             "json_bytes": json_path.stat().st_size,
