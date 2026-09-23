@@ -57,51 +57,82 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     merged_checkpoints: dict[tuple[int, str], dict[str, Any]] = {}
     merged_results: dict[int, dict[str, Any]] = {}
     merged_splits: dict[tuple[int, str], dict[str, Any]] = {}
-    family_sizes: dict[str, int] = {}
+    family_core_sizes: dict[str, int] = {}
+    family_split_sizes: dict[str, int] = {}
     edition_sizes: dict[str, int] = {}
 
     for family, spec in catalog["families"].items():
-        chunk_path = output_dir / Path(spec["json"]).name
-        js_path = output_dir / Path(spec["js"]).name
-        if not chunk_path.exists() or not js_path.exists():
-            raise RuntimeError(f"Missing chunk files for {family}")
-        chunk = load_json(chunk_path)
-        scope = chunk.get("meta", {}).get("data_scope", {})
-        if scope != {"kind": "race-family", "race_family": family}:
-            raise RuntimeError(f"Wrong data scope for {family}: {scope!r}")
+        if any(key in spec for key in ("json", "js", "json_bytes", "js_bytes")):
+            raise RuntimeError(f"Legacy full-family transport still present for {family}")
+        core_spec = spec.get("core") or {}
+        split_spec = spec.get("split_data") or {}
+        core_path = output_dir / Path(core_spec["json"]).name
+        core_js_path = output_dir / Path(core_spec["js"]).name
+        split_path = output_dir / Path(split_spec["json"]).name
+        split_js_path = output_dir / Path(split_spec["js"]).name
+        if not all(path.exists() for path in (core_path, core_js_path, split_path, split_js_path)):
+            raise RuntimeError(f"Missing progressive family chunk files for {family}")
 
-        for race in chunk["races"]:
+        core = load_json(core_path)
+        split_data = load_json(split_path)
+        if core.get("meta", {}).get("data_scope", {}) != {
+            "kind": "race-family-core",
+            "race_family": family,
+        }:
+            raise RuntimeError(f"Wrong core data scope for {family}")
+        if split_data.get("meta", {}).get("data_scope", {}) != {
+            "kind": "race-family-splits",
+            "race_family": family,
+        }:
+            raise RuntimeError(f"Wrong split data scope for {family}")
+        if core.get("splits") != []:
+            raise RuntimeError(f"Family core unexpectedly contains splits for {family}")
+        if any(split_data.get(key) for key in ("races", "checkpoints", "results", "sources")):
+            raise RuntimeError(f"Family split module contains duplicated core rows for {family}")
+        if split_data.get("stats") != {}:
+            raise RuntimeError(f"Family split module contains duplicated stats for {family}")
+
+        for race in core["races"]:
             expected = race_family_by_key.get(race["race_key"])
             if expected != family:
                 raise RuntimeError(
-                    f"{race['race_key']} belongs to {expected!r}, not chunk {family!r}"
+                    f"{race['race_key']} belongs to {expected!r}, not family {family!r}"
                 )
-        for result in chunk["results"]:
+        for result in core["results"]:
             race = source_races.get(int(result["race_id"]))
             if not race or race_family_by_key.get(race["race_key"]) != family:
                 raise RuntimeError(f"Result {result['id']} is routed to wrong family")
 
-        merged_races.update(keyed(chunk["races"], lambda row: int(row["id"])))
+        merged_races.update(keyed(core["races"], lambda row: int(row["id"])))
         merged_checkpoints.update(
-            keyed(chunk["checkpoints"], lambda row: (int(row["race_id"]), row["checkpoint_key"]))
+            keyed(core["checkpoints"], lambda row: (int(row["race_id"]), row["checkpoint_key"]))
         )
-        merged_results.update(keyed(chunk["results"], lambda row: int(row["id"])))
+        merged_results.update(keyed(core["results"], lambda row: int(row["id"])))
         merged_splits.update(
-            keyed(chunk["splits"], lambda row: (int(row["result_id"]), row["checkpoint_key"]))
+            keyed(split_data["splits"], lambda row: (int(row["result_id"]), row["checkpoint_key"]))
         )
 
-        expected_js = (
-            "window.ULTRAVASAN_DATA_FAMILIES=window.ULTRAVASAN_DATA_FAMILIES||{};"
-            f"window.ULTRAVASAN_DATA_FAMILIES[{json.dumps(family)}]="
-            + json.dumps(chunk, ensure_ascii=False, separators=(",", ":"))
+        expected_core_js = (
+            "window.ULTRAVASAN_DATA_FAMILY_CORES=window.ULTRAVASAN_DATA_FAMILY_CORES||{};"
+            f"window.ULTRAVASAN_DATA_FAMILY_CORES[{json.dumps(family)}]="
+            + json.dumps(core, ensure_ascii=False, separators=(",", ":"))
             + ";\n"
         )
-        if js_path.read_text(encoding="utf-8") != expected_js:
-            raise RuntimeError(f"JSON/JavaScript payload mismatch for {family}")
-        family_sizes[family] = chunk_path.stat().st_size
+        expected_split_js = (
+            "window.ULTRAVASAN_DATA_FAMILY_SPLITS=window.ULTRAVASAN_DATA_FAMILY_SPLITS||{};"
+            f"window.ULTRAVASAN_DATA_FAMILY_SPLITS[{json.dumps(family)}]="
+            + json.dumps(split_data, ensure_ascii=False, separators=(",", ":"))
+            + ";\n"
+        )
+        if core_js_path.read_text(encoding="utf-8") != expected_core_js:
+            raise RuntimeError(f"Core JSON/JavaScript payload mismatch for {family}")
+        if split_js_path.read_text(encoding="utf-8") != expected_split_js:
+            raise RuntimeError(f"Split JSON/JavaScript payload mismatch for {family}")
 
-        if spec["results"] != len(chunk["results"]) or spec["splits"] != len(chunk["splits"]):
+        if spec["results"] != len(core["results"]) or spec["splits"] != len(split_data["splits"]):
             raise RuntimeError(f"Catalog count mismatch for {family}")
+        family_core_sizes[family] = core_path.stat().st_size
+        family_split_sizes[family] = split_path.stat().st_size
 
     if set(catalog.get("editions", {})) != {
         str(int(race["id"])) for race in source["races"]
@@ -216,7 +247,8 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             family: {
                 "results": catalog["families"][family]["results"],
                 "splits": catalog["families"][family]["splits"],
-                "json_bytes": family_sizes[family],
+                "core_json_bytes": family_core_sizes[family],
+                "split_json_bytes": family_split_sizes[family],
             }
             for family in ("uv90", "uv45")
         },
@@ -227,7 +259,8 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             "total_json_bytes": sum(edition_sizes.values()),
         },
         "catalog_bytes": catalog_path.stat().st_size,
-        "largest_family_bytes": max(family_sizes.values()),
+        "largest_family_core_bytes": max(family_core_sizes.values()),
+        "largest_family_split_bytes": max(family_split_sizes.values()),
         "largest_edition_bytes": max(edition_sizes.values()),
     }
 
@@ -252,12 +285,12 @@ def main() -> None:
         summary = validate(source, args.output_dir, config)
         source_bytes = args.source.stat().st_size
         summary["legacy_bytes"] = source_bytes
-        if summary["largest_family_bytes"] >= source_bytes:
+        if summary["largest_family_core_bytes"] >= source_bytes:
             raise SystemExit(
-                "Modular export does not reduce the largest initial family payload"
+                "Progressive family core does not reduce the initial payload"
             )
-        summary["largest_family_reduction_pct"] = round(
-            100 * (1 - summary["largest_family_bytes"] / source_bytes), 1
+        summary["largest_family_core_reduction_pct"] = round(
+            100 * (1 - summary["largest_family_core_bytes"] / source_bytes), 1
         )
         summary["largest_edition_reduction_pct"] = round(
             100 * (1 - summary["largest_edition_bytes"] / source_bytes), 1
