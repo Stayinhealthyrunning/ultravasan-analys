@@ -1,5 +1,5 @@
 'use strict';
-const state={data:null,dataPhase:'none',filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null,raceFamily:'uv90'};
+const state=window.UltravasanAppState.createMain();
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const fmtTime=s=>{if(s==null)return '–';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.round(s%60);return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fixedFinishTimeBins=(times,step=900)=>{const values=(times||[]).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);if(!values.length)return{start:null,step,bins:[]};const start=Math.floor(values[0]/step)*step,count=Math.floor((values.at(-1)-start)/step)+1,bins=Array.from({length:count},(_,i)=>({from:start+i*step,to:start+(i+1)*step,count:0}));for(const value of values)bins[Math.floor((value-start)/step)].count++;return{start,step,bins}};
