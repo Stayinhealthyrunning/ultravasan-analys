@@ -32,6 +32,8 @@ from urllib.parse import parse_qs, urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
+import identity_contracts
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data" / "ultravasan.sqlite"
 DEFAULT_CONFIG = ROOT / "config" / "races.json"
@@ -421,6 +423,7 @@ def ensure_schema_migrations(conn: sqlite3.Connection) -> None:
     for name, sql_type in additions.items():
         if name not in split_columns:
             conn.execute(f"ALTER TABLE splits ADD COLUMN {name} {sql_type}")
+    identity_contracts.ensure_identity_schema(conn)
     conn.commit()
 
 
@@ -819,38 +822,64 @@ def _candidate_is_safe_for_race(
 
 
 def find_or_create_athlete(conn: sqlite3.Connection, race_id: int, parsed: ParsedResult, source_id: int) -> int:
-    ext = conn.execute("SELECT athlete_id FROM athlete_external_ids WHERE source_id=? AND external_id=?", (source_id, parsed.source_result_id)).fetchone()
-    if ext:
-        return ext[0]
-    name = parsed.name or f"Okänd {parsed.source_result_id}"
-    norm = normalize(name)
+    """Resolve only deterministic provider identity; never merge people by name."""
+    identity_contracts.ensure_identity_schema(conn)
     source_code_row = conn.execute("SELECT code FROM sources WHERE id=?", (source_id,)).fetchone()
     source_code = source_code_row[0] if source_code_row else None
-    # VasaNerd's idpe is a stable person identifier across race years. When it
-    # is new, create a distinct athlete even if another runner has the same
-    # published name. Subsequent years link through athlete_external_ids.
-    if source_code == "vasanerd":
-        compatible = []
-    else:
-        candidates = conn.execute("SELECT * FROM athletes WHERE normalized_name=?", (norm,)).fetchall()
-        compatible = [
-            c for c in candidates
-            if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"])
-            and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])
-            and _candidate_is_safe_for_race(conn, c["id"], race_id, source_id, parsed)
-        ]
-    if len(compatible) == 1:
-        athlete_id = compatible[0]["id"]
-    else:
-        cur = conn.execute("""
-          INSERT INTO athletes(canonical_name,normalized_name,sex,birth_year,nationality,city,athlete_match_status)
-          VALUES(?,?,?,?,?,?,?)
-        """, (name, norm, parsed.sex, parsed.birth_year, parsed.nationality, parsed.city, "source-id" if source_code == "vasanerd" else "unverified"))
-        athlete_id = cur.lastrowid
-    conn.execute("""
-      INSERT OR IGNORE INTO athlete_external_ids(athlete_id,source_id,external_id,profile_url,confidence)
-      VALUES(?,?,?,?,?)
-    """, (athlete_id, source_id, parsed.source_result_id, parsed.source_url, 1.0))
+
+    ext = conn.execute(
+        "SELECT athlete_id FROM athlete_external_ids WHERE source_id=? AND external_id=?",
+        (source_id, parsed.source_result_id),
+    ).fetchone()
+    if ext:
+        athlete_id = ext[0]
+        identity_contracts.record_external_identity(
+            conn,
+            athlete_id=athlete_id,
+            source_id=source_id,
+            external_id=parsed.source_result_id,
+            profile_url=parsed.source_url,
+            race_id=race_id,
+        )
+        return athlete_id
+
+    # U2 identity contract: a new provider record is a new local athlete unless
+    # the provider identifier itself is person-scoped. Name, sex, birth year,
+    # class, city and other demographics are candidate evidence only and must
+    # never create an automatic cross-edition person link.
+    name = parsed.name or f"Okänd {parsed.source_result_id}"
+    norm = normalize(name)
+    cur = conn.execute(
+        """
+        INSERT INTO athletes(canonical_name,normalized_name,sex,birth_year,nationality,city,athlete_match_status)
+        VALUES(?,?,?,?,?,?,?)
+        """,
+        (
+            name,
+            norm,
+            parsed.sex,
+            parsed.birth_year,
+            parsed.nationality,
+            parsed.city,
+            "source-id" if source_code == "vasanerd" else "unverified",
+        ),
+    )
+    athlete_id = cur.lastrowid
+    conn.execute(
+        """
+        INSERT INTO athlete_external_ids(athlete_id,source_id,external_id,profile_url,confidence)
+        VALUES(?,?,?,?,?)
+        """,
+        (athlete_id, source_id, parsed.source_result_id, parsed.source_url, 1.0),
+    )
+    identity_contracts.record_external_identity(
+        conn,
+        athlete_id=athlete_id,
+        source_id=source_id,
+        external_id=parsed.source_result_id,
+        profile_url=parsed.source_url,
+        race_id=race_id,
+    )
     return athlete_id
 
 
@@ -884,6 +913,15 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         class_place=excluded.class_place,pace_seconds_per_km=excluded.pace_seconds_per_km,raw_json=excluded.raw_json,imported_at=CURRENT_TIMESTAMP
     """, data)
     result_id = conn.execute("SELECT id FROM results WHERE race_id=? AND source_id=? AND source_result_id=?", (race_id, source_id, parsed.source_result_id)).fetchone()[0]
+    identity_contracts.record_external_identity(
+        conn,
+        athlete_id=athlete_id,
+        source_id=source_id,
+        external_id=parsed.source_result_id,
+        profile_url=parsed.source_url,
+        race_id=race_id,
+        result_id=result_id,
+    )
     cp_by_key = {c["checkpoint_key"]: c for c in checkpoints}
     last_elapsed = 0
     last_distance = 0.0
