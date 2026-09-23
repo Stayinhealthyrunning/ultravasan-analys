@@ -277,9 +277,10 @@
       ['pace_dispersion','field','pace_iqr_seconds_per_km'],
       ['dnf_exit_rate','field','dnf_exit_rate_pct'],
     ];
+    const eligibleSegments=(segments||[]).filter(segment=>segment?.field?.sufficient_sample===true);
     const distributions=Object.fromEntries(definitions.map(([name,scope,key])=>[
       name,
-      segments.map(segment=>segment?.[scope]?.[key]).filter(finite).map(Number)
+      eligibleSegments.map(segment=>segment?.[scope]?.[key]).filter(finite).map(Number)
     ]));
 
     const scored=segments.map(segment=>{
