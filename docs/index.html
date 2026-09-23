@@ -15,17 +15,18 @@
 <meta content="Analysera resultat, mellantider, fart och loppförlopp för Ultravasan 90 och Ultravasan 45." name="twitter:description"/>
 <meta content="https://stayinhealthyrunning.github.io/ultravasan-analys/assets/salen-mora-header.png" name="twitter:image"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260923-u7" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260923-u8" rel="stylesheet"/>
 <link href="assets/runner-replay.css?v=20260716-livecompare5" rel="stylesheet"/>
 <link href="data:," rel="icon"/>
 </head>
 <body>
+<a class="skip-link" href="#mainContent">Hoppa till analysinnehållet</a>
 <header class="hero hero-image-header"><img id="heroHeaderImage" alt="Sälen-Mora Splits – analysera din resa i Ultravasan från Sälen till Mora" class="hero-header-image" src="assets/salen-mora-header.png?v=20260713-multirace1"/></header>
 <div class="race-switch-shell">
-  <div class="race-switch" role="tablist" aria-label="Välj lopp">
-    <button class="race-switch-button active" id="raceSwitch90" data-race-family="uv90" role="tab" aria-selected="true"><span>Ultravasan</span><strong>90</strong><small>Sälen–Mora</small></button>
+  <div class="race-switch" role="group" aria-label="Välj lopp">
+    <button type="button" class="race-switch-button active" id="raceSwitch90" data-race-family="uv90" aria-pressed="true"><span>Ultravasan</span><strong>90</strong><small>Sälen–Mora</small></button>
     <span class="race-switch-track" aria-hidden="true"><i></i></span>
-    <button class="race-switch-button" id="raceSwitch45" data-race-family="uv45" role="tab" aria-selected="false"><span>Ultravasan</span><strong>45</strong><small>Oxberg–Mora</small></button>
+    <button type="button" class="race-switch-button" id="raceSwitch45" data-race-family="uv45" aria-pressed="false"><span>Ultravasan</span><strong>45</strong><small>Oxberg–Mora</small></button>
   </div>
   <div class="race-load-slot">
     <div class="race-load-status" id="raceLoadStatus" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
@@ -34,21 +35,42 @@
     </div>
   </div>
 </div>
-<main>
+<main id="mainContent" tabindex="-1">
+<h1 class="visually-hidden">Ultravasan 90 och 45 – resultat, loppanalys och historik</h1>
 <nav aria-label="Analysområden" class="analysis-nav panel">
 <div class="analysis-nav-scroll">
-<button class="analysis-nav-button active" data-target="overview">Översikt</button>
-<button class="analysis-nav-button" data-target="kon">Genusperspektiv</button>
-<button class="analysis-nav-button" data-target="klasser">Klasslabbet</button>
-<button class="analysis-nav-button" data-target="klubbar">Klubb- och ortsarenan</button>
-<button class="analysis-nav-button" data-target="lopare">Löpare</button>
-<button class="analysis-nav-button" data-target="kartduell">Kartduell</button>
+<button type="button" class="analysis-nav-button active" data-target="overview" aria-current="location">Översikt</button>
+<button type="button" class="analysis-nav-button" data-target="kon">Genusperspektiv</button>
+<button type="button" class="analysis-nav-button" data-target="klasser">Klasslabbet</button>
+<button type="button" class="analysis-nav-button" data-target="klubbar">Klubb- och ortsarenan</button>
+<button type="button" class="analysis-nav-button" data-target="lopare">Löpare</button>
+<button type="button" class="analysis-nav-button" data-target="kartduell">Kartduell</button>
 </div>
 <div class="analysis-nav-actions">
 <button class="nav-action" id="playYears" title="Spela loppåren i följd">▶ Spela år</button>
 <button class="nav-action" id="shareView" title="Kopiera en länk till aktuell vy">Dela vy</button>
 </div>
-</nav><section class="analysis-scope individual-scope runner-lookup-panel individual-runner-panel panel" id="individual-analysis"><div class="individual-runner-copy"><p class="eyebrow">Individuell loppanalys</p><h2>Analysera en löpares lopp i realtid</h2><p>Välj år eller sök i hela historiken. Klicka på ett namn för att i realtid analysera löparens lopp, mellantider, placering totalt, placering mot klass samt få prestationsinsikter</p></div><div class="individual-runner-search"><h3>Hitta en löpare</h3><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
+</nav>
+<section class="analysis-guide panel" aria-labelledby="analysisGuideTitle">
+  <div class="analysis-guide-intro">
+    <div><p class="eyebrow">METOD &amp; DATAKVALITET</p><h2 id="analysisGuideTitle">Så läser du analysen</h2><p>Verktyget skiljer på publicerade källvärden, beräknade mellanlägen och historiska jämförelser. När underlaget inte räcker visas hellre ett tomt värde än en gissning.</p></div>
+    <div class="analysis-guide-context" aria-live="polite" aria-atomic="true">
+      <strong id="analysisGuideContext">Läser loppdata…</strong>
+      <span id="analysisGuideDataStatus">Kontrollerar historik och passager</span>
+    </div>
+  </div>
+  <details id="analysisGuideDetails">
+    <summary>Metod, filter och jämförbarhet</summary>
+    <div class="analysis-guide-grid">
+      <article><span class="analysis-guide-mark source" aria-hidden="true">1</span><div><strong>Källvärde</strong><p>Sluttid, officiell passage, placering och status visas som publicerade observationer när de finns.</p></div></article>
+      <article><span class="analysis-guide-mark estimate" aria-hidden="true">2</span><div><strong>Beräknat</strong><p>Position mellan kontroller och vissa visualiseringar är rekonstruktioner. De märks som estimerade och ska inte läsas som individuell GPS.</p></div></article>
+      <article><span class="analysis-guide-mark compare" aria-hidden="true">3</span><div><strong>Jämförbart</strong><p>Fart- och sluttidstrender mellan år kräver samma CourseVersion eller ett explicit jämförbarhetskontrakt. Banbyten bryter prestationsserien.</p></div></article>
+      <article><span class="analysis-guide-mark filter" aria-hidden="true">4</span><div><strong>Aktuellt urval</strong><p>Kön, klass, klubb/ort och status filtrerar fältanalyserna. Individuell löparsökning och kartduell har egna val och blandas inte in i fälturvalet.</p></div></article>
+    </div>
+    <p class="analysis-guide-foot" id="analysisGuideFilterStatus">Inga fältfilter är aktiva.</p>
+  </details>
+</section>
+<section class="analysis-scope individual-scope runner-lookup-panel individual-runner-panel panel" id="individual-analysis"><div class="individual-runner-copy"><p class="eyebrow">Individuell loppanalys</p><h2>Analysera en löpares lopp i realtid</h2><p>Välj år eller sök i hela historiken. Klicka på ett namn för att i realtid analysera löparens lopp, mellantider, placering totalt, placering mot klass samt få prestationsinsikter</p></div><div class="individual-runner-search"><h3>Hitta en löpare</h3><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
 <label>Sök löpare<input autocomplete="off" id="nameFilter" placeholder="Namn eller startnummer" type="search"/></label>
 <div class="main-runner-suggestions" hidden="" id="mainRunnerSuggestions"></div>
 </div></div><div class="runner-favorites-panel" id="runnerFavorites"><div class="runner-favorites-head"><div><strong>Favoriter</strong><small>Sparade lopp på den här enheten</small></div><span id="runnerFavoritesCount">0</span></div><div class="runner-favorites-list" id="runnerFavoritesList"><span class="runner-favorites-empty">Inga sparade lopp ännu.</span></div></div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
@@ -310,9 +332,9 @@
 <script src="assets/runner-analysis.js?v=20260923-u5"></script>
 <script src="assets/runner-favorites.js?v=20260923-u5"></script>
 <script src="assets/course-intelligence.js?v=20260923-u6"></script>
-<script src="assets/app.js?v=20260923-u5c"></script>
+<script src="assets/app.js?v=20260923-u8"></script>
 <script src="assets/nerdlab.js?v=20260923-u7"></script>
 <script src="assets/class-evolution.js?v=20260923-u7"></script>
-<script src="assets/audience-analytics.js?v=20260923-u7"></script>
+<script src="assets/audience-analytics.js?v=20260923-u8"></script>
 </body>
 </html>
