@@ -15,8 +15,11 @@ import u2_baseline
 import u2_identity_migration
 import uvtool
 
+U3_BASELINE = ROOT / "reports" / "U3_BASELINE.json"
+
 
 @unittest.skipUnless(u2_baseline.DEFAULT_BASELINE.exists(), "U2 production baseline not applied yet")
+@unittest.skipIf(U3_BASELINE.exists(), "U2 exact web-data baseline is historical after U3 activation")
 class U2BaselineTests(unittest.TestCase):
     def test_checked_in_u2_data_matches_baseline(self) -> None:
         expected = json.loads(u2_baseline.DEFAULT_BASELINE.read_text(encoding="utf-8"))
