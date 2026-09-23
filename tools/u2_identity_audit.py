@@ -174,6 +174,9 @@ def audit(conn: sqlite3.Connection, db_path: Path) -> dict[str, Any]:
     no_person_evidence_multi_edition = 0
     fully_supported_person_athletes = 0
     partially_supported_person_athletes = 0
+    partially_supported_unsupported_rows = 0
+    partial_unsupported_by_race_family: Counter[str] = Counter()
+    partial_unsupported_by_race: Counter[str] = Counter()
     review_result_rows = 0
     classification_counts: Counter[str] = Counter()
     review_by_race_family: Counter[str] = Counter()
@@ -232,6 +235,11 @@ def audit(conn: sqlite3.Connection, db_path: Path) -> dict[str, Any]:
         elif has_person_evidence:
             classification = "partially-person-supported"
             partially_supported_person_athletes += 1
+            partially_supported_unsupported_rows += len(unsupported)
+            for row in unsupported:
+                family = "uv45" if row["race_key"].startswith("ultravasan45-") else "uv90" if row["race_key"].startswith("ultravasan90-") else "other"
+                partial_unsupported_by_race_family[family] += 1
+                partial_unsupported_by_race[row["race_key"]] += 1
         elif len(race_ids) > 1:
             classification = "review-multiedition-no-person-evidence"
             no_person_evidence_multi_edition += 1
@@ -273,6 +281,11 @@ def audit(conn: sqlite3.Connection, db_path: Path) -> dict[str, Any]:
         "vasanerd_person_athletes": vasanerd_person_athletes,
         "fully_supported_person_athletes": fully_supported_person_athletes,
         "partially_supported_person_athletes": partially_supported_person_athletes,
+        "partially_supported_unsupported_results": {
+            "result_rows": partially_supported_unsupported_rows,
+            "result_rows_by_race_family": dict(sorted(partial_unsupported_by_race_family.items())),
+            "result_rows_by_race": dict(sorted(partial_unsupported_by_race.items())),
+        },
         "review_multiedition_no_person_evidence": {
             "athletes": no_person_evidence_multi_edition,
             "result_rows": review_result_rows,
@@ -326,6 +339,7 @@ def summary(report: dict[str, Any]) -> dict[str, Any]:
         "vasanerd_person_athletes": report["vasanerd_person_athletes"],
         "fully_supported_person_athletes": report["fully_supported_person_athletes"],
         "partially_supported_person_athletes": report["partially_supported_person_athletes"],
+        "partially_supported_unsupported_results": report["partially_supported_unsupported_results"],
         "review_multiedition_no_person_evidence": {
             key: value
             for key, value in report["review_multiedition_no_person_evidence"].items()
