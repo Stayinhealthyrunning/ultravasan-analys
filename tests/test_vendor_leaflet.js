@@ -25,8 +25,10 @@ assert.ok(license.includes('BSD 2-Clause License'),'Leaflet BSD-2-Clause-licens 
 assert.ok(info.includes('Leaflet 1.9.4')&&info.includes('npm leaflet@1.9.4'),'vendor-metadata ska låsa källa och version');
 
 const mapSource=fs.readFileSync(path.join(root,'docs/assets/map.js'),'utf8');
-assert.ok(mapSource.includes("LEAFLET_VENDOR_ROOT='vendor/leaflet-1.9.4'"),'kartappen ska använda lokal Leaflet-root');
-assert.ok(mapSource.includes('LEAFLET_VENDOR_ROOT}/leaflet.js')&&mapSource.includes('LEAFLET_VENDOR_ROOT}/leaflet.css'),'kartappen ska ladda både lokal JS och CSS');
-assert.ok(!mapSource.includes('unpkg.com/leaflet')&&!mapSource.includes('cdnjs.cloudflare.com/ajax/libs/leaflet'),'runtime får inte hämta Leaflet från extern CDN');
+const engineSource=fs.readFileSync(path.join(root,'docs/assets/map-engine.js'),'utf8');
+assert.ok(engineSource.includes("LEAFLET_VENDOR_ROOT='vendor/leaflet-1.9.4'"),'MapEngine ska äga lokal Leaflet-root');
+assert.ok(engineSource.includes('vendorRoot}/leaflet.js')&&engineSource.includes('vendorRoot}/leaflet.css'),'MapEngine ska ladda både lokal JS och CSS');
+assert.ok(mapSource.includes('mapEngine.ensureLeaflet'),'kartappen ska delegera Leaflet-bootstrap till MapEngine');
+assert.ok(!mapSource.includes('unpkg.com/leaflet')&&!engineSource.includes('unpkg.com/leaflet'),'runtime får inte hämta Leaflet från extern CDN');
 
 console.log('OK: Leaflet 1.9.4 är vendrad lokalt med officiell SRI, images och BSD-licens');
