@@ -57,24 +57,42 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     merged_checkpoints: dict[tuple[int, str], dict[str, Any]] = {}
     merged_results: dict[int, dict[str, Any]] = {}
     merged_splits: dict[tuple[int, str], dict[str, Any]] = {}
+    family_shell_sizes: dict[str, int] = {}
     family_core_sizes: dict[str, int] = {}
     family_split_sizes: dict[str, int] = {}
+    edition_core_sizes: dict[str, int] = {}
     edition_sizes: dict[str, int] = {}
 
     for family, spec in catalog["families"].items():
         if any(key in spec for key in ("json", "js", "json_bytes", "js_bytes")):
             raise RuntimeError(f"Legacy full-family transport still present for {family}")
+        shell_spec = spec.get("shell") or {}
         core_spec = spec.get("core") or {}
         split_spec = spec.get("split_data") or {}
+        shell_path = output_dir / Path(shell_spec["json"]).name
         core_path = output_dir / Path(core_spec["json"]).name
         core_js_path = output_dir / Path(core_spec["js"]).name
         split_path = output_dir / Path(split_spec["json"]).name
         split_js_path = output_dir / Path(split_spec["js"]).name
-        if not all(path.exists() for path in (core_path, core_js_path, split_path, split_js_path)):
+        if "js" in shell_spec:
+            raise RuntimeError(f"Family shell must be JSON-only for {family}")
+        if not all(path.exists() for path in (shell_path, core_path, core_js_path, split_path, split_js_path)):
             raise RuntimeError(f"Missing progressive family chunk files for {family}")
 
+        shell = load_json(shell_path)
         core = load_json(core_path)
         split_data = load_json(split_path)
+        if shell.get("meta", {}).get("data_scope", {}) != {
+            "kind": "race-family-shell",
+            "race_family": family,
+        }:
+            raise RuntimeError(f"Wrong shell data scope for {family}")
+        if shell.get("results") != [] or shell.get("splits") != []:
+            raise RuntimeError(f"Family shell unexpectedly contains result/split rows for {family}")
+        for key in ("races", "checkpoints", "stats", "sources"):
+            if shell.get(key) != core.get(key):
+                raise RuntimeError(f"Family shell/core {key} mismatch for {family}")
+
         if core.get("meta", {}).get("data_scope", {}) != {
             "kind": "race-family-core",
             "race_family": family,
@@ -131,6 +149,14 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
 
         if spec["results"] != len(core["results"]) or spec["splits"] != len(split_data["splits"]):
             raise RuntimeError(f"Catalog count mismatch for {family}")
+        family_races = [race for race in core["races"]]
+        expected_default = max(
+            family_races,
+            key=lambda race: (int(race.get("year") or 0), int(race["id"])),
+        )
+        if spec.get("default_race_id") != int(expected_default["id"]):
+            raise RuntimeError(f"Wrong default race for {family}")
+        family_shell_sizes[family] = shell_path.stat().st_size
         family_core_sizes[family] = core_path.stat().st_size
         family_split_sizes[family] = split_path.stat().st_size
 
@@ -152,6 +178,19 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             f"unexpected_js={sorted(actual_edition_js)}"
         )
 
+    expected_race_core_json = {
+        f"ultravasan-race-core-{race['race_key']}.json" for race in source["races"]
+    }
+    actual_race_core_json = {path.name for path in output_dir.glob("ultravasan-race-core-*.json")}
+    actual_race_core_js = {path.name for path in output_dir.glob("ultravasan-race-core-*.js")}
+    if actual_race_core_json != expected_race_core_json or actual_race_core_js:
+        raise RuntimeError(
+            "RaceEdition core file set differs from catalog: "
+            f"json_extra={sorted(actual_race_core_json-expected_race_core_json)}, "
+            f"json_missing={sorted(expected_race_core_json-actual_race_core_json)}, "
+            f"unexpected_js={sorted(actual_race_core_js)}"
+        )
+
     edition_races: dict[int, dict[str, Any]] = {}
     edition_checkpoints: dict[tuple[int, str], dict[str, Any]] = {}
     edition_results: dict[int, dict[str, Any]] = {}
@@ -161,13 +200,31 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         race_key = race["race_key"]
         edition_key = str(int(race["id"]))
         spec = catalog["editions"][edition_key]
+        core_spec = spec.get("core") or {}
+        core_path = output_dir / Path(core_spec["json"]).name
         chunk_path = output_dir / Path(spec["json"]).name
+        if "js" in core_spec:
+            raise RuntimeError(f"Edition core {race_key} must be JSON-only")
+        if not core_path.exists():
+            raise RuntimeError(f"Missing edition core JSON chunk for {race_key}")
         if "js" in spec:
             raise RuntimeError(f"Edition {race_key} must be JSON-only")
         if not chunk_path.exists():
             raise RuntimeError(f"Missing edition JSON chunk for {race_key}")
+        edition_core = load_json(core_path)
         chunk = load_json(chunk_path)
         family = race_family_by_key[race_key]
+        expected_core_scope = {
+            "kind": "race-edition-core",
+            "race_family": family,
+            "race_key": race_key,
+            "race_id": int(race["id"]),
+        }
+        if edition_core.get("meta", {}).get("data_scope", {}) != expected_core_scope:
+            raise RuntimeError(f"Wrong core data scope for edition {race_key}")
+        if edition_core.get("splits") != []:
+            raise RuntimeError(f"Edition core unexpectedly contains splits for {race_key}")
+
         expected_scope = {
             "kind": "race-edition",
             "race_family": family,
@@ -176,6 +233,10 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         }
         if chunk.get("meta", {}).get("data_scope", {}) != expected_scope:
             raise RuntimeError(f"Wrong data scope for {race_key}")
+
+        for key in ("races", "checkpoints", "results", "stats", "sources"):
+            if edition_core.get(key) != chunk.get(key):
+                raise RuntimeError(f"Edition core/full {key} mismatch for {race_key}")
 
         if chunk["races"] != [race]:
             raise RuntimeError(f"Edition {race_key} must contain exactly its race row")
@@ -201,6 +262,7 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             raise RuntimeError(f"Catalog race_family mismatch for {race_key}")
         if spec["results"] != len(chunk["results"]) or spec["splits"] != len(chunk["splits"]):
             raise RuntimeError(f"Catalog count mismatch for edition {race_key}")
+        edition_core_sizes[race_key] = core_path.stat().st_size
         edition_sizes[race_key] = chunk_path.stat().st_size
 
     if edition_races != source_races:
@@ -247,6 +309,7 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             family: {
                 "results": catalog["families"][family]["results"],
                 "splits": catalog["families"][family]["splits"],
+                "shell_json_bytes": family_shell_sizes[family],
                 "core_json_bytes": family_core_sizes[family],
                 "split_json_bytes": family_split_sizes[family],
             }
@@ -254,13 +317,18 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         },
         "editions": {
             "count": len(edition_sizes),
+            "largest_core_json_bytes": max(edition_core_sizes.values()),
+            "smallest_core_json_bytes": min(edition_core_sizes.values()),
+            "total_core_json_bytes": sum(edition_core_sizes.values()),
             "largest_json_bytes": max(edition_sizes.values()),
             "smallest_json_bytes": min(edition_sizes.values()),
             "total_json_bytes": sum(edition_sizes.values()),
         },
         "catalog_bytes": catalog_path.stat().st_size,
+        "largest_family_shell_bytes": max(family_shell_sizes.values()),
         "largest_family_core_bytes": max(family_core_sizes.values()),
         "largest_family_split_bytes": max(family_split_sizes.values()),
+        "largest_edition_core_bytes": max(edition_core_sizes.values()),
         "largest_edition_bytes": max(edition_sizes.values()),
     }
 
@@ -291,6 +359,17 @@ def main() -> None:
             )
         summary["largest_family_core_reduction_pct"] = round(
             100 * (1 - summary["largest_family_core_bytes"] / source_bytes), 1
+        )
+        summary["largest_active_edition_core_reduction_pct"] = round(
+            100 * (
+                1
+                - (
+                    summary["largest_family_shell_bytes"]
+                    + summary["largest_edition_core_bytes"]
+                )
+                / source_bytes
+            ),
+            1,
         )
         summary["largest_edition_reduction_pct"] = round(
             100 * (1 - summary["largest_edition_bytes"] / source_bytes), 1
