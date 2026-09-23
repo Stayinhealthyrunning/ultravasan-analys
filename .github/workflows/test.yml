@@ -39,6 +39,15 @@ jobs:
       - name: Audita U2 legacy-identiteter read-only
         run: python tools/u2_identity_audit.py --expect-u0-audit --report "$RUNNER_TEMP/u2-identity-audit.json"
 
+      - name: Provkör U2-identitetsmigration på databaskopia
+        run: |
+          python tools/u2_identity_migration.py \
+            --copy-from data/ultravasan.sqlite \
+            --db "$RUNNER_TEMP/u2-migrated.sqlite" \
+            --apply \
+            --confirm MIGRATE-U2-IDENTITY \
+            --report "$RUNNER_TEMP/u2-identity-migration.json"
+
       - name: Kör Python-tester
         run: python -m pytest -q
 
