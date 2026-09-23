@@ -1,0 +1,190 @@
+name: Migrera U2-identiteter
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Jag vill migrera den incheckade produktionsdatabasen till U2-identitetsmodellen"
+        required: true
+        default: false
+        type: boolean
+      confirmation_text:
+        description: "Skriv exakt: MIGRATE-U2-IDENTITY"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-u2-identity-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: ${{ inputs.confirm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Hämta main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installera testberoenden
+        run: python -m pip install -r requirements-test.txt
+
+      - name: Säkerhetsgrind före migration
+        shell: bash
+        env:
+          CONFIRMATION_TEXT: ${{ inputs.confirmation_text }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION_TEXT" = "MIGRATE-U2-IDENTITY"
+          test "$(git branch --show-current)" = "main"
+          test ! -f reports/U2_BASELINE.json
+          git diff --quiet
+          python tools/u0_baseline.py --check
+          python tools/u2_identity_audit.py --expect-u0-audit --report "$RUNNER_TEMP/u2-before.json"
+
+      - name: Skapa återställningspunkt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BACKUP_TAG="backup-before-u2-identity-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git tag -a "$BACKUP_TAG" "$GITHUB_SHA" -m "Återställningspunkt före U2-identitetsmigration"
+          git push origin "$BACKUP_TAG"
+          echo "BACKUP_TAG=$BACKUP_TAG" >> "$GITHUB_ENV"
+
+      - name: Migrera identiteter och bygg om webbdata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/u2_identity_migration.py \
+            --db data/ultravasan.sqlite \
+            --apply \
+            --confirm MIGRATE-U2-IDENTITY \
+            --confirm-production MIGRATE-CHECKED-IN-PRODUCTION-U2 \
+            --report reports/U2_IDENTITY_MIGRATION_APPLIED.json
+          rm -f data/ultravasan.sqlite-wal data/ultravasan.sqlite-shm
+          python tools/uvtool.py --db data/ultravasan.sqlite export \
+            --output docs/data/ultravasan.json \
+            --js-output docs/data/ultravasan-data.js
+          python tools/uvtool.py --db data/ultravasan.sqlite validate
+          python tools/u2_baseline.py --write
+          python tools/u2_baseline.py --check
+
+      - name: Kör regressionssviten före commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q
+          while IFS= read -r file; do
+            node --check "$file"
+          done < <(find docs/assets tests tools -type f \( -name "*.js" -o -name "*.mjs" \) | sort)
+          while IFS= read -r file; do
+            node "$file"
+          done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
+          git diff --check
+
+      - name: Installera Chromium för slutlig browserkontroll
+        run: |
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Verifiera verkligt browserflöde före commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory docs >"$RUNNER_TEMP/ultravasan-http.log" 2>&1 &
+          browser_path="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          "$browser_path" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --remote-debugging-port=9223 \
+            --user-data-dir="$RUNNER_TEMP/ultravasan-chromium" \
+            http://127.0.0.1:8765/ >"$RUNNER_TEMP/ultravasan-browser.log" 2>&1 &
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null
+          node tools/verify_local_browser.mjs
+
+      - name: Kontrollera exakt ändringsyta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              "data/ultravasan.sqlite",
+              "docs/data/ultravasan.json",
+              "docs/data/ultravasan-data.js",
+              "docs/data/manifest.json",
+              "reports/U2_BASELINE.json",
+              "reports/U2_IDENTITY_MIGRATION_APPLIED.json",
+          }
+          changed = {
+              line[3:]
+              for line in subprocess.check_output(
+                  ["git", "status", "--porcelain"], text=True
+              ).splitlines()
+              if line.strip()
+          }
+          unexpected = sorted(changed - allowed)
+          missing = sorted({
+              "data/ultravasan.sqlite",
+              "docs/data/ultravasan.json",
+              "docs/data/ultravasan-data.js",
+              "reports/U2_BASELINE.json",
+              "reports/U2_IDENTITY_MIGRATION_APPLIED.json",
+          } - changed)
+          if unexpected or missing:
+              raise SystemExit(
+                  f"Unexpected migration diff. unexpected={unexpected}, missing={missing}"
+              )
+          print("Migration diff is restricted to:", ", ".join(sorted(changed)))
+          PY
+
+      - name: Spara migreringen på main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add \
+            data/ultravasan.sqlite \
+            docs/data/ultravasan.json \
+            docs/data/ultravasan-data.js \
+            docs/data/manifest.json \
+            reports/U2_BASELINE.json \
+            reports/U2_IDENTITY_MIGRATION_APPLIED.json
+          git commit -m "Apply U2 identity migration"
+          git push origin HEAD:main
+
+      - name: Sammanfattning
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## U2-identitetsmigration"
+            echo ""
+            echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
+            echo "- Migrationen skriver aldrig om resultat-ID, splitrader eller råa provider-ID:n."
+            echo "- Efter lyckad commit verifierar ordinarie CI den nya U2-golden-master-baslinjen."
+          } >> "$GITHUB_STEP_SUMMARY"
