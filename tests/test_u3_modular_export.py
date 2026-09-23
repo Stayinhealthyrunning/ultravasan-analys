@@ -56,8 +56,11 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     catalog = uvtool.write_modular_web_data(payload, tmp_path, config)
     assert catalog["mode"] == "modular"
     assert catalog["result_family"] == {"10": "uv90", "20": "uv45"}
+    assert catalog["result_edition"] == {"10": "uv90-a", "20": "uv45-a"}
     assert catalog["families"]["uv90"]["results"] == 1
     assert catalog["families"]["uv45"]["splits"] == 1
+    assert catalog["editions"]["uv90-a"]["results"] == 1
+    assert catalog["editions"]["uv45-a"]["splits"] == 1
 
     summary = u3_modularize.validate(payload, tmp_path, config)
     assert summary["results"] == 2
@@ -65,8 +68,15 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
 
     uv90 = json.loads((tmp_path / "ultravasan-uv90.json").read_text(encoding="utf-8"))
     uv45 = json.loads((tmp_path / "ultravasan-uv45.json").read_text(encoding="utf-8"))
+    edition90 = json.loads((tmp_path / "ultravasan-edition-uv90-a.json").read_text(encoding="utf-8"))
+    edition45 = json.loads((tmp_path / "ultravasan-edition-uv45-a.json").read_text(encoding="utf-8"))
     assert uv90["results"] == [payload["results"][0]]
     assert uv45["results"] == [payload["results"][1]]
+    assert edition90["results"] == [payload["results"][0]]
+    assert edition90["splits"] == [payload["splits"][0]]
+    assert edition90["meta"]["data_scope"]["kind"] == "race-edition"
+    assert edition45["results"] == [payload["results"][1]]
+    assert edition45["splits"] == [payload["splits"][1]]
 
 
 def test_export_auto_detects_activated_modular_catalog(tmp_path: Path) -> None:
