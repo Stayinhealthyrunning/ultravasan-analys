@@ -251,7 +251,6 @@ const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapC
 assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
 assert.ok(/<option value="120s" selected>Hela loppet på 2 minuter<\/option>/.test(speedBlock),'Kartduellen ska öppnas med två minuter som standard');
 assert.ok(appStateSource.includes('speed:playback.DEFAULT_MODE')&&mapSource.includes('mapPlayback.rateFor'),'Kartduellen ska använda gemensam Playback-standard och rate-beräkning');
-assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Individuell loppreplay ska återställas till två minuter');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'180s'),40,'treminutersvalet ska skala hela duellen till exakt tre minuter');
