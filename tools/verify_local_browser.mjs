@@ -282,8 +282,14 @@ const caseResults=[];
 for(const item of uv90Cases)caseResults.push(await openRunnerCase(item));
 
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
-await evaluate("document.querySelector('#raceSwitch45')?.click()");
-const uv45Loaded=await waitForActiveFamily('uv45');
+const uv45SwitchAwaited=await evaluate(`(async()=>{
+  const button=document.querySelector('#raceSwitch45');
+  if(typeof button?.onclick!=='function')return false;
+  await button.onclick();
+  await ensureActiveFamilyFull('uv45',true);
+  return state.raceFamily==='uv45'&&state.dataPhase==='full';
+})()`);
+const uv45Loaded=uv45SwitchAwaited&&await waitForActiveFamily('uv45');
 const uv45Progressive=await evaluate(`(() => {
   const events=(window.ULTRAVASAN_DATA_PHASE_EVENTS||[]).filter(event=>event.family==='uv45');
   const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv45||{};
@@ -311,8 +317,14 @@ const additionalCases=[...uv90Cases,...uv45Cases];
 // First return from the UV45 browser case to a fully hydrated UV90 family.
 // Then verify a same-CourseVersion pair and an old/new course pair.
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
-await evaluate("document.querySelector('#raceSwitch90')?.click()");
-const uv90Reloaded=await waitForActiveFamily('uv90');
+const uv90SwitchAwaited=await evaluate(`(async()=>{
+  const button=document.querySelector('#raceSwitch90');
+  if(typeof button?.onclick!=='function')return false;
+  await button.onclick();
+  await ensureActiveFamilyFull('uv90',true);
+  return state.raceFamily==='uv90'&&state.dataPhase==='full';
+})()`);
+const uv90Reloaded=uv90SwitchAwaited&&await waitForActiveFamily('uv90');
 await evaluate(`(() => {
   const year=document.querySelector('#compareYear');
   if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
@@ -426,7 +438,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
