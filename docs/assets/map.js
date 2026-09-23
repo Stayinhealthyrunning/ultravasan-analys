@@ -2,7 +2,8 @@
 
 const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
-const DUEL_PLAYBACK_DURATIONS=[30,60,120,180];
+const mapPlayback=typeof module==='object'&&module.exports?require('./playback.js'):window.UltravasanPlayback;
+const DUEL_PLAYBACK_DURATIONS=mapPlayback.DURATIONS;
 const DUEL_ELEVATION_VIEW={width:1200,height:94,left:30,right:30,top:10,bottom:19};
 const mapStateApi=typeof module==='object'&&module.exports?require('./app-state.js'):window.UltravasanAppState;
 const app=mapStateApi.createMap();
@@ -22,7 +23,7 @@ const mapRaceFamily=r=>mapRaceUi.familyKey(r);
 function mixedRaceFamilyError(results,races){const selected=(results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id)));if(selected.some(family=>family===null))return 'Loppkontrakt saknas för någon av de valda löparna.';const families=[...new Set(selected)];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
 function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||null}
 function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
-function duelPlaybackRate(maxTime,mode){const duration=Number(String(mode||'120s').replace(/s$/,''));return Number.isFinite(maxTime)&&maxTime>0&&DUEL_PLAYBACK_DURATIONS.includes(duration)?maxTime/duration:maxTime/120}
+function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
 const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?.elevation_profile,distance);
 
 if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,duelPlaybackRate,elevationAtDistance};
