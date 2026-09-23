@@ -1364,18 +1364,21 @@ def write_modular_web_data(
         global_name: str,
         global_key: str,
         chunk_payload: dict[str, Any],
-    ) -> tuple[Path, Path]:
+        javascript: bool = True,
+    ) -> tuple[Path, Path | None]:
         compact = json.dumps(chunk_payload, ensure_ascii=False, separators=(",", ":"))
         json_path = output_dir / f"{stem}.json"
-        js_path = output_dir / f"{stem}.js"
         json_path.write_text(compact, encoding="utf-8")
-        js_path.write_text(
-            f"window.{global_name}=window.{global_name}||{{}};"
-            f"window.{global_name}[{json.dumps(global_key)}]="
-            + compact
-            + ";\n",
-            encoding="utf-8",
-        )
+        js_path: Path | None = None
+        if javascript:
+            js_path = output_dir / f"{stem}.js"
+            js_path.write_text(
+                f"window.{global_name}=window.{global_name}||{{}};"
+                f"window.{global_name}[{json.dumps(global_key)}]="
+                + compact
+                + ";\n",
+                encoding="utf-8",
+            )
         return json_path, js_path
 
     for family in ("uv90", "uv45"):
@@ -1427,11 +1430,12 @@ def write_modular_web_data(
             splits=edition_splits,
         )
         stem = f"ultravasan-edition-{race_key}"
-        json_path, js_path = write_chunk(
+        json_path, _ = write_chunk(
             stem=stem,
             global_name="ULTRAVASAN_DATA_EDITIONS",
             global_key=str(race_id),
             chunk_payload=edition_payload,
+            javascript=False,
         )
         catalog["editions"][str(race_id)] = {
             "race_id": race_id,
@@ -1441,9 +1445,7 @@ def write_modular_web_data(
             "results": len(edition_results),
             "splits": len(edition_splits),
             "json": public_prefix + json_path.name,
-            "js": public_prefix + js_path.name,
             "json_bytes": json_path.stat().st_size,
-            "js_bytes": js_path.stat().st_size,
         }
 
     catalog_json = json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))
