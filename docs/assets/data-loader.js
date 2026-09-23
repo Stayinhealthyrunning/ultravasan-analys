@@ -64,10 +64,21 @@
         }
         return dataset;
       }
-      const bootstrap=await readJsonOrScript('data/bootstrap.json','data/bootstrap.js','ULTRAVASAN_BOOTSTRAP');
-      const history=await readJsonOrScript('data/history-index.json','data/history-index.js','ULTRAVASAN_HISTORY_INDEX');
-      dataset=makeDataset(bootstrap,history);
-      return dataset;
+      try{
+        const bootstrap=await readJsonOrScript('data/bootstrap.json','data/bootstrap.js','ULTRAVASAN_BOOTSTRAP');
+        const history=await readJsonOrScript('data/history-index.json','data/history-index.js','ULTRAVASAN_HISTORY_INDEX');
+        dataset=makeDataset(bootstrap,history);
+        return dataset;
+      }catch(modularError){
+        console.warn('Modulär U3-data kunde inte laddas; använder testad monolitfallback.',modularError);
+        if(!root?.ULTRAVASAN_DATA)await loadScript('data/ultravasan-data.js');
+        if(!root?.ULTRAVASAN_DATA)throw modularError;
+        dataset=root.ULTRAVASAN_DATA;
+        if(!(dataset.loadedRaceIds instanceof Set)){
+          Object.defineProperty(dataset,'loadedRaceIds',{value:new Set((dataset.races||[]).map(r=>r.id)),enumerable:false});
+        }
+        return dataset;
+      }
     })();
     return corePromise;
   }
