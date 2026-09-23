@@ -252,11 +252,15 @@ for(const spec of viewportSpecs){
   const measured=await evaluate(`(() => {
     const grid=document.querySelector('.analysis-guide-grid');
     const columns=grid?getComputedStyle(grid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length:0;
+    const scrolling=document.scrollingElement||document.documentElement;
     return {
       innerWidth:window.innerWidth,
       documentWidth:document.documentElement.scrollWidth,
+      documentClientWidth:document.documentElement.clientWidth,
       bodyWidth:document.body.scrollWidth,
-      overflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-window.innerWidth,
+      scrollingWidth:scrolling.scrollWidth,
+      scrollingClientWidth:scrolling.clientWidth,
+      overflow:Math.max(0,scrolling.scrollWidth-scrolling.clientWidth),
       guideColumns:columns,
       mainVisible:Boolean(document.querySelector('#mainContent')),
     };
