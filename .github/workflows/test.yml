@@ -53,6 +53,12 @@ jobs:
             --write --check \
             --report "$RUNNER_TEMP/u3-modular-report.json"
 
+      - name: Verifiera U9 release freeze
+        run: |
+          python tools/u9_release_audit.py \
+            --modular-report "$RUNNER_TEMP/u3-modular-report.json" \
+            --json-output "$RUNNER_TEMP/u9-release-audit.json"
+
       - name: Audita U2 legacy-identiteter read-only
         shell: bash
         run: |
