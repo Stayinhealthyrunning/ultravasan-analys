@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "phase": "U2",
+  "identity_contract": "u2-person-key-v1",
+  "files": {
+    "database": {
+      "path": "data/ultravasan.sqlite",
+      "bytes": 75825152,
+      "sha256": "a5918ff12f4613642e2fa6d345f6e942fa7ff43d71975a1b2861581d5ed9b17c"
+    },
+    "web_json": {
+      "path": "docs/data/ultravasan.json",
+      "bytes": 42688494,
+      "sha256": "dccbfdf501cd85611da46a0aae3b0c66bd5030204e024dd3c037a0cc8823f18d"
+    },
+    "web_javascript": {
+      "path": "docs/data/ultravasan-data.js",
+      "bytes": 42688519,
+      "sha256": "ab8b61ee9ad3a95a3f3be045e31061d32231275f0d41dfe0eeede9b59bba3b8a"
+    },
+    "manifest": {
+      "path": "docs/data/manifest.json",
+      "bytes": 125,
+      "sha256": "4be91df1dbfb468d39a13094fd6fc0b30aeee6f90e5b0522ded040d5313e7534"
+    }
+  },
+  "totals": {
+    "race_editions": 22,
+    "results": 24422,
+    "splits": 139910,
+    "athletes": 20805,
+    "external_ids": 20805,
+    "person_keys": 9571,
+    "identity_evidence": 20805,
+    "pending_review_candidates": 4211
+  },
+  "source_results": {
+    "vasaloppet_mika": 11234,
+    "vasanerd": 13188
+  },
+  "identity_state": {
+    "athletes": 20805,
+    "cross_source_athletes": 0,
+    "multi_edition_without_vasanerd_person_evidence": 0,
+    "person_keys": 9571,
+    "identity_evidence": 20805,
+    "review_candidates": 4211
+  },
+  "identity_evidence_distribution": [
+    {
+      "provider": "vasaloppet_mika",
+      "namespace": "event_code:idp",
+      "scope": "result",
+      "decision": "observed",
+      "rows": 11234
+    },
+    {
+      "provider": "vasanerd",
+      "namespace": "idpe",
+      "scope": "person",
+      "decision": "verified",
+      "rows": 9571
+    }
+  ],
+  "protected_payload": {
+    "results_count": 24422,
+    "splits_count": 139910,
+    "external_ids_count": 20805,
+    "result_payload_digest": "52bca3a938eb94d1167d2f889bc438fc8d3da28a70292689fa30d5154cd14a46",
+    "split_digest": "80ad571172edd4a691f235cff9e8e6a797ba21214c6466d0dd5dc0dddcce2149",
+    "external_id_values_digest": "bb16719e6f847d9c9e0905a728587dab47514b9ffb73c60eb84ef01533d82045",
+    "source_records_digest": "5a8381000f3fa67bc7146497ba13778e461561c510ff69ae5767d815804b459f"
+  },
+  "checks": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "duplicate_result_keys": 0,
+    "duplicate_split_keys": 0,
+    "results_without_exact_external_link": 0,
+    "evidence_without_athlete": 0,
+    "evidence_without_source": 0
+  },
+  "web_export": {
+    "identity_contract": "u2-person-key-v1",
+    "results": 24422,
+    "splits": 139910,
+    "person_key_rows": 13188,
+    "distinct_person_keys": 9571,
+    "person_key_prefixes": {
+      "uvp_": 13188
+    }
+  }
+}
