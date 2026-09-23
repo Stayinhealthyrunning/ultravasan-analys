@@ -1384,8 +1384,23 @@ def export_web(args: argparse.Namespace) -> None:
 
     manifest = {"generated_at": payload["meta"]["generated_at"], "races": len(races), "results": len(results), "splits": len(splits), "bytes": args.output.stat().st_size}
     (args.output.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # U3 modular/lazy data is written alongside the legacy bundle. The legacy
+    # JSON/JS remains available as an automatic transition fallback, while the
+    # normal browser path can load a small bootstrap, a compact history index
+    # and one RaceEdition bundle at a time.
+    try:
+        from u3_webdata import export_modular
+    except ImportError:
+        from .u3_webdata import export_modular
+    u3_manifest = export_modular(payload, load_config(args.config), args.output.parent / "u3")
+
     conn.close()
-    print(f"Webbdata exporterad: {args.output} och {js_output} ({len(results)} resultat, {len(splits)} mellantider)")
+    print(
+        f"Webbdata exporterad: {args.output} och {js_output} "
+        f"({len(results)} resultat, {len(splits)} mellantider); "
+        f"U3 bootstrap {u3_manifest['bootstrap_bytes']} byte"
+    )
 
 def validation_rule_for_race(config: dict[str, Any], race: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     """Resolve validation rules by configured race key/family, never by distance."""
