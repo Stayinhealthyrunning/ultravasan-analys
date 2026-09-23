@@ -175,9 +175,14 @@
     if(current.mode!=='modular')return loadLegacy();
 
     const editionKeys=ids.map(id=>editionForResultId(id,current));
-    if(ids.length&&editionKeys.every(Boolean)&&current.editions){
+    const canFetchEditions=typeof location==='undefined'||location.protocol!=='file:';
+    if(ids.length&&editionKeys.every(Boolean)&&current.editions&&canFetchEditions){
       const uniqueEditions=[...new Set(editionKeys)];
-      return mergeDatasets(await Promise.all(uniqueEditions.map(loadModularEdition)));
+      try{
+        return mergeDatasets(await Promise.all(uniqueEditions.map(loadModularEdition)));
+      }catch(error){
+        console.warn?.('Edition-laddning misslyckades; faller tillbaka till race family.',error);
+      }
     }
 
     const families=[...new Set(ids.map(id=>familyForResultId(id,current)).filter(Boolean))];
