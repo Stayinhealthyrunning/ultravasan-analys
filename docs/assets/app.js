@@ -174,6 +174,7 @@ async function load(){
     activateDataset(await window.UltravasanDataLoader.loadInitialFamily(family));
     setup();
   }catch(e){
+    window.ULTRAVASAN_LOAD_ERROR_STACK=e?.stack||String(e);
     console.error(e);
     $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
   }
