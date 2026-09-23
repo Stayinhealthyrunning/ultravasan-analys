@@ -47,7 +47,7 @@ async function switchRaceFamily(family,initial=false){
     if(nextData!==state.data)activateDataset(nextData);
     document.body.classList.toggle('race-uv45',family==='uv45');
     const sw=$('.race-switch');if(sw)sw.dataset.active=family;
-    document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+    document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
     const heroReady=updateRaceHero($('#heroHeaderImage'),raceUi[family],initial);
     document.title=raceUi[family].title;
     populateRaceYears();state.page=1;compareState.selected=[];
@@ -84,6 +84,27 @@ const dataPhaseOf=d=>{
   const kind=d?.meta?.data_scope?.kind;
   return kind==='race-family-active-core'?'active':kind==='race-family-core'?'core':'full';
 };
+function updateAnalysisGuide(){
+  const context=$('#analysisGuideContext'),dataStatus=$('#analysisGuideDataStatus'),filterStatus=$('#analysisGuideFilterStatus');
+  if(!context||!dataStatus||!filterStatus||!state.data)return;
+  const race=state.data.races.find(item=>String(item.id)===String(state.raceId));
+  const familyLabel=state.raceFamily==='uv45'?'Ultravasan 45':'Ultravasan 90';
+  context.textContent=race?familyLabel+' · '+race.year:familyLabel;
+  const phaseCopy={
+    active:'Visar valt lopp. Historik och mellantider laddas i nästa steg.',
+    core:'Historiska resultat är laddade. Mellantider och fördjupade analyser kompletteras.',
+    full:'Full historik och tillgängliga mellantider är laddade.'
+  };
+  dataStatus.textContent=phaseCopy[state.dataPhase]||'Datastatus kunde inte fastställas.';
+  const filters=[
+    ['Kön',$('#sexFilter')?.selectedOptions?.[0]?.textContent,$('#sexFilter')?.value],
+    ['Klass',$('#classFilter')?.value,$('#classFilter')?.value],
+    ['Klubb/ort',$('#clubFilterSearch')?.value,$('#clubFilter')?.value],
+    ['Status',$('#statusFilter')?.value,$('#statusFilter')?.value]
+  ].filter(([,label,value])=>value&&String(label||'').trim());
+  const shown=state.filtered?.length??0,total=raceResults().length;
+  filterStatus.textContent=(filters.length?filters.map(([name,label])=>name+': '+String(label).trim()).join(' · '):'Inga fältfilter är aktiva.')+' Visar '+shown.toLocaleString('sv-SE')+' av '+total.toLocaleString('sv-SE')+' resultat.';
+}
 function activateDataset(data,phase=dataPhaseOf(data)){
   state.data=hydrateData(data);state.dataPhase=phase;window.ULTRAVASAN_ACTIVE_DATA=state.data;
   window.ULTRAVASAN_ACTIVE_READY=true;
@@ -177,7 +198,7 @@ const isDnsResult=r=>resultStatus(r).dns;
 const isDsqResult=r=>resultStatus(r).dsq;
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(compareClasses),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));renderAll()}
-function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';renderHistogram(times);renderTable();if(state.dataPhase!=='full')return;renderPaceChart();renderStatistics();if(typeof renderNerdLab==='function')renderNerdLab()}
+function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';updateAnalysisGuide();renderHistogram(times);renderTable();if(state.dataPhase!=='full')return;renderPaceChart();renderStatistics();if(typeof renderNerdLab==='function')renderNerdLab()}
 function svg(tag,attrs={},text=''){const a=Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(' ');return `<${tag} ${a}>${text}</${tag}>`}
 function renderHistogram(times){const el=$('#histogram');if(!times.length){el.innerHTML='<div class="empty">Inga sluttider i urvalet</div>';return}const grouped=fixedFinishTimeBins(times),bins=grouped.bins,counts=bins.map(bin=>bin.count),W=1000,H=270,p={l:44,r:14,t:12,b:42},{cellWidth:cw,barWidth,barOffset}=baseFinishHistogramGeometry(bins.length,W,p.l,p.r),ymax=Math.max(...counts,1);let s='';for(let i=0;i<=4;i++){const y=p.t+(H-p.t-p.b)*i/4;s+=svg('line',{x1:p.l,y1:y,x2:W-p.r,y2:y,class:'gridline'})+svg('text',{x:5,y:y+4},String(Math.round(ymax*(1-i/4))))}counts.forEach((c,i)=>{const h=(H-p.t-p.b)*c/ymax,x=p.l+i*cw+barOffset,y=H-p.b-h,bin=bins[i],tip=`${c} löpare, ${finishBinTime(bin.from)}–${finishBinTime(bin.to)}`;s+=`<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${h}" tabindex="0" role="img" aria-label="${tip}"><title>${tip}</title></rect>`;if(i%Math.max(1,Math.ceil(bins.length/7))===0||i===bins.length-1)s+=svg('text',{x:p.l+(i+.5)*cw,y:H-18,'text-anchor':'middle'},finishBinTime(bin.from))});s+=svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;$('#distributionLabel').textContent=`15-minutersintervall från ${finishBinTime(grouped.start)} · hälften: ${fmtTime(quantile(times,.25))}–${fmtTime(quantile(times,.75))}`}
 function renderPaceChart(){
@@ -210,7 +231,7 @@ function renderPaceChart(){
   });
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${out}</svg>`;
 }
-function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$$('#resultsBody tr[data-id]').forEach(tr=>tr.onclick=()=>openRunner(Number(tr.dataset.id)));$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
+function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}" tabindex="0" role="button" aria-label="Öppna loppanalys för ${esc(r.name_as_published)}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$('#resultsBody tr[data-id]').forEach(tr=>{const open=()=>openRunner(Number(tr.dataset.id));tr.onclick=open;tr.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}}});$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
 function runnerRouteForRace(race){return window.RunnerReplay?.routeForRace(window.ULTRAVASAN_ROUTES,race)||null}
 function runnerFavoritesStorage(){try{return window.localStorage}catch{return null}}
 function runnerFavoriteReference(result,race){return window.RunnerFavorites?.referenceFor(result,race,window.RaceContracts)||null}
@@ -756,7 +777,7 @@ const INFO_HELP_EXTENDED=[
   ['.source-panel','Friskrivning från ansvar samt uppgifter om när databasen byggdes och hur många resultat och mellantider den innehåller.']
 ];
 
-let infoInteractionsReady=false,infoTipsUpgraded=false;
+let infoInteractionsReady=false,infoTipsUpgraded=false,infoTipCounter=0;
 function setupInfoInteractions(){
   if(infoInteractionsReady)return;infoInteractionsReady=true;
   document.addEventListener('click',e=>{
@@ -776,9 +797,9 @@ function addCardInfo(card,text){
   if(!card||card.dataset.infoInstalled==='v4')return;
   card.dataset.infoInstalled='v4';
   card.classList.add('has-info-tip');
-  const tip=document.createElement('button');
-  tip.type='button';tip.className='info-tip';tip.setAttribute('aria-label','Visa förklaring');tip.setAttribute('aria-expanded','false');
-  tip.innerHTML=`<svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#1b7659" stroke-width="1.8"/><circle cx="12" cy="7.2" r="1.25" fill="#1b7659"/><path d="M10.8 10.3h1.8v6.1h1.3" fill="none" stroke="#1b7659" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="info-popup" role="tooltip">${esc(text)}</span>`;
+  const tip=document.createElement('button'),popupId='info-popup-'+(++infoTipCounter);
+  tip.type='button';tip.className='info-tip';tip.setAttribute('aria-label','Visa förklaring');tip.setAttribute('aria-expanded','false');tip.setAttribute('aria-controls',popupId);tip.setAttribute('aria-describedby',popupId);
+  tip.innerHTML=`<svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#1b7659" stroke-width="1.8"/><circle cx="12" cy="7.2" r="1.25" fill="#1b7659"/><path d="M10.8 10.3h1.8v6.1h1.3" fill="none" stroke="#1b7659" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="info-popup" id="${popupId}" role="tooltip">${esc(text)}</span>`;
   const head=[...card.children].find(x=>x.classList?.contains('panel-head'));
   if(head){
     const tools=[...head.children].find(x=>x.classList?.contains('chart-head-tools'));
