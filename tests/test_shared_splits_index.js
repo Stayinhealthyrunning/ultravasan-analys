@@ -143,13 +143,13 @@ assert.ok(raceUiSource.includes('selectionTitle')&&raceUiSource.includes('startN
 
 const appStateSource=fs.readFileSync(path.join(root,'docs/assets/app-state.js'),'utf8');
 assert.ok(appSource.includes('UltravasanAppState.createMain'),'huvudappen ska initiera state via U4 AppState');
-assert.ok(mapSource.includes('UltravasanAppState.createMap'),'kartappen ska initiera state via samma U4 AppState');
+assert.ok(mapSource.includes("require('./app-state.js')")&&mapSource.includes('mapStateApi.createMap'),'kartappen ska initiera state via samma U4 AppState, även i CommonJS');
 assert.ok(appStateSource.includes('createMain')&&appStateSource.includes('createMap'),'AppState ska exponera båda ytkontrakten');
 
 
 const chartsSource=fs.readFileSync(path.join(root,'docs/assets/charts.js'),'utf8');
 assert.ok(appSource.includes('window.UltravasanCharts.median')&&appSource.includes('window.UltravasanCharts.quantile'),'huvudappen ska använda U4 Charts');
-assert.ok(mapSource.includes('window.UltravasanCharts.median'),'kartappen ska använda samma Charts-kärna');
+assert.ok(mapSource.includes("require('./charts.js')")&&mapSource.includes('mapCharts.median'),'kartappen ska använda samma Charts-kärna, även i CommonJS');
 assert.ok(chartsSource.includes('fixedFinishTimeBins')&&chartsSource.includes('barGeometry'),'Charts ska äga gemensam statistik och histogramgeometri');
 
 
