@@ -39,6 +39,14 @@ U1:s explicita event-, utgåve-, käll-, tävlings- och bankontrakt beskrivs i
 Den slutförda käll- och utgåvemodellen finns i
 [`reports/U1_SOURCE_EDITION_SPEC.md`](reports/U1_SOURCE_EDITION_SPEC.md).
 
+U3:s modulära och lazy webbdatakontrakt finns i
+[`reports/U3_MODULAR_WEBDATA.md`](reports/U3_MODULAR_WEBDATA.md).
+Normal start behöver efter aktivering inte längre läsa hela den monolitiska
+resultatdatabasen: aktuell RaceEdition laddas först, det kompakta historikindexet
+efter första renderingen och historiska splits först när de efterfrågas.
+Legacy-bundlen finns kvar som automatisk fallback under övergången och samma
+flöde verifieras både via GitHub Pages och direkt `file://`.
+
 U2:s identitets- och historikkontrakt finns i
 [`reports/U2_IDENTITY_HISTORY_SPEC.md`](reports/U2_IDENTITY_HISTORY_SPEC.md).
 Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på namn
