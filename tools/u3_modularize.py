@@ -108,6 +108,23 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     }:
         raise RuntimeError("Catalog edition set differs from monolith")
 
+    expected_edition_json = {
+        f"ultravasan-edition-{race['race_key']}.json" for race in source["races"]
+    }
+    expected_edition_js = {
+        f"ultravasan-edition-{race['race_key']}.js" for race in source["races"]
+    }
+    actual_edition_json = {path.name for path in output_dir.glob("ultravasan-edition-*.json")}
+    actual_edition_js = {path.name for path in output_dir.glob("ultravasan-edition-*.js")}
+    if actual_edition_json != expected_edition_json or actual_edition_js != expected_edition_js:
+        raise RuntimeError(
+            "Edition file set differs from catalog: "
+            f"json_extra={sorted(actual_edition_json-expected_edition_json)}, "
+            f"json_missing={sorted(expected_edition_json-actual_edition_json)}, "
+            f"js_extra={sorted(actual_edition_js-expected_edition_js)}, "
+            f"js_missing={sorted(expected_edition_js-actual_edition_js)}"
+        )
+
     edition_races: dict[int, dict[str, Any]] = {}
     edition_checkpoints: dict[tuple[int, str], dict[str, Any]] = {}
     edition_results: dict[int, dict[str, Any]] = {}
