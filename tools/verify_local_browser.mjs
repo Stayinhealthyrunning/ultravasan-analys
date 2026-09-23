@@ -74,17 +74,31 @@ if(!fullReady){
     phaseEvents:window.ULTRAVASAN_DATA_PHASE_EVENTS||[],
     activeScope:window.ULTRAVASAN_ACTIVE_DATA?.meta?.data_scope||null,
     activeSplits:window.ULTRAVASAN_ACTIVE_DATA?.splits?.length||0,
+    activeReady:Boolean(window.ULTRAVASAN_ACTIVE_READY),
+    historyReady:Boolean(window.ULTRAVASAN_HISTORY_READY),
+    splitsReady:Boolean(window.ULTRAVASAN_SPLITS_READY),
   }))()`);
-  throw new Error("Progressive split data did not finish loading: "+JSON.stringify(diagnostics));
+  throw new Error("Progressive active/core/split data did not finish loading: "+JSON.stringify(diagnostics));
 }
 const progressiveLoad=await evaluate(`(() => {
   const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||[];
-  const required=Boolean(window.ULTRAVASAN_DATA_CATALOG?.families?.uv90?.core);
-  const core=events.find(event=>event.family==='uv90'&&event.phase==='core')||null;
+  const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv90||{};
+  const required=Boolean(familySpec.shell&&familySpec.core&&familySpec.split_data);
+  const active=events.find(event=>event.family==='uv90'&&event.phase==='active')||null;
+  const core=events.find(event=>event.family==='uv90'&&event.phase==='core'&&(!active||event.at>=active.at))||null;
   const full=events.find(event=>event.family==='uv90'&&event.phase==='full'&&(!core||event.at>=core.at))||null;
+  const defaultRaceId=Number(familySpec.default_race_id||0)||null;
   return {
-    required,core,full,
-    verified:!required||Boolean(core&&full&&core.splits===0&&core.results>0&&full.splits>0&&full.results===core.results&&full.at>=core.at)
+    required,defaultRaceId,active,core,full,
+    verified:!required||Boolean(
+      active&&core&&full&&
+      active.scope==='race-family-active-core'&&
+      active.raceId===defaultRaceId&&
+      active.splits===0&&active.results>0&&
+      core.scope==='race-family-core'&&core.splits===0&&core.results>=active.results&&
+      full.splits>0&&full.results===core.results&&
+      active.at<=core.at&&core.at<=full.at
+    )
   };
 })()`);
 
