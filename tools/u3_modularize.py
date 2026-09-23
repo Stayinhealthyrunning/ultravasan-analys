@@ -58,6 +58,7 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     merged_results: dict[int, dict[str, Any]] = {}
     merged_splits: dict[tuple[int, str], dict[str, Any]] = {}
     family_sizes: dict[str, int] = {}
+    edition_sizes: dict[str, int] = {}
 
     for family, spec in catalog["families"].items():
         chunk_path = output_dir / Path(spec["json"]).name
@@ -102,6 +103,76 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         if spec["results"] != len(chunk["results"]) or spec["splits"] != len(chunk["splits"]):
             raise RuntimeError(f"Catalog count mismatch for {family}")
 
+    if set(catalog.get("editions", {})) != {
+        race["race_key"] for race in source["races"]
+    }:
+        raise RuntimeError("Catalog edition set differs from monolith")
+
+    edition_races: dict[int, dict[str, Any]] = {}
+    edition_checkpoints: dict[tuple[int, str], dict[str, Any]] = {}
+    edition_results: dict[int, dict[str, Any]] = {}
+    edition_splits: dict[tuple[int, str], dict[str, Any]] = {}
+
+    for race in source["races"]:
+        race_key = race["race_key"]
+        spec = catalog["editions"][race_key]
+        chunk_path = output_dir / Path(spec["json"]).name
+        js_path = output_dir / Path(spec["js"]).name
+        if not chunk_path.exists() or not js_path.exists():
+            raise RuntimeError(f"Missing edition chunk files for {race_key}")
+        chunk = load_json(chunk_path)
+        family = race_family_by_key[race_key]
+        expected_scope = {
+            "kind": "race-edition",
+            "race_family": family,
+            "race_key": race_key,
+            "race_id": int(race["id"]),
+        }
+        if chunk.get("meta", {}).get("data_scope", {}) != expected_scope:
+            raise RuntimeError(f"Wrong data scope for {race_key}")
+
+        if chunk["races"] != [race]:
+            raise RuntimeError(f"Edition {race_key} must contain exactly its race row")
+        if any(int(result["race_id"]) != int(race["id"]) for result in chunk["results"]):
+            raise RuntimeError(f"Edition {race_key} contains a result from another race")
+        if any(int(checkpoint["race_id"]) != int(race["id"]) for checkpoint in chunk["checkpoints"]):
+            raise RuntimeError(f"Edition {race_key} contains a checkpoint from another race")
+
+        edition_races.update(keyed(chunk["races"], lambda row: int(row["id"])))
+        edition_checkpoints.update(
+            keyed(chunk["checkpoints"], lambda row: (int(row["race_id"]), row["checkpoint_key"]))
+        )
+        edition_results.update(keyed(chunk["results"], lambda row: int(row["id"])))
+        edition_splits.update(
+            keyed(chunk["splits"], lambda row: (int(row["result_id"]), row["checkpoint_key"]))
+        )
+
+        expected_js = (
+            "window.ULTRAVASAN_DATA_EDITIONS=window.ULTRAVASAN_DATA_EDITIONS||{};"
+            f"window.ULTRAVASAN_DATA_EDITIONS[{json.dumps(race_key)}]="
+            + json.dumps(chunk, ensure_ascii=False, separators=(",", ":"))
+            + ";\n"
+        )
+        if js_path.read_text(encoding="utf-8") != expected_js:
+            raise RuntimeError(f"JSON/JavaScript payload mismatch for edition {race_key}")
+
+        if spec["race_id"] != int(race["id"]):
+            raise RuntimeError(f"Catalog race_id mismatch for {race_key}")
+        if spec["race_family"] != family:
+            raise RuntimeError(f"Catalog race_family mismatch for {race_key}")
+        if spec["results"] != len(chunk["results"]) or spec["splits"] != len(chunk["splits"]):
+            raise RuntimeError(f"Catalog count mismatch for edition {race_key}")
+        edition_sizes[race_key] = chunk_path.stat().st_size
+
+    if edition_races != source_races:
+        raise RuntimeError("Edition race payload differs from monolith")
+    if edition_checkpoints != source_checkpoints:
+        raise RuntimeError("Edition checkpoint payload differs from monolith")
+    if edition_results != source_results:
+        raise RuntimeError("Edition result payload differs from monolith")
+    if edition_splits != source_splits:
+        raise RuntimeError("Edition split payload differs from monolith")
+
     if merged_races != source_races:
         raise RuntimeError("Modular race payload differs from monolith")
     if merged_checkpoints != source_checkpoints:
@@ -112,11 +183,15 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         raise RuntimeError("Modular split payload differs from monolith")
 
     expected_result_family = {}
+    expected_result_edition = {}
     for result_id, result in source_results.items():
         race = source_races[int(result["race_id"])]
         expected_result_family[str(result_id)] = race_family_by_key[race["race_key"]]
+        expected_result_edition[str(result_id)] = race["race_key"]
     if catalog.get("result_family") != expected_result_family:
         raise RuntimeError("result_family routing index differs from race contracts")
+    if catalog.get("result_edition") != expected_result_edition:
+        raise RuntimeError("result_edition routing index differs from race rows")
 
     totals = catalog.get("totals", {})
     expected_totals = {
@@ -139,8 +214,15 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             }
             for family in ("uv90", "uv45")
         },
+        "editions": {
+            "count": len(edition_sizes),
+            "largest_json_bytes": max(edition_sizes.values()),
+            "smallest_json_bytes": min(edition_sizes.values()),
+            "total_json_bytes": sum(edition_sizes.values()),
+        },
         "catalog_bytes": catalog_path.stat().st_size,
         "largest_family_bytes": max(family_sizes.values()),
+        "largest_edition_bytes": max(edition_sizes.values()),
     }
 
 
@@ -170,6 +252,9 @@ def main() -> None:
             )
         summary["largest_family_reduction_pct"] = round(
             100 * (1 - summary["largest_family_bytes"] / source_bytes), 1
+        )
+        summary["largest_edition_reduction_pct"] = round(
+            100 * (1 - summary["largest_edition_bytes"] / source_bytes), 1
         )
         rendered = json.dumps(summary, ensure_ascii=False, indent=2)
         print(rendered)
