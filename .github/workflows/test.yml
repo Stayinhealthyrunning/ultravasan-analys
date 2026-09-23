@@ -134,6 +134,16 @@ jobs:
           python -m pip install -r requirements-browser.txt
           python -m playwright install --with-deps chromium
 
+      - name: Bygg och aktivera modulär U3-webbdata i testarbetsytan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/uvtool.py --db data/ultravasan.sqlite export \
+            --output docs/data/ultravasan.json \
+            --js-output docs/data/ultravasan-data.js
+          python tools/u3_modular_check.py docs/data
+          python tools/u3_activate.py docs/index.html
+
       - name: Kör verkligt browserflöde
         shell: bash
         run: |
