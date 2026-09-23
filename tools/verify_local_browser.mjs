@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import {resolve as resolvePath} from 'node:path';
+import {pathToFileURL} from 'node:url';
 const endpoint = process.argv[2] || "http://127.0.0.1:9223";
 const targets = await (await fetch(`${endpoint}/json`)).json();
 const target = targets.find(item => item.type === "page" && item.url.startsWith("http://127.0.0.1:8765/"));
@@ -53,6 +55,14 @@ for (let attempt = 0; attempt < 100; attempt++) {
   await delay(100);
 }
 if (!ready) throw new Error("Local application did not finish loading");
+
+const lazyInitial = await evaluate(`(() => window.UltravasanDataLoader?.status?.() || null)()`);
+await evaluate("window.ensureUltravasanHistory?.({rerender:false})");
+await delay(250);
+const lazyAfterHistory = await evaluate(`(() => window.UltravasanDataLoader?.status?.() || null)()`);
+await evaluate("window.ensureUltravasanRaceData?.(9)");
+await delay(250);
+const lazyAfterRace = await evaluate(`(() => window.UltravasanDataLoader?.status?.() || null)()`);
 
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA;
@@ -177,7 +187,15 @@ for(const item of [additionalCases[2],additionalCases[4]]){
   mapCases.push({item,loaded,state,verified:loaded&&state.raceKey===item.label&&state.route===state.expected&&state.audio===state.expectedAudio&&state.note.includes('kartspår')});
 }
 
+const modularChecks = {
+  mode:lazyInitial?.mode==='modular',
+  initialIsPartial:lazyInitial?.loadedResults>0&&lazyInitial.loadedResults<lazyInitial.totalResults&&lazyInitial.loadedSplits>0&&lazyInitial.loadedSplits<lazyInitial.totalSplits,
+  historyAddsResults:lazyAfterHistory?.loadedResults===lazyAfterHistory?.totalResults&&lazyAfterHistory?.loadedSplits<lazyAfterHistory?.totalSplits,
+  raceAddsSplits:lazyAfterRace?.loadedSplits>lazyAfterHistory?.loadedSplits&&lazyAfterRace?.loadedSplits<lazyAfterRace?.totalSplits,
+};
+
 const checks = {
+  modular:Object.values(modularChecks).every(Boolean),
   contracts:Object.values(contractChecks).every(Boolean),
   maps:mapCases.length===2&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
@@ -192,7 +210,29 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+// Verify the exact same modular loader when the site is opened directly from disk.
+const offlineUrl=pathToFileURL(resolvePath('docs/index.html')).href+'?race=uv90';
+await command('Page.navigate',{url:offlineUrl});
+let offlineReady=false;
+for(let attempt=0;attempt<180;attempt++){
+  if(await evaluate("Boolean(window.UltravasanDataLoader?.status?.().mode==='modular' && document.querySelector('#loading')?.classList.contains('hidden'))")){offlineReady=true;break}
+  await delay(100);
+}
+const offline=offlineReady?await evaluate(`(() => {
+  const status=window.UltravasanDataLoader.status();
+  return {
+    mode:status.mode,
+    loadedResults:status.loadedResults,
+    totalResults:status.totalResults,
+    loadedSplits:status.loadedSplits,
+    totalSplits:status.totalSplits,
+    title:document.title,
+    visibleRows:document.querySelectorAll('#resultsBody tr').length,
+  };
+})()`):null;
+checks.offline=Boolean(offlineReady&&offline?.mode==='modular'&&offline.loadedResults>0&&offline.loadedResults<=offline.totalResults&&offline.loadedSplits>0&&offline.loadedSplits<offline.totalSplits&&offline.visibleRows>0);
+
+const output = {modularChecks,lazyInitial,lazyAfterHistory,lazyAfterRace,offline,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
