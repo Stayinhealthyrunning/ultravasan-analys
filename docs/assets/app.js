@@ -88,7 +88,7 @@ function activateDataset(data,phase=dataPhaseOf(data)){
   window.ULTRAVASAN_HISTORY_READY=phase!=='active';
   window.ULTRAVASAN_SPLITS_READY=phase==='full';
   const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||(window.ULTRAVASAN_DATA_PHASE_EVENTS=[]);
-  events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length});
+  events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length,scope:state.data.meta?.data_scope?.kind||null,raceId:state.data.meta?.data_scope?.race_id??null});
   if(events.length>20)events.shift();
   window.dispatchEvent(new CustomEvent('ultravasan:data-activated',{detail:{phase,family:state.raceFamily,data:state.data}}));
   return state.data
