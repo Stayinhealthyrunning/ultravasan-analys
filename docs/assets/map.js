@@ -17,6 +17,7 @@ const mapCharts=typeof module==='object'&&module.exports?require('./charts.js'):
 const median=mapCharts.median;
 const mapContracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):window.RaceContracts;
 const mapRaceUi=typeof module==='object'&&module.exports?require('./race-ui.js'):window.RaceUI;
+const mapRaceMedia=typeof module==='object'&&module.exports?require('./race-media.js'):window.RaceMedia;
 const mapEngine=typeof module==='object'&&module.exports?require('./map-engine.js'):window.UltravasanMapEngine;
 const mapDataAdapter=typeof module==='object'&&module.exports?require('./data-adapter.js'):window.UltravasanDataAdapter;
 const mapRaceFamily=r=>mapRaceUi.familyKey(r);
@@ -43,7 +44,7 @@ async function ensureRaceData(){
     ?window.UltravasanDataLoader.loadForResultIds(ids,preferred)
     :window.UltravasanDataLoader.loadFamily(preferred);
 }
-function ensureLeaflet(){if(window.L)return Promise.resolve();setLoading('Förbereder karta och banlager…');return new Promise(resolve=>{const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);const script=document.createElement('script');let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=finish;script.onerror=finish;document.head.appendChild(script);const timer=setTimeout(finish,2200)})}
+function ensureLeaflet(){return mapEngine.ensureLeaflet({onStatus:setLoading})}
 
 
 function raceForResult(result){return app.data.races.find(r=>r.id===result.race_id)}
@@ -58,7 +59,7 @@ function boot(){
   selected=selected.slice(0,5);if(!selected.length){showFatal('Det finns inga löpare att visa.');return}
   if(selected.some(result=>!routeForRace(raceForResult(result)))){showFatal('Kartreferens saknas för det valda loppet.');return}
   app.models=selected.map((r,i)=>buildModel(r,COLORS[i],i));
-  const is45=app.models.every(m=>mapRaceFamily(m.race)==='uv45');const audio=$('#raceSoundtrack');if(audio)audio.src=window.RACE_MEDIA_CONFIG?.musicForRace(app.models[0]?.race)||'';document.body.classList.toggle('race-uv45',is45);
+  const is45=app.models.every(m=>mapRaceFamily(m.race)==='uv45');const audio=$('#raceSoundtrack');mapRaceMedia.applyAudioSource(audio,app.models[0]?.race);document.body.classList.toggle('race-uv45',is45);
   app.usedRoutes=[...new Map(app.models.map(m=>[m.route.id,m.route])).values()];
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;

@@ -3,7 +3,7 @@
   const contracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):root.RaceContracts;
   const api=factory(contracts);
   if(typeof module==='object'&&module.exports)module.exports=api;
-  if(root)root.RACE_MEDIA_CONFIG=api;
+  if(root){root.RaceMedia=api;root.RACE_MEDIA_CONFIG=api}
 })(typeof window!=='undefined'?window:globalThis,function(contracts){
   const tracks=Object.freeze(Object.fromEntries(Object.entries(contracts.catalog.families).map(([key,family])=>[key,family.music])));
 
@@ -13,6 +13,20 @@
 
   function musicForRace(race){
     return tracks[familyForRace(race)]||null;
+  }
+
+  function mediaForRace(race){
+    const family=familyForRace(race);
+    return Object.freeze({family,music:family?tracks[family]||null:null});
+  }
+
+  function applyAudioSource(audio,race){
+    if(!audio)return null;
+    const source=musicForRace(race);
+    if(source)audio.src=source;
+    else if(typeof audio.removeAttribute==='function')audio.removeAttribute('src');
+    else audio.src='';
+    return source;
   }
 
   function installSocialFooter(){
@@ -155,6 +169,8 @@
     tracks,
     familyForRace,
     musicForRace,
+    mediaForRace,
+    applyAudioSource,
     installSocialFooter
   };
 });
