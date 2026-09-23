@@ -13,6 +13,8 @@ if str(TOOLS) not in sys.path:
 
 import u2_identity_audit
 
+U2_BASELINE = ROOT / "reports" / "U2_BASELINE.json"
+
 
 def test_same_performance_requires_non_conflicting_race_specific_evidence() -> None:
     base = {
