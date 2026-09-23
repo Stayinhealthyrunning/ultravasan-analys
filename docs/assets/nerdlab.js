@@ -33,7 +33,7 @@ function nComparableFinishSeries(rows,minCount=1){
 }
 
 function initNerdLab(){
-  if(nerd.ready||!window.ULTRAVASAN_DATA||typeof state==='undefined'||!state.data)return;
+  if(nerd.ready||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
