@@ -73,9 +73,12 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     assert "result_family" not in catalog
     assert catalog["result_edition"] == {"10": 1, "20": 2}
     assert catalog["families"]["uv90"]["results"] == 1
+    assert catalog["families"]["uv90"]["default_race_id"] == 1
+    assert catalog["families"]["uv90"]["shell"]["json"].endswith("ultravasan-uv90-shell.json")
     assert catalog["families"]["uv45"]["splits"] == 1
     assert catalog["editions"]["1"]["race_key"] == "uv90-a"
     assert catalog["editions"]["1"]["results"] == 1
+    assert catalog["editions"]["1"]["core"]["json"].endswith("ultravasan-race-core-uv90-a.json")
     assert catalog["editions"]["2"]["race_key"] == "uv45-a"
     assert catalog["editions"]["2"]["splits"] == 1
 
@@ -83,23 +86,36 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     assert summary["results"] == 2
     assert summary["splits"] == 2
 
+    uv90_shell = json.loads((tmp_path / "ultravasan-uv90-shell.json").read_text(encoding="utf-8"))
     uv90_core = json.loads((tmp_path / "ultravasan-uv90-core.json").read_text(encoding="utf-8"))
     uv90_splits = json.loads((tmp_path / "ultravasan-uv90-splits.json").read_text(encoding="utf-8"))
     uv45_core = json.loads((tmp_path / "ultravasan-uv45-core.json").read_text(encoding="utf-8"))
     uv45_splits = json.loads((tmp_path / "ultravasan-uv45-splits.json").read_text(encoding="utf-8"))
+    edition_core90 = json.loads((tmp_path / "ultravasan-race-core-uv90-a.json").read_text(encoding="utf-8"))
+    edition_core45 = json.loads((tmp_path / "ultravasan-race-core-uv45-a.json").read_text(encoding="utf-8"))
     edition90 = json.loads((tmp_path / "ultravasan-edition-uv90-a.json").read_text(encoding="utf-8"))
     edition45 = json.loads((tmp_path / "ultravasan-edition-uv45-a.json").read_text(encoding="utf-8"))
+    assert uv90_shell["results"] == []
+    assert uv90_shell["splits"] == []
+    assert uv90_shell["races"] == [payload["races"][0]]
     assert uv90_core["results"] == [payload["results"][0]]
     assert uv90_core["splits"] == []
     assert uv90_splits["results"] == []
     assert uv90_splits["splits"] == [payload["splits"][0]]
     assert uv45_core["results"] == [payload["results"][1]]
     assert uv45_splits["splits"] == [payload["splits"][1]]
+    assert edition_core90["results"] == [payload["results"][0]]
+    assert edition_core90["splits"] == []
+    assert edition_core90["meta"]["data_scope"]["kind"] == "race-edition-core"
+    assert edition_core45["results"] == [payload["results"][1]]
+    assert edition_core45["splits"] == []
     assert edition90["results"] == [payload["results"][0]]
     assert edition90["splits"] == [payload["splits"][0]]
     assert edition90["meta"]["data_scope"]["kind"] == "race-edition"
     assert edition45["results"] == [payload["results"][1]]
     assert edition45["splits"] == [payload["splits"][1]]
+    assert not (tmp_path / "ultravasan-race-core-uv90-a.js").exists()
+    assert not (tmp_path / "ultravasan-race-core-uv45-a.js").exists()
     assert not (tmp_path / "ultravasan-edition-uv90-a.js").exists()
     assert not (tmp_path / "ultravasan-edition-uv45-a.js").exists()
     assert (tmp_path / "ultravasan-uv90-core.js").exists()
