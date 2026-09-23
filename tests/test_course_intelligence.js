@@ -151,4 +151,30 @@ assert.throws(
   'segmentendpoints får inte gissas från namn eller distans'
 );
 
+const historicalPlan=intelligence.buildRacePlan(data,race2016,36000);
+assert.strictEqual(historicalPlan.complete,true,'verifierad pre-2023 CourseVersion ska kunna ge komplett historisk loppplan');
+assert.strictEqual(historicalPlan.course_version_id,'uv90-pre2023-v1');
+assert.ok(historicalPlan.cohort_finishers>100);
+assert.ok(historicalPlan.historical_segments>=7);
+assert.ok(Math.abs(historicalPlan.rows.at(-1).target_cumulative_seconds-36000)<1);
+assert.ok(Math.abs(historicalPlan.rows.reduce((sum,row)=>sum+row.target_segment_seconds,0)-36000)<1);
+assert.ok(historicalPlan.rows.every(row=>row.source==='historical-course-version'||row.source==='distance-fallback'));
+
+const fallbackPlan=intelligence.buildRacePlan({races:[race2016],results:[],splits:[]},race2016,36000);
+assert.strictEqual(fallbackPlan.complete,true);
+assert.strictEqual(fallbackPlan.historical_segments,0);
+assert.strictEqual(fallbackPlan.fallback_segments,8);
+assert.ok(fallbackPlan.rows.every(row=>row.source==='distance-fallback'));
+assert.ok(Math.abs(fallbackPlan.rows.at(-1).target_cumulative_seconds-36000)<1);
+
+const race2026=data.races.find(race=>race.race_key==='ultravasan90-2026')||{id:999,race_key:'ultravasan90-2026',year:2026};
+const incomplete2026=intelligence.buildRacePlan({races:[race2026],results:[],splits:[]},race2026,36000);
+assert.strictEqual(incomplete2026.complete,false,'okända 2026-segment får inte fyllas med gissad måltempoandel');
+assert.ok(incomplete2026.unavailable_segments>=4);
+assert.strictEqual(incomplete2026.allocated_seconds,0);
+assert.strictEqual(incomplete2026.unallocated_seconds,36000);
+assert.ok(incomplete2026.rows.some(row=>row.source==='unavailable'));
+
+assert.throws(()=>intelligence.buildRacePlan(data,race2016,0),/Måltiden/);
+
 console.log('OK: U6 Course Intelligence separerar tävlings-/GPX-axel och bygger konservativa segmentmått');
