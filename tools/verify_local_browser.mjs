@@ -247,6 +247,25 @@ for(const item of uv90Cases)caseResults.push(await openRunnerCase(item));
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
 await evaluate("document.querySelector('#raceSwitch45')?.click()");
 const uv45Loaded=await waitForActiveFamily('uv45');
+const uv45Progressive=await evaluate(`(() => {
+  const events=(window.ULTRAVASAN_DATA_PHASE_EVENTS||[]).filter(event=>event.family==='uv45');
+  const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv45||{};
+  const active=events.find(event=>event.phase==='active')||null;
+  const core=events.find(event=>event.phase==='core'&&(!active||event.at>=active.at))||null;
+  const full=events.find(event=>event.phase==='full'&&(!core||event.at>=core.at))||null;
+  return {
+    active,core,full,
+    verified:Boolean(
+      active&&core&&full&&
+      active.scope==='race-family-active-core'&&
+      active.raceId===Number(familySpec.default_race_id||0)&&
+      active.splits===0&&active.results>0&&
+      core.scope==='race-family-core'&&core.splits===0&&core.results>=active.results&&
+      full.splits>0&&full.results===core.results&&
+      active.at<=core.at&&core.at<=full.at
+    )
+  };
+})()`);
 const uv45Cases=uv45Loaded?await representativeCases([['ultravasan45-2016','finisher']]):[null];
 caseResults.push(await openRunnerCase(uv45Cases[0]));
 const additionalCases=[...uv90Cases,...uv45Cases];
@@ -302,6 +321,7 @@ for(const request of mapRequests){
 const checks = {
   contracts:Object.values(contractChecks).every(Boolean),
   progressive:progressiveLoad.verified,
+  uv45Progressive:uv45Progressive.verified,
   modules:moduleChecks.verified,
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
@@ -316,7 +336,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,moduleChecks,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
