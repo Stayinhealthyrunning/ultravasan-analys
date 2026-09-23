@@ -190,7 +190,7 @@ assert.ok(appSource.includes('renderRunnerJourney(profile)')&&appSource.includes
 assert.ok(appSource.includes('renderRunnerVerifiedHistory(profile)'),'dialogen ska exponera verifierad historik utan namnmatchning');
 assert.ok(!appSource.includes('splits.map(s=>'),'den detaljerade mellantidstabellen får inte återgå till egen ad hoc-splitrendering');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Journey')&&stylesSourceU5.includes('.runner-journey-track'),'Journey ska ha egen responsiv layout');
-assert.ok(/assets\/styles\.css\?v=20260923-u5[a-z]*/.test(indexHtml)&&/assets\/app\.js\?v=20260923-u5[a-z]*/.test(indexHtml),'U5 UI-assets ska cache-bustas tillsammans');
+assert.ok(/assets\/styles\.css\?v=20260923-u6[a-z]*/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'U6 får föra gemensam CSS-generation framåt utan att ändra U5-appens JavaScript-generation');
 
 assert.ok(indexHtml.includes('id="compareH2HButton"')&&indexHtml.includes('id="headToHeadDialog"'),'U5 ska exponera Head-to-head från befintligt löparurval');
 assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'),'Head-to-head UI ska använda RunnerAnalysis-modellen');
