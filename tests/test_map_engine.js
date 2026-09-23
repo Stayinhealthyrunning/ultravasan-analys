@@ -34,6 +34,7 @@ async function bootstrapChecks(){
   assert.strictEqual(engine.LEAFLET_VENDOR_ROOT,'vendor/leaflet-1.9.4');
   assert.strictEqual(await engine.ensureLeaflet({root:{L:{version:'1.9.4'}}}),true,'befintlig Leaflet-instans ska återanvändas');
   assert.strictEqual(await engine.ensureLeaflet({root:{},document:null}),false,'utan DOM ska bootstrap ge kontrollerad false');
+  assert.strictEqual(await engine.ensureLeaflet({document:null}),false,'implicit runtime-root utan DOM ska ge kontrollerad false, inte ReferenceError');
   console.log('OK: U4 MapEngine centraliserar geometri och vendrad Leaflet-bootstrap deterministiskt');
 }
 bootstrapChecks().catch(error=>{console.error(error);process.exitCode=1});
