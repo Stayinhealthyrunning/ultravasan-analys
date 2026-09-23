@@ -160,6 +160,50 @@ const u6Plan=await evaluate(`(() => ({
   lastCumulative:document.querySelector('#coursePlanRows tr:last-child td:nth-child(3)')?.textContent?.trim()||null,
 }))()`);
 
+const u7Switch=await evaluate(`(() => {
+  const race=state.data.races.find(item=>item.race_key==='ultravasan90-2025');
+  if(!race)return null;
+  state.raceId=race.id;
+  const year=document.querySelector('#yearFilter');if(year)year.value=String(race.id);
+  refreshFilters();applyFilters();
+  return {id:race.id,key:race.race_key};
+})()`);
+await delay(250);
+const u7History=await evaluate(`(() => {
+  const data=window.ULTRAVASAN_ACTIVE_DATA,race=data.races.find(item=>item.race_key==='ultravasan90-2025');
+  const fingerprint=window.HistoryIntelligence?.fingerprint(data,race,{currentResults:state.filtered,referenceResults:familyResults(),minReferenceYears:2,sexFilterActive:false});
+  const verified=window.HistoryIntelligence?.verifiedHistories(data,'uv90')||[];
+  let candidate=null,model=null;
+  for(const group of verified){
+    const result=group.rows.at(-1);
+    const current=window.HistoryIntelligence.personHistory(data,result.id);
+    if(!candidate||current.comparable_series.length>model.comparable_series.length){candidate=result;model=current}
+    if(current.comparable_series.length>1)break;
+  }
+  if(candidate)renderRunnerHistory(candidate.id);
+  nerd.hall='veterans';renderHall();
+  return {
+    api:Boolean(window.HistoryIntelligence),
+    fingerprintPerformanceYears:fingerprint?.performance_reference_years||[],
+    fingerprintScopes:(fingerprint?.metrics||[]).map(metric=>[metric.id,metric.available,metric.reference_scope,metric.reference_n]),
+    fingerprintRows:document.querySelectorAll('#raceFingerprint .finger-row[data-history-scope]').length,
+    fingerprintMethod:(document.querySelector('.fingerprint-card .info-popup')?.textContent||'').trim(),
+    hallRows:document.querySelectorAll('#hallOfFame .hall-row[data-history-scope]').length,
+    hallMethod:(document.querySelector('.hall-card .info-popup')?.textContent||'').trim(),
+    classBreaks:document.querySelectorAll('#classEvolutionChart .class-evolution-course-break').length,
+    classMethod:(document.querySelector('#classEvolutionChart')?.closest('article')?.querySelector('.info-popup')?.textContent||'').trim(),
+    candidateId:candidate?.id||null,
+    verifiedPerson:model?.verified_person===true,
+    expectedSeries:model?.comparable_series?.length||0,
+    expectedSeparate:model?.incomparable_to_focus_count||0,
+    seriesRendered:document.querySelectorAll('#runnerHistory .history-series').length,
+    separateRendered:document.querySelectorAll('#runnerHistory .history-year.separate-series').length,
+    historyNote:(document.querySelector('#runnerHistory .history-identity-note')?.textContent||'').trim(),
+    archiveMethod:(document.querySelector('.history-lab .info-popup')?.textContent||'').trim(),
+  };
+})()`);
+await delay(100);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -482,6 +526,17 @@ const checks = {
     u6Plan.target==='09:30:00'&&u6Plan.rows===u6Initial.rows&&u6Plan.historical>0&&u6Plan.unavailable===0&&
     !u6Plan.status.includes('kan inte beräknas')&&u6Plan.lastCumulative&&u6Plan.lastCumulative!=='–'
   ),
+  historyIntelligence:Boolean(
+    u7Switch?.key==='ultravasan90-2025'&&u7History.api&&
+    u7History.fingerprintPerformanceYears.includes(2023)&&u7History.fingerprintPerformanceYears.includes(2024)&&
+    !u7History.fingerprintPerformanceYears.includes(2019)&&u7History.fingerprintRows===5&&
+    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===true&&item[2]==='whole-course-comparable-race-medians'&&item[3]>=2)&&
+    u7History.fingerprintMethod.includes('loppårsmedianerna')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
+    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion-byte')&&
+    u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>0&&u7History.seriesRendered===u7History.expectedSeries&&
+    u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
+    u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
+  ),
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -498,7 +553,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
