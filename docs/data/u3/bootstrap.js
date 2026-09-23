@@ -1,0 +1,1 @@
+window.ULTRAVASAN_U3_AVAILABLE=false;
