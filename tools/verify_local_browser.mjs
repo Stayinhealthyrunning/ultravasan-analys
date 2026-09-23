@@ -66,8 +66,16 @@ if (!ready) {
 
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
+  const loadedKeys=new Set(data.races.map(race=>race.race_key));
+  const activeFamilies=[...new Set(data.races.map(race=>contracts.familyForRace(race)))];
+  const activeFamily=activeFamilies.length===1?activeFamilies[0]:null;
+  const expectedKeys=new Set(
+    Object.entries(contracts.catalog.editions)
+      .filter(([,edition])=>edition.race_family===activeFamily)
+      .map(([key])=>key)
+  );
   return {
-    editions:data.races.length===Object.keys(contracts.catalog.editions).length,
+    editions:activeFamily!==null&&loadedKeys.size===expectedKeys.size&&[...loadedKeys].every(key=>expectedKeys.has(key)),
     routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
     families:data.races.every(race=>raceFamilyOf(race)===contracts.familyForRace(race)),
     unknown:window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,{race_key:'ultravasan90-2099',year:2025})===null,
