@@ -199,3 +199,14 @@ assert.ok(appSource.includes("$$('.runner-chip').forEach"),'alla valda löparchi
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Head-to-head'),'Head-to-head ska ha responsiv U5-layout');
 
 assert.ok(appSource.includes("h2hClose.onclick=()=>h2hDialog.close()"),'Head-to-head-dialogen ska ha fungerande stängknapp');
+
+const runnerFavoritesSource=fs.readFileSync(path.join(root,'docs/assets/runner-favorites.js'),'utf8');
+assert.ok(indexHtml.includes('id="runnerFavoritesList"')&&indexHtml.includes('id="runnerFavoritesCount"'),'individuell sökning ska exponera lokal favoritlista');
+assert.ok(indexHtml.includes('assets/runner-favorites.js?v=20260923-u5'),'huvudytan ska ladda U5 RunnerFavorites');
+assert.ok(indexHtml.indexOf('assets/runner-analysis.js')<indexHtml.indexOf('assets/runner-favorites.js')&&indexHtml.indexOf('assets/runner-favorites.js')<indexHtml.indexOf('assets/app.js'),'RunnerFavorites ska laddas före huvudappen');
+assert.ok(appSource.includes('window.RunnerFavorites?.referenceFor')&&appSource.includes('window.RunnerFavorites.toggle'),'profilen ska använda RunnerFavorites för referens och toggle');
+assert.ok(appSource.includes('function openRunnerFavorite(key)')&&appSource.includes('ensureActiveFamilyCore(ref.family,false)'),'favoritöppning ska kunna lazy-ladda historiskt resultat');
+assert.ok(runnerFavoritesSource.includes("STORAGE_KEY='ultravasan-runner-favorites-v1'")&&runnerFavoritesSource.includes('MAX_ITEMS=40'),'favoritlagret ska vara lokalt, versionsstyrt och begränsat');
+assert.ok(!runnerFavoritesSource.includes('person_key')&&!runnerFavoritesSource.includes('identityKey'),'favoriter får inte skapa eget personidentitetsantagande');
+assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: local favorites'),'favorit-UI ska ha egen responsiv U5-layout');
+assert.ok(indexHtml.includes('assets/styles.css?v=20260923-u5c')&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favorit-UI och app ska cache-bustas tillsammans');
