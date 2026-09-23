@@ -344,7 +344,6 @@ def migrated_state(conn: sqlite3.Connection) -> dict[str, Any]:
 
 def execute(conn: sqlite3.Connection, *, apply: bool) -> dict[str, Any]:
     before_protected = protected_state(conn)
-    before_audit = u2_identity_audit.audit(conn, Path(":memory:")) if False else None
     plan = migration_plan(conn)
 
     if apply:
