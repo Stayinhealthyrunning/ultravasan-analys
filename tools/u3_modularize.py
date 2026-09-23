@@ -111,18 +111,14 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     expected_edition_json = {
         f"ultravasan-edition-{race['race_key']}.json" for race in source["races"]
     }
-    expected_edition_js = {
-        f"ultravasan-edition-{race['race_key']}.js" for race in source["races"]
-    }
     actual_edition_json = {path.name for path in output_dir.glob("ultravasan-edition-*.json")}
     actual_edition_js = {path.name for path in output_dir.glob("ultravasan-edition-*.js")}
-    if actual_edition_json != expected_edition_json or actual_edition_js != expected_edition_js:
+    if actual_edition_json != expected_edition_json or actual_edition_js:
         raise RuntimeError(
             "Edition file set differs from catalog: "
             f"json_extra={sorted(actual_edition_json-expected_edition_json)}, "
             f"json_missing={sorted(expected_edition_json-actual_edition_json)}, "
-            f"js_extra={sorted(actual_edition_js-expected_edition_js)}, "
-            f"js_missing={sorted(expected_edition_js-actual_edition_js)}"
+            f"unexpected_js={sorted(actual_edition_js)}"
         )
 
     edition_races: dict[int, dict[str, Any]] = {}
@@ -135,9 +131,10 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         edition_key = str(int(race["id"]))
         spec = catalog["editions"][edition_key]
         chunk_path = output_dir / Path(spec["json"]).name
-        js_path = output_dir / Path(spec["js"]).name
-        if not chunk_path.exists() or not js_path.exists():
-            raise RuntimeError(f"Missing edition chunk files for {race_key}")
+        if "js" in spec:
+            raise RuntimeError(f"Edition {race_key} must be JSON-only")
+        if not chunk_path.exists():
+            raise RuntimeError(f"Missing edition JSON chunk for {race_key}")
         chunk = load_json(chunk_path)
         family = race_family_by_key[race_key]
         expected_scope = {
@@ -164,15 +161,6 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
         edition_splits.update(
             keyed(chunk["splits"], lambda row: (int(row["result_id"]), row["checkpoint_key"]))
         )
-
-        expected_js = (
-            "window.ULTRAVASAN_DATA_EDITIONS=window.ULTRAVASAN_DATA_EDITIONS||{};"
-            f"window.ULTRAVASAN_DATA_EDITIONS[{json.dumps(edition_key)}]="
-            + json.dumps(chunk, ensure_ascii=False, separators=(",", ":"))
-            + ";\n"
-        )
-        if js_path.read_text(encoding="utf-8") != expected_js:
-            raise RuntimeError(f"JSON/JavaScript payload mismatch for edition {race_key}")
 
         if spec["race_id"] != int(race["id"]):
             raise RuntimeError(f"Catalog race_id mismatch for {race_key}")
