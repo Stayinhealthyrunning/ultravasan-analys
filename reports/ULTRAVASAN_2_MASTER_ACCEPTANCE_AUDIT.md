@@ -131,7 +131,7 @@ test/browserbevis.
 |---|---|---|---|
 | G1 | Synkad karta, höjdprofil, segmentfördelning, berättelse och tabell. | PASS-EVIDENCE | U6 + Chromium synk. |
 | G2 | Segmentdistans/stigning/nedför/medianfart/Q25–Q75. | PASS-EVIDENCE | `course-intelligence.js`. |
-| G3 | Q10–Q90 när underlaget räcker. | **FAIL-CONFIRMED** | Ursprungskravet anger detta. `course-intelligence.js` innehåller Q25/Q75 men inga q10/q90-fält och testet verifierar dem inte. |
+| G3 | Q10–Q90 när underlaget räcker. | **FAIL-CONFIRMED** | Ursprungskravet anger detta. `docs/assets/course-intelligence.js::fieldStatsForSegment()` publicerar `q25_pace_seconds_per_km` och `q75_pace_seconds_per_km`/IQR men inga Q10/Q90-fält; `tests/test_course_intelligence.js` verifierar dem inte. |
 | G4 | Placeringsrörelse, pacing loss/fartretention och DNF-signal. | PASS-EVIDENCE | U6. |
 | G5 | Course Difficulty får inte hävda teknisk stigsvårighet eller fysisk absolut skala. | PASS-EVIDENCE | U6 metodcopy säger relativt index inom valt lopp/CourseVersion. |
 | G6 | Gotaleden använder flera separata svårighetsdimensioner och förbjuder syntetiskt totalscore; Ultravasan har ett fyrkomponentsindex. | **DECISION-REQUIRED** | Ultravasan U6 skapar `Difficulty=(P_climb+P_pacing+P_IQR+P_DNF)/4`. Kräver explicit metodbeslut och oberoende känslighetsanalys. |
@@ -149,7 +149,7 @@ test/browserbevis.
 | H3 | Personhistorik ska använda verifierad identitet och separata jämförbarhetsserier. | PASS-EVIDENCE | U7. |
 | H4 | Hall of Fame och Årets fingeravtryck ska moderniseras med jämförbarhetskontrakt. | PASS-EVIDENCE | U7. |
 | H5 | Klubb-/orthistorik ska bevaras och moderniseras. | PARTIAL | Vyn finns i `audience-analytics.js` och `docs/index.html`, men U7-rapport/test behandlar inte dess CourseVersion-kontrakt. |
-| H6 | Klubb-/orthistorikens median sluttid får inte bindas över inkompatibla CourseVersions. | **FAIL-CONFIRMED** | `renderClubHistory()` bygger en enda SVG-path genom alla år med `L` mellan varje giltig median utan jämförbarhetskontroll. |
+| H6 | Klubb-/orthistorikens median sluttid får inte bindas över inkompatibla CourseVersions. | **FAIL-CONFIRMED** | `docs/assets/audience-analytics.js::renderClubHistory()` bygger `years=familyRaces()` och en enda SVG-path genom alla år med `L` mellan varje giltig median. Funktionen frågar varken `HistoryEngine`/`HistoryIntelligence` eller CourseVersion/comparison key innan punkterna binds. |
 | H7 | “Mest förbättrad” klubb/ort måste ha definierad cross-year-jämförbarhet. | **REVIEW-GAP / sannolik avvikelse** | `clubHistoryImprovement()` jämför första/sista årens SM-index utan att fråga HistoryIntelligence/CourseVersion. Kräver metodbeslut och fix/test om prestationsregeln ska gälla. |
 | H8 | Club DNA ska bevaras. | PASS-EVIDENCE | UI finns. Metodiken ska dock Codex-granskas. |
 | H9 | Historisk kartduell ska bevaras. | PASS-EVIDENCE | U4/U5 browser map cases. |
@@ -160,7 +160,7 @@ test/browserbevis.
 
 | ID | Krav | Preliminär status | Bevis / auditnotering |
 |---|---|---|---|
-| I1 | Primär finish progression ska visa “10 % i mål / 25 % / 50 % · median / 75 % / 90 %” i stället för P10/P25/P50/P75/P90. | **FAIL-CONFIRMED** | Dessa etiketter/funktion hittas inte i Ultravasan-releasekandidaten. U8-rapporten kallar i stället en flerårs start/målgångsvy för “Finish progression”. Fryst Gotaleden har `GCharts.finishProgression()` med exakt beslutade etiketter. |
+| I1 | Primär finish progression ska visa “10 % i mål / 25 % / 50 % · median / 75 % / 90 %” i stället för P10/P25/P50/P75/P90. | **FAIL-CONFIRMED** | `docs/assets/nerdlab.js::renderPercentiles()` visar i stället nivåerna `Topp 1 %`, `Topp 5 %`, `Topp 10 %`, `Topp 25 %`, `Median`, `75-percentilen`; 90 %-nivån saknas och primärsemantiken är inte “andel i mål”. U8-rapporten använder dessutom termen Finish progression för en annan flerårsvy. Fryst Gotaleden har `GCharts.finishProgression()` med exakt de beslutade fem etiketterna och Q10/Q25/Q50/Q75/Q90. |
 | I2 | Fartretention: 100 = varje series egen hel-loppsreferens. | VERIFY-INDEPENDENTLY | U8 regressionskrav finns; Codex ska kontrollera formel + kohort mot Gotaleden. |
 | I3 | Centrala pacingdiagram ska visa median + Q25–Q75. | PASS-EVIDENCE | U8 test låser kvantiler; Codex ska stickprovsräkna verklig data. |
 | I4 | Gruppvyer för kön, klass och klubb/ort ska vara konsekventa. | VERIFY-INDEPENDENTLY | UI finns; full sida-mot-sida UX-audit återstår. |
@@ -174,7 +174,7 @@ test/browserbevis.
 | ID | Krav | Preliminär status | Bevis / auditnotering |
 |---|---|---|---|
 | J1 | URL/deep links ska återställa race/year/filter. | PASS-EVIDENCE för initial restore | `restoreUrl()` läser querystring. |
-| J2 | Browser back/forward/history ska fungera och testas. | **REVIEW-GAP / sannolikt FAIL** | `syncUrl()` använder endast `history.replaceState()`; ingen `popstate`-lyssnare hittades. Gotaleden E4 testade back/forward uttryckligen. |
+| J2 | Browser back/forward/history ska fungera och testas. | **REVIEW-GAP / sannolikt FAIL** | `docs/assets/audience-analytics.js::syncUrl()` använder `history.replaceState()` och `restoreUrl()` läser endast initial querystring; ingen `popstate`-lyssnare hittades i releasekandidaten. Gotaleden E4 testade back/forward uttryckligen. Codex ska reproducera faktisk browserpåverkan innan slutlig FAIL. |
 | J3 | XSS/HTML-injektion från konfig/source/data ska red-team-testas. | **REVIEW-GAP** | Ingen explicit XSS/onerror-mutationstest hittad i Ultravasan. Gotaleden E4 hittade ett verkligt P1 på detta sätt. |
 | J4 | Oberoende matematiska stickprov ska göras från rå/SQLite-data och jämföras med UI/modell. | **REVIEW-GAP** | Många unit-tester finns, men U9 innehåller ingen Gotaleden-lik oberoende tabell med verkliga hand-/SQL-beräkningar. |
 | J5 | DNF/DNS red-team. | PASS-EVIDENCE men ska stickprovas oberoende | ResultStatus/Journey/Replay tester och verkliga browserfall. |
