@@ -28,8 +28,15 @@ jobs:
       - name: Installera Python-beroenden
         run: python -m pip install -r requirements-test.txt
 
-      - name: Verifiera U0 golden master
-        run: python tools/u0_baseline.py --check
+      - name: Verifiera aktiv golden master
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f reports/U2_BASELINE.json ]; then
+            python tools/u2_baseline.py --check
+          else
+            python tools/u0_baseline.py --check
+          fi
 
       - name: Verifiera loppkontrakt och publicerade banversioner
         env:
