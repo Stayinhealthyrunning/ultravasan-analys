@@ -102,6 +102,9 @@ jobs:
           node --check docs/data/ultravasan-uv90.js
           node --check docs/data/ultravasan-uv45.js
           while IFS= read -r file; do
+            node --check "$file"
+          done < <(find docs/data -maxdepth 1 -type f -name "ultravasan-edition-*.js" | sort)
+          while IFS= read -r file; do
             node "$file"
           done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
           git diff --check
@@ -139,7 +142,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import subprocess
-          allowed={
+          required={
               "docs/data/ultravasan-data-catalog.js",
               "docs/data/ultravasan-data-catalog.json",
               "docs/data/ultravasan-uv90.json",
@@ -153,20 +156,23 @@ jobs:
               for line in subprocess.check_output(["git","status","--porcelain"],text=True).splitlines()
               if line.strip()
           }
-          unexpected=sorted(changed-allowed)
-          required={
-              "docs/data/ultravasan-data-catalog.js",
-              "docs/data/ultravasan-data-catalog.json",
-              "docs/data/ultravasan-uv90.json",
-              "docs/data/ultravasan-uv90.js",
-              "docs/data/ultravasan-uv45.json",
-              "docs/data/ultravasan-uv45.js",
-              "reports/U3_MODULAR_DATA_APPLIED.json",
+          edition_files={
+              path for path in changed
+              if path.startswith("docs/data/ultravasan-edition-")
+              and (path.endswith(".json") or path.endswith(".js"))
           }
+          unexpected=sorted(changed-required-edition_files)
           missing=sorted(required-changed)
+          edition_json={path for path in edition_files if path.endswith(".json")}
+          edition_js={path for path in edition_files if path.endswith(".js")}
+          if len(edition_json)!=22 or len(edition_js)!=22:
+              raise SystemExit(
+                  f"Expected 22 edition JSON + 22 edition JS files, got "
+                  f"{len(edition_json)} JSON and {len(edition_js)} JS"
+              )
           if unexpected or missing:
               raise SystemExit(f"Unexpected U3 diff. unexpected={unexpected}, missing={missing}")
-          print("U3 diff is restricted to:",", ".join(sorted(changed)))
+          print("U3 diff is restricted to catalog, family chunks, 22 edition pairs and report.")
           PY
 
       - name: Spara aktiveringen på main
@@ -180,6 +186,8 @@ jobs:
             docs/data/ultravasan-uv90.js \
             docs/data/ultravasan-uv45.json \
             docs/data/ultravasan-uv45.js \
+            docs/data/ultravasan-edition-*.json \
+            docs/data/ultravasan-edition-*.js \
             reports/U3_MODULAR_DATA_APPLIED.json
           git commit -m "Activate U3 modular browser data"
           git push origin HEAD:main
@@ -194,4 +202,5 @@ jobs:
             echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
             echo "- Legacy-monoliten behålls oförändrad som paritetskälla och fallback."
             echo "- Startsidan laddar efter aktivering endast vald loppfamiljs data."
+            echo "- Delade kartlänkar laddar endast de RaceEdition-chunks som valda result-ID:n tillhör."
           } >> "$GITHUB_STEP_SUMMARY"
