@@ -90,6 +90,14 @@ Delsträckelabbet. Måltempo/loppplan använder endast samma CourseVersion, mär
 distansfallback explicit och lämnar okända segment oallokerade i stället för att
 gissa.
 
+U7:s Historik 2.0 beskrivs i
+[`reports/U7_HISTORY_2.md`](reports/U7_HISTORY_2.md).
+History Intelligence återanvänder U2:s verifierade personidentitet och
+whole-course-jämförbarhet för Löpararkiv, Hall of Fame och Årets fingeravtryck.
+Klasshistorik och Klassutveckling bryter prestationslinjer och animation vid
+CourseVersion-gränser i stället för att skapa en skenbar trend över olika banor.
+Fingeravtryckets prestationsnormal byggs av lika viktade, jämförbara loppår.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
