@@ -4,26 +4,25 @@ const assert=require('assert');
 global.ULTRAVASAN_DATA_CATALOG={
   mode:'modular',
   totals:{races:3,results:4,splits:5},
-  result_family:{'1':'uv90','2':'uv90','3':'uv45','4':'uv45'},
-  result_edition:{'1':'uv90-a','2':'uv90-b','3':'uv45-a','4':'uv45-a'},
+  result_edition:{'1':101,'2':102,'3':201,'4':201},
   families:{uv90:{},uv45:{}},
   editions:{
-    'uv90-a':{race_family:'uv90'},
-    'uv90-b':{race_family:'uv90'},
-    'uv45-a':{race_family:'uv45'}
+    '101':{race_key:'uv90-a',race_family:'uv90'},
+    '102':{race_key:'uv90-b',race_family:'uv90'},
+    '201':{race_key:'uv45-a',race_family:'uv45'}
   }
 };
 const loader=require('../docs/assets/data-loader.js');
 
 const catalog=global.ULTRAVASAN_DATA_CATALOG;
-assert.strictEqual(loader.editionForResultId(1,catalog),'uv90-a');
-assert.strictEqual(loader.editionForResultId('3',catalog),'uv45-a');
+assert.strictEqual(loader.editionForResultId(1,catalog),'101');
+assert.strictEqual(loader.editionForResultId('3',catalog),'201');
 assert.strictEqual(loader.editionForResultId(99,catalog),null);
 assert.strictEqual(loader.familyForResultId(1,catalog),'uv90');
 assert.strictEqual(loader.familyForResultId('3',catalog),'uv45');
 assert.strictEqual(loader.familyForResultId(99,catalog),null);
 assert.strictEqual(
-  loader.familyForResultId(3,{result_edition:{'3':'uv45-a'},editions:{'uv45-a':{race_family:'uv45'}}}),
+  loader.familyForResultId(3,{result_edition:{'3':201},editions:{'201':{race_family:'uv45'}}}),
   'uv45',
   'familjen ska kunna härledas från edition-indexet'
 );
@@ -56,7 +55,7 @@ assert.strictEqual(merged.splits.length,2);
 assert.strictEqual(merged.meta.data_scope.kind,'merged-editions');
 
 async function main(){
-  global.ULTRAVASAN_DATA_EDITIONS={'uv90-a':a,'uv90-b':b};
+  global.ULTRAVASAN_DATA_EDITIONS={'101':a,'102':b};
   loader.clearCaches();
   const one=await loader.loadForResultIds([1]);
   assert.strictEqual(one,a,'ett result-ID ska ladda exakt sin edition');
