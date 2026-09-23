@@ -76,7 +76,10 @@ function setupRaceSwitch(){
   try{localStorage.setItem('ultravasan-race-family',family)}catch{}
 }
 
-const hydrateData=d=>{if(d?.__ultravasanHydrated)return d;window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});Object.defineProperty(d,'__ultravasanHydrated',{value:true,enumerable:false});return d};
+const hydrateData=d=>window.UltravasanDataAdapter.hydrate(d,{
+  statusApi:window.ResultStatus,
+  replayApi:window.RunnerReplay
+});
 const dataPhaseOf=d=>{
   const kind=d?.meta?.data_scope?.kind;
   return kind==='race-family-active-core'?'active':kind==='race-family-core'?'core':'full';
