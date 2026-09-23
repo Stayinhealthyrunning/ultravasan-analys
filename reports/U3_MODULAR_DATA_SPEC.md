@@ -48,6 +48,39 @@ Edition-lagret är medvetet JSON-only. Vid file:// används family-JavaScript so
 fallback. Därmed bevaras offline-funktionen utan att ytterligare cirka 43 MB
 edition-data behöver dupliceras som JavaScript i repot.
 
+## U3.4: progressive family core + splitdata
+
+Startsidan behöver inte alla 139 910 mellantider för att visa resultatlista,
+filter, KPI:er, sluttidsfördelning och årsöversikt. Family-lagret är därför nu
+delat i två transporter:
+
+| Familj | Core JSON | Split JSON | Resultat | Splits |
+| --- | ---: | ---: | ---: | ---: |
+| UV90 | 7 386 601 byte | 24 676 372 byte | 15 521 | 108 640 |
+| UV45 | 4 174 374 byte | 6 453 998 byte | 8 901 | 31 270 |
+
+UV90:s första datalast minskar därmed från 42 688 494 byte legacydata till
+7 386 601 byte coredata, **82,7 % mindre före HTTP-komprimering**.
+
+Core innehåller races, checkpoints, results, stats och sources men inga splits.
+Splitmodulen innehåller endast splitrader och nödvändig metadata. DataLoader kan
+antingen ge endast core eller mergea core + splitdata till samma fulla
+family-kontrakt som tidigare analyskod förväntar sig.
+
+Applikationsflödet är progressivt:
+
+1. core laddas och första analysvyn renderas,
+2. splitdata laddas i bakgrunden,
+3. full family-data aktiveras atomärt,
+4. splitbaserade diagram och NerdLab renderas om,
+5. löpardialog och Replay inväntar full family-data om användaren klickar innan
+   bakgrundsladdningen är klar.
+
+Samtidiga önskemål om full family-data dedupliceras så bara en splitladdning per
+familj pågår. Browsergrinden verifierar både core- och full-fasen samt att
+runner search, löpardialog, Replay, NerdLab och målgruppsanalys fungerar efter
+hydrering.
+
 ## Loader-kontrakt
 
 docs/assets/data-loader.js är den enda browserkomponent som väljer fysisk
@@ -126,10 +159,9 @@ SQLite-databasen, U2-baslinjen och legacy-monoliten får inte ändras.
 
 ## Fortsättning inom U3
 
-Nästa flaskhals är startsidan: UV90 family-filen innehåller fortfarande 108 640
-splits och är cirka 32 MB. Nästa etapp separerar därför initialt
-resultat-/metadataunderlag från split-/Replay-data och därefter historikdata, så
-stora analyslager kan hämtas först när de faktiskt behövs.
+U3.4 har tagit bort splitdata ur den första analysladdningen. Nästa etapp är att
+separera flerårshistorik/personhistorik från den initiala family-core-payloaden
+och därefter pröva ännu finare RaceEdition-core för startsidans valda loppår.
 
-Slutmålet för U3 är att första analysvyn inte ska behöva ladda hela
-flerårshistorikens splitdata.
+Slutmålet för U3 är att första analysvyn bara ska hämta den minsta verifierade
+datamängd som krävs för just den vy användaren faktiskt öppnar.
