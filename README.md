@@ -38,6 +38,12 @@ U1:s explicita event-, utgåve-, käll-, tävlings- och bankontrakt beskrivs i
 [`reports/U1_EVENT_COURSE_CONTRACTS.md`](reports/U1_EVENT_COURSE_CONTRACTS.md).
 Den slutförda käll- och utgåvemodellen finns i
 [`reports/U1_SOURCE_EDITION_SPEC.md`](reports/U1_SOURCE_EDITION_SPEC.md).
+
+U2:s identitets- och historikkontrakt finns i
+[`reports/U2_IDENTITY_HISTORY_SPEC.md`](reports/U2_IDENTITY_HISTORY_SPEC.md).
+Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på namn
+eller ett äldre `athlete_id`. Tidsutveckling mellan utgåvor kräver dessutom
+explicit jämförbara CourseVersion-kontrakt.
 `config/races.json` tilldelar utgåvorna fem låsta ban-/kontrollmodeller från
 `config/course_versions.json`. För att bygga och verifiera katalogen:
 
