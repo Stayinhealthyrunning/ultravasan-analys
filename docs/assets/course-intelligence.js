@@ -255,17 +255,80 @@
     });
   }
 
+  function percentileRank(values,value){
+    const rows=(values||[]).filter(finite).map(Number).sort((a,b)=>a-b);
+    if(!rows.length||!finite(value))return null;
+    if(rows.length===1)return .5;
+    const target=Number(value);
+    let below=0,equal=0;
+    for(const item of rows){
+      if(item<target)below++;
+      else if(item===target)equal++;
+    }
+    return (below+(equal-1)/2)/(rows.length-1);
+  }
+
+  function applyDifficultyIndex(segments){
+    const definitions=[
+      ['climb_load','terrain','ascent_m_per_km'],
+      ['pacing_loss','field','median_pacing_loss_seconds_per_km'],
+      ['pace_dispersion','field','pace_iqr_seconds_per_km'],
+      ['dnf_exit_rate','field','dnf_exit_rate_pct'],
+    ];
+    const distributions=Object.fromEntries(definitions.map(([name,scope,key])=>[
+      name,
+      segments.map(segment=>segment?.[scope]?.[key]).filter(finite).map(Number)
+    ]));
+
+    const scored=segments.map(segment=>{
+      const components={};
+      for(const [name,scope,key] of definitions){
+        const raw=segment?.[scope]?.[key];
+        const percentile=percentileRank(distributions[name],raw);
+        components[name]=Object.freeze({
+          value:finite(raw)?Number(raw):null,
+          percentile:percentile===null?null:round(percentile*100,1),
+        });
+      }
+      const available=Object.values(components).filter(component=>component.percentile!==null);
+      const eligible=segment.field?.sufficient_sample===true&&available.length>=2;
+      const score=eligible?round(available.reduce((sum,item)=>sum+item.percentile,0)/available.length,1):null;
+      return {
+        ...segment,
+        difficulty:Object.freeze({
+          score,
+          relative_scope:'selected-race-course-version',
+          component_weighting:'equal-available-components',
+          evidence_components:available.length,
+          components:Object.freeze(components),
+        }),
+      };
+    });
+
+    const ranked=scored.filter(segment=>finite(segment.difficulty.score)).sort((a,b)=>b.difficulty.score-a.difficulty.score);
+    const rankByKey=new Map(ranked.map((segment,index)=>[segment.key,index+1]));
+    return scored.map(segment=>Object.freeze({
+      ...segment,
+      difficulty:Object.freeze({
+        ...segment.difficulty,
+        rank:rankByKey.get(segment.key)||null,
+        segment_count_ranked:ranked.length,
+      }),
+    }));
+  }
+
   function buildCourseModel(dataset,race,routeRegistry,{results=null,minSample=5}={}){
     if(!race)throw new Error('Course Intelligence kräver en explicit RaceEdition.');
     const edition=contracts.editionForRace(race);
     const course=courseForRace(race);
     const route=routeForRace(routeRegistry,race);
     if(!edition||!course)throw new Error(`RaceEdition saknar CourseVersion-kontrakt: ${race.race_key||race.id}`);
-    const segments=segmentContracts(course).map(segment=>Object.freeze({
+    const rawSegments=segmentContracts(course).map(segment=>Object.freeze({
       ...segment,
       terrain:terrainForSegment(route,segment),
       field:fieldStatsForSegment(dataset,race,segment,{results,minSample}),
     }));
+    const segments=applyDifficultyIndex(rawSegments);
     return Object.freeze({
       race,
       race_family:edition.race_family,
@@ -292,6 +355,8 @@
     segmentTimingSample,
     locatedDnfExit,
     fieldStatsForSegment,
+    percentileRank,
+    applyDifficultyIndex,
     buildCourseModel,
   });
 });
