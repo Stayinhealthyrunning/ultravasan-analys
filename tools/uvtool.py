@@ -1267,6 +1267,14 @@ def write_modular_web_data(
         family_by_race_id[int(race["id"])] = family
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    expected_edition_stems = {
+        f"ultravasan-edition-{race['race_key']}" for race in payload["races"]
+    }
+    for pattern in ("ultravasan-edition-*.json", "ultravasan-edition-*.js"):
+        for existing in output_dir.glob(pattern):
+            if existing.stem not in expected_edition_stems:
+                existing.unlink()
+
     total_results = len(payload["results"])
     total_splits = len(payload["splits"])
     global_totals = {
@@ -1618,6 +1626,14 @@ def export_web(args: argparse.Namespace) -> None:
                     for key in ("races", "results", "splits", "json_bytes", "js_bytes")
                 }
                 for family, spec in modular_catalog["families"].items()
+            },
+            "editions": {
+                "count": len(modular_catalog["editions"]),
+                "results": sum(spec["results"] for spec in modular_catalog["editions"].values()),
+                "splits": sum(spec["splits"] for spec in modular_catalog["editions"].values()),
+                "largest_json_bytes": max(
+                    spec["json_bytes"] for spec in modular_catalog["editions"].values()
+                ),
             },
         }
         (args.output.parent / "manifest.json").write_text(
