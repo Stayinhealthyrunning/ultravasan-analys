@@ -27,13 +27,16 @@ const races=[
 const checkpoints=[
   {race_id:1,checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
   {race_id:1,checkpoint_key:'smagan',name:'Smågan',sequence_no:1,distance_km:10},
-  {race_id:1,checkpoint_key:'mora',name:'Mora',sequence_no:2,distance_km:92},
+  {race_id:1,checkpoint_key:'mangsbodarna',name:'Mångsbodarna',sequence_no:2,distance_km:25},
+  {race_id:1,checkpoint_key:'mora',name:'Mora',sequence_no:3,distance_km:92},
   {race_id:2,checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
   {race_id:2,checkpoint_key:'smagan',name:'Smågan',sequence_no:1,distance_km:10},
-  {race_id:2,checkpoint_key:'mora',name:'Mora',sequence_no:2,distance_km:92},
+  {race_id:2,checkpoint_key:'mangsbodarna',name:'Mångsbodarna',sequence_no:2,distance_km:25},
+  {race_id:2,checkpoint_key:'mora',name:'Mora',sequence_no:3,distance_km:92},
   {race_id:3,checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
   {race_id:3,checkpoint_key:'smagan',name:'Smågan',sequence_no:1,distance_km:8.8},
-  {race_id:3,checkpoint_key:'mora',name:'Mora',sequence_no:2,distance_km:90},
+  {race_id:3,checkpoint_key:'mangsbodarna',name:'Mångsbodarna',sequence_no:2,distance_km:23.3},
+  {race_id:3,checkpoint_key:'mora',name:'Mora',sequence_no:3,distance_km:90},
   {race_id:4,checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
   {race_id:4,checkpoint_key:'mora',name:'Mora',sequence_no:1,distance_km:45},
 ];
@@ -47,13 +50,17 @@ const results=[
 ];
 const splits=[
   {result_id:101,checkpoint_key:'smagan',elapsed_seconds:3600,segment_seconds:3600,pace_seconds_per_km:360},
-  {result_id:101,checkpoint_key:'mora',elapsed_seconds:36000,segment_seconds:32400,pace_seconds_per_km:395},
+  {result_id:101,checkpoint_key:'mangsbodarna',elapsed_seconds:9000,segment_seconds:5400,pace_seconds_per_km:360},
+  {result_id:101,checkpoint_key:'mora',elapsed_seconds:36000,segment_seconds:27000,pace_seconds_per_km:403},
   {result_id:102,checkpoint_key:'smagan',elapsed_seconds:3500,segment_seconds:3500,pace_seconds_per_km:350},
-  {result_id:102,checkpoint_key:'mora',elapsed_seconds:35400,segment_seconds:31900,pace_seconds_per_km:389},
+  {result_id:102,checkpoint_key:'mangsbodarna',elapsed_seconds:8800,segment_seconds:5300,pace_seconds_per_km:353},
+  {result_id:102,checkpoint_key:'mora',elapsed_seconds:35400,segment_seconds:26600,pace_seconds_per_km:397},
   {result_id:103,checkpoint_key:'smagan',elapsed_seconds:3550,segment_seconds:3550,pace_seconds_per_km:355},
-  {result_id:103,checkpoint_key:'mora',elapsed_seconds:36600,segment_seconds:33050,pace_seconds_per_km:403},
+  {result_id:103,checkpoint_key:'mangsbodarna',elapsed_seconds:8900,segment_seconds:5350,pace_seconds_per_km:357},
+  {result_id:103,checkpoint_key:'mora',elapsed_seconds:36600,segment_seconds:27700,pace_seconds_per_km:413},
   {result_id:104,checkpoint_key:'smagan',elapsed_seconds:3400,segment_seconds:3400,pace_seconds_per_km:386},
-  {result_id:104,checkpoint_key:'mora',elapsed_seconds:35000,segment_seconds:31600,pace_seconds_per_km:389},
+  {result_id:104,checkpoint_key:'mangsbodarna',elapsed_seconds:8600,segment_seconds:5200,pace_seconds_per_km:359},
+  {result_id:104,checkpoint_key:'mora',elapsed_seconds:35000,segment_seconds:26400,pace_seconds_per_km:396},
   {result_id:105,checkpoint_key:'mora',elapsed_seconds:18000,segment_seconds:18000,pace_seconds_per_km:400},
 ];
 const dataset={races,checkpoints,results,splits};
@@ -70,8 +77,10 @@ assert.strictEqual(sameCourse.available,true);
 assert.strictEqual(sameCourse.same_course_version,true);
 assert.strictEqual(sameCourse.whole_course_comparable,true);
 assert.deepStrictEqual(sameCourse.finish_ranking.map(row=>[row.result_id,row.gap_seconds]),[[102,0],[103,1200]]);
-assert.ok(sameCourse.segments.every(segment=>segment.comparable));
-assert.strictEqual(sameCourse.segments[0].entries.find(row=>row.result_id===103).gap_seconds,50);
+const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
+assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
+assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
+assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
 assert.strictEqual(changedCourse.available,true);
