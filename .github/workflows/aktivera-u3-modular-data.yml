@@ -99,8 +99,10 @@ jobs:
             node --check "$file"
           done < <(find docs/assets tests tools -type f \( -name "*.js" -o -name "*.mjs" \) | sort)
           node --check docs/data/ultravasan-data-catalog.js
-          node --check docs/data/ultravasan-uv90.js
-          node --check docs/data/ultravasan-uv45.js
+          node --check docs/data/ultravasan-uv90-core.js
+          node --check docs/data/ultravasan-uv90-splits.js
+          node --check docs/data/ultravasan-uv45-core.js
+          node --check docs/data/ultravasan-uv45-splits.js
           while IFS= read -r file; do
             node "$file"
           done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
@@ -142,10 +144,14 @@ jobs:
           required={
               "docs/data/ultravasan-data-catalog.js",
               "docs/data/ultravasan-data-catalog.json",
-              "docs/data/ultravasan-uv90.json",
-              "docs/data/ultravasan-uv90.js",
-              "docs/data/ultravasan-uv45.json",
-              "docs/data/ultravasan-uv45.js",
+              "docs/data/ultravasan-uv90-core.json",
+              "docs/data/ultravasan-uv90-core.js",
+              "docs/data/ultravasan-uv90-splits.json",
+              "docs/data/ultravasan-uv90-splits.js",
+              "docs/data/ultravasan-uv45-core.json",
+              "docs/data/ultravasan-uv45-core.js",
+              "docs/data/ultravasan-uv45-splits.json",
+              "docs/data/ultravasan-uv45-splits.js",
               "reports/U3_MODULAR_DATA_APPLIED.json",
           }
           changed={
@@ -179,10 +185,14 @@ jobs:
           git add \
             docs/data/ultravasan-data-catalog.js \
             docs/data/ultravasan-data-catalog.json \
-            docs/data/ultravasan-uv90.json \
-            docs/data/ultravasan-uv90.js \
-            docs/data/ultravasan-uv45.json \
-            docs/data/ultravasan-uv45.js \
+            docs/data/ultravasan-uv90-core.json \
+            docs/data/ultravasan-uv90-core.js \
+            docs/data/ultravasan-uv90-splits.json \
+            docs/data/ultravasan-uv90-splits.js \
+            docs/data/ultravasan-uv45-core.json \
+            docs/data/ultravasan-uv45-core.js \
+            docs/data/ultravasan-uv45-splits.json \
+            docs/data/ultravasan-uv45-splits.js \
             docs/data/ultravasan-edition-*.json \
             reports/U3_MODULAR_DATA_APPLIED.json
           git commit -m "Activate U3 modular browser data"
@@ -197,6 +207,6 @@ jobs:
             echo ""
             echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
             echo "- Legacy-monoliten behålls oförändrad som paritetskälla och fallback."
-            echo "- Startsidan laddar efter aktivering endast vald loppfamiljs data."
+            echo "- Startsidan laddar först vald loppfamiljs coredata; mellantider fylls på progressivt."
             echo "- Delade kartlänkar laddar endast de RaceEdition-chunks som valda result-ID:n tillhör."
           } >> "$GITHUB_STEP_SUMMARY"

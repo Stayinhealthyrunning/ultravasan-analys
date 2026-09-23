@@ -1,5 +1,5 @@
 'use strict';
-const state={data:null,filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null,raceFamily:'uv90'};
+const state={data:null,dataPhase:'none',filtered:[],page:1,pageSize:10,sortKey:'overall_place',sortDir:1,raceId:null,raceFamily:'uv90'};
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const fmtTime=s=>{if(s==null)return '–';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.round(s%60);return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fixedFinishTimeBins=(times,step=900)=>{const values=(times||[]).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);if(!values.length)return{start:null,step,bins:[]};const start=Math.floor(values[0]/step)*step,count=Math.floor((values.at(-1)-start)/step)+1,bins=Array.from({length:count},(_,i)=>({from:start+i*step,to:start+(i+1)*step,count:0}));for(const value of values)bins[Math.floor((value-start)/step)].count++;return{start,step,bins}};
@@ -25,7 +25,8 @@ let raceSwitchBusy=false,raceSwitchHasError=false;
 function populateRaceYears(){const races=familyRaces().slice().sort((a,b)=>b.year-a.year),year=$('#yearFilter');year.innerHTML=races.map(r=>`<option value="${r.id}">${r.year}</option>`).join('');state.raceId=Number(year.value)||races[0]?.id||null}
 function waitForRacePaint(){return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
 function waitForRaceDelay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-function setRaceLoading(active,error=false){const status=$('#raceLoadStatus'),sw=$('.race-switch'),main=$('main');document.body.classList.toggle('race-is-loading',active);sw?.setAttribute('aria-busy',String(active));main?.setAttribute('aria-busy',String(active));$$('.race-switch-button').forEach(b=>{b.disabled=active;b.setAttribute('aria-disabled',String(active))});if(!status)return;status.classList.toggle('is-visible',active||error);status.classList.toggle('is-error',error);status.setAttribute('aria-hidden',String(!active&&!error));$('.race-load-copy strong').textContent=error?'Det gick inte att ladda loppdata.':'Laddar data...';$('.race-load-copy small').textContent=error?'Försök igen.':'Byter lopp och uppdaterar analyser'}
+function setRaceLoading(active,error=false){const status=$('#raceLoadStatus'),sw=$('.race-switch'),main=$('main');document.body.classList.toggle('race-is-loading',active);sw?.setAttribute('aria-busy',String(active));main?.setAttribute('aria-busy',String(active));document.querySelectorAll('.race-switch-button').forEach(b=>{b.disabled=active;b.setAttribute('aria-disabled',String(active))});if(!status)return;status.classList.toggle('is-visible',active||error);status.classList.toggle('is-error',error);status.setAttribute('aria-hidden',String(!active&&!error));$('.race-load-copy strong').textContent=error?'Det gick inte att ladda loppdata.':'Laddar data...';$('.race-load-copy small').textContent=error?'Försök igen.':'Byter lopp och uppdaterar analyser'}
+function setSplitLoading(active,error=false){const status=$('#raceLoadStatus');if(!status)return;status.classList.toggle('is-visible',active||error);status.classList.toggle('is-error',error);status.setAttribute('aria-hidden',String(!active&&!error));$('.race-load-copy strong').textContent=error?'Mellantiderna kunde inte laddas.':'Resultaten är klara';$('.race-load-copy small').textContent=error?'Grunddata kan fortfarande användas. Försök ladda om sidan.':'Laddar mellantider och fördjupade analyser…'}
 function updateRaceHero(img,ui,initial){if(!img)return Promise.resolve();if(img.src&&!initial)img.classList.add('switching');return new Promise((resolve,reject)=>{let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timeout);img.removeEventListener('load',loaded);img.removeEventListener('error',failed);img.classList.remove('switching');ok?resolve():reject(new Error('Rubrikbilden kunde inte laddas.'))},loaded=()=>finish(true),failed=()=>finish(false),timeout=setTimeout(failed,8000);img.addEventListener('load',loaded,{once:true});img.addEventListener('error',failed,{once:true});setTimeout(()=>{img.src=ui.hero;img.alt=ui.alt;if(img.complete)Promise.resolve().then(()=>finish(img.naturalWidth>0))},initial?0:140)})}
 function preferredRaceFamily(){
   const query=new URLSearchParams(location.search).get('race');
@@ -41,12 +42,9 @@ async function switchRaceFamily(family,initial=false){
   raceSwitchBusy=true;raceSwitchHasError=false;setRaceLoading(true);const started=performance.now();
   try{
     if(!initial)await waitForRacePaint();
-    const nextData=await window.UltravasanDataLoader.loadFamily(family);
-    if(nextData!==state.data){
-      state.data=hydrateData(nextData);
-      window.ULTRAVASAN_ACTIVE_DATA=state.data;
-    }
+    const nextData=await window.UltravasanDataLoader.loadFamilyCore(family);
     state.raceFamily=family;
+    if(nextData!==state.data)activateDataset(nextData);
     document.body.classList.toggle('race-uv45',family==='uv45');
     const sw=$('.race-switch');if(sw)sw.dataset.active=family;
     document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
@@ -57,18 +55,47 @@ async function switchRaceFamily(family,initial=false){
     try{localStorage.setItem('ultravasan-race-family',family)}catch{}
     await heroReady;await waitForRacePaint();
     const remaining=360-(performance.now()-started);if(remaining>0)await waitForRaceDelay(remaining);
-    setRaceLoading(false);return true;
+    setRaceLoading(false);
+    if(state.dataPhase==='core')startFamilyCompletion(family);else setSplitLoading(false);
+    return true;
   }catch(error){
-    console.error('Loppväxlingen misslyckades',error);raceSwitchHasError=true;setRaceLoading(false,true);return false;
+    window.ULTRAVASAN_RACE_SWITCH_ERROR=error?.message||String(error);console.error('Loppväxlingen misslyckades',error);raceSwitchHasError=true;setRaceLoading(false,true);return false;
   }finally{raceSwitchBusy=false}
 }
 function setupRaceSwitch(){
-  const saved=preferredRaceFamily();
+  const family=preferredRaceFamily();
+  state.raceFamily=family;
   document.querySelectorAll('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));
-  switchRaceFamily(saved,true);
+  document.body.classList.toggle('race-uv45',family==='uv45');
+  const sw=$('.race-switch');if(sw)sw.dataset.active=family;
+  document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+  const ui=raceUi[family],img=$('#heroHeaderImage');if(img){img.src=ui.hero;img.alt=ui.alt}
+  document.title=ui.title;
+  populateRaceYears();state.page=1;compareState.selected=[];
+  refreshFilters();applyFilters();setupMapCompare(true);setupMainRunnerSearch(true);
+  try{localStorage.setItem('ultravasan-race-family',family)}catch{}
 }
 
-const hydrateData=d=>{window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});return d};
+const hydrateData=d=>{if(d?.__ultravasanHydrated)return d;window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});Object.defineProperty(d,'__ultravasanHydrated',{value:true,enumerable:false});return d};
+const dataPhaseOf=d=>d?.meta?.data_scope?.kind==='race-family-core'?'core':'full';
+function activateDataset(data,phase=dataPhaseOf(data)){state.data=hydrateData(data);state.dataPhase=phase;window.ULTRAVASAN_ACTIVE_DATA=state.data;window.ULTRAVASAN_CORE_READY=true;window.ULTRAVASAN_SPLITS_READY=phase==='full';const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||(window.ULTRAVASAN_DATA_PHASE_EVENTS=[]);events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length});if(events.length>20)events.shift();window.dispatchEvent(new CustomEvent('ultravasan:data-activated',{detail:{phase,family:state.raceFamily,data:state.data}}));return state.data}
+const familyFullLoads=new Map();
+async function ensureActiveFamilyFull(family=state.raceFamily,rerender=true){
+  if(state.raceFamily===family&&state.dataPhase==='full')return state.data;
+  let pending=familyFullLoads.get(family);
+  if(!pending){
+    pending=window.UltravasanDataLoader.loadFamily(family).finally(()=>familyFullLoads.delete(family));
+    familyFullLoads.set(family,pending);
+  }
+  const full=await pending;
+  if(state.raceFamily!==family)return full;
+  if(state.dataPhase==='full')return state.data;
+  activateDataset(full,'full');setSplitLoading(false);
+  if(rerender&&state.raceId)renderAll();
+  window.dispatchEvent(new CustomEvent('ultravasan:splits-ready',{detail:{family}}));
+  return state.data;
+}
+function startFamilyCompletion(family){setSplitLoading(true);ensureActiveFamilyFull(family,true).catch(error=>{window.ULTRAVASAN_SPLIT_LOAD_ERROR=error?.message||String(error);console.error('Mellantiderna kunde inte laddas',error);if(state.raceFamily===family)setSplitLoading(false,true)})}
 const splitsForResult=id=>window.UltravasanDataIndex.splitsForResult(state.data,id);
 const splitsForResults=rows=>window.UltravasanDataIndex.splitsForResults(state.data,rows);
 
@@ -77,15 +104,14 @@ async function load(){
     if(!window.UltravasanDataLoader)throw new Error('DataLoader saknas.');
     const family=preferredRaceFamily();
     state.raceFamily=family;
-    state.data=hydrateData(await window.UltravasanDataLoader.loadFamily(family));
-    window.ULTRAVASAN_ACTIVE_DATA=state.data;
+    activateDataset(await window.UltravasanDataLoader.loadFamilyCore(family));
     setup();
   }catch(e){
     console.error(e);
     $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
   }
 }
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase==='core')requestAnimationFrame(()=>{if(state.dataPhase==='core')startFamilyCompletion(state.raceFamily)})}
 let speedUnitControlsReady=false;
 function syncSpeedUnitControls(unit=speedUnit()){
   const select=$('#speedUnitFilter');if(select)select.value=unit;
@@ -105,7 +131,7 @@ const isDnsResult=r=>resultStatus(r).dns;
 const isDsqResult=r=>resultStatus(r).dsq;
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(compareClasses),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));renderAll()}
-function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';renderHistogram(times);renderPaceChart();renderStatistics();renderTable();if(typeof renderNerdLab==='function')renderNerdLab()}
+function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';renderHistogram(times);renderTable();if(state.dataPhase==='core')return;renderPaceChart();renderStatistics();if(typeof renderNerdLab==='function')renderNerdLab()}
 function svg(tag,attrs={},text=''){const a=Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(' ');return `<${tag} ${a}>${text}</${tag}>`}
 function renderHistogram(times){const el=$('#histogram');if(!times.length){el.innerHTML='<div class="empty">Inga sluttider i urvalet</div>';return}const grouped=fixedFinishTimeBins(times),bins=grouped.bins,counts=bins.map(bin=>bin.count),W=1000,H=270,p={l:44,r:14,t:12,b:42},{cellWidth:cw,barWidth,barOffset}=baseFinishHistogramGeometry(bins.length,W,p.l,p.r),ymax=Math.max(...counts,1);let s='';for(let i=0;i<=4;i++){const y=p.t+(H-p.t-p.b)*i/4;s+=svg('line',{x1:p.l,y1:y,x2:W-p.r,y2:y,class:'gridline'})+svg('text',{x:5,y:y+4},String(Math.round(ymax*(1-i/4))))}counts.forEach((c,i)=>{const h=(H-p.t-p.b)*c/ymax,x=p.l+i*cw+barOffset,y=H-p.b-h,bin=bins[i],tip=`${c} löpare, ${finishBinTime(bin.from)}–${finishBinTime(bin.to)}`;s+=`<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${h}" tabindex="0" role="img" aria-label="${tip}"><title>${tip}</title></rect>`;if(i%Math.max(1,Math.ceil(bins.length/7))===0||i===bins.length-1)s+=svg('text',{x:p.l+(i+.5)*cw,y:H-18,'text-anchor':'middle'},finishBinTime(bin.from))});s+=svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;$('#distributionLabel').textContent=`15-minutersintervall från ${finishBinTime(grouped.start)} · hälften: ${fmtTime(quantile(times,.25))}–${fmtTime(quantile(times,.75))}`}
 function renderPaceChart(){
@@ -140,11 +166,18 @@ function renderPaceChart(){
 }
 function renderTable(){const pages=Math.max(1,Math.ceil(state.filtered.length/state.pageSize));state.page=Math.min(state.page,pages);const start=(state.page-1)*state.pageSize,rows=state.filtered.slice(start,start+state.pageSize);$('#resultsBody').innerHTML=rows.length?rows.map(r=>`<tr data-id="${r.id}"><td>${r.overall_place??'–'}</td><td><div class="runner-name">${esc(r.name_as_published)}</div><div class="runner-meta">${r.bib?'#'+esc(r.bib):''}${r.city?' · '+esc(r.city):''}</div></td><td>${esc(r.sex||'–')}</td><td>${esc(r.age_class||'–')}</td><td>${esc(r.club||r.city||'–')}</td><td>${esc(r.nationality||'–')}</td><td class="time">${fmtTime(r.finish_seconds)}</td><td class="time">${fmtPace(r.pace_seconds_per_km)}</td><td><span class="status ${String(r.status).toLowerCase()}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9" class="empty">Inga resultat matchar filtren</td></tr>`;$$('#resultsBody tr[data-id]').forEach(tr=>tr.onclick=()=>openRunner(Number(tr.dataset.id)));$('#pageLabel').textContent=`Sida ${state.page} av ${pages}`;$('#prevPage').disabled=state.page<=1;$('#nextPage').disabled=state.page>=pages;$('#resultCountLabel').textContent=`${state.filtered.length.toLocaleString('sv-SE')} resultat`}
 function runnerRouteForRace(race){return window.RunnerReplay?.routeForRace(window.ULTRAVASAN_ROUTES,race)||null}
-function openRunner(id){
+async function openRunner(id){
+  const initial=state.data.results.find(x=>x.id===id);if(!initial)return;const family=state.raceFamily,dialog=$('#runnerDialog');
+  if(state.dataPhase!=='full'){
+    $('#runnerDetail').innerHTML='<div class="runner-detail"><div class="empty">Laddar mellantider och loppreplay…</div></div>';
+    if(!dialog.open)dialog.showModal();
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error(error);$('#runnerDetail').innerHTML='<div class="runner-detail"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
+    if(state.raceFamily!==family)return;
+  }
   const r=state.data.results.find(x=>x.id===id);if(!r)return;const race=state.data.races.find(x=>x.id===r.race_id),splits=splitsForResult(id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus});
   const replay=model?window.RunnerReplay.render(model):'<div class="runner-map-empty">Loppreplay kunde inte startas. Mellantiderna visas nedan.</div>',clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven',classPlace=window.RunnerReplay?.formatClassPlace(r.class_place)||'Saknas',wholePace=window.RunnerReplay?.wholeRacePace(r,race);
   $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||'Ultravasan 90')}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div><section class="runner-map-section">${replay}</section><details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${esc(cleanCheckpointName(s.checkpoint_name))}</td><td>${s.distance_km??'–'} km</td><td class="time">${fmtTime(s.elapsed_seconds)}</td><td class="time">${fmtTime(s.segment_seconds)}</td><td class="time">${fmtPace(s.pace_seconds_per_km)}</td><td>${s.place_overall??'–'}</td></tr>`).join('')||'<tr><td colspan="6">Mellantider saknas</td></tr>'}</tbody></table></div></details></div>`;
-  $('#runnerDialog').showModal();if(model)window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RACE_MEDIA_CONFIG);
+  if(!dialog.open)dialog.showModal();if(model)window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RACE_MEDIA_CONFIG);
 }
 
 const targetSimulatorSelections=new Map();
@@ -318,8 +351,9 @@ function createMapPayload(selected){
     splits:splitsForResults(selected)
   };
 }
-function openMapWithRunners(selected){
+async function openMapWithRunners(selected){
   const runners=(selected||[]).filter(Boolean).slice(0,5);if(!runners.length)return;
+  const family=state.raceFamily;if(state.dataPhase!=='full'){try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Kartduellen kunde inte ladda mellantider',error);return}if(state.raceFamily!==family)return}
   const ids=runners.map(r=>r.id).join(','),payload=createMapPayload(runners),token=`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
   try{
     sessionStorage.setItem(MAP_SESSION_KEY,JSON.stringify(payload));

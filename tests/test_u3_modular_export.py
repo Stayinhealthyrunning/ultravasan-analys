@@ -59,10 +59,16 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     stale_json.write_text("{}", encoding="utf-8")
     stale_js.write_text("window.obsolete=true;", encoding="utf-8")
     stale_current_js.write_text("window.obsolete=true;", encoding="utf-8")
+    stale_family_json = tmp_path / "ultravasan-uv90.json"
+    stale_family_js = tmp_path / "ultravasan-uv90.js"
+    stale_family_json.write_text("{}", encoding="utf-8")
+    stale_family_js.write_text("window.obsolete=true;", encoding="utf-8")
     catalog = uvtool.write_modular_web_data(payload, tmp_path, config)
     assert not stale_json.exists()
     assert not stale_js.exists()
     assert not stale_current_js.exists()
+    assert not stale_family_json.exists()
+    assert not stale_family_js.exists()
     assert catalog["mode"] == "modular"
     assert "result_family" not in catalog
     assert catalog["result_edition"] == {"10": 1, "20": 2}
@@ -77,12 +83,18 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     assert summary["results"] == 2
     assert summary["splits"] == 2
 
-    uv90 = json.loads((tmp_path / "ultravasan-uv90.json").read_text(encoding="utf-8"))
-    uv45 = json.loads((tmp_path / "ultravasan-uv45.json").read_text(encoding="utf-8"))
+    uv90_core = json.loads((tmp_path / "ultravasan-uv90-core.json").read_text(encoding="utf-8"))
+    uv90_splits = json.loads((tmp_path / "ultravasan-uv90-splits.json").read_text(encoding="utf-8"))
+    uv45_core = json.loads((tmp_path / "ultravasan-uv45-core.json").read_text(encoding="utf-8"))
+    uv45_splits = json.loads((tmp_path / "ultravasan-uv45-splits.json").read_text(encoding="utf-8"))
     edition90 = json.loads((tmp_path / "ultravasan-edition-uv90-a.json").read_text(encoding="utf-8"))
     edition45 = json.loads((tmp_path / "ultravasan-edition-uv45-a.json").read_text(encoding="utf-8"))
-    assert uv90["results"] == [payload["results"][0]]
-    assert uv45["results"] == [payload["results"][1]]
+    assert uv90_core["results"] == [payload["results"][0]]
+    assert uv90_core["splits"] == []
+    assert uv90_splits["results"] == []
+    assert uv90_splits["splits"] == [payload["splits"][0]]
+    assert uv45_core["results"] == [payload["results"][1]]
+    assert uv45_splits["splits"] == [payload["splits"][1]]
     assert edition90["results"] == [payload["results"][0]]
     assert edition90["splits"] == [payload["splits"][0]]
     assert edition90["meta"]["data_scope"]["kind"] == "race-edition"
@@ -90,6 +102,8 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     assert edition45["splits"] == [payload["splits"][1]]
     assert not (tmp_path / "ultravasan-edition-uv90-a.js").exists()
     assert not (tmp_path / "ultravasan-edition-uv45-a.js").exists()
+    assert (tmp_path / "ultravasan-uv90-core.js").exists()
+    assert (tmp_path / "ultravasan-uv90-splits.js").exists()
 
 
 def test_export_auto_detects_activated_modular_catalog(tmp_path: Path) -> None:

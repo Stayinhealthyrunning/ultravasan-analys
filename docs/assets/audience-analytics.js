@@ -97,6 +97,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const filterRowsForSexControl=(rows,key)=>{const v=sexVisibility(key);return rows.filter(r=>(v.M&&sexKey(r)==='M')||(v.F&&sexKey(r)==='F'))};
 
   function buildCaches(){
+    advanced.resultById.clear();
+    advanced.clubKeyByResult.clear();
+    advanced.clubDisplay.clear();
+    advanced.smIndex.clear();
+    advanced.classEvolutionCache.clear();
+    advanced.classEvolutionModel=null;
+    advanced.classEvolutionKey='';
     state.data.results.forEach(r=>advanced.resultById.set(r.id,r));
     advanced.splitsByResult=state.data.splitsByResult;
     advanced.splitEvidence=state.data.splitEvidence;
@@ -144,7 +151,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     applyFilters=function(){
       const f=filterValues();state.filtered=raceResults().filter(r=>(!f.sex||sexKey(r)===f.sex)&&(!f.cls||r.age_class===f.cls)&&(!f.club||advanced.clubKeyByResult.get(r.id)===f.club)&&(!f.status||r.status===f.status));
       state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));
-      syncUrl();renderAll();renderAudienceWorlds();
+      syncUrl();renderAll();if(state.dataPhase!=='core')renderAudienceWorlds();
     };
     const club=document.querySelector('#clubFilter');club?.addEventListener('change',()=>{state.page=1;applyFilters()});
     const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';const ci=document.querySelector('#clubFilterSearch');if(ci)ci.value='';applyFilters()};
@@ -518,7 +525,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
-  const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
+  const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data&&window.ULTRAVASAN_SPLITS_READY){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
