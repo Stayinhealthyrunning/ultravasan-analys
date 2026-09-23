@@ -1,0 +1,187 @@
+name: Aktivera U3 modulär webbdata
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Jag vill regenerera och aktivera U3:s modulära webbdata"
+        required: true
+        default: false
+        type: boolean
+      confirmation_text:
+        description: "Skriv exakt: ACTIVATE-U3-MODULAR-DATA"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-u3-modular-data
+  cancel-in-progress: false
+
+jobs:
+  activate:
+    if: ${{ inputs.confirm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Hämta main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installera beroenden
+        run: python -m pip install -r requirements-test.txt
+
+      - name: Säkerhetsgrind före U3
+        shell: bash
+        env:
+          CONFIRMATION_TEXT: ${{ inputs.confirmation_text }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION_TEXT" = "ACTIVATE-U3-MODULAR-DATA"
+          test "$(git branch --show-current)" = "main"
+          test -f reports/U2_BASELINE.json
+          test ! -f reports/U3_BASELINE.json
+          git diff --quiet
+          python tools/u2_baseline.py --check
+
+      - name: Skapa återställningspunkt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BACKUP_TAG="backup-before-u3-modular-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git tag -a "$BACKUP_TAG" "$GITHUB_SHA" -m "Återställningspunkt före U3 modulär webbdata"
+          git push origin "$BACKUP_TAG"
+          echo "BACKUP_TAG=$BACKUP_TAG" >> "$GITHUB_ENV"
+
+      - name: Regenerera U3-data och aktivera lazy loading
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/uvtool.py --db data/ultravasan.sqlite export \
+            --output docs/data/ultravasan.json \
+            --js-output docs/data/ultravasan-data.js
+          python tools/u3_modular_check.py docs/data
+          python tools/u3_activate.py docs/index.html
+          python tools/u3_baseline.py --write
+          python tools/u3_baseline.py --check
+
+      - name: Kör full regressionssvit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q
+          while IFS= read -r file; do
+            node --check "$file"
+          done < <(find docs/assets tests tools -type f \( -name "*.js" -o -name "*.mjs" \) | sort)
+          while IFS= read -r file; do
+            node "$file"
+          done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
+          git diff --check
+
+      - name: Installera Chromium
+        run: |
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Verifiera verkligt modulärt browserflöde
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory docs >"$RUNNER_TEMP/ultravasan-http.log" 2>&1 &
+          browser_path="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          "$browser_path" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --remote-debugging-port=9223 \
+            --user-data-dir="$RUNNER_TEMP/ultravasan-chromium" \
+            http://127.0.0.1:8765/ >"$RUNNER_TEMP/ultravasan-browser.log" 2>&1 &
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null
+          node tools/verify_local_browser.mjs
+
+      - name: Kontrollera exakt ändringsyta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import subprocess
+          changed = {
+              line[3:]
+              for line in subprocess.check_output(["git","status","--porcelain"],text=True).splitlines()
+              if line.strip()
+          }
+          fixed = {
+              "docs/index.html",
+              "docs/data/bootstrap.json",
+              "docs/data/bootstrap.js",
+              "docs/data/history-index.json",
+              "docs/data/history-index.js",
+              "docs/data/ultravasan.json",
+              "docs/data/ultravasan-data.js",
+              "docs/data/manifest.json",
+              "reports/U3_BASELINE.json",
+          }
+          allowed = set(fixed)
+          allowed.update(path for path in changed if path.startswith("docs/data/editions/"))
+          unexpected = sorted(changed - allowed)
+          required = fixed | {
+              path for path in changed if path.startswith("docs/data/editions/") and path.endswith(".json")
+          }
+          missing = sorted({
+              "docs/index.html",
+              "docs/data/bootstrap.json",
+              "docs/data/history-index.json",
+              "reports/U3_BASELINE.json",
+          } - changed)
+          edition_json = [p for p in changed if p.startswith("docs/data/editions/") and p.endswith(".json")]
+          edition_js = [p for p in changed if p.startswith("docs/data/editions/") and p.endswith(".js")]
+          if unexpected or missing or len(edition_json)!=22 or len(edition_js)!=22:
+              raise SystemExit(
+                  f"Unexpected U3 diff. unexpected={unexpected}, missing={missing}, "
+                  f"edition_json={len(edition_json)}, edition_js={len(edition_js)}"
+              )
+          print("U3 diff verified:",len(changed),"files")
+          PY
+
+      - name: Spara U3-aktiveringen på main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/index.html docs/data reports/U3_BASELINE.json
+          git commit -m "Activate U3 modular web data"
+          git push origin HEAD:main
+
+      - name: Sammanfattning
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## U3 modulär webbdata"
+            echo ""
+            echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
+            echo "- SQLite-databasen ändras inte."
+            echo "- Monoliten behålls som fallback men laddas inte synkront av startsidan."
+            echo "- U3-golden-master verifierar 22 edition bundles och full resultat/splitparitet."
+          } >> "$GITHUB_STEP_SUMMARY"
