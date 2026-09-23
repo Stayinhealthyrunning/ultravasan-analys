@@ -1,6 +1,7 @@
 'use strict';
 /* Advanced cross-year analytics. Works entirely in the browser on exported data. */
 const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null};
+const nHistoryEngine=typeof module!=='undefined'&&module.exports?require('./history-engine.js'):globalThis.UltravasanHistoryEngine;
 const n$=s=>document.querySelector(s), n$$=s=>[...document.querySelectorAll(s)];
 const nEsc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const nMedian=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
@@ -22,20 +23,13 @@ const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
 
-function athleteIdentityKey(r){
-  for(const [field,prefix] of [['athlete_id','athlete'],['person_id','person'],['canonical_athlete_key','canonical']]){
-    const value=r?.[field];if(value!==null&&value!==undefined&&String(value).trim()!=='')return `${prefix}:${value}`;
-  }
-  // Never infer identity from a name. Without a stable person key, keep results separate.
-  if(r?.id!==null&&r?.id!==undefined)return `result:${r.id}`;
-  if(r?.source_result_id)return `result:${r.race_id??'race'}:${r.source_code??'source'}:${r.source_result_id}`;
-  if(r?.bib)return `result:${r.race_id??'race'}:bib:${r.bib}`;
-  return null;
-}
-function groupAthleteHistories(results,races=[]){
-  const years=new Map((races||[]).map(r=>[r.id,Number(r.year)||0])),groups=new Map();
-  (results||[]).forEach((r,index)=>{const key=athleteIdentityKey(r)||`result-index:${index}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
-  return [...groups.entries()].map(([key,rows])=>({key,rows:rows.sort((a,b)=>(years.get(a.race_id)||0)-(years.get(b.race_id)||0)||(Number(a.id)||0)-(Number(b.id)||0))}));
+function athleteIdentityKey(r){return nHistoryEngine.identityKey(r)}
+function groupAthleteHistories(results,races=[]){return nHistoryEngine.groupHistories(results,races)}
+const nCourses=()=>globalThis.RACE_CATALOG?.courses||{};
+function nComparableFinishSeries(rows,minCount=1){
+  return nHistoryEngine.comparableSeries((rows||[]).filter(nIsFinished),state.data.races,nCourses())
+    .filter(series=>series.rows.length>=minCount)
+    .sort((a,b)=>b.rows.length-a.rows.length||String(a.key).localeCompare(String(b.key)));
 }
 
 function initNerdLab(){
@@ -136,15 +130,21 @@ function renderHall(){
   const el=n$('#hallOfFame'),explain=n$('#hallExplanation');if(!el)return;
   const histories=allHistories(),copy={
     veterans:'Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.',
-    improved:'Störst förbättring mellan löparens första och senaste fullföljda Ultravasan.',
-    consistent:'Minst tidsspridning mellan snabbaste och långsammaste lopp för löpare med minst tre målgångar.',
+    improved:'Störst förbättring inom en uttryckligen jämförbar banserie mellan löparens första och senaste fullföljda Ultravasan.',
+    consistent:'Minst tidsspridning inom en uttryckligen jämförbar banserie för löpare med minst tre målgångar.',
     chargers:'Flest vunna totalplaceringar från Evertsberg till Mora i ett och samma lopp.'
   };
   if(explain)explain.textContent=copy[nerd.hall]+' Fem kvinnor och fem män visas när underlaget räcker.';
   let rows=[];
   if(nerd.hall==='veterans')rows=histories.map(x=>({...x,completed:x.rows.filter(nIsFinished)})).filter(x=>x.completed.length>1).map(x=>{const years=x.completed.map(r=>state.data.races.find(q=>q.id===r.race_id)?.year).filter(Boolean);return{...x,rows:x.completed,score:x.completed.length,label:`${x.completed.length} fullföljda lopp`,detail:`${Math.min(...years)}–${Math.max(...years)}`,reason:`Har fullföljt ${x.completed.length} Ultravasan under ${years.length} registrerade loppår.`}}).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='improved')rows=histories.filter(x=>x.rows.filter(nIsFinished).length>1).map(x=>{const f=x.rows.filter(nIsFinished),first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds,fy=state.data.races.find(q=>q.id===first.race_id)?.year,ly=state.data.races.find(q=>q.id===last.race_id)?.year;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${fy} → ${ly}`,reason:`Förbättrade sluttiden från ${nTime(first.finish_seconds)} till ${nTime(last.finish_seconds)}.`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='consistent')rows=histories.filter(x=>x.rows.filter(nIsFinished).length>2).map(x=>{const f=x.rows.filter(nIsFinished),t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`${Math.round(range/60)} min spridning`,detail:`${f.length} målgångar`,reason:`Skillnaden mellan snabbaste och långsammaste lopp är bara ${Math.round(range/60)} minuter över ${f.length} målgångar.`}}).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='improved')rows=histories.map(x=>{
+    const candidates=nComparableFinishSeries(x.rows,2).map(series=>{const f=series.rows,first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds,fy=state.data.races.find(q=>q.id===first.race_id)?.year,ly=state.data.races.find(q=>q.id===last.race_id)?.year;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${fy} → ${ly}`,reason:`Förbättrade sluttiden från ${nTime(first.finish_seconds)} till ${nTime(last.finish_seconds)} inom samma jämförbarhetskontrakt.`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+    return candidates[0]||null;
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
+  if(nerd.hall==='consistent')rows=histories.map(x=>{
+    const candidates=nComparableFinishSeries(x.rows,3).map(series=>{const f=series.rows,t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`${Math.round(range/60)} min spridning`,detail:`${f.length} jämförbara målgångar`,reason:`Skillnaden mellan snabbaste och långsammaste lopp är ${Math.round(range/60)} minuter inom samma jämförbarhetskontrakt.`}}).sort((a,b)=>b.score-a.score);
+    return candidates[0]||null;
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
   if(nerd.hall==='chargers')rows=familyResults().map(r=>{const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`${mid.place_overall} → ${finish.place_overall}`,reason:`Avancerade från plats ${mid.place_overall} i Evertsberg till plats ${finish.place_overall} i Mora.`}:null}).filter(Boolean).sort((a,b)=>b.score-a.score);
   const renderGroup=(sex,title)=>{const list=rows.filter(x=>nSex(x.rows.at(-1))===sex).slice(0,5);return `<section class="hall-sex-group ${sex==='F'?'women':'men'}"><h4>${title}</h4>${list.length?list.map((x,i)=>{const r=x.rows.at(-1);return `<button class="hall-row" data-id="${r.id}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(x.detail||'')}</small><em>${nEsc(x.reason||x.label)}</em></span><i>${nEsc(x.label)}</i><u aria-hidden="true">Karta ↗</u></button>`}).join(''):'<div class="empty compact-empty">Underlaget räcker inte till fem placeringar.</div>'}</section>`};
   el.innerHTML=`<div class="hall-columns">${renderGroup('F','Kvinnor')}${renderGroup('M','Män')}</div>`;
@@ -207,12 +207,16 @@ function renderHistorySuggestions(){
   n$$('#historySuggestions button').forEach(b=>b.onclick=()=>{const g=allHistories().find(x=>x.key===b.dataset.key);if(g){input.value=g.rows.at(-1).name_as_published;box.hidden=true;renderRunnerHistory(g)}});
 }
 function renderRunnerHistory(g){
-  const el=n$('#runnerHistory');if(!el)return;const rows=g.rows,finish=rows.filter(nIsFinished),best=finish.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];
+  const el=n$('#runnerHistory');if(!el)return;
+  const rows=g.rows,finish=rows.filter(nIsFinished),series=nComparableFinishSeries(rows,1)[0]?.rows||[];
+  const best=series.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];
   const timeline=rows.map(r=>{const race=state.data.races.find(x=>x.id===r.race_id);return `<button class="history-year ${r.id===best?.id?'best':''}" data-id="${r.id}"><b>${race?.year||'–'}</b><strong>${nTime(r.finish_seconds)}</strong><span>plats ${r.overall_place??'–'} · ${nEsc(r.age_class||'')}</span></button>`}).join('');
-  const improvement=finish.length>1?finish[0].finish_seconds-finish.at(-1).finish_seconds:null;
-  el.innerHTML=`<div class="history-head"><div><span>${rows.length} starter</span><strong>${nEsc(rows.at(-1).name_as_published)}</strong></div><div><span>Bästa tid</span><strong>${nTime(best?.finish_seconds)}</strong></div><div><span>Utveckling</span><strong>${improvement==null?'–':`${improvement>=0?'−':'+'}${Math.abs(Math.round(improvement/60))} min`}</strong></div></div><div class="history-timeline">${timeline}</div><button id="historyMap" class="compare-map-button">Spela upp åren på karta →</button>`;
+  const improvement=series.length>1?series[0].finish_seconds-series.at(-1).finish_seconds:null;
+  const development=improvement!=null?`${improvement>=0?'−':'+'}${Math.abs(Math.round(improvement/60))} min`:finish.length>1?'Ej jämförbart':'–';
+  el.innerHTML=`<div class="history-head"><div><span>${rows.length} starter</span><strong>${nEsc(rows.at(-1).name_as_published)}</strong></div><div><span>Bästa tid i jämförbar serie</span><strong>${nTime(best?.finish_seconds)}</strong></div><div><span>Utveckling</span><strong>${development}</strong></div></div><div class="history-timeline">${timeline}</div><button id="historyMap" class="compare-map-button">Spela upp åren på karta →</button>`;
   n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(rows.slice(-5)):window.open(`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`,'_blank');
 }
+
 
 if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
