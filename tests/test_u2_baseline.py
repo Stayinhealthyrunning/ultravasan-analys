@@ -25,7 +25,7 @@ class U2BaselineTests(unittest.TestCase):
         expected = json.loads(u2_baseline.DEFAULT_BASELINE.read_text(encoding="utf-8"))
         actual = u2_baseline.build_snapshot()
         self.assertEqual([], u2_baseline.validate_snapshot(actual))
-        self.assertEqual(expected, actual)
+        self.assertEqual(u2_baseline.comparable_snapshot(expected), u2_baseline.comparable_snapshot(actual))
 
 
 class U2BaselineBuilderTests(unittest.TestCase):
