@@ -64,6 +64,30 @@ if (!ready) {
   throw new Error("Local application did not finish loading: " + JSON.stringify(diagnostics));
 }
 
+let fullReady=false;
+for(let attempt=0;attempt<300;attempt++){
+  if(await evaluate("Boolean(window.ULTRAVASAN_SPLITS_READY)")){fullReady=true;break}
+  await delay(100);
+}
+if(!fullReady){
+  const diagnostics=await evaluate(`(() => ({
+    phaseEvents:window.ULTRAVASAN_DATA_PHASE_EVENTS||[],
+    activeScope:window.ULTRAVASAN_ACTIVE_DATA?.meta?.data_scope||null,
+    activeSplits:window.ULTRAVASAN_ACTIVE_DATA?.splits?.length||0,
+  }))()`);
+  throw new Error("Progressive split data did not finish loading: "+JSON.stringify(diagnostics));
+}
+const progressiveLoad=await evaluate(`(() => {
+  const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||[];
+  const required=Boolean(window.ULTRAVASAN_DATA_CATALOG?.families?.uv90?.core);
+  const core=events.find(event=>event.family==='uv90'&&event.phase==='core')||null;
+  const full=events.find(event=>event.family==='uv90'&&event.phase==='full'&&(!core||event.at>=core.at))||null;
+  return {
+    required,core,full,
+    verified:!required||Boolean(core&&full&&core.splits===0&&core.results>0&&full.splits>0&&full.results===core.results&&full.at>=core.at)
+  };
+})()`);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -142,15 +166,15 @@ async function representativeCases(raceKeys) {
   })(${JSON.stringify(raceKeys)})`);
 }
 
-async function waitForActiveFamily(family){
-  for(let attempt=0;attempt<150;attempt++){
+async function waitForActiveFamily(family,requireSplits=true){
+  for(let attempt=0;attempt<250;attempt++){
     const active=await evaluate(`(() => {
       const data=window.ULTRAVASAN_ACTIVE_DATA;
-      if(!data?.races?.length)return null;
+      if(!data?.races?.length)return {family:null,splitsReady:false};
       const families=[...new Set(data.races.map(r=>window.RaceContracts.familyForRace(r)))];
-      return families.length===1?families[0]:families.join(',');
+      return {family:families.length===1?families[0]:families.join(','),splitsReady:Boolean(window.ULTRAVASAN_SPLITS_READY)};
     })()`);
-    if(active===family)return true;
+    if(active.family===family&&(!requireSplits||active.splitsReady))return true;
     await delay(100);
   }
   return false;
@@ -254,6 +278,7 @@ for(const request of mapRequests){
 
 const checks = {
   contracts:Object.values(contractChecks).every(Boolean),
+  progressive:progressiveLoad.verified,
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -267,7 +292,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
