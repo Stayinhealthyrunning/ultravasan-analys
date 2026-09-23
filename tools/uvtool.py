@@ -1277,6 +1277,12 @@ def write_modular_web_data(
     # valid race keys if an earlier development export created them.
     for existing in output_dir.glob("ultravasan-edition-*.js"):
         existing.unlink()
+    # U3.4 replaces monolithic family chunks with core + split-data modules.
+    for family in ("uv90", "uv45"):
+        for suffix in (".json", ".js"):
+            obsolete = output_dir / f"ultravasan-{family}{suffix}"
+            if obsolete.exists():
+                obsolete.unlink()
 
     total_results = len(payload["results"])
     total_splits = len(payload["splits"])
@@ -1391,28 +1397,56 @@ def write_modular_web_data(
         }
         family_results = results_by_family[family]
         family_splits = splits_by_family[family]
-        family_payload = scoped_payload(
-            scope={"kind": "race-family", "race_family": family},
+
+        core_payload = scoped_payload(
+            scope={"kind": "race-family-core", "race_family": family},
             race_ids=race_ids,
             results=family_results,
-            splits=family_splits,
+            splits=[],
         )
-        stem = f"ultravasan-{family}"
-        json_path, js_path = write_chunk(
-            stem=stem,
-            global_name="ULTRAVASAN_DATA_FAMILIES",
+        core_json, core_js = write_chunk(
+            stem=f"ultravasan-{family}-core",
+            global_name="ULTRAVASAN_DATA_FAMILY_CORES",
             global_key=family,
-            chunk_payload=family_payload,
+            chunk_payload=core_payload,
+        )
+
+        split_payload = {
+            "meta": {
+                **payload["meta"],
+                "data_scope": {"kind": "race-family-splits", "race_family": family},
+                "global_totals": global_totals,
+            },
+            "races": [],
+            "checkpoints": [],
+            "results": [],
+            "splits": family_splits,
+            "stats": {},
+            "sources": [],
+        }
+        split_json, split_js = write_chunk(
+            stem=f"ultravasan-{family}-splits",
+            global_name="ULTRAVASAN_DATA_FAMILY_SPLITS",
+            global_key=family,
+            chunk_payload=split_payload,
         )
         catalog["families"][family] = {
             "race_ids": sorted(race_ids),
             "races": len(race_ids),
             "results": len(family_results),
             "splits": len(family_splits),
-            "json": public_prefix + json_path.name,
-            "js": public_prefix + js_path.name,
-            "json_bytes": json_path.stat().st_size,
-            "js_bytes": js_path.stat().st_size,
+            "core": {
+                "json": public_prefix + core_json.name,
+                "js": public_prefix + core_js.name,
+                "json_bytes": core_json.stat().st_size,
+                "js_bytes": core_js.stat().st_size,
+            },
+            "split_data": {
+                "json": public_prefix + split_json.name,
+                "js": public_prefix + split_js.name,
+                "json_bytes": split_json.stat().st_size,
+                "js_bytes": split_js.stat().st_size,
+            },
         }
 
     for race in payload["races"]:
@@ -1627,8 +1661,11 @@ def export_web(args: argparse.Namespace) -> None:
             "catalog": "ultravasan-data-catalog.json",
             "families": {
                 family: {
-                    key: spec[key]
-                    for key in ("races", "results", "splits", "json_bytes", "js_bytes")
+                    "races": spec["races"],
+                    "results": spec["results"],
+                    "splits": spec["splits"],
+                    "core_json_bytes": spec["core"]["json_bytes"],
+                    "split_json_bytes": spec["split_data"]["json_bytes"],
                 }
                 for family, spec in modular_catalog["families"].items()
             },
