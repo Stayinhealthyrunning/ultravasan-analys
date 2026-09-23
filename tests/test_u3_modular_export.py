@@ -85,6 +85,9 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     summary = u3_modularize.validate(payload, tmp_path, config)
     assert summary["results"] == 2
     assert summary["splits"] == 2
+    assert summary["families"]["uv90"]["default_race_id"] == 1
+    assert summary["families"]["uv90"]["default_first_paint_json_bytes"] > 0
+    assert summary["largest_default_first_paint_with_catalog_bytes"] > summary["largest_default_first_paint_bytes"]
 
     uv90_shell = json.loads((tmp_path / "ultravasan-uv90-shell.json").read_text(encoding="utf-8"))
     uv90_core = json.loads((tmp_path / "ultravasan-uv90-core.json").read_text(encoding="utf-8"))
