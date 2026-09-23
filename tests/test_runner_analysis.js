@@ -47,6 +47,7 @@ const results=[
   {id:104,race_id:3,person_key:'p3',status:'FINISHED',finish_seconds:35000},
   {id:105,race_id:4,person_key:'p4',status:'FINISHED',finish_seconds:18000},
   {id:106,race_id:1,status:'FINISHED',finish_seconds:37000,name_as_published:'No Identity'},
+  {id:107,race_id:1,person_key:'p5',status:'DNF',finish_seconds:38000,name_as_published:'Contradictory DNF'},
 ];
 const splits=[
   {result_id:101,checkpoint_key:'smagan',elapsed_seconds:3600,segment_seconds:3600,pace_seconds_per_km:360},
@@ -71,6 +72,10 @@ assert.deepStrictEqual(history.rows.map(row=>row.id),[101,102],'verifierad ident
 const unverified=analysis.historyForResult(dataset,106);
 assert.strictEqual(unverified.verified_person,false);
 assert.deepStrictEqual(unverified.rows.map(row=>row.id),[106],'namn utan identitet får inte länkas');
+
+const contradictory=analysis.journeyForResult(dataset,107);
+assert.strictEqual(contradictory.status.dnf,true);
+assert.strictEqual(contradictory.rows.at(-1).source,'missing','motsägelsefull DNF-sluttid får inte skapas som exakt målpassage');
 
 const sameCourse=analysis.headToHead(dataset,[102,103]);
 assert.strictEqual(sameCourse.available,true);
