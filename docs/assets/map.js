@@ -4,7 +4,7 @@ const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const DUEL_PLAYBACK_DURATIONS=[30,60,120,180];
 const DUEL_ELEVATION_VIEW={width:1200,height:94,left:30,right:30,top:10,bottom:19};
-const app={data:null,registry:null,models:[],time:0,maxTime:1,speed:'120s',playing:false,lastFrame:0,lastUi:0,lastCamera:0,lastBattle:0,prevTime:0,map:null,tileLayer:null,routeOnly:false,leafletReady:false,focused:null,project:null,usedRoutes:[],allCoords:[],audio:null,musicEnabled:true,duelElevation:null};
+const app=window.UltravasanAppState.createMap();
 const $=s=>document.querySelector(s);
 const fmtTime=s=>{if(s==null||!Number.isFinite(s))return '–';s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
 const fmtPace=s=>window.SpeedUnits?.formatPace?.(s,window.SpeedUnits.get())??(!Number.isFinite(s)?'–':`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} /km`);
