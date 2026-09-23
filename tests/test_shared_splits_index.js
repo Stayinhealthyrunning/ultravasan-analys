@@ -209,7 +209,7 @@ assert.ok(appSource.includes('function openRunnerFavorite(key)')&&appSource.incl
 assert.ok(runnerFavoritesSource.includes("STORAGE_KEY='ultravasan-runner-favorites-v1'")&&runnerFavoritesSource.includes('MAX_ITEMS=40'),'favoritlagret ska vara lokalt, versionsstyrt och begränsat');
 assert.ok(!runnerFavoritesSource.includes('person_key')&&!runnerFavoritesSource.includes('identityKey'),'favoriter får inte skapa eget personidentitetsantagande');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: local favorites'),'favorit-UI ska ha egen responsiv U5-layout');
-assert.ok(indexHtml.includes('assets/styles.css?v=20260923-u5c')&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favorit-UI och app ska cache-bustas tillsammans');
+assert.ok(/assets\/styles\.css\?v=20260923-(?:u5c|u6[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favoriternas appgeneration ska bevaras och aktuell UI-CSS ska vara cache-bustad');
 
 const courseIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/course-intelligence.js'),'utf8');
 assert.ok(indexHtml.includes('assets/course-intelligence.js?v=20260923-u6'),'huvudytan ska ladda U6 Course Intelligence');
