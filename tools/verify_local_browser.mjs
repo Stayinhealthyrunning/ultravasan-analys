@@ -204,6 +204,40 @@ const u7History=await evaluate(`(() => {
 })()`);
 await delay(100);
 
+const u8Ux=await evaluate(`(() => {
+  const guide=document.querySelector('#analysisGuideDetails');if(guide)guide.open=true;
+  const classNav=document.querySelector('.analysis-nav-button[data-target="klasser"]');classNav?.click();
+  const activeNav=document.querySelector('.analysis-nav-button[aria-current="location"]');
+  const tip=document.querySelector('.info-tip[aria-controls][aria-describedby]');
+  const popupId=tip?.getAttribute('aria-controls')||'';
+  return {
+    skipHref:document.querySelector('.skip-link')?.getAttribute('href')||null,
+    h1Count:document.querySelectorAll('h1').length,
+    mainFocusable:document.querySelector('#mainContent')?.getAttribute('tabindex')||null,
+    race90Pressed:document.querySelector('#raceSwitch90')?.getAttribute('aria-pressed')||null,
+    race45Pressed:document.querySelector('#raceSwitch45')?.getAttribute('aria-pressed')||null,
+    falseTabs:document.querySelectorAll('.race-switch [role="tab"],.race-switch[role="tablist"]').length,
+    guideOpen:Boolean(guide?.open),
+    guideContext:(document.querySelector('#analysisGuideContext')?.textContent||'').trim(),
+    guideData:(document.querySelector('#analysisGuideDataStatus')?.textContent||'').trim(),
+    guideFilters:(document.querySelector('#analysisGuideFilterStatus')?.textContent||'').trim(),
+    activeNav:activeNav?.dataset.target||null,
+    infoLinked:Boolean(tip&&popupId&&tip.getAttribute('aria-describedby')===popupId&&document.getElementById(popupId)),
+    keyboardRows:document.querySelectorAll('#resultsBody tr[role="button"][tabindex="0"]').length,
+  };
+})()`);
+await evaluate(`(() => {
+  const row=document.querySelector('#resultsBody tr[role="button"]');
+  row?.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+})()`);
+await delay(650);
+const u8Keyboard=await evaluate(`(() => {
+  const dialog=document.querySelector('#runnerDialog'),open=Boolean(dialog?.open),text=(document.querySelector('#runnerDetail')?.innerText||'').trim();
+  if(dialog?.open)dialog.close();
+  document.querySelector('.analysis-nav-button[data-target="overview"]')?.click();
+  return {open,textLength:text.length};
+})()`);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -537,6 +571,14 @@ const checks = {
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
   ),
+  uxMethodology:Boolean(
+    u8Ux.skipHref==='#mainContent'&&u8Ux.h1Count===1&&u8Ux.mainFocusable==='-1'&&
+    u8Ux.race90Pressed==='true'&&u8Ux.race45Pressed==='false'&&u8Ux.falseTabs===0&&
+    u8Ux.guideOpen&&u8Ux.guideContext.includes('Ultravasan 90')&&u8Ux.guideContext.includes('2025')&&
+    u8Ux.guideData.includes('Full historik')&&u8Ux.guideFilters.includes('Visar')&&
+    u8Ux.activeNav==='klasser'&&u8Ux.infoLinked&&u8Ux.keyboardRows>0&&
+    u8Keyboard.open&&u8Keyboard.textLength>50
+  ),
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -553,7 +595,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
