@@ -49,11 +49,13 @@ CREATE TABLE IF NOT EXISTS athletes (
   city TEXT,
   country TEXT,
   athlete_match_status TEXT NOT NULL DEFAULT 'unverified',
+  person_key TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_athletes_normalized_name ON athletes(normalized_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_athletes_person_key ON athletes(person_key) WHERE person_key IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS athlete_external_ids (
   id INTEGER PRIMARY KEY,
@@ -113,6 +115,29 @@ CREATE TABLE IF NOT EXISTS results (
 CREATE INDEX IF NOT EXISTS idx_results_race ON results(race_id);
 CREATE INDEX IF NOT EXISTS idx_results_athlete ON results(athlete_id);
 CREATE INDEX IF NOT EXISTS idx_results_finish ON results(race_id, finish_seconds);
+
+CREATE TABLE IF NOT EXISTS identity_evidence (
+  id INTEGER PRIMARY KEY,
+  athlete_id INTEGER NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
+  result_id INTEGER REFERENCES results(id) ON DELETE CASCADE,
+  race_id INTEGER REFERENCES races(id) ON DELETE CASCADE,
+  source_id INTEGER NOT NULL REFERENCES sources(id),
+  provider TEXT NOT NULL,
+  namespace TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  external_id TEXT NOT NULL,
+  evidence_type TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  decision TEXT NOT NULL,
+  profile_url TEXT,
+  details_json TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(provider, namespace, scope, external_id, athlete_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_identity_evidence_athlete ON identity_evidence(athlete_id);
+CREATE INDEX IF NOT EXISTS idx_identity_evidence_result ON identity_evidence(result_id);
+CREATE INDEX IF NOT EXISTS idx_identity_evidence_lookup ON identity_evidence(provider, namespace, scope, external_id);
 
 CREATE TABLE IF NOT EXISTS splits (
   id INTEGER PRIMARY KEY,

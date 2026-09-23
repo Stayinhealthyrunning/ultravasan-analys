@@ -32,6 +32,8 @@ from urllib.parse import parse_qs, urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
+import identity_contracts
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data" / "ultravasan.sqlite"
 DEFAULT_CONFIG = ROOT / "config" / "races.json"
@@ -421,6 +423,7 @@ def ensure_schema_migrations(conn: sqlite3.Connection) -> None:
     for name, sql_type in additions.items():
         if name not in split_columns:
             conn.execute(f"ALTER TABLE splits ADD COLUMN {name} {sql_type}")
+    identity_contracts.ensure_identity_schema(conn)
     conn.commit()
 
 
@@ -819,38 +822,64 @@ def _candidate_is_safe_for_race(
 
 
 def find_or_create_athlete(conn: sqlite3.Connection, race_id: int, parsed: ParsedResult, source_id: int) -> int:
-    ext = conn.execute("SELECT athlete_id FROM athlete_external_ids WHERE source_id=? AND external_id=?", (source_id, parsed.source_result_id)).fetchone()
-    if ext:
-        return ext[0]
-    name = parsed.name or f"Okänd {parsed.source_result_id}"
-    norm = normalize(name)
+    """Resolve only deterministic provider identity; never merge people by name."""
+    identity_contracts.ensure_identity_schema(conn)
     source_code_row = conn.execute("SELECT code FROM sources WHERE id=?", (source_id,)).fetchone()
     source_code = source_code_row[0] if source_code_row else None
-    # VasaNerd's idpe is a stable person identifier across race years. When it
-    # is new, create a distinct athlete even if another runner has the same
-    # published name. Subsequent years link through athlete_external_ids.
-    if source_code == "vasanerd":
-        compatible = []
-    else:
-        candidates = conn.execute("SELECT * FROM athletes WHERE normalized_name=?", (norm,)).fetchall()
-        compatible = [
-            c for c in candidates
-            if (not parsed.sex or not c["sex"] or parsed.sex == c["sex"])
-            and (not parsed.birth_year or not c["birth_year"] or parsed.birth_year == c["birth_year"])
-            and _candidate_is_safe_for_race(conn, c["id"], race_id, source_id, parsed)
-        ]
-    if len(compatible) == 1:
-        athlete_id = compatible[0]["id"]
-    else:
-        cur = conn.execute("""
-          INSERT INTO athletes(canonical_name,normalized_name,sex,birth_year,nationality,city,athlete_match_status)
-          VALUES(?,?,?,?,?,?,?)
-        """, (name, norm, parsed.sex, parsed.birth_year, parsed.nationality, parsed.city, "source-id" if source_code == "vasanerd" else "unverified"))
-        athlete_id = cur.lastrowid
-    conn.execute("""
-      INSERT OR IGNORE INTO athlete_external_ids(athlete_id,source_id,external_id,profile_url,confidence)
-      VALUES(?,?,?,?,?)
-    """, (athlete_id, source_id, parsed.source_result_id, parsed.source_url, 1.0))
+
+    ext = conn.execute(
+        "SELECT athlete_id FROM athlete_external_ids WHERE source_id=? AND external_id=?",
+        (source_id, parsed.source_result_id),
+    ).fetchone()
+    if ext:
+        athlete_id = ext[0]
+        identity_contracts.record_external_identity(
+            conn,
+            athlete_id=athlete_id,
+            source_id=source_id,
+            external_id=parsed.source_result_id,
+            profile_url=parsed.source_url,
+            race_id=race_id,
+        )
+        return athlete_id
+
+    # U2 identity contract: a new provider record is a new local athlete unless
+    # the provider identifier itself is person-scoped. Name, sex, birth year,
+    # class, city and other demographics are candidate evidence only and must
+    # never create an automatic cross-edition person link.
+    name = parsed.name or f"Okänd {parsed.source_result_id}"
+    norm = normalize(name)
+    cur = conn.execute(
+        """
+        INSERT INTO athletes(canonical_name,normalized_name,sex,birth_year,nationality,city,athlete_match_status)
+        VALUES(?,?,?,?,?,?,?)
+        """,
+        (
+            name,
+            norm,
+            parsed.sex,
+            parsed.birth_year,
+            parsed.nationality,
+            parsed.city,
+            "source-id" if source_code == "vasanerd" else "unverified",
+        ),
+    )
+    athlete_id = cur.lastrowid
+    conn.execute(
+        """
+        INSERT INTO athlete_external_ids(athlete_id,source_id,external_id,profile_url,confidence)
+        VALUES(?,?,?,?,?)
+        """,
+        (athlete_id, source_id, parsed.source_result_id, parsed.source_url, 1.0),
+    )
+    identity_contracts.record_external_identity(
+        conn,
+        athlete_id=athlete_id,
+        source_id=source_id,
+        external_id=parsed.source_result_id,
+        profile_url=parsed.source_url,
+        race_id=race_id,
+    )
     return athlete_id
 
 
@@ -884,6 +913,15 @@ def save_result(conn: sqlite3.Connection, race_id: int, source_id: int, distance
         class_place=excluded.class_place,pace_seconds_per_km=excluded.pace_seconds_per_km,raw_json=excluded.raw_json,imported_at=CURRENT_TIMESTAMP
     """, data)
     result_id = conn.execute("SELECT id FROM results WHERE race_id=? AND source_id=? AND source_result_id=?", (race_id, source_id, parsed.source_result_id)).fetchone()[0]
+    identity_contracts.record_external_identity(
+        conn,
+        athlete_id=athlete_id,
+        source_id=source_id,
+        external_id=parsed.source_result_id,
+        profile_url=parsed.source_url,
+        race_id=race_id,
+        result_id=result_id,
+    )
     cp_by_key = {c["checkpoint_key"]: c for c in checkpoints}
     last_elapsed = 0
     last_distance = 0.0
@@ -1200,9 +1238,11 @@ def export_web(args: argparse.Namespace) -> None:
     # Several sources can describe the same race performance. Keep all source
     # rows locally, but publish one merged record per race + canonical athlete.
     priority = {"vasaloppet_mika": 0, "vasaloppet_media": 1, "vasanerd": 2, "vasaloppet_pdf": 3, "duv": 4, "itra": 5, "manual": 6}
+    athlete_columns = {row[1] for row in conn.execute("PRAGMA table_info(athletes)")}
+    person_key_select = "a.person_key person_key" if "person_key" in athlete_columns else "NULL person_key"
     raw_results = []
-    for row in conn.execute("""
-      SELECT r.*, a.canonical_name, a.athlete_match_status, s.code source_code
+    for row in conn.execute(f"""
+      SELECT r.*, a.canonical_name, a.athlete_match_status, {person_key_select}, s.code source_code
       FROM results r JOIN athletes a ON a.id=r.athlete_id JOIN sources s ON s.id=r.source_id
       ORDER BY r.race_id, r.athlete_id
     """):
@@ -1227,6 +1267,25 @@ def export_web(args: argparse.Namespace) -> None:
         merged = dict(items[0])
         merged["source_codes"] = sorted({r["source_code"] for r in items}, key=lambda c: priority.get(c, 99))
         merged["source_count"] = len(items)
+
+        # Publish only verified person identity. Legacy athlete_id remains in the
+        # payload for local result plumbing but must not be interpreted as a
+        # cross-edition person key.
+        verified_person_keys = {
+            str(r["person_key"]).strip()
+            for r in items
+            if r.get("person_key") not in (None, "")
+        }
+        verified_person_keys.update(
+            identity_contracts.stable_person_key("vasanerd", "idpe", r["source_result_id"])
+            for r in items
+            if r.get("source_code") == "vasanerd" and r.get("source_result_id") not in (None, "")
+        )
+        if len(verified_person_keys) > 1:
+            raise IdentityCollisionError(
+                f"Conflicting verified person identities for race_id={merged['race_id']} athlete_id={merged['athlete_id']}"
+            )
+        merged["person_key"] = next(iter(verified_person_keys), None)
         for other in items[1:]:
             for field in merge_fields:
                 if merged.get(field) in (None, "", "UNKNOWN") and other.get(field) not in (None, "", "UNKNOWN"):
@@ -1277,7 +1336,13 @@ def export_web(args: argparse.Namespace) -> None:
         stats[str(race["id"])] = {"count": len([r for r in results if r["race_id"] == race["id"]]), "finishers": len(times), "times": percentiles(times), "statuses": statuses}
     sources = [dict(r) for r in conn.execute("SELECT code,name,base_url,source_type,terms_note FROM sources ORDER BY id")]
     latest_import = conn.execute("SELECT MAX(finished_at) FROM import_runs WHERE status='complete'").fetchone()[0]
-    meta = {"schema_version": 1, "generated_at": utc_now(), "latest_import": latest_import, "data_notice": "Resultatdata ska verifieras mot officiell källa. Personmatchning mellan år är konservativ och kan kräva manuell granskning."}
+    meta = {
+        "schema_version": 1,
+        "generated_at": utc_now(),
+        "latest_import": latest_import,
+        "identity_contract": "u2-person-key-v1",
+        "data_notice": "Resultatdata ska verifieras mot officiell källa. Flerårshistorik kräver verifierad personidentitet och explicit bankompatibilitet.",
+    }
     incomplete_years = [str(r["year"]) for r in races if stats.get(str(r["id"]), {}).get("count", 0) < 100]
     if incomplete_years:
         meta["coverage_note"] = "Ofullständig datatäckning för loppår: " + ", ".join(incomplete_years) + ". Kör onlineimporten eller ladda upp en officiell CSV-fil."
@@ -1287,7 +1352,7 @@ def export_web(args: argparse.Namespace) -> None:
         "id", "race_id", "athlete_id", "bib", "name_as_published", "canonical_name",
         "sex", "age_class", "nationality", "club", "city", "start_group", "status",
         "finish_seconds", "overall_place", "gender_place", "class_place",
-        "pace_seconds_per_km", "source_code", "source_result_id", "athlete_match_status"
+        "pace_seconds_per_km", "source_code", "source_result_id", "athlete_match_status", "person_key"
     }
     split_fields = {
         "result_id", "checkpoint_key", "elapsed_seconds", "segment_seconds",

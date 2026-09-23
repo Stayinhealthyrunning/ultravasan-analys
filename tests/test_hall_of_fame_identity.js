@@ -17,13 +17,25 @@ assert.deepStrictEqual(separate.map(g=>g.rows.filter(r=>r.finish_seconds).length
 assert.ok(!separate.some(g=>g.rows.length===2),'Ingen namne får visas med två lopp');
 assert.notStrictEqual(athleteIdentityKey(namesakes[0]),athleteIdentityKey(namesakes[1]),'Olika athlete_id måste ge olika identitet');
 
-const sameAthlete=[
-  {id:21,race_id:1,athlete_id:303,name_as_published:'Säker Löpare',bib:'4001',finish_seconds:20000},
-  {id:22,race_id:2,athlete_id:303,name_as_published:'Säker Löpare',bib:'5001',finish_seconds:19500},
+const legacyAthleteId=[
+  {id:21,race_id:1,athlete_id:303,source_code:'vasaloppet_mika',source_result_id:'E1:A',name_as_published:'Äldre länk',bib:'4001',finish_seconds:20000},
+  {id:22,race_id:2,athlete_id:303,source_code:'vasaloppet_mika',source_result_id:'E2:B',name_as_published:'Äldre länk',bib:'5001',finish_seconds:19500},
 ];
-const linked=groupAthleteHistories(sameAthlete,races);
-assert.strictEqual(linked.length,1,'Samma stabila athlete_id ska länka loppår');
-assert.strictEqual(linked[0].rows.length,2,'Den säkert identifierade löparen ska ha två lopp');
+const legacySeparated=groupAthleteHistories(legacyAthleteId,races);
+assert.strictEqual(legacySeparated.length,2,'athlete_id får inte ensam bära flerårig personidentitet');
+
+const linkedByPersonKey=groupAthleteHistories([
+  {id:25,race_id:1,person_key:'uvp_verified',name_as_published:'Verifierad Person',finish_seconds:20000},
+  {id:26,race_id:2,person_key:'uvp_verified',name_as_published:'Verifierad Person',finish_seconds:19500},
+],races);
+assert.strictEqual(linkedByPersonKey.length,1,'Samma verifierade person_key ska länka loppår');
+assert.strictEqual(linkedByPersonKey[0].rows.length,2,'Verifierad person ska ha två lopp');
+
+const linkedByVasaNerd=groupAthleteHistories([
+  {id:27,race_id:1,source_code:'vasanerd',source_result_id:'IDPE-77',name_as_published:'Vasa Person',finish_seconds:20000},
+  {id:28,race_id:2,source_code:'vasanerd',source_result_id:'IDPE-77',name_as_published:'Vasa Person',finish_seconds:19500},
+],races);
+assert.strictEqual(linkedByVasaNerd.length,1,'VasaNerd idpe får bära verifierad legacy-personidentitet');
 
 const linkedByPersonId=groupAthleteHistories([
   {id:23,race_id:1,person_id:'person-77',name_as_published:'Säker Person',finish_seconds:20000},
@@ -37,4 +49,4 @@ const noStableIdentity=[
 ];
 assert.strictEqual(groupAthleteHistories(noStableIdentity,races).length,2,'Samma namn utan stabil identitet ska förbli separata resultat');
 
-console.log('OK: Hall of Fame använder stabil löparidentitet, aldrig enbart namn');
+console.log('OK: Hall of Fame använder verifierad personidentitet, aldrig athlete_id eller namn som genväg');
