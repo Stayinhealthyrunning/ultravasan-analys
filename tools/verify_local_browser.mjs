@@ -59,7 +59,8 @@ if (!ready) {
     hasLegacyData: Boolean(window.ULTRAVASAN_DATA),
     hasActiveData: Boolean(window.ULTRAVASAN_ACTIVE_DATA),
     loadingText: document.querySelector('#loading')?.innerText || '',
-    loadingHidden: document.querySelector('#loading')?.classList.contains('hidden') || false
+    loadingHidden: document.querySelector('#loading')?.classList.contains('hidden') || false,
+    loadErrorStack: window.ULTRAVASAN_LOAD_ERROR_STACK || null
   }))()`);
   throw new Error("Local application did not finish loading: " + JSON.stringify(diagnostics));
 }
