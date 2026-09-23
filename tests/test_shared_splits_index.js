@@ -166,3 +166,12 @@ const playbackSourceU4=fs.readFileSync(path.join(root,'docs/assets/playback.js')
 assert.ok(mapSource.includes("require('./playback.js')")&&mapSource.includes('mapPlayback.rateFor'),'kartduellen ska använda U4 Playback');
 assert.ok(replaySourceU4.includes("require('./playback.js')")&&replaySourceU4.includes('playback.distanceStep'),'Replay ska använda samma U4 Playback');
 assert.ok(playbackSourceU4.includes('DURATIONS')&&playbackSourceU4.includes('DEFAULT_DURATION=120'),'Playback ska äga tillåtna tidslägen och standard');
+
+
+const raceMediaSourceU4=fs.readFileSync(path.join(root,'docs/assets/race-media.js'),'utf8');
+assert.ok(appSource.includes('window.RaceMedia'),'huvudappen ska använda kanoniska U4 RaceMedia');
+assert.ok(mapSource.includes("require('./race-media.js')")&&mapSource.includes('mapRaceMedia.applyAudioSource'),'kartduellen ska använda samma U4 RaceMedia');
+assert.ok(!appSource.includes('window.RACE_MEDIA_CONFIG'),'huvudappen får inte återgå till legacy-aliaset');
+assert.ok(raceMediaSourceU4.includes('root.RaceMedia=api;root.RACE_MEDIA_CONFIG=api'),'legacy media-alias ska endast exponeras från RaceMedia för bakåtkompatibilitet');
+assert.ok(indexHtml.includes('assets/race-media.js?v=20260923-u4b')&&indexHtml.includes('assets/app.js?v=20260923-u4b'),'huvudytan ska cache-busta ändrade U4.9-assets');
+assert.ok(mapHtml.includes('assets/map-engine.js?v=20260923-u4b')&&mapHtml.includes('assets/race-media.js?v=20260923-u4b')&&mapHtml.includes('assets/map.js?v=20260923-u4b'),'kartytan ska cache-busta ändrade U4.8/U4.9-assets');
