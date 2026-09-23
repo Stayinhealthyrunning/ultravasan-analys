@@ -592,7 +592,7 @@ function setupMapCompare(rebuild=false){
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
-  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;
+  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;const h2hDialog=$('#headToHeadDialog'),h2hClose=$('#headToHeadDialog .dialog-close');if(h2hDialog&&h2hClose)h2hClose.onclick=()=>h2hDialog.close();
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
