@@ -1,10 +1,12 @@
 'use strict';
 (function(root,factory){
   const contracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):root.RaceContracts;
-  const api=factory(contracts);
+  const mapEngine=typeof module==='object'&&module.exports?require('./map-engine.js'):root.UltravasanMapEngine;
+  const playback=typeof module==='object'&&module.exports?require('./playback.js'):root.UltravasanPlayback;
+  const api=factory(contracts,mapEngine,playback);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.RunnerReplay=api;
-})(typeof window!=='undefined'?window:globalThis,function(contracts){
+})(typeof window!=='undefined'?window:globalThis,function(contracts,mapEngine,playback){
   const SVG_W=920,SVG_H=430,MAP_PAD=42;
   const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.35;
   const MIN_REFERENCE_SIZE=5,MEDAL_MIN_SIZE=20,MEDAL_SIDE_SIZE=40;
@@ -39,25 +41,10 @@
 
   const routeForRace=(registry,race)=>contracts.supports(race,'replay')?contracts.routeForRace(registry,race):null;
 
-  function pointAtDistance(points,distance){
-    if(!Array.isArray(points)||!points.length)return null;
-    const d=clamp(distance,0,Number(points.at(-1)?.[2]||0));
-    let lo=0,hi=points.length-1;
-    while(lo<hi){const mid=(lo+hi)>>1;if(Number(points[mid][2])<d)lo=mid+1;else hi=mid}
-    const b=points[lo],a=points[Math.max(0,lo-1)],span=Number(b[2])-Number(a[2]),t=span>0?(d-Number(a[2]))/span:0;
-    return [Number(a[0])+(Number(b[0])-Number(a[0]))*t,Number(a[1])+(Number(b[1])-Number(a[1]))*t,d];
-  }
+  const pointAtDistance=mapEngine.pointAtDistance;
+  const terrainAtDistance=mapEngine.terrainAtDistance;
+  const elevationAtDistance=mapEngine.elevationAtDistance;
 
-  function terrainAtDistance(profile,distance){
-    if(!Array.isArray(profile)||!profile.length)return null;
-    const d=clamp(distance,0,Number(profile.at(-1)?.[0]||0));
-    let lo=0,hi=profile.length-1;
-    while(lo<hi){const mid=(lo+hi)>>1;if(Number(profile[mid][0])<d)lo=mid+1;else hi=mid}
-    const b=profile[lo],a=profile[Math.max(0,lo-1)],span=Number(b[0])-Number(a[0]),t=span>0?(d-Number(a[0]))/span:0;
-    const interpolate=index=>finite(a[index])&&finite(b[index])?Number(a[index])+(Number(b[index])-Number(a[index]))*t:(finite(a[index])?Number(a[index]):finite(b[index])?Number(b[index]):null);
-    return {distance:d,elevation:interpolate(1),grade:interpolate(2),cumulativeAscent:interpolate(3),cumulativeDescent:interpolate(4)};
-  }
-  function elevationAtDistance(profile,distance){return terrainAtDistance(profile,distance)?.elevation??null}
 
   function paceColor(pace,allPaces){
     if(!finite(pace))return {color:NEUTRAL_COLOR,colorIndex:null,label:'Tid saknas',icon:'—'};
@@ -422,8 +409,8 @@
     seekElevation(event){const p=this.model._elevationProjection,svg=event.currentTarget.ownerSVGElement,rect=svg.getBoundingClientRect(),x=(event.clientX-rect.left)*(p?.width||ELEV_W)/(rect.width||1),distance=(x-(p?.pad.l??ELEV_PAD.l))*this.model.totalDistance/((p?.width||ELEV_W)-(p?.pad.l??ELEV_PAD.l)-(p?.pad.r??ELEV_PAD.r));this.setDistance(distance,true,true)}
     togglePlay(userGesture=false){if(this.playing){this.pause();return}if(this.progressDistanceKm>=this.model.maxDistance-.001)this.setDistance(0,false,true);this.playing=true;this.playButton.innerHTML='❚❚ <span>Pausa</span>';this.playButton.setAttribute('aria-label','Pausa loppet');this.lastFrame=performance.now();if(userGesture)this.playAudio();this.frameId=requestAnimationFrame(now=>this.frame(now))}
     pause(pauseAudio=true){if(!this.playing&&pauseAudio)return;this.playing=false;if(this.frameId)cancelAnimationFrame(this.frameId);this.frameId=null;if(this.playButton){this.playButton.innerHTML='▶ <span>Fortsätt</span>';this.playButton.setAttribute('aria-label','Fortsätt loppet')}if(pauseAudio)this.audio?.pause()}
-    reset(){this.pause();if(this.speedSelect)this.speedSelect.value='120s';this.setVolume(DEFAULT_VOLUME);const slider=this.query('[data-replay-volume]');if(slider)slider.value=String(DEFAULT_VOLUME);this.mapView=initialMapView(this.model);this.applyMapView(true);this.setDistance(0,true,true);if(this.audio){this.audio.pause();try{this.audio.currentTime=0}catch{}}if(this.playButton)this.playButton.innerHTML='▶ <span>Spela loppet</span>'}
-    frame(now){if(!this.playing||this.destroyed)return;const dt=Math.min(.12,(now-this.lastFrame)/1000);this.lastFrame=now;const mode=this.speedSelect?.value||'120s';let next;if(String(mode).endsWith('s')){const duration=Math.max(1,Number(String(mode).slice(0,-1))||120);next=this.progressDistanceKm+this.model.maxDistance/duration*dt}else{const speed=Number(mode)||60,currentTime=timeAtDistance(this.model,this.progressDistanceKm);next=distanceAtTime(this.model,currentTime+dt*speed)}this.setDistance(next,false,false,now);if(this.progressDistanceKm>=this.model.maxDistance-.001){this.setDistance(this.model.maxDistance,false,true,now);this.playing=false;this.playButton.innerHTML='▶ <span>Spela igen</span>';this.playButton.setAttribute('aria-label','Spela loppet igen');this.announce(this.model.finished?'Löparen är i mål.':'Löparen har nått sin sista registrerade passage.');return}this.frameId=requestAnimationFrame(value=>this.frame(value))}
+    reset(){this.pause();if(this.speedSelect)this.speedSelect.value=playback.DEFAULT_MODE;this.setVolume(DEFAULT_VOLUME);const slider=this.query('[data-replay-volume]');if(slider)slider.value=String(DEFAULT_VOLUME);this.mapView=initialMapView(this.model);this.applyMapView(true);this.setDistance(0,true,true);if(this.audio){this.audio.pause();try{this.audio.currentTime=0}catch{}}if(this.playButton)this.playButton.innerHTML='▶ <span>Spela loppet</span>'}
+    frame(now){if(!this.playing||this.destroyed)return;const dt=Math.min(.12,(now-this.lastFrame)/1000);this.lastFrame=now;const mode=this.speedSelect?.value||playback.DEFAULT_MODE;let next;if(String(mode).endsWith('s')){next=this.progressDistanceKm+playback.distanceStep(this.model.maxDistance,mode,dt)}else{const speed=Number(mode)||60,currentTime=timeAtDistance(this.model,this.progressDistanceKm);next=distanceAtTime(this.model,currentTime+dt*speed)}this.setDistance(next,false,false,now);if(this.progressDistanceKm>=this.model.maxDistance-.001){this.setDistance(this.model.maxDistance,false,true,now);this.playing=false;this.playButton.innerHTML='▶ <span>Spela igen</span>';this.playButton.setAttribute('aria-label','Spela loppet igen');this.announce(this.model.finished?'Löparen är i mål.':'Löparen har nått sin sista registrerade passage.');return}this.frameId=requestAnimationFrame(value=>this.frame(value))}
     setDistance(distance,announce=false,forceText=false,now=performance.now()){
       this.progressDistanceKm=clamp(distance,0,this.model.maxDistance);const state=stateAt(this.model,this.progressDistanceKm);if(this.scrubber){this.scrubber.value=String(this.progressDistanceKm);this.scrubber.setAttribute('aria-valuenow',this.progressDistanceKm.toFixed(1))}
       const marker=this.query('.runner-replay-marker');if(marker&&state.coordinate){const pos=this.model._mapProjection.project(state.coordinate);this.updateMainMarker(state);if(this.mapView.follow&&this.mapView.scale>1){this.mapView=followMapView(this.mapView,{x:pos[0],y:pos[1]});this.applyMapView(false)}}

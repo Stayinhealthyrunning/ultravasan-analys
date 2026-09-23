@@ -194,12 +194,13 @@ const rankRace={race_key:'ultravasan45-test',distance_km:20},rankRoute={points:[
 assert.strictEqual(replay.stateAt(rankModel,5).lastKnownClassRank,null,'Klassplacering får inte visas före första kontrollen');
 assert.strictEqual(replay.stateAt(rankModel,15).lastKnownClassRank,1,'Klassplacering får inte interpoleras eller bytas före nästa kontroll');
 assert.strictEqual(replay.stateAt(rankModel,20).lastKnownClassRank,2,'Klassplaceringen ska bytas först vid nästa verifierade passage');
-const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8');
+const appSource=fs.readFileSync(require.resolve('../docs/assets/app.js'),'utf8'),adapterSource=fs.readFileSync(require.resolve('../docs/assets/data-adapter.js'),'utf8'),replaySource=fs.readFileSync(require.resolve('../docs/assets/runner-replay.js'),'utf8'),playbackSource=fs.readFileSync(require.resolve('../docs/assets/playback.js'),'utf8');
 assert.ok(appSource.includes('<span>Klassplacering</span>')&&appSource.includes('formatClassPlace(r.class_place)'),'Profilhuvudet ska visa verifierad slutlig klassplacering');
 assert.ok(appSource.includes('wholeRacePace(r,race)'),'Profilhuvudets snittfart ska beräknas från sluttid och loppdistans');
-assert.ok(appSource.includes('deriveClassPlacements(d.results,d.splits)'),'Passageplaceringarna ska byggas och cachas vid datahydrering');
-assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Återställning ska välja två minuters replay');
-assert.ok(replaySource.includes("const mode=this.speedSelect?.value||'120s'")&&replaySource.includes('Number(String(mode).slice(0,-1))||120'),'Replay-fallback ska vara två minuter');
+assert.ok(adapterSource.includes('deriveClassPlacements(data.results,data.splits)')&&appSource.includes('UltravasanDataAdapter.hydrate'),'Passageplaceringarna ska byggas och cachas av den gemensamma DataAdapter-hydreringen');
+assert.ok(replaySource.includes('this.speedSelect.value=playback.DEFAULT_MODE'),'Återställning ska använda Playback-standard');
+assert.ok(replaySource.includes('this.speedSelect?.value||playback.DEFAULT_MODE')&&replaySource.includes('playback.distanceStep'),'Replay ska använda gemensam Playback-normalisering och distanssteg');
+assert.ok(playbackSource.includes('DEFAULT_DURATION=120')&&playbackSource.includes('DEFAULT_MODE'),'Playback-standard ska vara två minuter');
 assert.ok(!replaySource.includes('this.fadeAudio(true)'),'Musiken får inte tonas ut automatiskt vid målgång');
 assert.ok(replaySource.includes('const normal=routeNormalAngle(this.model,distance),x=position[0],y=position[1]')&&!replaySource.includes("lane=key==='field'"),'Referensmarkörernas centrum ska sammanfalla med rutten utan sidooffset');
 assert.ok(replaySource.includes('this.progressDistanceKm')&&!replaySource.includes('this.distance='),'Replay ska använda en enda kontinuerlig global distansvariabel');
@@ -246,11 +247,10 @@ assert.ok(renderedUv45.includes('data-elevation-checkpoint="mora_warning"'),'UV4
 assert.ok(renderedOld.includes('data-replay-scrubber')&&renderedOld.includes('aria-live="polite"'),'Tangentbordsreglage och live-status saknas');
 
 // Kartduellen använder samma fyra tidsval och en synkroniserad höjdprofil.
-const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapCss=fs.readFileSync(require.resolve('../docs/assets/map.css'),'utf8'),mapSource=fs.readFileSync(require.resolve('../docs/assets/map.js'),'utf8'),speedBlock=mapHtml.match(/<select id="speedSelect">([\s\S]*?)<\/select>/)?.[1]||'',duelSpeedOptions=[...speedBlock.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/g)].map(match=>[match[1],match[2].trim()]);
+const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapCss=fs.readFileSync(require.resolve('../docs/assets/map.css'),'utf8'),mapSource=fs.readFileSync(require.resolve('../docs/assets/map.js'),'utf8'),appStateSource=fs.readFileSync(require.resolve('../docs/assets/app-state.js'),'utf8'),speedBlock=mapHtml.match(/<select id="speedSelect">([\s\S]*?)<\/select>/)?.[1]||'',duelSpeedOptions=[...speedBlock.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/g)].map(match=>[match[1],match[2].trim()]);
 assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
 assert.ok(/<option value="120s" selected>Hela loppet på 2 minuter<\/option>/.test(speedBlock),'Kartduellen ska öppnas med två minuter som standard');
-assert.ok(mapSource.includes("speed:'120s'")&&mapSource.includes("mode||'120s'"),'Kartduellens sessionsstandard och fallback ska vara två minuter');
-assert.ok(replaySource.includes("this.speedSelect.value='120s'"),'Individuell loppreplay ska återställas till två minuter');
+assert.ok(appStateSource.includes('speed:playback.DEFAULT_MODE')&&mapSource.includes('mapPlayback.rateFor'),'Kartduellen ska använda gemensam Playback-standard och rate-beräkning');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'180s'),40,'treminutersvalet ska skala hela duellen till exakt tre minuter');
