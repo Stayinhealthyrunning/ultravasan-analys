@@ -247,12 +247,12 @@ function renderCourseRacePlan(existingModel=null){
   catch(error){console.error('Loppplan kunde inte byggas',error);status.innerHTML='<strong>Loppplan saknas</strong><span>CourseVersion-underlaget kunde inte verifieras.</span>';rowsEl.innerHTML='';return}
   const years=plan.cohort_years.length?`${plan.cohort_years[0]}${plan.cohort_years.length>1?'–'+plan.cohort_years.at(-1):''}`:'inga loppår';
   if(plan.complete){
-    status.innerHTML=`<strong>${nTime(plan.target_finish_seconds)} · ${nEsc(plan.course_version_id)}</strong><span>${plan.cohort_finishers.toLocaleString('sv-SE')} fullföljande · ${nEsc(years)} · ${plan.historical_segments} historiska segment${plan.reservberäkning_segments?' · '+plan.reservberäkning_segments+' distansreservberäkning':''}</span>`;
+    status.innerHTML=`<strong>${nTime(plan.target_finish_seconds)} · ${nEsc(plan.course_version_id)}</strong><span>${plan.cohort_finishers.toLocaleString('sv-SE')} fullföljande · ${nEsc(years)} · ${plan.historical_segments} historiska segment${plan.fallback_segments?' · '+plan.fallback_segments+' distansreserv':''}</span>`;
   }else{
     status.innerHTML=`<strong>Komplett loppplan kan inte beräknas</strong><span>${plan.unavailable_segments} segment saknar både tillräcklig historik och explicit distans. Ingen resttid fördelas genom gissning.</span>`;
   }
   rowsEl.innerHTML=plan.rows.map(row=>{
-    const source=row.source==='historical-course-version'?`Historisk CourseVersion · n=${row.sample_n}`:row.source==='distance-reservberäkning'?'Distansreservberäkning':'Underlag saknas';
+    const source=row.source==='historical-course-version'?`Historisk CourseVersion · n=${row.sample_n}`:row.source==='distance-fallback'?'Distansreserv':'Underlag saknas';
     return `<tr class="${row.source}"><td><strong>${nEsc(row.to_name)}</strong><small>${nEsc(row.from_name)} → ${nEsc(row.to_name)}</small></td><td>${row.target_segment_seconds==null?'–':nTime(row.target_segment_seconds)}</td><td>${row.target_cumulative_seconds==null?'–':nTime(row.target_cumulative_seconds)}</td><td>${row.target_pace_seconds_per_km==null?'–':nPace(row.target_pace_seconds_per_km)}</td><td><span class="course-plan-source ${row.source}">${nEsc(source)}</span></td></tr>`;
   }).join('');
 }
@@ -390,7 +390,7 @@ function renderHallFallback(route){
   const cps=route.checkpoints||[];let content='<rect width="900" height="480" fill="#e7eee6"/><path d="M0 380 Q210 300 410 360 T900 300 V480 H0Z" fill="#c8dbc8" opacity=".8"/>';
   for(let i=1;i<cps.length;i++){const seg=routeSegmentPoints(route,cps[i-1].distance_km,cps[i].distance_km),d=seg.map((q,j)=>`${j?'L':'M'}${x(q[1]).toFixed(1)} ${y(q[0]).toFixed(1)}`).join(' ');content+=`<path d="${d}" fill="none" stroke="${HALL_SEGMENT_COLORS[(i-1)%HALL_SEGMENT_COLORS.length]}" stroke-width="7" stroke-linecap="round"/>`}
   cps.forEach((c,i)=>{content+=`<circle cx="${x(c.coord[1])}" cy="${y(c.coord[0])}" r="7" fill="#fff" stroke="#0d4c3a" stroke-width="3"/><text x="${x(c.coord[1])+9}" y="${y(c.coord[0])-9}" font-size="12" font-weight="800" fill="#10241d">${nEsc(c.short||c.name)}</text>`});
-  el.innerHTML=`<svg class="hall-reservberäkning-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bana med delsträckor">${content}</svg><div class="hall-map-reservberäkning-note">Kartbakgrunden kunde inte laddas. Den verkliga GPS-rutten visas ändå.</div>`;
+  el.innerHTML=`<svg class="hall-fallback-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bana med delsträckor">${content}</svg><div class="hall-map-fallback-note">Kartbakgrunden kunde inte laddas. Den verkliga GPS-rutten visas ändå.</div>`;
 }
 async function openHallMap(resultId){
   const r=state.data.results.find(x=>x.id===resultId),race=r&&state.data.races.find(x=>x.id===r.race_id),route=race&&runnerRouteForRace(race),dialog=n$('#hallMapDialog');if(!r||!race||!route||!dialog)return;
