@@ -68,7 +68,7 @@ function setupRaceSwitch(){
   document.querySelectorAll('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));
   document.body.classList.toggle('race-uv45',family==='uv45');
   const sw=$('.race-switch');if(sw)sw.dataset.active=family;
-  document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+  document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
   const ui=raceUi[family],img=$('#heroHeaderImage');if(img){img.src=ui.hero;img.alt=ui.alt}
   document.title=ui.title;
   populateRaceYears();state.page=1;compareState.selected=[];
