@@ -277,10 +277,11 @@
       ['pace_dispersion','field','pace_iqr_seconds_per_km'],
       ['dnf_exit_rate','field','dnf_exit_rate_pct'],
     ];
-    const eligibleSegments=(segments||[]).filter(segment=>segment?.field?.sufficient_sample===true);
+    const completeEvidence=segment=>segment?.field?.sufficient_sample===true&&definitions.every(([,scope,key])=>finite(segment?.[scope]?.[key]));
+    const eligibleSegments=(segments||[]).filter(completeEvidence);
     const distributions=Object.fromEntries(definitions.map(([name,scope,key])=>[
       name,
-      eligibleSegments.map(segment=>segment?.[scope]?.[key]).filter(finite).map(Number)
+      eligibleSegments.map(segment=>Number(segment[scope][key]))
     ]));
 
     const scored=segments.map(segment=>{
@@ -294,7 +295,7 @@
         });
       }
       const available=Object.values(components).filter(component=>component.percentile!==null);
-      const eligible=segment.field?.sufficient_sample===true&&available.length===definitions.length;
+      const eligible=completeEvidence(segment)&&available.length===definitions.length;
       const score=eligible?round(available.reduce((sum,item)=>sum+item.percentile,0)/definitions.length,1):null;
       return {
         ...segment,
