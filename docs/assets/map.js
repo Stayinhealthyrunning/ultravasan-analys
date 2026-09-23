@@ -11,7 +11,7 @@ const fmtPace=s=>window.SpeedUnits?.formatPace?.(s,window.SpeedUnits.get())??(!N
 const fmtGap=s=>!Number.isFinite(s)||s<1?'LEDARE':`+${fmtTime(s)}`;
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
+const median=window.UltravasanCharts.median;
 const mapContracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):window.RaceContracts;
 const mapRaceUi=typeof module==='object'&&module.exports?require('./race-ui.js'):window.RaceUI;
 const mapDataAdapter=typeof module==='object'&&module.exports?require('./data-adapter.js'):window.UltravasanDataAdapter;
