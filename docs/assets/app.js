@@ -523,7 +523,7 @@ function runnerH2HSegmentLabel(analysis,segment){
 function renderHeadToHead(analysis){
   const detail=$('#headToHeadDetail');if(!detail)return;
   if(!analysis?.available){
-    detail.innerHTML='<div class="head-to-head-shell"><p class="eyebrow">HEAD-TO-HEAD</p><h2>Jämförelsen kan inte byggas</h2><p class="head-to-head-method">Välj minst två löpare från samma loppfamilj.</p></div>';
+    detail.innerHTML='<div class="head-to-head-shell"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>Jämförelsen kan inte byggas</h2><p class="head-to-head-method">Välj minst två löpare från samma loppfamilj.</p></div>';
     return;
   }
   const resultById=new Map(analysis.results.map(result=>[String(result.id),result]));
@@ -555,7 +555,7 @@ function renderHeadToHead(analysis){
     ?'Sluttid och gap visas eftersom de valda loppen har en CourseVersion som kontraktet tillåter att jämföra.'
     :'Sluttiderna visas som källvärden, men ranking och gap är avstängda eftersom CourseVersion-kontraktet inte tillåter en direkt hel-loppsjämförelse.';
   detail.innerHTML=`<div class="head-to-head-shell">
-    <header class="head-to-head-head"><div><p class="eyebrow">HEAD-TO-HEAD</p><h2>Löpare mot löpare</h2><p>${analysis.results.length} valda löpare · ${esc(window.RaceUI.labelFor(analysis.family))}</p></div><span class="pill ${analysis.whole_course_comparable?'':'warning'}">${esc(versionText)}</span></header>
+    <header class="head-to-head-head"><div><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>Löpare mot löpare</h2><p>${analysis.results.length} valda löpare · ${esc(window.RaceUI.labelFor(analysis.family))}</p></div><span class="pill ${analysis.whole_course_comparable?'':'warning'}">${esc(versionText)}</span></header>
     <p class="head-to-head-method">${esc(method)}</p>
     <section class="h2h-finish-grid" aria-label="Sluttidsjämförelse">${finishHtml}</section>
     <section class="h2h-segments"><div class="runner-section-head"><div><p class="eyebrow">DELSTRÄCKOR</p><h3>Kontroll till kontroll</h3></div></div>
@@ -567,7 +567,7 @@ async function openHeadToHead(){
   if(compareState.selected.length<2)return;
   const family=state.raceFamily;
   if(state.dataPhase!=='full'){
-    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Head-to-head kunde inte ladda mellantider',error);return}
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Direktjämförelse kunde inte ladda mellantider',error);return}
     if(state.raceFamily!==family)return;
   }
   const ids=compareState.selected.map(result=>result.id);
@@ -610,10 +610,10 @@ function renderHeadToHead(model){
   if(!model?.available){
     const reasons={
       'need-two-runners':'Välj minst två löpare för head-to-head.',
-      'mixed-race-family':'Head-to-head kräver löpare från samma loppfamilj.',
+      'mixed-race-family':'Direktjämförelse kräver löpare från samma loppfamilj.',
       'missing-race-data':'Jämförelsen saknar nödvändigt loppunderlag.'
     };
-    return `<div class="head-to-head-shell"><header><p class="eyebrow">HEAD-TO-HEAD</p><h2>Jämförelsen kan inte visas</h2><p>${esc(reasons[model?.reason]||'Jämförelsen saknar tillräckligt underlag.')}</p></header></div>`;
+    return `<div class="head-to-head-shell"><header><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>Jämförelsen kan inte visas</h2><p>${esc(reasons[model?.reason]||'Jämförelsen saknar tillräckligt underlag.')}</p></header></div>`;
   }
   const byId=new Map(model.results.map(result=>[String(result.id),result]));
   const finish=model.whole_course_comparable
@@ -637,7 +637,7 @@ function renderHeadToHead(model){
     }).join('')}</div></section>`
     :'<aside class="h2h-warning"><strong>Inga jämförbara delsträckor.</strong><span>CourseVersion-kontrakten öppnar inte något gemensamt segment för de valda resultaten.</span></aside>';
 
-  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">HEAD-TO-HEAD</p><h2>${model.results.length} löpare sida vid sida</h2><p>Jämförelsen använder endast verifierade lopp- och segmentkontrakt. Olika banversioner får inte ett artificiellt tidsövertag.</p></header>${finish}${segments}</div>`;
+  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Jämförelsen använder endast verifierade lopp- och segmentkontrakt. Olika banversioner får inte ett artificiellt tidsövertag.</p></header>${finish}${segments}</div>`;
 }
 async function openHeadToHead(){
   if(compareState.selected.length<2)return;
@@ -646,7 +646,7 @@ async function openHeadToHead(){
   if(state.dataPhase!=='full'){
     detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Laddar mellantider för head-to-head…</div></div>';
     if(!dialog.open)dialog.showModal();
-    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Head-to-head kunde inte ladda mellantider',error);detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Direktjämförelse kunde inte ladda mellantider',error);detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
     if(state.raceFamily!==family)return;
   }
   const ids=compareState.selected.map(result=>result.id);
@@ -765,7 +765,7 @@ const INFO_HELP_EXTENDED=[
   ['#clubDna','Fem relativa klubbmått på en skala 0–100. Fart jämför medianprestationen, bredd visar antalet fullföljande, uthållighet är fullföljandegraden, avslutning mäter placeringslyft och deltagande jämför antalet startande.'],
   ['#clubCompareChart','Jämför medianfarten genom loppet för upp till fyra klubbar eller orter. Varje punkt visar delsträckans median i vald fartenhet och hur många registrerade löpare värdet bygger på. Punkten kan hovras eller fokuseras med tangentbord.'],
   ['#clubHistoryChart','Jämför valda klubbars och orters starter, målgångar och mediantid över åren. Staplarna använder vänster personaxel från noll och medianlinjerna höger tidsaxel. Hovra eller fokusera en stapel eller punkt för år, bortfall, målgångsandel och exakt median.'],
-  ['.nerd-hero','Race Intelligence Lab samlar delsträckejämförelser, percentiler, flerårshistorik, fältflöde och topplistor.'],
+  ['.nerd-hero','Loppanalyslabbet samlar delsträckejämförelser, percentiler, flerårshistorik, fältflöde och topplistor.'],
   ['#raceStories','Automatiska berättelser som sammanfattar det valda loppårets mest framträdande resultat och mönster.'],
   ['#segmentRanking','Välj två kontroller, klass och sortering för att jämföra prestationer på just den delen av loppet. Fart följer den gemensamma fartenheten, medan placering endast jämförs där officiella passager finns. Alla övriga aktiva loppfilter respekteras.'],
   ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika nivåer bland fullföljande löpare.'],
