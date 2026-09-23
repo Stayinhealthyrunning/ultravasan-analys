@@ -32,7 +32,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f reports/U2_BASELINE.json ]; then
+          if [ -f reports/U3_BASELINE.json ]; then
+            python tools/u3_baseline.py --check
+          elif [ -f reports/U2_BASELINE.json ]; then
             python tools/u2_baseline.py --check
           else
             python tools/u0_baseline.py --check
