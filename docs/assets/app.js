@@ -49,7 +49,7 @@ async function switchRaceFamily(family,initial=false){
     state.raceFamily=family;
     document.body.classList.toggle('race-uv45',family==='uv45');
     const sw=$('.race-switch');if(sw)sw.dataset.active=family;
-    $('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+    document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
     const heroReady=updateRaceHero($('#heroHeaderImage'),raceUi[family],initial);
     document.title=raceUi[family].title;
     populateRaceYears();state.page=1;compareState.selected=[];
@@ -64,7 +64,7 @@ async function switchRaceFamily(family,initial=false){
 }
 function setupRaceSwitch(){
   const saved=preferredRaceFamily();
-  $('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));
+  document.querySelectorAll('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));
   switchRaceFamily(saved,true);
 }
 
