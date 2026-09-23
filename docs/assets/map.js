@@ -16,13 +16,15 @@ const mapCharts=typeof module==='object'&&module.exports?require('./charts.js'):
 const median=mapCharts.median;
 const mapContracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):window.RaceContracts;
 const mapRaceUi=typeof module==='object'&&module.exports?require('./race-ui.js'):window.RaceUI;
+const mapEngine=typeof module==='object'&&module.exports?require('./map-engine.js'):window.UltravasanMapEngine;
 const mapDataAdapter=typeof module==='object'&&module.exports?require('./data-adapter.js'):window.UltravasanDataAdapter;
 const mapRaceFamily=r=>mapRaceUi.familyKey(r);
 function mixedRaceFamilyError(results,races){const selected=(results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id)));if(selected.some(family=>family===null))return 'Loppkontrakt saknas för någon av de valda löparna.';const families=[...new Set(selected)];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
 function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||null}
 function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
 function duelPlaybackRate(maxTime,mode){const duration=Number(String(mode||'120s').replace(/s$/,''));return Number.isFinite(maxTime)&&maxTime>0&&DUEL_PLAYBACK_DURATIONS.includes(duration)?maxTime/duration:maxTime/120}
-function elevationAtDistance(route,distance){const profile=route?.elevation_profile||[];if(!profile.length)return null;const d=clamp(Number(distance)||0,Number(profile[0][0])||0,Number(profile.at(-1)[0])||Number(route?.official_distance_km)||0);let lo=0,hi=profile.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(Number(profile[mid][0])<d)lo=mid+1;else hi=mid}if(lo===0)return Number(profile[0][1]);const a=profile[lo-1],b=profile[lo],span=Number(b[0])-Number(a[0]),f=span>0?(d-Number(a[0]))/span:0;return Number(a[1])+(Number(b[1])-Number(a[1]))*f}
+const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?.elevation_profile,distance);
+
 if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,duelPlaybackRate,elevationAtDistance};
 const hydrateData=d=>mapDataAdapter.hydrate(d);
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
@@ -90,9 +92,8 @@ function buildCheckpointJump(){
   $('#checkpointJump').innerHTML='<option value="">Kontroll…</option>'+checkpoints.map(cp=>`<option value="${cp.key}">${esc(cp.name||cp.short||cp.key)}</option>`).join('')
 }
 
-function validLatLng(value){
-  return Array.isArray(value)&&value.length>=2&&Number.isFinite(Number(value[0]))&&Number.isFinite(Number(value[1]));
-}
+const validLatLng=mapEngine.validLatLng;
+
 function switchToFallback(reason){
   app.leafletReady=false;app.routeOnly=true;
   try{if(app.map){app.map.remove();app.map=null}}catch(e){console.warn('Kunde inte stänga kartlagret',e)}
@@ -233,8 +234,9 @@ function updateDuelElevation(states){
   const view=app.duelElevation;if(!view)return;
   for(const state of states){const marker=$(`#duelElevationRunner${state.model.result.id}`);if(!marker)continue;const distance=clamp(state.progress,0,1)*view.total,elevation=elevationAtDistance(view.route,distance);marker.setAttribute('cx',view.x(distance));marker.setAttribute('cy',view.y(elevation));marker.setAttribute('aria-label',`${state.model.result.name_as_published}: ${distance.toFixed(1)} km, ${Math.round(elevation)} meter över havet`)}
 }
-function routePosition(route,distance){const pts=route.points,d=clamp(distance,0,route.official_distance_km);let lo=0,hi=pts.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(pts[mid][2]<d)lo=mid+1;else hi=mid}const i=Math.max(1,lo),a=pts[i-1],b=pts[i],span=b[2]-a[2],f=span>0?(d-a[2])/span:0;return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f]}
-function routeSlice(route,from,to){const a=clamp(from,0,route.official_distance_km),b=clamp(to,0,route.official_distance_km),out=[routePosition(route,a)];for(const p of route.points)if(p[2]>a&&p[2]<b)out.push([p[0],p[1]]);out.push(routePosition(route,b));return out}
+const routePosition=mapEngine.routePosition;
+const routeSlice=mapEngine.routeSlice;
+
 function statusAt(model,time){const a=model.anchors;if(time<=0)return {distance:0,progress:0,pace:null,segment:a[1]?.name||'Start',finished:false,stopped:false};if(time>=model.endTime){const last=a.at(-1),reachedFinish=model.finished||last.distance>=model.route.official_distance_km-.05;return {distance:reachedFinish?model.route.official_distance_km:last.distance,progress:reachedFinish?1:last.distance/model.route.official_distance_km,pace:null,segment:reachedFinish?'Mål':last.name,finished:reachedFinish,stopped:!reachedFinish}}let i=1;while(i<a.length&&a[i].time<time)i++;const p=a[i-1],n=a[i],dt=n.time-p.time,dd=n.distance-p.distance,f=dt>0?(time-p.time)/dt:0,distance=p.distance+dd*f;return {distance,progress:distance/model.route.official_distance_km,pace:dd>0?dt/dd:null,segment:`${p.name.replace('Start Sälen','Start')} → ${n.name.replace('Mora mål','Mora')}`,finished:false,stopped:false,next:n,prev:p}}
 function timeAtDistance(model,distance){const a=model.anchors,d=clamp(distance,0,a.at(-1).distance);if(d<=0)return 0;let i=1;while(i<a.length&&a[i].distance<d)i++;if(i>=a.length)return model.endTime;const p=a[i-1],n=a[i],dd=n.distance-p.distance;return p.time+(dd>0?(d-p.distance)/dd:0)*(n.time-p.time)}
 function timeAtProgress(model,progress){return timeAtDistance(model,progress*model.route.official_distance_km)}
