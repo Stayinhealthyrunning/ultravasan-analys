@@ -6,13 +6,13 @@ global.ULTRAVASAN_DATA_CATALOG={
   totals:{races:3,results:4,splits:5},
   result_edition:{'1':101,'2':102,'3':201,'4':201},
   families:{
-    uv90:{core:{},split_data:{}},
-    uv45:{core:{},split_data:{}}
+    uv90:{default_race_id:102,shell:{},core:{},split_data:{}},
+    uv45:{default_race_id:201,shell:{},core:{},split_data:{}}
   },
   editions:{
-    '101':{race_key:'uv90-a',race_family:'uv90'},
-    '102':{race_key:'uv90-b',race_family:'uv90'},
-    '201':{race_key:'uv45-a',race_family:'uv45'}
+    '101':{race_key:'uv90-a',race_family:'uv90',core:{}},
+    '102':{race_key:'uv90-b',race_family:'uv90',core:{}},
+    '201':{race_key:'uv45-a',race_family:'uv45',core:{}}
   }
 };
 const loader=require('../docs/assets/data-loader.js');
@@ -57,6 +57,24 @@ assert.strictEqual(merged.sources.length,2);
 assert.strictEqual(merged.splits.length,2);
 assert.strictEqual(merged.meta.data_scope.kind,'merged-editions');
 
+const familyShell={
+  meta:{identity_contract:'u2-person-key-v1',data_scope:{kind:'race-family-shell',race_family:'uv90'}},
+  races:[{id:1},{id:2}],
+  checkpoints:[{race_id:1,checkpoint_key:'a'},{race_id:2,checkpoint_key:'b'}],
+  results:[],splits:[],
+  stats:{'1':{count:1},'2':{count:1}},
+  sources:[{code:'x'}]
+};
+const editionCore={
+  meta:{identity_contract:'u2-person-key-v1',data_scope:{kind:'race-edition-core',race_family:'uv90',race_key:'uv90-b',race_id:102}},
+  races:[{id:2}],
+  checkpoints:[{race_id:2,checkpoint_key:'b'}],
+  results:[{id:2,race_id:2}],
+  splits:[],
+  stats:{'2':{count:1}},
+  sources:[{code:'x'}]
+};
+
 const familyCore={
   meta:{identity_contract:'u2-person-key-v1',data_scope:{kind:'race-family-core',race_family:'uv90'}},
   races:[{id:1},{id:2}],
@@ -74,9 +92,18 @@ const familySplits={
 };
 
 async function main(){
+  global.ULTRAVASAN_DATA_FAMILY_SHELLS={uv90:familyShell};
+  global.ULTRAVASAN_DATA_EDITION_CORES={'102':editionCore};
   global.ULTRAVASAN_DATA_FAMILY_CORES={uv90:familyCore};
   global.ULTRAVASAN_DATA_FAMILY_SPLITS={uv90:familySplits};
   loader.clearCaches();
+
+  const initial=await loader.loadInitialFamily('uv90');
+  assert.deepStrictEqual(initial.races.map(x=>x.id),[1,2]);
+  assert.deepStrictEqual(initial.results.map(x=>x.id),[2]);
+  assert.strictEqual(initial.splits.length,0);
+  assert.strictEqual(initial.meta.data_scope.kind,'race-family-active-core');
+  assert.strictEqual(initial.meta.data_scope.race_id,102);
 
   const core=await loader.loadFamilyCore('uv90');
   assert.strictEqual(core,familyCore,'första paint ska kunna använda endast family core');
@@ -99,11 +126,13 @@ async function main(){
 
   global.location={protocol:'file:'};
   loader.clearCaches();
+  const offlineInitial=await loader.loadInitialFamily('uv90');
+  assert.strictEqual(offlineInitial,familyCore,'file:// ska hoppa över HTTP-only shell/edition-core');
   const offline=await loader.loadForResultIds([1]);
   assert.strictEqual(offline.splits.length,2,'file:// ska falla tillbaka till komplett family core+splits');
   assert.strictEqual(offline.meta.data_scope.kind,'race-family');
   delete global.location;
 
-  console.log('OK: U3 DataLoader supports progressive core, full family, edition routing and offline fallback');
+  console.log('OK: U3 DataLoader supports active-edition first paint, progressive family hydration, edition routing and offline fallback');
 }
 main().catch(error=>{console.error(error);process.exitCode=1});
