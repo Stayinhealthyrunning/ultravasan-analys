@@ -1373,19 +1373,101 @@ def export_web(args: argparse.Namespace) -> None:
         "stats": stats, "sources": sources
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
+
+    # U3 modular web data. Keep the legacy monolith as an explicit fallback and
+    # audit artifact, but the browser no longer needs it for first paint.
+    modular_root = args.output.parent
+    editions_root = modular_root / "editions"
+    editions_root.mkdir(parents=True, exist_ok=True)
+    edition_manifest: dict[str, Any] = {}
+    result_race = {row["id"]: row["race_id"] for row in public_results}
+    splits_by_race: dict[int, list[dict[str, Any]]] = {int(race["id"]): [] for race in races}
+    for split in public_splits:
+        race_id = result_race.get(split["result_id"])
+        if race_id is not None:
+            splits_by_race.setdefault(int(race_id), []).append(split)
+
+    for race in races:
+        race_id = int(race["id"])
+        race_key = str(race["race_key"])
+        filename = race_key + ".json"
+        js_filename = race_key + ".js"
+        global_name = "ULTRAVASAN_EDITION_" + str(race_id)
+        edition_payload = {
+            "schema_version": 1,
+            "race_id": race_id,
+            "race_key": race_key,
+            "splits": splits_by_race.get(race_id, []),
+        }
+        edition_json = json.dumps(edition_payload, ensure_ascii=False, separators=(",", ":"))
+        json_path = editions_root / filename
+        js_path = editions_root / js_filename
+        json_path.write_text(edition_json, encoding="utf-8")
+        js_path.write_text(f"window.{global_name}=" + edition_json + ";\n", encoding="utf-8")
+        edition_manifest[str(race_id)] = {
+            "race_id": race_id,
+            "race_key": race_key,
+            "json": f"data/editions/{filename}",
+            "js": f"data/editions/{js_filename}",
+            "global": global_name,
+            "splits": len(edition_payload["splits"]),
+            "bytes": json_path.stat().st_size,
+        }
+
+    modular_meta = dict(meta)
+    modular_meta["data_contract"] = "u3-modular-v1"
+    modular_meta["modular_data"] = {
+        "bootstrap": {"json": "data/bootstrap.json", "js": "data/bootstrap.js"},
+        "history_index": {"json": "data/history-index.json", "js": "data/history-index.js"},
+        "fallback_monolith": {"json": "data/ultravasan.json", "js": "data/ultravasan-data.js"},
+        "editions": edition_manifest,
+    }
+    bootstrap_payload = {
+        "meta": modular_meta,
+        "races": races,
+        "checkpoints": checkpoints,
+        "stats": stats,
+        "sources": sources,
+    }
+    history_payload = {
+        "schema_version": 1,
+        "identity_contract": meta["identity_contract"],
+        "results": public_results,
+    }
+    bootstrap_json = json.dumps(bootstrap_payload, ensure_ascii=False, separators=(",", ":"))
+    history_json = json.dumps(history_payload, ensure_ascii=False, separators=(",", ":"))
+    (modular_root / "bootstrap.json").write_text(bootstrap_json, encoding="utf-8")
+    (modular_root / "bootstrap.js").write_text("window.ULTRAVASAN_BOOTSTRAP=" + bootstrap_json + ";\n", encoding="utf-8")
+    (modular_root / "history-index.json").write_text(history_json, encoding="utf-8")
+    (modular_root / "history-index.js").write_text("window.ULTRAVASAN_HISTORY_INDEX=" + history_json + ";\n", encoding="utf-8")
+
+    # Preserve the old complete bundle as a tested fallback for old links and
+    # recovery. It is no longer referenced synchronously by index.html.
+    payload["meta"] = modular_meta
     compact_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     args.output.write_text(compact_json, encoding="utf-8")
-
-    # A JavaScript bundle makes the site work when index.html is opened directly
-    # from disk (file://), where browsers normally block fetch() of local JSON.
     js_output = args.js_output or args.output.with_name("ultravasan-data.js")
     js_output.parent.mkdir(parents=True, exist_ok=True)
     js_output.write_text("window.ULTRAVASAN_DATA=" + compact_json + ";\n", encoding="utf-8")
 
-    manifest = {"generated_at": payload["meta"]["generated_at"], "races": len(races), "results": len(results), "splits": len(splits), "bytes": args.output.stat().st_size}
+    manifest = {
+        "generated_at": payload["meta"]["generated_at"],
+        "data_contract": "u3-modular-v1",
+        "races": len(races),
+        "results": len(results),
+        "splits": len(splits),
+        "bytes": args.output.stat().st_size,
+        "bootstrap_bytes": (modular_root / "bootstrap.json").stat().st_size,
+        "history_index_bytes": (modular_root / "history-index.json").stat().st_size,
+        "edition_bytes": sum(item["bytes"] for item in edition_manifest.values()),
+        "editions": edition_manifest,
+    }
     (args.output.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     conn.close()
-    print(f"Webbdata exporterad: {args.output} och {js_output} ({len(results)} resultat, {len(splits)} mellantider)")
+    print(
+        f"Webbdata exporterad: {args.output} + U3 modulär data "
+        f"({len(results)} resultat, {len(splits)} mellantider, {len(edition_manifest)} edition bundles)"
+    )
 
 def validation_rule_for_race(config: dict[str, Any], race: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     """Resolve validation rules by configured race key/family, never by distance."""
