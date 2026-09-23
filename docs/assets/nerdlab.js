@@ -1,7 +1,8 @@
 'use strict';
 /* Advanced cross-year analytics. Works entirely in the browser on exported data. */
-const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null};
+const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null,courseSegmentKey:null,courseRaceId:null};
 const nHistoryEngine=typeof module!=='undefined'&&module.exports?require('./history-engine.js'):globalThis.UltravasanHistoryEngine;
+const nCourseIntelligence=typeof module!=='undefined'&&module.exports?require('./course-intelligence.js'):globalThis.CourseIntelligence;
 const n$=s=>document.querySelector(s), n$$=s=>[...document.querySelectorAll(s)];
 const nEsc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const nMedian=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
@@ -52,7 +53,7 @@ function populateSegmentSelectors(){
 }
 
 function renderNerdLab(){
-  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
+  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderCourseIntelligence();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
 }
 function populateSegmentSelectorsPreserve(){
   const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;const old=[from.value,to.value],oldRace=from.dataset.race;
@@ -66,6 +67,83 @@ function renderCoverage(){
   const resultIds=results.filter(r=>nSplitsForResult(r.id).length).length,coverage=results.length?resultIds/results.length:0;
   const el=n$('#intelligenceCoverage');if(el)el.textContent=`${years.size} loppår · ${results.length.toLocaleString('sv-SE')} resultat · ${Math.round(coverage*100)} % med passager`;
 }
+const nPace=s=>globalThis.SpeedUnits?.formatPace?.(s,globalThis.SpeedUnits.get())??(Number.isFinite(Number(s))?`${Math.floor(Number(s)/60)}:${String(Math.round(Number(s)%60)).padStart(2,'0')} /km`:'–');
+const nSigned=(value,suffix='')=>Number.isFinite(Number(value))?`${Number(value)>0?'+':''}${Number(value).toLocaleString('sv-SE',{maximumFractionDigits:1})}${suffix}`:'–';
+function currentCourseModel(){
+  const race=activeRace();if(!race||!nCourseIntelligence||!globalThis.ULTRAVASAN_ROUTES)return null;
+  try{return nCourseIntelligence.buildCourseModel(state.data,race,globalThis.ULTRAVASAN_ROUTES,{results:state.filtered,minSample:5})}
+  catch(error){console.error('Course Intelligence kunde inte byggas',error);return null}
+}
+function courseMax(segments,getter){
+  return (segments||[]).filter(segment=>Number.isFinite(Number(getter(segment)))).sort((a,b)=>Number(getter(b))-Number(getter(a)))[0]||null;
+}
+function courseSegmentSelection(model){
+  if(!model?.segments?.length)return null;
+  if(nerd.courseRaceId!==String(model.race.id)){
+    nerd.courseRaceId=String(model.race.id);nerd.courseSegmentKey=null;
+  }
+  let selected=model.segments.find(segment=>segment.key===nerd.courseSegmentKey);
+  if(!selected)selected=model.segments.find(segment=>segment.difficulty?.rank===1)||model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
+  nerd.courseSegmentKey=selected?.key||null;
+  return selected;
+}
+function syncLegacySegmentLab(segment){
+  if(!segment)return;
+  const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;
+  const fromValue=String(segment.from_sequence),toValue=String(segment.to_sequence);
+  if([...from.options].some(option=>option.value===fromValue))from.value=fromValue;
+  if([...to.options].some(option=>option.value===toValue))to.value=toValue;
+  renderSegmentLab();
+}
+function selectCourseSegment(key,{sync=true}={}){
+  nerd.courseSegmentKey=key;
+  const model=currentCourseModel(),segment=model?.segments?.find(item=>item.key===key);
+  if(sync&&segment)syncLegacySegmentLab(segment);
+  renderCourseIntelligence(model);
+}
+function courseNarrative(segment){
+  if(!segment)return'<div class="empty">Välj ett segment.</div>';
+  const terrain=segment.terrain||{},field=segment.field||{},difficulty=segment.difficulty||{};
+  const clauses=[];
+  if(Number.isFinite(Number(difficulty.score)))clauses.push(`relativ Difficulty ${Number(difficulty.score).toLocaleString('sv-SE',{maximumFractionDigits:1})}/100, rank ${difficulty.rank} av ${difficulty.segment_count_ranked}`);
+  else clauses.push('ingen Difficulty-poäng eftersom timingunderlaget inte når evidensgränsen');
+  if(Number.isFinite(Number(terrain.ascent_m)))clauses.push(`${Math.round(terrain.ascent_m)} höjdmeter upp och ${Math.round(terrain.descent_m||0)} ned`);
+  if(Number.isFinite(Number(field.median_pacing_loss_seconds_per_km)))clauses.push(`${nSigned(field.median_pacing_loss_seconds_per_km,' sek/km')} mot löparnas egen hel-loppsfart`);
+  if(Number.isFinite(Number(field.median_placement_movement)))clauses.push(`median ${nSigned(field.median_placement_movement,' platser')}`);
+  if(Number.isFinite(Number(field.dnf_exit_rate_pct)))clauses.push(`${Number(field.dnf_exit_rate_pct).toLocaleString('sv-SE',{maximumFractionDigits:1})} % DNF-exit bland registrerade segmententréer`);
+  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Difficulty är relativ inom valt lopp/CourseVersion och är inte ett absolut banbetyg.</small></div>`;
+}
+function renderCourseIntelligence(existingModel=null){
+  const rowsEl=n$('#courseIntelligenceRows'),summary=n$('#courseIntelligenceSummary'),version=n$('#courseIntelligenceVersion'),narrative=n$('#courseSegmentNarrative');
+  if(!rowsEl||!summary||!version||!narrative)return;
+  const model=existingModel||currentCourseModel();
+  if(!model){rowsEl.innerHTML='<tr><td colspan="9">Course Intelligence saknar underlag.</td></tr>';summary.innerHTML='';narrative.innerHTML='';return}
+  version.textContent=model.course_version_id;
+  const selected=courseSegmentSelection(model);
+  const hardest=model.segments.find(segment=>segment.difficulty?.rank===1)||null;
+  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m);
+  const pacing=courseMax(model.segments,segment=>segment.field?.median_pacing_loss_seconds_per_km);
+  const attrition=courseMax(model.segments,segment=>segment.field?.dnf_exit_rate_pct);
+  const summaryItems=[
+    ['Tuffast relativt',hardest?`${hardest.from_name} → ${hardest.to_name}`:'Underlag saknas',hardest?.difficulty?.score!=null?`${hardest.difficulty.score}/100`:'–'],
+    ['Mest stigning',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m!=null?`+${Math.round(climb.terrain.ascent_m)} m`:'–'],
+    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' sek/km'):'–'],
+    ['Högst DNF-exit',attrition?`${attrition.from_name} → ${attrition.to_name}`:'Underlag saknas',attrition?.field?.dnf_exit_rate_pct!=null?`${attrition.field.dnf_exit_rate_pct} %`:'–'],
+  ];
+  summary.innerHTML=summaryItems.map(([label,title,value])=>`<article><span>${nEsc(label)}</span><strong>${nEsc(title)}</strong><em>${nEsc(value)}</em></article>`).join('');
+  rowsEl.innerHTML=model.segments.map(segment=>{
+    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{},difficulty=segment.difficulty||{};
+    const range=field.sufficient_sample&&field.q25_pace_seconds_per_km!=null&&field.q75_pace_seconds_per_km!=null?`${nPace(field.q25_pace_seconds_per_km)}–${nPace(field.q75_pace_seconds_per_km)}`:'–';
+    const distance=segment.distance_km==null?'underlag saknas':`${Number(segment.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:2})} km`;
+    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(range)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td><td>${difficulty.score==null?'–':`<strong>${difficulty.score}</strong><small>#${difficulty.rank}/${difficulty.segment_count_ranked}</small>`}</td></tr>`;
+  }).join('');
+  narrative.innerHTML=courseNarrative(selected);
+  n$('[data-course-segment]').forEach(row=>{
+    row.onclick=()=>selectCourseSegment(row.dataset.courseSegment);
+    row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCourseSegment(row.dataset.courseSegment)}};
+  });
+}
+
 function renderStories(){
   const el=n$('#raceStories');if(!el)return;const rows=state.filtered.filter(nIsFinished).sort((a,b)=>a.finish_seconds-b.finish_seconds),splits=activeSplits();
   if(!rows.length){el.innerHTML='<div class="empty">Inget underlag för berättelser</div>';return}
