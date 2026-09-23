@@ -85,6 +85,46 @@
     return terrainAtDistance(profile,distance)?.elevation??null;
   }
 
+  const LEAFLET_VENDOR_ROOT='vendor/leaflet-1.9.4';
+
+  function ensureLeaflet(options={}){
+    const runtime=options.root||root;
+    const documentRef=options.document||runtime?.document;
+    if(runtime?.L)return Promise.resolve(true);
+    if(!documentRef)return Promise.resolve(false);
+    options.onStatus?.('Förbereder karta och banlager…');
+    const vendorRoot=options.vendorRoot||LEAFLET_VENDOR_ROOT;
+    const timeoutMs=Number(options.timeoutMs)||2200;
+
+    if(!documentRef.querySelector?.('link[data-ultravasan-leaflet]')){
+      const css=documentRef.createElement('link');
+      css.rel='stylesheet';
+      css.href=`${vendorRoot}/leaflet.css`;
+      css.dataset.ultravasanLeaflet='1.9.4';
+      documentRef.head.appendChild(css);
+    }
+
+    return new Promise(resolve=>{
+      const existing=documentRef.querySelector?.('script[data-ultravasan-leaflet]');
+      if(existing){
+        const finish=()=>resolve(Boolean(runtime?.L));
+        existing.addEventListener?.('load',finish,{once:true});
+        existing.addEventListener?.('error',()=>resolve(false),{once:true});
+        setTimeout(finish,timeoutMs);
+        return;
+      }
+      const script=documentRef.createElement('script');
+      let done=false;
+      const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve(Boolean(runtime?.L))};
+      script.src=`${vendorRoot}/leaflet.js`;
+      script.dataset.ultravasanLeaflet='1.9.4';
+      script.onload=finish;
+      script.onerror=finish;
+      documentRef.head.appendChild(script);
+      const timer=setTimeout(finish,timeoutMs);
+    });
+  }
+
   return Object.freeze({
     clamp,
     validLatLng,
@@ -93,5 +133,7 @@
     routeSlice,
     terrainAtDistance,
     elevationAtDistance,
+    LEAFLET_VENDOR_ROOT,
+    ensureLeaflet,
   });
 });
