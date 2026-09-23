@@ -124,6 +124,27 @@ assert.strictEqual(tooSmall.timing_sample_n,4);
 assert.strictEqual(tooSmall.sufficient_sample,false);
 assert.strictEqual(tooSmall.median_pace_seconds_per_km,null,'n<5 får inte publicera fältmedian');
 
+const scored=intelligence.applyDifficultyIndex([
+  {key:'easy',terrain:{ascent_m_per_km:2},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:-5,pace_iqr_seconds_per_km:8,dnf_exit_rate_pct:0}},
+  {key:'middle',terrain:{ascent_m_per_km:8},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:5,pace_iqr_seconds_per_km:16,dnf_exit_rate_pct:2}},
+  {key:'hard',terrain:{ascent_m_per_km:20},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:20,pace_iqr_seconds_per_km:30,dnf_exit_rate_pct:8}},
+  {key:'thin',terrain:{ascent_m_per_km:50},field:{sufficient_sample:false,median_pacing_loss_seconds_per_km:null,pace_iqr_seconds_per_km:null,dnf_exit_rate_pct:10}},
+]);
+assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.score,100);
+assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.rank,1);
+assert.strictEqual(scored.find(row=>row.key==='middle').difficulty.score,50);
+assert.strictEqual(scored.find(row=>row.key==='easy').difficulty.score,0);
+assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.score,null,'svag timing-evidens får inte få Course Difficulty-poäng');
+assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.rank,null);
+assert.strictEqual(intelligence.percentileRank([1,2,3],2),.5);
+
+const realScores=model.segments.filter(segment=>segment.difficulty.score!==null);
+assert.ok(realScores.length>=5,'verkligt 2016-underlag ska kunna ge relativa svårighetspoäng för huvuddelen av segmenten');
+assert.deepStrictEqual(
+  [...realScores].sort((a,b)=>a.difficulty.rank-b.difficulty.rank).map(segment=>segment.difficulty.rank),
+  Array.from({length:realScores.length},(_,index)=>index+1)
+);
+
 assert.throws(
   ()=>intelligence.segmentContracts({...post2023,segments:[{from:'start',to:'not-a-checkpoint',distance_km:1}]}),
   /saknar explicit checkpoint/,
