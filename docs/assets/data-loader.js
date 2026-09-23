@@ -59,7 +59,7 @@
 
   function editionForResultId(resultId,sourceCatalog=catalog()){
     const value=sourceCatalog?.result_edition?.[String(resultId)];
-    return typeof value==='string'&&value?value:null;
+    return value!==null&&value!==undefined&&value!==''?String(value):null;
   }
 
   function familyForResultId(resultId,sourceCatalog=catalog()){
