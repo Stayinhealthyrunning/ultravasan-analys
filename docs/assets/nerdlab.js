@@ -220,5 +220,5 @@ function renderRunnerHistory(g){
 
 if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
-  const nerdTimer=setInterval(()=>{try{initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
+  const nerdTimer=setInterval(()=>{try{if(window.ULTRAVASAN_SPLITS_READY)initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
 }
