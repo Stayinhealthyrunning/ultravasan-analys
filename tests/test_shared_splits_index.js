@@ -183,3 +183,11 @@ assert.ok(indexHtml.indexOf('assets/history-engine.js')<indexHtml.indexOf('asset
 assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/runner-analysis.js'),'DataIndex ska laddas före RunnerAnalysis');
 assert.ok(indexHtml.indexOf('assets/runner-analysis.js')<indexHtml.indexOf('assets/app.js'),'RunnerAnalysis ska laddas före huvudappen');
 assert.ok(runnerAnalysisSource.includes("require('./history-engine.js')")&&runnerAnalysisSource.includes("require('./data-index.js')"),'RunnerAnalysis ska återanvända U2 HistoryEngine och U4 DataIndex');
+
+const stylesSourceU5=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
+assert.ok(appSource.includes('window.RunnerAnalysis?.profileForResult(state.data,id)'),'löparens dialog ska byggas från U5 RunnerAnalysis-profilen');
+assert.ok(appSource.includes('renderRunnerJourney(profile)')&&appSource.includes('renderRunnerJourneyTable(profile)'),'dialogen ska återanvända samma Journey-modell för översikt och tabell');
+assert.ok(appSource.includes('renderRunnerVerifiedHistory(profile)'),'dialogen ska exponera verifierad historik utan namnmatchning');
+assert.ok(!appSource.includes('splits.map(s=>'),'den detaljerade mellantidstabellen får inte återgå till egen ad hoc-splitrendering');
+assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Journey')&&stylesSourceU5.includes('.runner-journey-track'),'Journey ska ha egen responsiv layout');
+assert.ok(indexHtml.includes('assets/styles.css?v=20260923-u5')&&indexHtml.includes('assets/app.js?v=20260923-u5a'),'U5 UI-assets ska cache-bustas tillsammans');
