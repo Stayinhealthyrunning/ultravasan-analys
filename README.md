@@ -67,6 +67,13 @@ alla tre faserna för UV90 och UV45, exakt dataparitet, kartlänkar och verkligt
 Chromium-flöde. Efter produktionsaktivering regenererar framtida exporter
 automatiskt shell-, core-, split- och edition-lagren och rensar gamla artifakter.
 
+U4:s gemensamma frontendkärna beskrivs i
+[`reports/U4_FRONTEND_CORE.md`](reports/U4_FRONTEND_CORE.md). DataAdapter,
+RaceUI, AppState, Charts, MapEngine, Playback och RaceMedia är nu separata,
+testbara kontrakt som delas av huvudanalysen, RunnerReplay och kartduellen.
+Leaflet 1.9.4 är vendrad lokalt med verifierad SRI och licens, medan kartans
+förenklade banvy finns kvar som fallback.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
