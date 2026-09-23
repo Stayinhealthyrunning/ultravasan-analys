@@ -30,7 +30,8 @@ def test_production_migration_plan_is_non_destructive_and_complete() -> None:
     assert before == after
     assert plan["retained_vasanerd_person_athletes"] == 9571
     assert plan["actions_by_reason"]["legacy-multiedition-link-without-person-evidence"] == 1555
-    assert plan["actions_by_reason"]["legacy-cross-source-without-deterministic-same-performance-evidence"] > 0
+    assert plan["actions_by_reason"]["legacy-cross-source-without-deterministic-same-performance-evidence"] == 2656
+    assert len(plan["actions"]) == 4211
 
 
 @pytest.mark.skipif(U2_BASELINE.exists(), reason="Legacy migration fixture is no longer the checked-in database")
@@ -46,6 +47,7 @@ def test_full_migration_on_copy_preserves_payload_and_is_idempotent() -> None:
         assert first["protected_state_unchanged"] is True
         assert before == after
         assert first["athletes_created"] == first["plan"]["actions"]
+        assert first["migrated_state"]["athletes"] == 20805
         assert first["migrated_state"]["cross_source_athletes"] == 0
         assert first["migrated_state"]["multi_edition_without_vasanerd_person_evidence"] == 0
         assert first["migrated_state"]["person_keys"] == 9571
