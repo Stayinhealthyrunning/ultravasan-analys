@@ -1,0 +1,15 @@
+window.ULTRAVASAN_DATA_CATALOG={
+  "schema_version":1,
+  "mode":"legacy",
+  "generated_at":"2026-09-23T08:15:11+00:00",
+  "identity_contract":"u2-person-key-v1",
+  "legacy":{
+    "json":"data/ultravasan.json",
+    "js":"data/ultravasan-data.js"
+  },
+  "totals":{
+    "races":22,
+    "results":24422,
+    "splits":139910
+  }
+};
