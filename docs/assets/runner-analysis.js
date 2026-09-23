@@ -50,6 +50,10 @@
 
     const checkpoints=normalizedCheckpoints(dataset,race);
     const byKey=splitMap(dataset,result.id);
+    const ownSplits=dataIndex.splitsForResult(dataset,result.id);
+    const classification=statusApi?.classify
+      ?statusApi.classify(result,{hasSplit:ownSplits.length>0})
+      :null;
     const rows=[];
     const start=checkpoints[0];
     if(start){
@@ -73,7 +77,7 @@
       const key=String(checkpoint.checkpoint_key||'').toLowerCase();
       const split=byKey.get(key)||null;
       const isFinish=index===checkpoints.length-1;
-      const finishFallback=isFinish&&!split&&finite(result.finish_seconds);
+      const finishFallback=isFinish&&!split&&finite(result.finish_seconds)&&classification?.finished===true;
       const estimated=Boolean(split&&(split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true'));
       rows.push(Object.freeze({
         checkpoint_key:key,
@@ -90,9 +94,6 @@
       }));
     }
 
-    const classification=statusApi?.classify
-      ?statusApi.classify(result,{hasSplit:dataIndex.splitsForResult(dataset,result.id).length>0})
-      :null;
     return Object.freeze({
       result,
       race,
@@ -162,7 +163,12 @@
     const sameCourseVersion=versionIds.every(id=>id&&id===versionIds[0]);
     const comparableWhole=pairwiseEvery(selected,(a,b)=>history.wholeCourseComparable(a.result,b.result,races,contracts.catalog.courses));
 
-    const finishers=selected.filter(item=>finite(item.result.finish_seconds));
+    const finishers=selected.filter(item=>{
+      if(!finite(item.result.finish_seconds))return false;
+      if(!statusApi?.classify)return true;
+      const hasSplit=dataIndex.splitsForResult(dataset,item.result.id).length>0;
+      return statusApi.classify(item.result,{hasSplit}).finished===true;
+    });
     const finishRanking=comparableWhole
       ?finishers.slice().sort((a,b)=>Number(a.result.finish_seconds)-Number(b.result.finish_seconds)).map((item,index,array)=>Object.freeze({
         result_id:item.result.id,
