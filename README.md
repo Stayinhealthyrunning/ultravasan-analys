@@ -55,12 +55,15 @@ U0-baslinjen behålls oförändrad som historiskt bevis.
 
 U3:s modulära datalager beskrivs i
 [`reports/U3_MODULAR_DATA_SPEC.md`](reports/U3_MODULAR_DATA_SPEC.md).
-Webbapplikationen läser data genom ett gemensamt DataLoader-kontrakt. Det kan
-växla mellan legacy-monoliten och race-family-chunks utan att analyskoden behöver
-känna till fysisk filstruktur. Ordinarie CI verifierar exakt paritet mot monoliten
-och kör det verkliga Chromium-flödet i modular mode före produktionsaktivering.
-Efter aktivering regenererar vanliga framtida exporter automatiskt även de
-modulära filerna.
+Webbapplikationen läser data genom ett gemensamt DataLoader-kontrakt och känner
+inte till fysisk filstruktur. Startsidan kan använda race-family-lagret, medan
+result-ID-baserade kartlänkar på webben routas till exakt en eller flera
+RaceEdition-JSON-filer. En enskild kartlänk behöver därmed som mest cirka 5,1 MB
+edition-data i stället för 42,7 MB legacydata; file:// behåller offline-stödet
+genom family-JavaScript som fallback. Ordinarie CI verifierar exakt paritet mot
+monoliten och kör det verkliga Chromium-flödet i modular mode före
+produktionsaktivering. Efter aktivering regenererar vanliga framtida exporter
+automatiskt family- och edition-lagren och rensar gamla edition-artifakter.
 `config/races.json` tilldelar utgåvorna fem låsta ban-/kontrollmodeller från
 `config/course_versions.json`. För att bygga och verifiera katalogen:
 
