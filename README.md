@@ -56,14 +56,16 @@ U0-baslinjen behålls oförändrad som historiskt bevis.
 U3:s modulära datalager beskrivs i
 [`reports/U3_MODULAR_DATA_SPEC.md`](reports/U3_MODULAR_DATA_SPEC.md).
 Webbapplikationen läser data genom ett gemensamt DataLoader-kontrakt och känner
-inte till fysisk filstruktur. Startsidan laddar först family core (UV90 cirka
-7,4 MB, 82,7 % mindre än legacy-monoliten) och fyller därefter på splitdata i
-bakgrunden. Result-ID-baserade kartlänkar routas på webben till exakt en eller
-flera RaceEdition-JSON-filer; en enskild sådan är som mest cirka 5,1 MB.
-file:// behåller offline-stödet genom family core/split-JavaScript. Ordinarie CI
-verifierar core→full-fasordningen, exakt dataparitet och det verkliga
-Chromium-flödet i modular mode. Efter aktivering regenererar framtida exporter
-automatiskt core-, split- och edition-lagren och rensar gamla artifakter.
+inte till fysisk filstruktur. På vanlig webb laddas först family-shell + senaste
+RaceEdition-core: UV90 behöver 1 087 000 byte, eller 1 339 829 byte inklusive
+den gemensamma katalogen, jämfört med 42 688 494 byte legacydata (**96,9 %
+mindre före HTTP-komprimering**). Därefter hydreras hela familjens historiska
+resultat och sist splitdata i faserna active → core → full. Direkta kartlänkar
+routas till exakt de fulla RaceEdition-JSON-filer som valda result-ID:n tillhör.
+file:// behåller offline-stödet via family core/split-JavaScript. CI verifierar
+alla tre faserna för UV90 och UV45, exakt dataparitet, kartlänkar och verkligt
+Chromium-flöde. Efter produktionsaktivering regenererar framtida exporter
+automatiskt shell-, core-, split- och edition-lagren och rensar gamla artifakter.
 
 ```bash
 python tools/race_contracts.py

@@ -77,6 +77,42 @@ att den övriga resultatsidan blockeras.
 CI har verifierat den faktiska fasordningen: UV90 aktiveras först med 15 521
 resultat och 0 splits och därefter med samma 15 521 resultat och 108 640 splits.
 
+## U3.5: aktiv RaceEdition först
+
+U3.4 tog bort splits från första laddningen, men family core innehöll fortfarande
+alla historiska resultat i familjen. U3.5 lägger därför två HTTP-only-lager
+framför family core:
+
+- **family shell**: alla loppår, checkpoints, stats och sources men inga resultat
+  eller splits,
+- **RaceEdition core**: resultat för exakt ett loppår men inga splits.
+
+Verifierad standard-start:
+
+| Familj | Shell | Senaste RaceEdition core | Shell + edition | Inkl. katalog |
+| --- | ---: | ---: | ---: | ---: |
+| UV90 | 20 515 B | 1 066 485 B | 1 087 000 B | 1 339 829 B |
+| UV45 | 15 223 B | 420 924 B | 436 147 B | 688 976 B |
+
+För UV90 innebär den verkliga standard-starten inklusive den gemensamma
+252 829-byte-katalogen **96,9 % mindre data än legacy-monoliten före
+HTTP-komprimering**. Exklusive den delade katalogen är minskningen 97,5 %.
+
+Browserns fasordning är nu explicit:
+
+1. **active** – family shell + senaste RaceEdition core,
+2. **core** – hela familjens historiska resultat, fortfarande utan splits,
+3. **full** – family core + samtliga splits.
+
+I CI verifierades UV90 i verklig Chromium till 2 333 resultat/0 splits i
+active-fasen, 15 521 resultat/0 splits i core-fasen och 15 521 resultat/
+108 640 splits i full-fasen. Årbyte, flerårssökning och kartduellsökning kräver
+core-fasen; löpardialog, Replay och kartpayload kräver full-fasen.
+
+Family shell och RaceEdition core är JSON-only. Vid file:// hoppar DataLoader
+direkt till U3.4:s family-core-JavaScript, så offline-stödet kräver ingen extra
+duplicering av de 22 edition-resultatfilerna.
+
 ## Loader-kontrakt
 
 docs/assets/data-loader.js är den enda browserkomponent som väljer fysisk
@@ -85,9 +121,10 @@ datakälla.
 Den stöder:
 
 - legacy: verifierad monolit,
-- modular family core: första resultatsidan,
+- modular active family: family shell + ett RaceEdition core,
+- modular family core: hela familjens historiska resultat utan splits,
 - modular family full: core + splitdata,
-- modular edition: exakt ett eller flera loppår för result-ID-baserade länkar.
+- modular edition: exakt ett eller flera kompletta loppår för result-ID-baserade kartlänkar.
 
 Prioritet för en kartlänk på vanlig webb:
 
@@ -100,8 +137,9 @@ På file:// används core- och split-JavaScript för komplett family-fallback.
 
 ## Paritetskrav
 
-tools/u3_modularize.py verifierar att family core + splitdata och samtliga
-RaceEdition-filer tillsammans är exakt lika med monoliten för:
+tools/u3_modularize.py verifierar att family shell, RaceEdition cores,
+family core + splitdata och samtliga fulla RaceEdition-filer är konsistenta med
+varandra och tillsammans exakt lika med monoliten för:
 
 - races,
 - checkpoints,
@@ -111,8 +149,9 @@ RaceEdition-filer tillsammans är exakt lika med monoliten för:
 - result→race_id-routing,
 - edition→race_key/family-routing.
 
-Verifieraren kräver dessutom exakt 22 edition-JSON-filer, avvisar gamla
-full-family-filer och förbjuder edition-JavaScript.
+Verifieraren kräver dessutom exakt två family-shells, exakt 22 RaceEdition-core
+JSON-filer, exakt 22 fulla edition-JSON-filer, avvisar gamla full-family-filer
+och förbjuder JavaScript-dubblering för shell-/edition-lagren.
 
 Vanliga framtida uvtool-exporter känner efter produktionskatalogens mode. När
 modular mode är aktiverat regenereras core-, split- och edition-lagren
@@ -123,8 +162,10 @@ automatiskt och gamla artifakter städas bort.
 Ordinarie CI bygger modulära filer i sin arbetskopia före Chromium-smoketestet.
 Smoketestet verifierar bland annat:
 
-- core → full-fasordning,
-- oförändrat antal resultat mellan faserna,
+- active → core → full-fasordning för UV90,
+- samma active → core → full-fasordning vid byte till UV45,
+- rätt default RaceEdition i active-fasen,
+- 0 splits i active/core och full splitmängd i full-fasen,
 - UV90 startsida och individuell runner search,
 - löpardialog och Replay efter full-data-grind,
 - NerdLab coverage, berättelsekort och segmentval,
@@ -144,17 +185,23 @@ docs/data/ultravasan.json.
 Aktiveringen får endast ändra:
 
 - modulär katalog JSON/JS,
+- UV90/UV45 family-shell JSON,
 - UV90 core JSON/JS och split JSON/JS,
 - UV45 core JSON/JS och split JSON/JS,
-- exakt 22 RaceEdition-JSON-filer,
+- exakt 22 RaceEdition-core JSON-filer,
+- exakt 22 fulla RaceEdition-JSON-filer,
 - U3-aktiveringsrapport.
 
 SQLite-databasen, U2-baslinjen och legacy-monoliten får inte ändras.
 
-## Fortsättning inom U3
+## U3-status efter U3.5
 
-Efter U3.4 är initial UV90-data cirka 7,4 MB i stället för 42,7 MB. Nästa
-optimeringsnivå är därför inte längre att flytta hela splitmassan, utan att
-utvärdera om historik-/analysmoduler eller assets bör laddas först när respektive
-analysområde används. Sådana steg ska bara införas om de ger mätbar nytta utan
-att öka komplexiteten oproportionerligt.
+U3:s beslutade huvudmål är nu uppnått: browsern har ett verifierat DataLoader-
+kontrakt, lazy routing per familj och RaceEdition, progressiv active/core/full-
+hydrering, offline-fallback, automatisk regenerering vid framtida exporter och
+paritetsgrindar i CI. Första UV90-datapayloaden inklusive katalog har minskat
+från 42,7 MB till cirka 1,34 MB utan att ta bort analyser eller rådata.
+
+Nästa planerade utvecklingsetapp är **U4 Gemensam frontendkärna**. Eventuell
+ytterligare U3-finindelning ska bara göras senare om mätning visar att den ger
+större nytta än den ökade komplexiteten.

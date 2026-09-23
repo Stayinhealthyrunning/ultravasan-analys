@@ -1284,6 +1284,15 @@ def write_modular_web_data(
             if obsolete.exists():
                 obsolete.unlink()
 
+    expected_race_core_stems = {
+        f"ultravasan-race-core-{race['race_key']}" for race in payload["races"]
+    }
+    for existing in output_dir.glob("ultravasan-race-core-*.json"):
+        if existing.stem not in expected_race_core_stems:
+            existing.unlink()
+    for existing in output_dir.glob("ultravasan-race-core-*.js"):
+        existing.unlink()
+
     total_results = len(payload["results"])
     total_splits = len(payload["splits"])
     global_totals = {
@@ -1397,6 +1406,27 @@ def write_modular_web_data(
         }
         family_results = results_by_family[family]
         family_splits = splits_by_family[family]
+        family_races = [
+            race for race in payload["races"] if int(race["id"]) in race_ids
+        ]
+        default_race = max(
+            family_races,
+            key=lambda race: (int(race.get("year") or 0), int(race["id"])),
+        )
+
+        shell_payload = scoped_payload(
+            scope={"kind": "race-family-shell", "race_family": family},
+            race_ids=race_ids,
+            results=[],
+            splits=[],
+        )
+        shell_json, _ = write_chunk(
+            stem=f"ultravasan-{family}-shell",
+            global_name="ULTRAVASAN_DATA_FAMILY_SHELLS",
+            global_key=family,
+            chunk_payload=shell_payload,
+            javascript=False,
+        )
 
         core_payload = scoped_payload(
             scope={"kind": "race-family-core", "race_family": family},
@@ -1432,9 +1462,14 @@ def write_modular_web_data(
         )
         catalog["families"][family] = {
             "race_ids": sorted(race_ids),
+            "default_race_id": int(default_race["id"]),
             "races": len(race_ids),
             "results": len(family_results),
             "splits": len(family_splits),
+            "shell": {
+                "json": public_prefix + shell_json.name,
+                "json_bytes": shell_json.stat().st_size,
+            },
             "core": {
                 "json": public_prefix + core_json.name,
                 "js": public_prefix + core_js.name,
@@ -1455,6 +1490,26 @@ def write_modular_web_data(
         family = family_by_race_id[race_id]
         edition_results = results_by_race[race_id]
         edition_splits = splits_by_race[race_id]
+
+        edition_core_payload = scoped_payload(
+            scope={
+                "kind": "race-edition-core",
+                "race_family": family,
+                "race_key": race_key,
+                "race_id": race_id,
+            },
+            race_ids={race_id},
+            results=edition_results,
+            splits=[],
+        )
+        edition_core_json, _ = write_chunk(
+            stem=f"ultravasan-race-core-{race_key}",
+            global_name="ULTRAVASAN_DATA_EDITION_CORES",
+            global_key=str(race_id),
+            chunk_payload=edition_core_payload,
+            javascript=False,
+        )
+
         edition_payload = scoped_payload(
             scope={
                 "kind": "race-edition",
@@ -1481,6 +1536,10 @@ def write_modular_web_data(
             "race_family": family,
             "results": len(edition_results),
             "splits": len(edition_splits),
+            "core": {
+                "json": public_prefix + edition_core_json.name,
+                "json_bytes": edition_core_json.stat().st_size,
+            },
             "json": public_prefix + json_path.name,
             "json_bytes": json_path.stat().st_size,
         }
@@ -1664,6 +1723,7 @@ def export_web(args: argparse.Namespace) -> None:
                     "races": spec["races"],
                     "results": spec["results"],
                     "splits": spec["splits"],
+                    "shell_json_bytes": spec["shell"]["json_bytes"],
                     "core_json_bytes": spec["core"]["json_bytes"],
                     "split_json_bytes": spec["split_data"]["json_bytes"],
                 }
@@ -1673,6 +1733,9 @@ def export_web(args: argparse.Namespace) -> None:
                 "count": len(modular_catalog["editions"]),
                 "results": sum(spec["results"] for spec in modular_catalog["editions"].values()),
                 "splits": sum(spec["splits"] for spec in modular_catalog["editions"].values()),
+                "largest_core_json_bytes": max(
+                    spec["core"]["json_bytes"] for spec in modular_catalog["editions"].values()
+                ),
                 "largest_json_bytes": max(
                     spec["json_bytes"] for spec in modular_catalog["editions"].values()
                 ),

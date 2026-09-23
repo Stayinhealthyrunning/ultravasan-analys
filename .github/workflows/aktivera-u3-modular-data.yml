@@ -144,10 +144,12 @@ jobs:
           required={
               "docs/data/ultravasan-data-catalog.js",
               "docs/data/ultravasan-data-catalog.json",
+              "docs/data/ultravasan-uv90-shell.json",
               "docs/data/ultravasan-uv90-core.json",
               "docs/data/ultravasan-uv90-core.js",
               "docs/data/ultravasan-uv90-splits.json",
               "docs/data/ultravasan-uv90-splits.js",
+              "docs/data/ultravasan-uv45-shell.json",
               "docs/data/ultravasan-uv45-core.json",
               "docs/data/ultravasan-uv45-core.js",
               "docs/data/ultravasan-uv45-splits.json",
@@ -164,7 +166,12 @@ jobs:
               if path.startswith("docs/data/ultravasan-edition-")
               and (path.endswith(".json") or path.endswith(".js"))
           }
-          unexpected=sorted(changed-required-edition_files)
+          race_core_files={
+              path for path in changed
+              if path.startswith("docs/data/ultravasan-race-core-")
+              and (path.endswith(".json") or path.endswith(".js"))
+          }
+          unexpected=sorted(changed-required-edition_files-race_core_files)
           missing=sorted(required-changed)
           edition_json={path for path in edition_files if path.endswith(".json")}
           edition_js={path for path in edition_files if path.endswith(".js")}
@@ -173,9 +180,16 @@ jobs:
                   f"Expected exactly 22 edition JSON files and no edition JS, got "
                   f"{len(edition_json)} JSON and {len(edition_js)} JS"
               )
+          race_core_json={path for path in race_core_files if path.endswith(".json")}
+          race_core_js={path for path in race_core_files if path.endswith(".js")}
+          if len(race_core_json)!=22 or race_core_js:
+              raise SystemExit(
+                  f"Expected exactly 22 RaceEdition core JSON files and no core JS, got "
+                  f"{len(race_core_json)} JSON and {len(race_core_js)} JS"
+              )
           if unexpected or missing:
               raise SystemExit(f"Unexpected U3 diff. unexpected={unexpected}, missing={missing}")
-          print("U3 diff is restricted to catalog, family chunks, 22 edition JSON files and report.")
+          print("U3 diff is restricted to catalog, family shell/core/splits, 22 RaceEdition cores, 22 full editions and report.")
           PY
 
       - name: Spara aktiveringen på main
@@ -185,14 +199,17 @@ jobs:
           git add \
             docs/data/ultravasan-data-catalog.js \
             docs/data/ultravasan-data-catalog.json \
+            docs/data/ultravasan-uv90-shell.json \
             docs/data/ultravasan-uv90-core.json \
             docs/data/ultravasan-uv90-core.js \
             docs/data/ultravasan-uv90-splits.json \
             docs/data/ultravasan-uv90-splits.js \
+            docs/data/ultravasan-uv45-shell.json \
             docs/data/ultravasan-uv45-core.json \
             docs/data/ultravasan-uv45-core.js \
             docs/data/ultravasan-uv45-splits.json \
             docs/data/ultravasan-uv45-splits.js \
+            docs/data/ultravasan-race-core-*.json \
             docs/data/ultravasan-edition-*.json \
             reports/U3_MODULAR_DATA_APPLIED.json
           git commit -m "Activate U3 modular browser data"
@@ -207,6 +224,6 @@ jobs:
             echo ""
             echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
             echo "- Legacy-monoliten behålls oförändrad som paritetskälla och fallback."
-            echo "- Startsidan laddar först vald loppfamiljs coredata; mellantider fylls på progressivt."
+            echo "- Startsidan laddar först family-shell + aktivt RaceEdition-core; historikcore och mellantider fylls på progressivt."
             echo "- Delade kartlänkar laddar endast de RaceEdition-chunks som valda result-ID:n tillhör."
           } >> "$GITHUB_STEP_SUMMARY"

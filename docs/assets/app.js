@@ -42,7 +42,7 @@ async function switchRaceFamily(family,initial=false){
   raceSwitchBusy=true;raceSwitchHasError=false;setRaceLoading(true);const started=performance.now();
   try{
     if(!initial)await waitForRacePaint();
-    const nextData=await window.UltravasanDataLoader.loadFamilyCore(family);
+    const nextData=await window.UltravasanDataLoader.loadInitialFamily(family);
     state.raceFamily=family;
     if(nextData!==state.data)activateDataset(nextData);
     document.body.classList.toggle('race-uv45',family==='uv45');
@@ -56,7 +56,7 @@ async function switchRaceFamily(family,initial=false){
     await heroReady;await waitForRacePaint();
     const remaining=360-(performance.now()-started);if(remaining>0)await waitForRaceDelay(remaining);
     setRaceLoading(false);
-    if(state.dataPhase==='core')startFamilyCompletion(family);else setSplitLoading(false);
+    if(state.dataPhase!=='full')startFamilyCompletion(family);else setSplitLoading(false);
     return true;
   }catch(error){
     window.ULTRAVASAN_RACE_SWITCH_ERROR=error?.message||String(error);console.error('Loppväxlingen misslyckades',error);raceSwitchHasError=true;setRaceLoading(false,true);return false;
@@ -77,9 +77,40 @@ function setupRaceSwitch(){
 }
 
 const hydrateData=d=>{if(d?.__ultravasanHydrated)return d;window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});Object.defineProperty(d,'__ultravasanHydrated',{value:true,enumerable:false});return d};
-const dataPhaseOf=d=>d?.meta?.data_scope?.kind==='race-family-core'?'core':'full';
-function activateDataset(data,phase=dataPhaseOf(data)){state.data=hydrateData(data);state.dataPhase=phase;window.ULTRAVASAN_ACTIVE_DATA=state.data;window.ULTRAVASAN_CORE_READY=true;window.ULTRAVASAN_SPLITS_READY=phase==='full';const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||(window.ULTRAVASAN_DATA_PHASE_EVENTS=[]);events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length});if(events.length>20)events.shift();window.dispatchEvent(new CustomEvent('ultravasan:data-activated',{detail:{phase,family:state.raceFamily,data:state.data}}));return state.data}
-const familyFullLoads=new Map();
+const dataPhaseOf=d=>{
+  const kind=d?.meta?.data_scope?.kind;
+  return kind==='race-family-active-core'?'active':kind==='race-family-core'?'core':'full';
+};
+function activateDataset(data,phase=dataPhaseOf(data)){
+  state.data=hydrateData(data);state.dataPhase=phase;window.ULTRAVASAN_ACTIVE_DATA=state.data;
+  window.ULTRAVASAN_ACTIVE_READY=true;
+  window.ULTRAVASAN_CORE_READY=phase!=='active';
+  window.ULTRAVASAN_HISTORY_READY=phase!=='active';
+  window.ULTRAVASAN_SPLITS_READY=phase==='full';
+  const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||(window.ULTRAVASAN_DATA_PHASE_EVENTS=[]);
+  events.push({phase,family:state.raceFamily,at:performance.now(),results:state.data.results.length,splits:state.data.splits.length,scope:state.data.meta?.data_scope?.kind||null,raceId:state.data.meta?.data_scope?.race_id??null});
+  if(events.length>20)events.shift();
+  window.dispatchEvent(new CustomEvent('ultravasan:data-activated',{detail:{phase,family:state.raceFamily,data:state.data}}));
+  return state.data
+}
+const familyCoreLoads=new Map(),familyFullLoads=new Map();
+async function ensureActiveFamilyCore(family=state.raceFamily,rerender=true){
+  if(state.raceFamily===family&&state.dataPhase!=='active')return state.data;
+  let pending=familyCoreLoads.get(family);
+  if(!pending){
+    pending=window.UltravasanDataLoader.loadFamilyCore(family).finally(()=>familyCoreLoads.delete(family));
+    familyCoreLoads.set(family,pending);
+  }
+  const core=await pending;
+  if(state.raceFamily!==family)return core;
+  if(state.dataPhase!=='active')return state.data;
+  const selectedRace=state.raceId;
+  activateDataset(core,'core');
+  if(selectedRace&&core.races.some(race=>race.id===selectedRace))state.raceId=selectedRace;
+  if(rerender&&state.raceId){refreshFilters();applyFilters()}
+  window.dispatchEvent(new CustomEvent('ultravasan:history-ready',{detail:{family}}));
+  return state.data;
+}
 async function ensureActiveFamilyFull(family=state.raceFamily,rerender=true){
   if(state.raceFamily===family&&state.dataPhase==='full')return state.data;
   let pending=familyFullLoads.get(family);
@@ -87,15 +118,27 @@ async function ensureActiveFamilyFull(family=state.raceFamily,rerender=true){
     pending=window.UltravasanDataLoader.loadFamily(family).finally(()=>familyFullLoads.delete(family));
     familyFullLoads.set(family,pending);
   }
+  if(state.raceFamily===family&&state.dataPhase==='active'){
+    await ensureActiveFamilyCore(family,rerender);
+  }
   const full=await pending;
   if(state.raceFamily!==family)return full;
   if(state.dataPhase==='full')return state.data;
+  const selectedRace=state.raceId;
   activateDataset(full,'full');setSplitLoading(false);
-  if(rerender&&state.raceId)renderAll();
+  if(selectedRace&&full.races.some(race=>race.id===selectedRace))state.raceId=selectedRace;
+  if(rerender&&state.raceId){refreshFilters();applyFilters()}
   window.dispatchEvent(new CustomEvent('ultravasan:splits-ready',{detail:{family}}));
   return state.data;
 }
-function startFamilyCompletion(family){setSplitLoading(true);ensureActiveFamilyFull(family,true).catch(error=>{window.ULTRAVASAN_SPLIT_LOAD_ERROR=error?.message||String(error);console.error('Mellantiderna kunde inte laddas',error);if(state.raceFamily===family)setSplitLoading(false,true)})}
+function startFamilyCompletion(family){
+  setSplitLoading(true);
+  ensureActiveFamilyFull(family,true).catch(error=>{
+    window.ULTRAVASAN_SPLIT_LOAD_ERROR=error?.message||String(error);
+    console.error('Historik eller mellantider kunde inte laddas',error);
+    if(state.raceFamily===family)setSplitLoading(false,true)
+  })
+}
 const splitsForResult=id=>window.UltravasanDataIndex.splitsForResult(state.data,id);
 const splitsForResults=rows=>window.UltravasanDataIndex.splitsForResults(state.data,rows);
 
@@ -104,14 +147,14 @@ async function load(){
     if(!window.UltravasanDataLoader)throw new Error('DataLoader saknas.');
     const family=preferredRaceFamily();
     state.raceFamily=family;
-    activateDataset(await window.UltravasanDataLoader.loadFamilyCore(family));
+    activateDataset(await window.UltravasanDataLoader.loadInitialFamily(family));
     setup();
   }catch(e){
     console.error(e);
     $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
   }
 }
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase==='core')requestAnimationFrame(()=>{if(state.dataPhase==='core')startFamilyCompletion(state.raceFamily)})}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=async()=>{const family=state.raceFamily,target=Number(year.value);if(state.dataPhase==='active'&&!state.data.results.some(r=>r.race_id===target)){try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för årbyte',error);return}if(state.raceFamily!==family)return}state.raceId=target;state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase!=='full')requestAnimationFrame(()=>{if(state.dataPhase!=='full')startFamilyCompletion(state.raceFamily)})}
 let speedUnitControlsReady=false;
 function syncSpeedUnitControls(unit=speedUnit()){
   const select=$('#speedUnitFilter');if(select)select.value=unit;
@@ -131,7 +174,7 @@ const isDnsResult=r=>resultStatus(r).dns;
 const isDsqResult=r=>resultStatus(r).dsq;
 function refreshFilters(){const rr=raceResults(),classes=[...new Set(rr.map(r=>r.age_class).filter(Boolean))].sort(compareClasses),statuses=[...new Set(rr.map(r=>r.status).filter(Boolean))].sort();$('#classFilter').innerHTML='<option value="">Alla klasser</option>'+classes.map(x=>`<option>${esc(x)}</option>`).join('');$('#statusFilter').innerHTML='<option value="">Alla</option>'+statuses.map(x=>`<option>${esc(x)}</option>`).join('')}
 function applyFilters(){const sex=$('#sexFilter').value,cls=$('#classFilter').value,status=$('#statusFilter').value;state.filtered=raceResults().filter(r=>(!sex||r.sex===sex)&&(!cls||r.age_class===cls)&&(!status||r.status===status));state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));renderAll()}
-function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';renderHistogram(times);renderTable();if(state.dataPhase==='core')return;renderPaceChart();renderStatistics();if(typeof renderNerdLab==='function')renderNerdLab()}
+function renderAll(){const rr=raceResults(),finishers=state.filtered.filter(isFinishedResult),starters=state.filtered.filter(isStarterResult),times=finishers.map(r=>r.finish_seconds),fast=finishers.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];$('#kpiCount').textContent=state.filtered.length.toLocaleString('sv-SE');$('#kpiTotal').textContent=`av ${rr.length.toLocaleString('sv-SE')}`;$('#kpiMedian').textContent=fmtTime(median(times));$('#kpiFastest').textContent=fast?fmtTime(fast.finish_seconds):'–';$('#kpiWinner').textContent=fast?fast.name_as_published:'–';$('#kpiFinishRate').textContent=starters.length?`${Math.round(finishers.length/starters.length*100)} %`:'–';renderHistogram(times);renderTable();if(state.dataPhase!=='full')return;renderPaceChart();renderStatistics();if(typeof renderNerdLab==='function')renderNerdLab()}
 function svg(tag,attrs={},text=''){const a=Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(' ');return `<${tag} ${a}>${text}</${tag}>`}
 function renderHistogram(times){const el=$('#histogram');if(!times.length){el.innerHTML='<div class="empty">Inga sluttider i urvalet</div>';return}const grouped=fixedFinishTimeBins(times),bins=grouped.bins,counts=bins.map(bin=>bin.count),W=1000,H=270,p={l:44,r:14,t:12,b:42},{cellWidth:cw,barWidth,barOffset}=baseFinishHistogramGeometry(bins.length,W,p.l,p.r),ymax=Math.max(...counts,1);let s='';for(let i=0;i<=4;i++){const y=p.t+(H-p.t-p.b)*i/4;s+=svg('line',{x1:p.l,y1:y,x2:W-p.r,y2:y,class:'gridline'})+svg('text',{x:5,y:y+4},String(Math.round(ymax*(1-i/4))))}counts.forEach((c,i)=>{const h=(H-p.t-p.b)*c/ymax,x=p.l+i*cw+barOffset,y=H-p.b-h,bin=bins[i],tip=`${c} löpare, ${finishBinTime(bin.from)}–${finishBinTime(bin.to)}`;s+=`<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${h}" tabindex="0" role="img" aria-label="${tip}"><title>${tip}</title></rect>`;if(i%Math.max(1,Math.ceil(bins.length/7))===0||i===bins.length-1)s+=svg('text',{x:p.l+(i+.5)*cw,y:H-18,'text-anchor':'middle'},finishBinTime(bin.from))});s+=svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});el.innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;$('#distributionLabel').textContent=`15-minutersintervall från ${finishBinTime(grouped.start)} · hälften: ${fmtTime(quantile(times,.25))}–${fmtTime(quantile(times,.75))}`}
 function renderPaceChart(){
@@ -377,7 +420,12 @@ function setupMapCompare(rebuild=false){
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
-function renderCompareSuggestions(){
+async function renderCompareSuggestions(){
+  const family=state.raceFamily;
+  if(state.dataPhase==='active'){
+    try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för kartduell',error);return}
+    if(state.raceFamily!==family)return;
+  }
   const q=$('#compareRunnerSearch').value.trim().toLowerCase(),box=$('#runnerSuggestions');
   if(!q){box.hidden=true;return}
   const selectedIds=new Set(compareState.selected.map(r=>r.id));
@@ -407,7 +455,12 @@ function setupMainRunnerSearch(rebuild=false){
   input.dataset.suggestionsReady='1';
   populateYears();
   const rowsForYear=()=>year.value==='all'?familyResults():state.data.results.filter(r=>r.race_id===Number(year.value));
-  const show=()=>{
+  const show=async()=>{
+    const family=state.raceFamily;
+    if(state.dataPhase==='active'){
+      try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för löparsökning',error);return}
+      if(state.raceFamily!==family)return;
+    }
     const q=input.value.trim().toLowerCase();
     if(q.length<1){box.hidden=true;box.innerHTML='';return}
     const rows=rowsForYear().filter(r=>`${r.name_as_published||''} ${r.club||''} ${r.bib||''}`.toLowerCase().includes(q));
