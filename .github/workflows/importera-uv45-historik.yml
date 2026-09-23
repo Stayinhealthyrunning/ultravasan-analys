@@ -202,6 +202,7 @@ jobs:
           cp docs/data/ultravasan.json "$after/docs/data/ultravasan.json"
           cp docs/data/ultravasan-data.js "$after/docs/data/ultravasan-data.js"
           cp docs/data/manifest.json "$after/docs/data/manifest.json"
+          cp -R docs/data/u3 "$after/docs/data/u3"
           cp reports/ultravasan45-*-import.json "$after/reports/"
           cp reports/ultravasan45-*-probe.json "$after/reports/"
           cp -R reports/uv45-history-validation/. "$after/reports/uv45-history-validation/"
@@ -210,6 +211,9 @@ jobs:
           test -s "$after/docs/data/ultravasan.json"
           test -s "$after/docs/data/ultravasan-data.js"
           test -s "$after/docs/data/manifest.json"
+          test -s "$after/docs/data/u3/bootstrap.js"
+          test -s "$after/docs/data/u3/history-index.js"
+          test -s "$after/docs/data/u3/manifest.json"
           while IFS='|' read -r year race event; do
             [[ -z "$year" ]] && continue
             test -s "$after/reports/ultravasan45-$year-import.json"
@@ -250,6 +254,8 @@ jobs:
             cp "$payload/docs/data/ultravasan.json" "$publish_worktree/docs/data/ultravasan.json"
             cp "$payload/docs/data/ultravasan-data.js" "$publish_worktree/docs/data/ultravasan-data.js"
             cp "$payload/docs/data/manifest.json" "$publish_worktree/docs/data/manifest.json"
+            rm -rf "$publish_worktree/docs/data/u3"
+            cp -R "$payload/docs/data/u3" "$publish_worktree/docs/data/u3"
             cp "$payload"/reports/ultravasan45-*-import.json "$publish_worktree/reports/"
             cp "$payload"/reports/ultravasan45-*-probe.json "$publish_worktree/reports/"
             cp -R "$payload/reports/uv45-history-validation/." \
@@ -260,13 +266,14 @@ jobs:
               docs/data/ultravasan.json \
               docs/data/ultravasan-data.js \
               docs/data/manifest.json \
+              docs/data/u3 \
               reports/ultravasan45-*-import.json \
               reports/ultravasan45-*-probe.json \
               reports/uv45-history-validation
 
             while IFS= read -r changed; do
               case "$changed" in
-                data/ultravasan.sqlite|docs/data/ultravasan.json|docs/data/ultravasan-data.js|docs/data/manifest.json|reports/ultravasan45-*-import.json|reports/ultravasan45-*-probe.json|reports/uv45-history-validation/*)
+                data/ultravasan.sqlite|docs/data/ultravasan.json|docs/data/ultravasan-data.js|docs/data/manifest.json|docs/data/u3/*|docs/data/u3/races/*|reports/ultravasan45-*-import.json|reports/ultravasan45-*-probe.json|reports/uv45-history-validation/*)
                   ;;
                 *)
                   echo "::error title=Otillåten publiceringskonflikt::Oväntad fil skulle ändras ovanpå origin/main: $changed"
