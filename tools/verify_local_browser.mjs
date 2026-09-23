@@ -88,6 +88,15 @@ const progressiveLoad=await evaluate(`(() => {
   };
 })()`);
 
+await delay(250);
+const moduleChecks=await evaluate(`(() => ({
+  nerdCoverage:(document.querySelector('#intelligenceCoverage')?.textContent||'').trim(),
+  nerdStories:document.querySelectorAll('#raceStories .story-card').length,
+  segmentOptions:document.querySelectorAll('#segmentFrom option').length,
+  genderKpis:document.querySelectorAll('#genderKpis article').length,
+}))()`);
+moduleChecks.verified=Boolean(moduleChecks.nerdCoverage&&moduleChecks.nerdStories>=3&&moduleChecks.segmentOptions>0&&moduleChecks.genderKpis>=2);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -279,6 +288,7 @@ for(const request of mapRequests){
 const checks = {
   contracts:Object.values(contractChecks).every(Boolean),
   progressive:progressiveLoad.verified,
+  modules:moduleChecks.verified,
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -292,7 +302,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,moduleChecks,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
