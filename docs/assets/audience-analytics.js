@@ -97,6 +97,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const filterRowsForSexControl=(rows,key)=>{const v=sexVisibility(key);return rows.filter(r=>(v.M&&sexKey(r)==='M')||(v.F&&sexKey(r)==='F'))};
 
   function buildCaches(){
+    advanced.resultById.clear();advanced.clubKeyByResult.clear();advanced.clubDisplay.clear();advanced.smIndex.clear();advanced.classEvolutionCache.clear();
     state.data.results.forEach(r=>advanced.resultById.set(r.id,r));
     advanced.splitsByResult=state.data.splitsByResult;
     advanced.splitEvidence=state.data.splitEvidence;
@@ -512,13 +513,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function setupNavigation(){
     document.querySelectorAll('.analysis-nav-button').forEach(b=>b.onclick=()=>{document.querySelector('#'+b.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('.analysis-nav-button').forEach(x=>x.classList.toggle('active',x===b))});
     document.querySelector('#shareView').onclick=async()=>{syncUrl();try{await navigator.clipboard.writeText(location.href);document.querySelector('#shareView').textContent='Länk kopierad ✓';setTimeout(()=>document.querySelector('#shareView').textContent='Dela vy',1800)}catch{prompt('Kopiera länken:',location.href)}};
-    document.querySelector('#playYears').onclick=()=>{const btn=document.querySelector('#playYears'),races=familyRaces().slice().sort((a,b)=>a.year-b.year);if(advanced.yearTimer){clearInterval(advanced.yearTimer);advanced.yearTimer=null;btn.textContent='▶ Spela år';return}let i=Math.max(0,races.findIndex(r=>r.id===state.raceId));btn.textContent='■ Stoppa';advanced.yearTimer=setInterval(()=>{i=(i+1)%races.length;document.querySelector('#yearFilter').value=String(races[i].id);state.raceId=races[i].id;state.page=1;refreshFilters();applyFilters()},1400)};
+    document.querySelector('#playYears').onclick=()=>{const btn=document.querySelector('#playYears'),races=familyRaces().slice().sort((a,b)=>a.year-b.year);if(advanced.yearTimer){clearInterval(advanced.yearTimer);advanced.yearTimer=null;btn.textContent='▶ Spela år';return}let i=Math.max(0,races.findIndex(r=>r.id===state.raceId)),busy=false;btn.textContent='■ Stoppa';advanced.yearTimer=setInterval(async()=>{if(busy)return;busy=true;try{i=(i+1)%races.length;await window.ensureUltravasanRaceData?.(races[i].id);document.querySelector('#yearFilter').value=String(races[i].id);state.raceId=races[i].id;state.page=1;refreshFilters();applyFilters()}finally{busy=false}},1400)};
   }
 
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});const refreshExpandedData=()=>{buildCaches();refreshFilters();renderAudienceWorlds()};window.addEventListener('ultravasan:history-ready',refreshExpandedData);window.addEventListener('ultravasan:family-data-ready',refreshExpandedData);window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
