@@ -21,8 +21,25 @@
     if(!dataset||typeof dataset!=='object')return new Map();
     if(dataset.splitsByResult instanceof Map)return dataset.splitsByResult;
     const index=buildSplitsByResult(dataset.splits);
-    Object.defineProperty(dataset,'splitsByResult',{value:index,enumerable:false,writable:false,configurable:false});
+    Object.defineProperty(dataset,'splitsByResult',{value:index,enumerable:false,writable:false,configurable:true});
     return index;
+  }
+
+  function appendSplits(dataset,splits){
+    if(!dataset||typeof dataset!=='object')return 0;
+    if(!Array.isArray(dataset.splits))dataset.splits=[];
+    const index=ensureSplitsByResult(dataset),seen=new Set();
+    index.forEach((rows,resultId)=>rows.forEach(row=>seen.add(`${resultId}|${row.checkpoint_key}`)));
+    let added=0;
+    for(const split of Array.isArray(splits)?splits:[]){
+      const key=`${split.result_id}|${split.checkpoint_key}`;
+      if(seen.has(key))continue;
+      seen.add(key);dataset.splits.push(split);
+      let rows=index.get(split.result_id);
+      if(!rows){rows=[];index.set(split.result_id,rows)}
+      rows.push(split);added++;
+    }
+    return added;
   }
 
   function splitsForResult(dataset,resultId){
@@ -43,5 +60,5 @@
     return out;
   }
 
-  return {buildSplitsByResult,ensureSplitsByResult,splitsForResult,splitsForResults,EMPTY_SPLITS};
+  return {buildSplitsByResult,ensureSplitsByResult,appendSplits,splitsForResult,splitsForResults,EMPTY_SPLITS};
 });
