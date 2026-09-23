@@ -175,3 +175,11 @@ assert.ok(!appSource.includes('window.RACE_MEDIA_CONFIG'),'huvudappen får inte 
 assert.ok(raceMediaSourceU4.includes('root.RaceMedia=api;root.RACE_MEDIA_CONFIG=api'),'legacy media-alias ska endast exponeras från RaceMedia för bakåtkompatibilitet');
 assert.ok(indexHtml.includes('assets/race-media.js?v=20260923-u4b')&&indexHtml.includes('assets/app.js?v=20260923-u4b'),'huvudytan ska cache-busta ändrade U4.9-assets');
 assert.ok(mapHtml.includes('assets/map-engine.js?v=20260923-u4b')&&mapHtml.includes('assets/race-media.js?v=20260923-u4b')&&mapHtml.includes('assets/map.js?v=20260923-u4b'),'kartytan ska cache-busta ändrade U4.8/U4.9-assets');
+
+
+const runnerAnalysisSource=fs.readFileSync(path.join(root,'docs/assets/runner-analysis.js'),'utf8');
+assert.ok(indexHtml.includes('assets/runner-analysis.js?v=20260923-u5'),'huvudytan ska ladda U5 RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/history-engine.js')<indexHtml.indexOf('assets/runner-analysis.js'),'HistoryEngine ska laddas före RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/runner-analysis.js'),'DataIndex ska laddas före RunnerAnalysis');
+assert.ok(indexHtml.indexOf('assets/runner-analysis.js')<indexHtml.indexOf('assets/app.js'),'RunnerAnalysis ska laddas före huvudappen');
+assert.ok(runnerAnalysisSource.includes("require('./history-engine.js')")&&runnerAnalysisSource.includes("require('./data-index.js')"),'RunnerAnalysis ska återanvända U2 HistoryEngine och U4 DataIndex');
