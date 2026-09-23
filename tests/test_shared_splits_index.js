@@ -77,17 +77,22 @@ const mapHtml=fs.readFileSync(path.join(root,'docs/karta.html'),'utf8');
 for(const html of [indexHtml,mapHtml]){
   assert.ok(html.includes('assets/data-index.js'),'båda applikationsytorna ska ladda samma indexmodul');
   assert.ok(html.includes('assets/data-adapter.js'),'båda applikationsytorna ska ladda U4 DataAdapter');
+  assert.ok(html.includes('assets/race-ui.js'),'båda applikationsytorna ska ladda U4 RaceUI');
   assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
   assert.ok(html.includes('data/ultravasan-data-catalog.js'),'båda applikationsytorna ska ladda datakatalogen');
 }
 assert.ok(indexHtml.indexOf('data/ultravasan-data-catalog.js')<indexHtml.indexOf('assets/data-loader.js'),'katalogen ska laddas före DataLoader');
 assert.ok(indexHtml.indexOf('assets/data-loader.js')<indexHtml.indexOf('assets/app.js'),'DataLoader ska laddas före appen');
 assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/data-adapter.js'),'indexmodulen ska laddas före DataAdapter');
+assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/race-ui.js'),'loppkontrakten ska laddas före RaceUI');
+assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/app.js'),'RaceUI ska laddas före huvudappen');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/data-adapter.js'),'loppkontrakten ska laddas före DataAdapter');
 assert.ok(indexHtml.indexOf('assets/data-adapter.js')<indexHtml.indexOf('assets/app.js'),'DataAdapter ska laddas före appen');
 assert.ok(mapHtml.indexOf('data/ultravasan-data-catalog.js')<mapHtml.indexOf('assets/data-loader.js'),'kartvyn ska läsa katalogen före DataLoader');
 assert.ok(mapHtml.indexOf('assets/data-loader.js')<mapHtml.indexOf('assets/map.js'),'kartvyn ska läsa DataLoader före kartduellen');
 assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans indexmodul ska laddas före DataAdapter');
+assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/race-ui.js'),'kartans loppkontrakt ska laddas före RaceUI');
+assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map.js'),'RaceUI ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans loppkontrakt ska laddas före DataAdapter');
 assert.ok(mapHtml.indexOf('assets/data-adapter.js')<mapHtml.indexOf('assets/map.js'),'DataAdapter ska laddas före kartduellen');
 
@@ -105,3 +110,10 @@ assert.ok(appSource.includes('UltravasanDataAdapter.hydrate'),'huvudappen ska hy
 assert.ok(mapSource.includes("require('./data-adapter.js')")&&mapSource.includes('mapDataAdapter.hydrate'),'kartappen ska hydrera genom samma DataAdapter');
 assert.ok(!appSource.includes('const rr=new Map(d.results.map'),'huvudappen får inte återinföra egen split/checkpoint-hydrering');
 assert.ok(!mapSource.includes('const rr=new Map(d.results.map'),'kartappen får inte återinföra egen split/checkpoint-hydrering');
+
+
+const raceUiSource=fs.readFileSync(path.join(root,'docs/assets/race-ui.js'),'utf8');
+assert.ok(appSource.includes('window.RaceUI.familyKey')&&appSource.includes('window.RaceUI.presentations'),'huvudappen ska använda delad RaceUI');
+assert.ok(mapSource.includes("require('./race-ui.js')")&&mapSource.includes('mapRaceUi.selectionTitle'),'kartappen ska använda samma RaceUI');
+assert.ok(!mapSource.includes('mapContracts.family(families[0])'),'kartappen får inte återinföra egen familjerubrik');
+assert.ok(raceUiSource.includes('selectionTitle')&&raceUiSource.includes('startNameFor'),'RaceUI ska äga gemensamma presentationsregler');
