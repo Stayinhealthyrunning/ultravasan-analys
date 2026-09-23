@@ -39,6 +39,15 @@ assert.ok(audience.includes("matchMedia('(prefers-reduced-motion: reduce)').matc
 assert.ok(css.includes('@media(prefers-reduced-motion:reduce)')&&css.includes('.skip-link{transition:none}'),'U8-rörelser ska respektera reduced motion');
 
 assert.ok(css.includes('.analysis-guide-grid{display:grid;grid-template-columns:repeat(4,1fr)')&&css.includes('@media(max-width:620px)')&&css.includes('.analysis-guide-grid{grid-template-columns:1fr}'),'metodguiden ska vara responsiv');
+
+assert.ok(html.includes('id="genderHistoryChart"')&&html.includes('Deltagande och fullföljande över åren'),'U8 ska behålla finish progression som årsvy');
+assert.ok(audience.includes('function renderGenderHistory()')&&audience.includes('stapel = startande · streckad linje = fullföljandegrad'),'finish progression ska visa både startande och fullföljandegrad');
+assert.ok(html.includes('id="genderRetentionChart"')&&html.includes('100 = snittfarten i loppet'),'U8 ska behålla fartretention med index 100 som referens');
+assert.ok(audience.includes("renderSexPaceChart(document.querySelector('#genderRetentionChart'),rows,false,true,'genderRetention')")&&audience.includes('Fart kvar i avslutningen'),'fartretention ska drivas av relativ fart och avslutningsinsikt');
+assert.ok(html.includes('Q25–Q75')&&app.includes('p25:quantile(g.vals,.25)')&&app.includes('p75:quantile(g.vals,.75)'),'U8 ska exponera och beräkna Q25–Q75 för delsträckors spridning');
+assert.ok(html.includes('id="classCompareChart"')&&html.includes('id="clubCompareChart"'),'U8 ska behålla gruppvyer för både klass och klubb/ort');
+assert.ok(audience.includes('function renderClassCompare(stats)')&&audience.includes('function renderClubCompare(stats)'),'klass- och klubbgruppvyerna ska ha egna jämförelserenderare');
+assert.ok(app.includes("['#genderRetentionChart'")&&app.includes("['#classCompareChart'")&&app.includes("['#clubCompareChart'"),'U8:s grupp- och retentionvyer ska ha metodhjälp');
 assert.ok(html.includes('assets/styles.css?v=20260923-u8')&&html.includes('assets/app.js?v=20260923-u8')&&html.includes('assets/audience-analytics.js?v=20260923-u8'),'alla ändrade U8-assets ska cache-bustas tillsammans');
 
-console.log('OK: U8 UX/metodik har semantisk struktur, metodguide, tangentbordsstöd och reduced-motion-kontrakt');
+console.log('OK: U8 UX/metodik låser finish progression, fartretention, Q25–Q75, gruppvyer, metodhjälp och tillgänglighet');
