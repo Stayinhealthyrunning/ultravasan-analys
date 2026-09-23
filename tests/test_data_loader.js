@@ -64,6 +64,18 @@ async function main(){
   assert.deepStrictEqual(two.races.map(x=>x.id),[1,2]);
   assert.strictEqual(two.meta.data_scope.kind,'merged-editions');
 
-  console.log('OK: U3 DataLoader routes result links to exact edition chunks and merges deterministically');
+  const familyDataset={
+    meta:{data_scope:{kind:'race-family',race_family:'uv90'}},
+    races:[{id:1},{id:2}],checkpoints:[],results:[{id:1,race_id:1},{id:2,race_id:2}],
+    splits:[],stats:{},sources:[]
+  };
+  global.location={protocol:'file:'};
+  global.ULTRAVASAN_DATA_FAMILIES={uv90:familyDataset};
+  loader.clearCaches();
+  const offline=await loader.loadForResultIds([1]);
+  assert.strictEqual(offline,familyDataset,'file:// ska falla tillbaka till offline-kompatibel family JS');
+  delete global.location;
+
+  console.log('OK: U3 DataLoader routes web links to editions and preserves offline family fallback');
 }
 main().catch(error=>{console.error(error);process.exitCode=1});
