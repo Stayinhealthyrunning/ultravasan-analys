@@ -15,7 +15,7 @@
 <meta content="Analysera resultat, mellantider, fart och loppförlopp för Ultravasan 90 och Ultravasan 45." name="twitter:description"/>
 <meta content="https://stayinhealthyrunning.github.io/ultravasan-analys/assets/salen-mora-header.png" name="twitter:image"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260923-u5c" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260923-u6" rel="stylesheet"/>
 <link href="assets/runner-replay.css?v=20260716-livecompare5" rel="stylesheet"/>
 <link href="data:," rel="icon"/>
 </head>
@@ -167,6 +167,17 @@
 </div>
 <div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
 </div>
+<article class="panel course-intelligence-card" id="courseIntelligenceCard">
+<div class="panel-head wrap"><div><p class="eyebrow">COURSE INTELLIGENCE</p><h3>Var avgörs loppet?</h3><p class="panel-subtitle">Terräng, pacing, spridning och avhopp på samma CourseVersion. Klicka på ett segment för att synka analysen.</p></div><span class="pill" id="courseIntelligenceVersion">CourseVersion</span></div>
+<div class="course-intelligence-summary" id="courseIntelligenceSummary"></div>
+<div class="course-intelligence-views">
+<div class="course-route-view" id="courseRouteView" aria-label="Interaktiv banöversikt"></div>
+<div class="course-elevation-view" id="courseElevationView" aria-label="Höjdprofil"></div>
+<div class="course-pace-view" id="coursePaceView" aria-label="Fartfördelning"></div>
+</div>
+<div class="course-segment-narrative" id="courseSegmentNarrative"></div>
+<div class="table-wrap course-intelligence-table-wrap"><table class="course-intelligence-table"><thead><tr><th>Segment</th><th>Distans</th><th>Stigning</th><th>Medianfart</th><th>Q25–Q75</th><th>Pacing loss</th><th>Plats ±</th><th>DNF</th><th>Difficulty</th></tr></thead><tbody id="courseIntelligenceRows"></tbody></table></div>
+</article>
 <div class="story-strip" id="raceStories"></div>
 <div class="intelligence-grid">
 <article class="panel lab-card segment-lab">
@@ -292,8 +303,9 @@
 <script src="assets/history-engine.js?v=20260923-u2"></script>
 <script src="assets/runner-analysis.js?v=20260923-u5"></script>
 <script src="assets/runner-favorites.js?v=20260923-u5"></script>
+<script src="assets/course-intelligence.js?v=20260923-u6"></script>
 <script src="assets/app.js?v=20260923-u5c"></script>
-<script src="assets/nerdlab.js?v=20260923-u2"></script>
+<script src="assets/nerdlab.js?v=20260923-u6"></script>
 <script src="assets/class-evolution.js?v=20260715-gapminder1"></script>
 <script src="assets/audience-analytics.js?v=20260922-u1"></script>
 </body>
