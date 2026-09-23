@@ -138,7 +138,7 @@ def build_snapshot(
             "phase": "U2",
             "identity_contract": "u2-person-key-v1",
             "files": {
-                "database": file_identity(db),
+                "database": {key: value for key, value in file_identity(db).items() if key != "sha256"},
                 "web_json": file_identity(web_json),
                 "web_javascript": file_identity(web_js),
                 "manifest": file_identity(manifest),
