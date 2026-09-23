@@ -68,6 +68,18 @@ if (!ready) {
   throw new Error("Local application did not finish loading");
 }
 
+const modularStartup = await evaluate(`(() => ({
+  active:Boolean(typeof state!=='undefined'&&state.data),
+  status:window.UltravasanDataLoader?.status?.()||null
+}))()`);
+await evaluate(`(async() => {
+  const data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null);
+  const keys=['ultravasan90-2016','ultravasan90-2015','ultravasan90-2017','ultravasan45-2016'];
+  const ids=keys.map(key=>data.races.find(race=>race.race_key===key)?.id).filter(Boolean);
+  if(window.UltravasanDataLoader?.ensureEditions)await window.UltravasanDataLoader.ensureEditions(ids);
+  return {ids,loaded:window.UltravasanDataLoader?.status?.().loadedRaceIds||[]};
+})()`);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null);
   return {
@@ -120,7 +132,7 @@ const replayProgress = await evaluate(`(() => ({
 }))()`);
 
 const additionalCases = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA,counts=new Map();
+  const data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null),counts=new Map();
   data.splits.forEach(split=>counts.set(split.result_id,(counts.get(split.result_id)||0)+1));
   const race=key=>data.races.find(item=>item.race_key===key);
   const pick=(raceKey,predicate)=>{
@@ -140,7 +152,7 @@ const additionalCases = await evaluate(`(() => {
 async function openRunnerCase(item) {
   if (!item) return {verified:false, reason:'No representative result found'};
   const setup = await evaluate(`(() => {
-    const data=window.ULTRAVASAN_DATA,result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
+    const data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null),result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
     const dialog=document.querySelector('#runnerDialog');if(dialog?.open)dialog.close();
     const family=window.RaceContracts.familyForRace(race)==='uv45'?'45':'90';document.querySelector('#raceSwitch'+family)?.click();
     return {family,raceKey:race.race_key,year:race.year};
@@ -206,7 +218,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {modularStartup,contractChecks,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
