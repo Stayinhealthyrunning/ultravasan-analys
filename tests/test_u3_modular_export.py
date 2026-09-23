@@ -85,6 +85,8 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     assert edition90["meta"]["data_scope"]["kind"] == "race-edition"
     assert edition45["results"] == [payload["results"][1]]
     assert edition45["splits"] == [payload["splits"][1]]
+    assert not (tmp_path / "ultravasan-edition-uv90-a.js").exists()
+    assert not (tmp_path / "ultravasan-edition-uv45-a.js").exists()
 
 
 def test_export_auto_detects_activated_modular_catalog(tmp_path: Path) -> None:
