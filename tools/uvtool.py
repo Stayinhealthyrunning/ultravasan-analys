@@ -1286,7 +1286,6 @@ def write_modular_web_data(
         "totals": global_totals,
         "families": {},
         "editions": {},
-        "result_family": {},
         "result_edition": {},
     }
 
@@ -1300,8 +1299,7 @@ def write_modular_web_data(
         race_key = race_by_id[race_id]["race_key"]
         results_by_family[family].append(result)
         results_by_race[race_id].append(result)
-        catalog["result_family"][str(result["id"])] = family
-        catalog["result_edition"][str(result["id"])] = race_key
+        catalog["result_edition"][str(result["id"])] = race_id
 
     result_family_lookup = {
         int(result["id"]): family
@@ -1424,11 +1422,12 @@ def write_modular_web_data(
         json_path, js_path = write_chunk(
             stem=stem,
             global_name="ULTRAVASAN_DATA_EDITIONS",
-            global_key=race_key,
+            global_key=str(race_id),
             chunk_payload=edition_payload,
         )
-        catalog["editions"][race_key] = {
+        catalog["editions"][str(race_id)] = {
             "race_id": race_id,
+            "race_key": race_key,
             "year": race.get("year"),
             "race_family": family,
             "results": len(edition_results),
