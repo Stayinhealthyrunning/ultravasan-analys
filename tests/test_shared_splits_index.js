@@ -224,3 +224,9 @@ assert.ok(courseIntelligenceSource.includes("relative_scope:'selected-race-cours
 assert.ok(nerdSource.includes('renderCourseRouteView(model,selected)')&&nerdSource.includes('renderCourseElevationView(model,selected)')&&nerdSource.includes('renderCoursePaceView(model,selected)'),'U6 ska rendera karta, höjd och fart från samma valda segment');
 assert.ok(nerdSource.includes("querySelectorAll?.('[data-course-segment]')")&&nerdSource.includes('selectCourseSegment(node.dataset.courseSegment)'),'alla Course Intelligence-vyer ska använda samma segment-eventkontrakt');
 assert.ok(stylesSourceU5.includes('.course-route-segment.selected')&&stylesSourceU5.includes('.course-elevation-hit.selected')&&stylesSourceU5.includes('.course-pace-row.selected'),'valt U6-segment ska ha synkad visuell state i alla vyer');
+
+assert.ok(indexHtml.includes('id="courseTargetTime"')&&indexHtml.includes('id="coursePlanRows"'),'U6 ska exponera redigerbar måltid och loppplan');
+assert.ok(nerdSource.includes('buildRacePlan(state.data,race,target,{minSample:5})'),'måltempo ska byggas via Course Intelligence, inte egen UI-matematik');
+assert.ok(nerdSource.includes('Ingen resttid fördelas genom gissning'),'ofullständig CourseVersion ska ge explicit stopp, inte dold interpolering');
+assert.ok(courseIntelligenceSource.includes("source:historicalShare!==null?'historical-course-version':fallbackShare!==null?'distance-fallback':'unavailable'"),'loppplanen ska märka historik, fallback och saknat underlag per segment');
+assert.ok(stylesSourceU5.includes('.course-plan-source.distance-fallback')&&stylesSourceU5.includes('.course-plan-source.unavailable'),'loppplanens evidenskälla ska vara visuellt synlig');
