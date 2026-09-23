@@ -320,6 +320,93 @@
     }));
   }
 
+  function comparableCourseRaces(dataset,race){
+    const version=courseVersionId(race);
+    return (dataset?.races||[]).filter(candidate=>courseVersionId(candidate)===version);
+  }
+
+  function segmentElapsedSeconds(dataset,result,segment){
+    const splits=splitByKey(dataset,result.id);
+    const from=segment.from_key==='start'?{elapsed_seconds:0,is_estimated:false}:splits.get(segment.from_key);
+    const to=splits.get(segment.to_key);
+    if(!exactSplit(from)||!exactSplit(to))return null;
+    const seconds=Number(to.elapsed_seconds)-Number(from.elapsed_seconds);
+    return seconds>0?seconds:null;
+  }
+
+  function buildRacePlan(dataset,race,targetFinishSeconds,{minSample=5}={}){
+    const target=Number(targetFinishSeconds);
+    if(!Number.isFinite(target)||target<=0)throw new Error('Måltiden måste vara ett positivt antal sekunder.');
+    const course=courseForRace(race);
+    if(!course)throw new Error('Loppplan kräver explicit CourseVersion.');
+    const segments=segmentContracts(course);
+    const raceIds=new Set(comparableCourseRaces(dataset,race).map(item=>String(item.id)));
+    const cohort=(dataset?.results||[]).filter(result=>{
+      if(!raceIds.has(String(result.race_id))||!finite(result.finish_seconds))return false;
+      return classify(dataset,result).finished===true;
+    });
+    const raceById=new Map((dataset?.races||[]).map(item=>[String(item.id),item]));
+    const years=[...new Set(cohort.map(result=>raceById.get(String(result.race_id))?.year).filter(Number.isFinite))].sort((a,b)=>a-b);
+    const courseDistance=wholeCourseDistance(course);
+
+    const provisional=segments.map(segment=>{
+      const shares=cohort.map(result=>{
+        const seconds=segmentElapsedSeconds(dataset,result,segment);
+        return seconds===null?null:seconds/Number(result.finish_seconds);
+      }).filter(finite).map(Number);
+      const historicalShare=shares.length>=minSample?charts.median(shares):null;
+      const fallbackShare=historicalShare===null&&finite(segment.distance_km)&&courseDistance>0
+        ?Number(segment.distance_km)/courseDistance:null;
+      const weight=historicalShare??fallbackShare;
+      return {
+        segment,
+        sample_n:shares.length,
+        raw_weight:weight,
+        source:historicalShare!==null?'historical-course-version':fallbackShare!==null?'distance-fallback':'unavailable',
+      };
+    });
+    const complete=provisional.every(item=>finite(item.raw_weight)&&Number(item.raw_weight)>0);
+    const weightSum=provisional.filter(item=>finite(item.raw_weight)&&Number(item.raw_weight)>0).reduce((sum,item)=>sum+Number(item.raw_weight),0);
+    let cumulative=0;
+    const rows=provisional.map(item=>{
+      const normalized=complete&&weightSum>0?Number(item.raw_weight)/weightSum:null;
+      const seconds=normalized===null?null:target*normalized;
+      if(seconds!==null)cumulative+=seconds;
+      return Object.freeze({
+        key:item.segment.key,
+        from_key:item.segment.from_key,
+        to_key:item.segment.to_key,
+        from_name:item.segment.from_name,
+        to_name:item.segment.to_name,
+        distance_km:item.segment.distance_km,
+        source:item.source,
+        sample_n:item.sample_n,
+        raw_weight:item.raw_weight===null?null:round(item.raw_weight,6),
+        normalized_weight:normalized===null?null:round(normalized,6),
+        target_segment_seconds:seconds===null?null:round(seconds,1),
+        target_cumulative_seconds:seconds===null?null:round(cumulative,1),
+        target_pace_seconds_per_km:seconds!==null&&finite(item.segment.distance_km)&&Number(item.segment.distance_km)>0
+          ?round(seconds/Number(item.segment.distance_km),1):null,
+      });
+    });
+    const allocated=rows.filter(row=>finite(row.target_segment_seconds)).reduce((sum,row)=>sum+Number(row.target_segment_seconds),0);
+    return Object.freeze({
+      race_family:contracts.familyForRace(race),
+      course_version_id:courseVersionId(race),
+      target_finish_seconds:target,
+      min_sample:minSample,
+      cohort_finishers:cohort.length,
+      cohort_years:Object.freeze(years),
+      complete,
+      historical_segments:rows.filter(row=>row.source==='historical-course-version').length,
+      fallback_segments:rows.filter(row=>row.source==='distance-fallback').length,
+      unavailable_segments:rows.filter(row=>row.source==='unavailable').length,
+      allocated_seconds:round(allocated,1),
+      unallocated_seconds:complete?0:round(target-allocated,1),
+      rows:Object.freeze(rows),
+    });
+  }
+
   function buildCourseModel(dataset,race,routeRegistry,{results=null,minSample=5}={}){
     if(!race)throw new Error('Course Intelligence kräver en explicit RaceEdition.');
     const edition=contracts.editionForRace(race);
@@ -360,6 +447,9 @@
     fieldStatsForSegment,
     percentileRank,
     applyDifficultyIndex,
+    comparableCourseRaces,
+    segmentElapsedSeconds,
+    buildRacePlan,
     buildCourseModel,
   });
 });
