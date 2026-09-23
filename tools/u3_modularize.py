@@ -301,6 +301,16 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     if totals != expected_totals:
         raise RuntimeError(f"Catalog totals differ: {totals!r} != {expected_totals!r}")
 
+    default_first_paint = {
+        family: (
+            family_shell_sizes[family]
+            + edition_core_sizes[
+                source_races[int(catalog["families"][family]["default_race_id"])]["race_key"]
+            ]
+        )
+        for family in ("uv90", "uv45")
+    }
+    catalog_bytes = catalog_path.stat().st_size
     return {
         "races": len(source_races),
         "results": len(source_results),
@@ -309,7 +319,15 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             family: {
                 "results": catalog["families"][family]["results"],
                 "splits": catalog["families"][family]["splits"],
+                "default_race_id": catalog["families"][family]["default_race_id"],
                 "shell_json_bytes": family_shell_sizes[family],
+                "default_edition_core_json_bytes": (
+                    default_first_paint[family] - family_shell_sizes[family]
+                ),
+                "default_first_paint_json_bytes": default_first_paint[family],
+                "default_first_paint_with_catalog_bytes": (
+                    default_first_paint[family] + catalog_bytes
+                ),
                 "core_json_bytes": family_core_sizes[family],
                 "split_json_bytes": family_split_sizes[family],
             }
@@ -324,12 +342,16 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             "smallest_json_bytes": min(edition_sizes.values()),
             "total_json_bytes": sum(edition_sizes.values()),
         },
-        "catalog_bytes": catalog_path.stat().st_size,
+        "catalog_bytes": catalog_bytes,
         "largest_family_shell_bytes": max(family_shell_sizes.values()),
         "largest_family_core_bytes": max(family_core_sizes.values()),
         "largest_family_split_bytes": max(family_split_sizes.values()),
         "largest_edition_core_bytes": max(edition_core_sizes.values()),
         "largest_edition_bytes": max(edition_sizes.values()),
+        "largest_default_first_paint_bytes": max(default_first_paint.values()),
+        "largest_default_first_paint_with_catalog_bytes": (
+            max(default_first_paint.values()) + catalog_bytes
+        ),
     }
 
 
@@ -368,6 +390,20 @@ def main() -> None:
                     + summary["largest_edition_core_bytes"]
                 )
                 / source_bytes
+            ),
+            1,
+        )
+        summary["largest_default_first_paint_reduction_pct"] = round(
+            100 * (
+                1
+                - summary["largest_default_first_paint_bytes"] / source_bytes
+            ),
+            1,
+        )
+        summary["largest_default_first_paint_with_catalog_reduction_pct"] = round(
+            100 * (
+                1
+                - summary["largest_default_first_paint_with_catalog_bytes"] / source_bytes
             ),
             1,
         )
