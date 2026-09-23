@@ -1,9 +1,10 @@
 'use strict';
 (function(root,factory){
-  const api=factory();
+  const playback=typeof module==='object'&&module.exports?require('./playback.js'):root.UltravasanPlayback;
+  const api=factory(playback);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.UltravasanAppState=api;
-})(typeof window!=='undefined'?window:globalThis,function(){
+})(typeof window!=='undefined'?window:globalThis,function(playback){
   const MAIN_DEFAULTS=Object.freeze({
     data:null,
     dataPhase:'none',
@@ -22,7 +23,7 @@
     models:null,
     time:0,
     maxTime:1,
-    speed:'120s',
+    speed:playback.DEFAULT_MODE,
     playing:false,
     lastFrame:0,
     lastUi:0,
