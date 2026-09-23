@@ -7,6 +7,8 @@
   const familyCache=new Map();
   const familyCoreCache=new Map();
   const familySplitCache=new Map();
+  const familyShellCache=new Map();
+  const editionCoreCache=new Map();
   const editionCache=new Map();
   let legacyPromise=null;
 
@@ -139,6 +141,37 @@
     try{return await promise}catch(error){cache.delete(family);throw error}
   }
 
+  async function loadJsonOnlyModule(spec,cache,key,globalName,label){
+    if(cache.has(key))return cache.get(key);
+    const globals=root[globalName]||(root[globalName]={});
+    if(globals[key]){
+      cache.set(key,Promise.resolve(globals[key]));
+      return globals[key];
+    }
+    if(typeof location!=='undefined'&&location.protocol==='file:'){
+      throw new Error(`${label} kräver HTTP/HTTPS.`);
+    }
+    if(!spec?.json)throw new Error(`Datakatalogen saknar JSON för ${label}.`);
+    const promise=fetchJson(spec.json).then(data=>{
+      globals[key]=data;
+      return data;
+    });
+    cache.set(key,promise);
+    try{return await promise}catch(error){cache.delete(key);throw error}
+  }
+
+  async function loadModularFamilyShell(family){
+    family=normalizeFamily(family);
+    const spec=familySpec(family)?.shell;
+    return loadJsonOnlyModule(spec,familyShellCache,family,'ULTRAVASAN_DATA_FAMILY_SHELLS',`family-shell ${family}`);
+  }
+
+  async function loadModularEditionCore(editionKey){
+    editionKey=String(editionKey);
+    const spec=editionSpec(editionKey)?.core;
+    return loadJsonOnlyModule(spec,editionCoreCache,editionKey,'ULTRAVASAN_DATA_EDITION_CORES',`edition-core ${editionKey}`);
+  }
+
   async function loadModularFamilyCore(family){
     const spec=familySpec(family);
     if(!spec.core)return loadOldModularFamily(family);
@@ -202,6 +235,39 @@
     })();
     editionCache.set(editionKey,promise);
     try{return await promise}catch(error){editionCache.delete(editionKey);throw error}
+  }
+
+  async function loadInitialFamily(family,editionKey=null){
+    family=normalizeFamily(family);
+    if(catalog().mode!=='modular')return loadLegacy();
+    const spec=familySpec(family);
+    const canFetch=typeof location==='undefined'||location.protocol!=='file:';
+    const key=String(editionKey??spec.default_race_id??'');
+    if(!canFetch||!spec.shell||!key||!catalog()?.editions?.[key]?.core){
+      return loadModularFamilyCore(family);
+    }
+    try{
+      const [shell,editionCore]=await Promise.all([
+        loadModularFamilyShell(family),
+        loadModularEditionCore(key),
+      ]);
+      const merged=mergeDatasets([shell,editionCore]);
+      const edition=catalog().editions[key];
+      merged.meta={
+        ...(shell.meta||{}),
+        data_scope:{
+          kind:'race-family-active-core',
+          race_family:family,
+          race_id:Number(key),
+          race_key:edition?.race_key||null,
+          data_parts:['shell','edition-core']
+        }
+      };
+      return merged;
+    }catch(error){
+      console.warn?.(`Aktivt loppår för ${family} kunde inte laddas; använder family core.`,error);
+      return loadModularFamilyCore(family);
+    }
   }
 
   async function loadFamilyCore(family){
@@ -271,8 +337,8 @@
   }
 
   function clearCaches(){
-    familyCache.clear();familyCoreCache.clear();familySplitCache.clear();editionCache.clear();legacyPromise=null;
+    familyCache.clear();familyCoreCache.clear();familySplitCache.clear();familyShellCache.clear();editionCoreCache.clear();editionCache.clear();legacyPromise=null;
   }
 
-  return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadFamilyCore,loadFamily,loadForResultIds,clearCaches};
+  return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadInitialFamily,loadFamilyCore,loadFamily,loadForResultIds,clearCaches};
 });
