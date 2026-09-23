@@ -64,6 +64,33 @@ jobs:
               --apply \
               --confirm MIGRATE-U2-IDENTITY \
               --report "$RUNNER_TEMP/u2-identity-migration.json"
+            python tools/uvtool.py --db "$RUNNER_TEMP/u2-migrated.sqlite" export \
+              --output "$RUNNER_TEMP/u2-web.json" \
+              --js-output "$RUNNER_TEMP/u2-web.js"
+            python - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "tools")
+          import u2_baseline
+
+          temp = Path(__import__("os").environ["RUNNER_TEMP"])
+          snapshot = u2_baseline.build_snapshot(
+              db=temp / "u2-migrated.sqlite",
+              web_json=temp / "u2-web.json",
+              web_js=temp / "u2-web.js",
+              manifest=temp / "manifest.json",
+          )
+          issues = u2_baseline.validate_snapshot(snapshot)
+          if issues:
+              raise SystemExit("Migrated web export failed U2 validation:\n- " + "\n- ".join(issues))
+          print(
+              "Migrated web export verified:",
+              snapshot["web_export"]["results"],
+              "results,",
+              snapshot["web_export"]["person_key_rows"],
+              "person-key result rows.",
+          )
+          PY
           else
             python tools/u2_identity_migration.py --db data/ultravasan.sqlite
           fi
