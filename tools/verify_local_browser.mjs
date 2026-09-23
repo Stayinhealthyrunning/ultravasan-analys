@@ -173,6 +173,34 @@ const replayProgress = await evaluate(`(() => ({
   time:document.querySelector('#runnerDetail [data-replay-value="time"]')?.textContent||''
 }))()`);
 
+const favoriteBefore=await evaluate(`(() => ({
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+}))()`);
+await evaluate("document.querySelector('#runnerDetail [data-runner-favorite]')?.click()");
+await delay(120);
+const favoriteSaved=await evaluate(`(() => ({
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+  listText:document.querySelector('#runnerFavoritesList')?.innerText||'',
+  stored:JSON.parse(localStorage.getItem('ultravasan-runner-favorites-v1')||'[]'),
+}))()`);
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#runnerFavoritesList [data-favorite-open]')?.click()");
+await delay(250);
+const favoriteReopened=await evaluate(`(() => ({
+  open:document.querySelector('#runnerDialog')?.open||false,
+  text:(document.querySelector('#runnerDetail')?.innerText||'').slice(0,250),
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+}))()`);
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#runnerFavoritesList [data-favorite-remove]')?.click()");
+await delay(80);
+const favoriteRemoved=await evaluate(`(() => ({
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+  stored:JSON.parse(localStorage.getItem('ultravasan-runner-favorites-v1')||'[]'),
+}))()`);
+
 async function representativeCases(raceKeys) {
   return evaluate(`((raceKeys) => {
     const data=window.ULTRAVASAN_ACTIVE_DATA,counts=new Map();
@@ -387,13 +415,14 @@ const checks = {
   dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
+  favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
