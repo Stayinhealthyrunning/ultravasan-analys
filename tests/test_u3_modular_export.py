@@ -55,11 +55,14 @@ def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
     config = tiny_config()
     stale_json = tmp_path / "ultravasan-edition-obsolete.json"
     stale_js = tmp_path / "ultravasan-edition-obsolete.js"
+    stale_current_js = tmp_path / "ultravasan-edition-uv90-a.js"
     stale_json.write_text("{}", encoding="utf-8")
     stale_js.write_text("window.obsolete=true;", encoding="utf-8")
+    stale_current_js.write_text("window.obsolete=true;", encoding="utf-8")
     catalog = uvtool.write_modular_web_data(payload, tmp_path, config)
     assert not stale_json.exists()
     assert not stale_js.exists()
+    assert not stale_current_js.exists()
     assert catalog["mode"] == "modular"
     assert "result_family" not in catalog
     assert catalog["result_edition"] == {"10": 1, "20": 2}
