@@ -52,7 +52,7 @@ def validate(root: Path) -> dict[str, Any]:
         if not entry:
             issues.append(f"missing edition manifest for race {race_id}")
             continue
-        json_path = root.parent / entry["json"].removeprefix("data/")
+        json_path = root / entry["json"].removeprefix("data/")
         if not json_path.is_file():
             issues.append(f"missing edition file {json_path}")
             continue
