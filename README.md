@@ -81,6 +81,15 @@ splits, flerårshistorik kräver U2-verifierad identitet och Head-to-head respek
 CourseVersion-kontrakten. Favoriter sparas endast lokalt som referenser till
 specifika publicerade resultat och skapar ingen egen personmatchning.
 
+U6:s Course Intelligence beskrivs i
+[`reports/U6_COURSE_INTELLIGENCE.md`](reports/U6_COURSE_INTELLIGENCE.md).
+Course Intelligence skiljer tävlings-/timingdistans från display-ruttens
+terrängaxel, kräver samma fyra evidenskomponenter för relativ Difficulty och
+synkroniserar segmentval mellan banöversikt, höjdprofil, fartvy och
+Delsträckelabbet. Måltempo/loppplan använder endast samma CourseVersion, märker
+distansfallback explicit och lämnar okända segment oallokerade i stället för att
+gissa.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
