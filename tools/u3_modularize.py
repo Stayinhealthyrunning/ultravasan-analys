@@ -127,16 +127,6 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     if totals != expected_totals:
         raise RuntimeError(f"Catalog totals differ: {totals!r} != {expected_totals!r}")
 
-    legacy_bytes = DEFAULT_SOURCE.stat().st_size if DEFAULT_SOURCE.exists() else 0
-    if source is not load_json and legacy_bytes == 0:
-        legacy_bytes = 0
-    if output_dir.resolve() == DEFAULT_OUTPUT.resolve():
-        legacy_bytes = DEFAULT_SOURCE.stat().st_size
-    else:
-        # Validation of a temporary export may point at a different source path;
-        # caller can still use the sum/max family sizes for the contract.
-        legacy_bytes = 0
-
     return {
         "races": len(source_races),
         "results": len(source_results),
@@ -150,7 +140,6 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             for family in ("uv90", "uv45")
         },
         "catalog_bytes": catalog_path.stat().st_size,
-        "legacy_bytes": legacy_bytes,
         "largest_family_bytes": max(family_sizes.values()),
     }
 
@@ -162,6 +151,7 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     if not args.write and not args.check:
         parser.error("choose --write and/or --check")
@@ -181,7 +171,11 @@ def main() -> None:
         summary["largest_family_reduction_pct"] = round(
             100 * (1 - summary["largest_family_bytes"] / source_bytes), 1
         )
-        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        rendered = json.dumps(summary, ensure_ascii=False, indent=2)
+        print(rendered)
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(rendered + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
