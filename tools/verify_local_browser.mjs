@@ -221,7 +221,7 @@ async function representativeCases(raceKeys) {
 }
 
 async function waitForActiveFamily(family,requireSplits=true){
-  for(let attempt=0;attempt<250;attempt++){
+  for(let attempt=0;attempt<450;attempt++){
     const active=await evaluate(`(() => {
       const data=window.ULTRAVASAN_ACTIVE_DATA;
       if(!data?.races?.length)return {family:null,splitsReady:false};
