@@ -98,6 +98,15 @@ Klasshistorik och Klassutveckling bryter prestationslinjer och animation vid
 CourseVersion-gränser i stället för att skapa en skenbar trend över olika banor.
 Fingeravtryckets prestationsnormal byggs av lika viktade, jämförbara loppår.
 
+
+U8:s UX-, metodik- och tillgänglighetskontrakt beskrivs i
+[`reports/U8_UX_METHODOLOGY.md`](reports/U8_UX_METHODOLOGY.md).
+Huvudsidan har en gemensam metod- och datakvalitetsguide med aktuell lopp-, data-
+och filterstatus, semantisk H1/skip-länk, tangentbordsöppning av resultatrader,
+korrekt knappsemantik i loppväxlaren, tydliga fokusmarkeringar och reduced-motion-
+stöd. Primära användartexter är konsekvent svenska utan att tekniska kontrakts-
+identifierare ändras.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
