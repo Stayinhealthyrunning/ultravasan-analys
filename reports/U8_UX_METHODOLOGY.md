@@ -13,6 +13,23 @@ analyskontrakten från U1–U7. Etappen fokuserar på:
 - konsekvent svensk användartext,
 - testbar UX i verklig Chromium.
 
+## U8:s analysytor som nu låses
+
+Den ursprungliga U8-specifikationen omfattar också fyra analysytor som redan
+fanns i kodbasen när denna etapp startade. U8 gör därför ingen parallell
+omimplementation, utan verifierar och låser dem som del av slutkontraktet:
+
+- **Finish progression:** könsvyn visar antal startande och fullföljandegrad per
+  loppår och redovisar DNF/DNS/DSQ i tooltip.
+- **Fartretention:** delsträckans gruppfart uttrycks relativt samma grupps
+  genomsnittliga loppfart, där index 100 är gruppens snittfart.
+- **Q25–Q75:** delsträckevyer behåller kvartilspannet runt medianen som
+  spridningsmått, beräknat med gemensam quantile-funktion.
+- **Gruppvyer:** klass- och klubb/ort-vyer kan jämföra flera valda grupper över
+  samma segmentaxel och har egna metodförklaringar.
+
+Dessa delar är nu explicita regressionskrav i `tests/test_u8_ux.js`.
+
 ## Metodguide nära toppen
 
 Huvudsidan har nu en kompakt sektion **Så läser du analysen** direkt efter
@@ -153,6 +170,11 @@ på mindre skärmar.
 - aria-current i analysnavigering,
 - reduced-motion-stöd,
 - responsiv metodguide,
+- finish progression,
+- fartretention,
+- Q25–Q75-spridning,
+- klass- och klubb/ort-gruppvyer,
+- metodhjälp för dessa vyer,
 - gemensam U8-cachegeneration.
 
 ### Chromium
