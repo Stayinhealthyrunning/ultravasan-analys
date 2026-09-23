@@ -440,6 +440,70 @@ function renderTargetSimulator(){
 }
 
 
+function runnerH2HLabel(result){
+  const race=state.data.races.find(item=>String(item.id)===String(result?.race_id));
+  return `${esc(result?.name_as_published||'Okänd löpare')}<small>${race?.year||'–'} · ${esc(window.RaceUI.labelFor(race))}</small>`;
+}
+function runnerH2HSegmentLabel(analysis,segment){
+  const first=analysis.results?.[0],journey=first?window.RunnerAnalysis.journeyForResult(state.data,first.id):null;
+  const byKey=new Map((journey?.rows||[]).map(row=>[row.checkpoint_key,cleanCheckpointName(row.checkpoint_name)]));
+  return `${esc(byKey.get(segment.from)||segment.from)} → ${esc(byKey.get(segment.to)||segment.to)}`;
+}
+function renderHeadToHead(analysis){
+  const detail=$('#headToHeadDetail');if(!detail)return;
+  if(!analysis?.available){
+    detail.innerHTML='<div class="head-to-head-shell"><p class="eyebrow">HEAD-TO-HEAD</p><h2>Jämförelsen kan inte byggas</h2><p class="head-to-head-method">Välj minst två löpare från samma loppfamilj.</p></div>';
+    return;
+  }
+  const resultById=new Map(analysis.results.map(result=>[String(result.id),result]));
+  const versionText=analysis.same_course_version?'Samma CourseVersion':analysis.whole_course_comparable?'Explicit jämförbara CourseVersions':'Olika CourseVersions';
+  let finishHtml='';
+  if(analysis.whole_course_comparable){
+    finishHtml=analysis.finish_ranking.map(row=>{
+      const result=resultById.get(String(row.result_id));
+      const gap=row.gap_seconds>0?`+${fmtTime(row.gap_seconds)}`:'Ledare';
+      return `<article class="h2h-finish-card"><span class="h2h-rank">${row.rank}</span><div><strong>${runnerH2HLabel(result)}</strong><em>${fmtTime(row.finish_seconds)}</em></div><small>${gap}</small></article>`;
+    }).join('');
+  }else{
+    finishHtml=analysis.results.map(result=>`<article class="h2h-finish-card not-comparable"><span class="h2h-rank">–</span><div><strong>${runnerH2HLabel(result)}</strong><em>${fmtTime(result.finish_seconds)}</em></div><small>Ingen direkt ranking</small></article>`).join('');
+  }
+
+  const headers=analysis.results.map(result=>`<th>${runnerH2HLabel(result)}</th>`).join('');
+  const segmentRows=analysis.segments.map(segment=>{
+    const cells=analysis.results.map(result=>{
+      const entry=segment.entries.find(item=>String(item.result_id)===String(result.id));
+      if(!segment.comparable)return '<td class="h2h-not-comparable">Ej jämförbart</td>';
+      if(!entry?.exact||entry.segment_seconds==null)return '<td class="h2h-missing">Saknas</td>';
+      const gap=entry.gap_seconds>0?`<small>+${fmtTime(entry.gap_seconds)}</small>`:'<small>snabbast</small>';
+      return `<td><strong>${fmtTime(entry.segment_seconds)}</strong>${gap}</td>`;
+    }).join('');
+    return `<tr class="${segment.comparable?'':'not-comparable'}"><th>${runnerH2HSegmentLabel(analysis,segment)}</th>${cells}</tr>`;
+  }).join('');
+
+  const method=analysis.whole_course_comparable
+    ?'Sluttid och gap visas eftersom de valda loppen har en CourseVersion som kontraktet tillåter att jämföra.'
+    :'Sluttiderna visas som källvärden, men ranking och gap är avstängda eftersom CourseVersion-kontraktet inte tillåter en direkt hel-loppsjämförelse.';
+  detail.innerHTML=`<div class="head-to-head-shell">
+    <header class="head-to-head-head"><div><p class="eyebrow">HEAD-TO-HEAD</p><h2>Löpare mot löpare</h2><p>${analysis.results.length} valda löpare · ${esc(window.RaceUI.labelFor(analysis.family))}</p></div><span class="pill ${analysis.whole_course_comparable?'':'warning'}">${esc(versionText)}</span></header>
+    <p class="head-to-head-method">${esc(method)}</p>
+    <section class="h2h-finish-grid" aria-label="Sluttidsjämförelse">${finishHtml}</section>
+    <section class="h2h-segments"><div class="runner-section-head"><div><p class="eyebrow">DELSTRÄCKOR</p><h3>Kontroll till kontroll</h3></div></div>
+      <div class="table-wrap"><table class="h2h-table"><thead><tr><th>Delsträcka</th>${headers}</tr></thead><tbody>${segmentRows||'<tr><td colspan="6">Inga gemensamma segment att jämföra.</td></tr>'}</tbody></table></div>
+    </section>
+  </div>`;
+}
+async function openHeadToHead(){
+  if(compareState.selected.length<2)return;
+  const family=state.raceFamily;
+  if(state.dataPhase!=='full'){
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Head-to-head kunde inte ladda mellantider',error);return}
+    if(state.raceFamily!==family)return;
+  }
+  const ids=compareState.selected.map(result=>result.id);
+  const analysis=window.RunnerAnalysis?.headToHead(state.data,ids);
+  renderHeadToHead(analysis);
+  const dialog=$('#headToHeadDialog');if(dialog&&!dialog.open)dialog.showModal();
+}
 const compareState={raceId:null,selected:[]};
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const MAP_LOCAL_PREFIX='ultravasan-map-data-v3:';
@@ -476,6 +540,7 @@ function setupMapCompare(rebuild=false){
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
+  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
@@ -501,7 +566,7 @@ function removeCompareRunner(id){compareState.selected=compareState.selected.fil
 function hideCompareSuggestions(){const box=$('#runnerSuggestions');if(box)box.hidden=true}
 function renderCompareSelection(){
   const box=$('#selectedCompareRunners');box.innerHTML=compareState.selected.length?compareState.selected.map((r,i)=>`<button class="runner-chip" data-id="${r.id}" title="Ta bort ${esc(r.name_as_published)}"><span>${i+1}. ${esc(r.name_as_published)} · ${state.data.races.find(x=>x.id===r.race_id)?.year||''}${r.bib?' #'+esc(r.bib):''}</span><span>×</span></button>`).join(''):'<span class="selection-empty">Inga löpare valda ännu · välj upp till fem</span>';
-  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
+  $('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h)h2h.disabled=compareState.selected.length<2;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
   const routeIds=compareState.selected.map(r=>window.RaceContracts.courseForRace(state.data.races.find(x=>x.id===r.race_id))?.display_route_id).filter(Boolean),mixed=new Set(routeIds).size>1,warning=$('#courseComparisonWarning');if(warning)warning.hidden=!mixed;
 }
 
