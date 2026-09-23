@@ -24,6 +24,19 @@ const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
 
+const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för publicerade medianmått. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Difficulty är ett relativt segmentindex inom valt lopp/CourseVersion, inte ett absolut banbetyg. Fyra komponenter används med lika vikt: stigning per km, pacing loss per km, fartspridning och DNF-exit. Varje komponent omvandlas till percentil bland segmenten; alla fyra komponenterna och n≥5 krävs för en sammanvägd poäng.';
+const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansfallback. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
+function installCourseMethodInfo(){
+  const card=n$('#courseIntelligenceCard');
+  if(card){
+    const popup=card.querySelector('.info-tip .info-popup');
+    if(popup)popup.textContent=COURSE_INTELLIGENCE_METHOD_HELP;
+    else globalThis.addCardInfo?.(card,COURSE_INTELLIGENCE_METHOD_HELP);
+  }
+  const plan=n$('#courseRacePlan');
+  if(plan&&!plan.querySelector('.info-tip'))globalThis.addCardInfo?.(plan,COURSE_PLAN_METHOD_HELP);
+}
+
 function athleteIdentityKey(r){return nHistoryEngine.identityKey(r)}
 function groupAthleteHistories(results,races=[]){return nHistoryEngine.groupHistories(results,races)}
 const nCourses=()=>globalThis.RACE_CATALOG?.courses||{};
@@ -36,6 +49,7 @@ function nComparableFinishSeries(rows,minCount=1){
 function initNerdLab(){
   if(nerd.ready||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
+  installCourseMethodInfo();
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
@@ -147,7 +161,7 @@ function bindCourseSegmentClicks(root){
 function renderCourseRouteView(model,selected){
   const el=n$('#courseRouteView');if(!el)return;
   const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race);
-  if(!route?.points?.length){el.innerHTML='<div class="course-view-empty">Verifierad display-rutt saknas för denna CourseVersion.</div>';return}
+  if(!route?.points?.length){el.innerHTML='<div class="course-view-empty">Låst display-rutt saknas för denna CourseVersion.</div>';return}
   const width=620,height=250,project=courseSvgProjector(route.points,width,height),base=courseSvgPath(route.points,project);
   const paths=model.segments.map(segment=>{
     if(!Number.isFinite(Number(segment.display_from_km))||!Number.isFinite(Number(segment.display_to_km)))return'';
@@ -161,7 +175,7 @@ function renderCourseRouteView(model,selected){
 function renderCourseElevationView(model,selected){
   const el=n$('#courseElevationView');if(!el)return;
   const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race),profile=route?.elevation_profile||[];
-  if(!profile.length){el.innerHTML='<div class="course-view-empty">Verifierad höjdprofil saknas för denna display-rutt.</div>';return}
+  if(!profile.length){el.innerHTML='<div class="course-view-empty">Höjdprofil saknas för denna låsta display-rutt.</div>';return}
   const width=620,height=250,padX=20,padTop=30,padBottom=28,maxDistance=Number(profile.at(-1)?.[0]||1);
   const elevations=profile.map(point=>Number(point[1])).filter(Number.isFinite),minE=Math.min(...elevations),maxE=Math.max(...elevations),span=Math.max(1,maxE-minE);
   const x=distance=>padX+Number(distance)/maxDistance*(width-padX*2),y=elevation=>height-padBottom-(Number(elevation)-minE)/span*(height-padTop-padBottom);
