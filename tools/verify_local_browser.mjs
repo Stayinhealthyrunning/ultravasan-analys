@@ -46,7 +46,7 @@ await command("Page.navigate", {url:"http://127.0.0.1:8765/?race=uv90"});
 await delay(1200);
 let ready = false;
 for (let attempt = 0; attempt < 100; attempt++) {
-  if (await evaluate("Boolean(window.ULTRAVASAN_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
+  if (await evaluate("Boolean((window.ULTRAVASAN_DATA || (typeof state!=='undefined'&&state.data)) && document.querySelector('#loading')?.classList.contains('hidden'))")) {
     ready = true;
     break;
   }
@@ -55,7 +55,7 @@ for (let attempt = 0; attempt < 100; attempt++) {
 if (!ready) throw new Error("Local application did not finish loading");
 
 const contractChecks = await evaluate(`(() => {
-  const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA;
+  const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null);
   return {
     editions:data.races.length===Object.keys(contracts.catalog.editions).length,
     routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
@@ -66,7 +66,7 @@ const contractChecks = await evaluate(`(() => {
 })()`);
 
 const initial = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA;
+  const data=window.ULTRAVASAN_DATA||(typeof state!=='undefined'?state.data:null);
   const race=data.races.find(item=>item.id===9);
   const result=data.results.find(item=>item.id===11545);
   const splits=data.splits.filter(item=>item.result_id===11545);
