@@ -295,7 +295,10 @@ for(const request of mapRequests){
     routes:app.models.map(model=>model.route?.id),
     expectedRoutes:app.models.map(model=>window.RaceContracts.courseForRace(model.race)?.display_route_id),
     audio:document.querySelector('#raceSoundtrack')?.getAttribute('src'),
-    expectedAudio:window.RACE_MEDIA_CONFIG.musicForRace(app.models[0]?.race),
+    expectedAudio:window.RaceMedia.musicForRace(app.models[0]?.race),
+    mediaAlias:window.RaceMedia===window.RACE_MEDIA_CONFIG,
+    leafletVersion:window.L?.version||null,
+    leafletVendorRoot:window.UltravasanMapEngine?.LEAFLET_VENDOR_ROOT||null,
     note:document.querySelector('#courseNote')?.textContent,
     loaderMode:window.UltravasanDataLoader?.mode?.(),
     dataScope:app.data?.meta?.data_scope?.kind||null,
@@ -313,6 +316,9 @@ for(const request of mapRequests){
       state.routes.every((route,index)=>route===state.expectedRoutes[index])&&
       state.families.length===1&&
       state.audio===state.expectedAudio&&
+      state.mediaAlias===true&&
+      state.leafletVersion==='1.9.4'&&
+      state.leafletVendorRoot==='vendor/leaflet-1.9.4'&&
       state.note.includes('kartspår')
     )
   });
