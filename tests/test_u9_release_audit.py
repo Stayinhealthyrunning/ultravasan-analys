@@ -60,5 +60,6 @@ def test_release_freeze_has_three_responsive_viewport_contracts() -> None:
     browser = (ROOT / "tools" / "verify_local_browser.mjs").read_text(encoding="utf-8")
     assert "const viewportSpecs=[" in browser
     assert "responsiveFreeze:u9Viewports.length===3&&u9Viewports.every(item=>item.verified)" in browser
-    assert "document.documentElement.scrollWidth" in browser
+    assert "document.scrollingElement||document.documentElement" in browser
+    assert "scrolling.scrollWidth-scrolling.clientWidth" in browser
     assert "guideColumns" in browser
