@@ -141,6 +141,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          trap 'status=$?; if [ "$status" -ne 0 ]; then echo "::group::HTTP-logg"; cat "$RUNNER_TEMP/ultravasan-http.log" 2>/dev/null || true; echo "::endgroup::"; echo "::group::Chromium-logg"; cat "$RUNNER_TEMP/ultravasan-browser.log" 2>/dev/null || true; echo "::endgroup::"; fi; exit "$status"' EXIT
           python -m http.server 8765 --directory docs >"$RUNNER_TEMP/ultravasan-http.log" 2>&1 &
           browser_path="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
           "$browser_path" \
