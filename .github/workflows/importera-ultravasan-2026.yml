@@ -165,7 +165,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- config/races.json data/ultravasan.sqlite docs/data/manifest.json docs/data/ultravasan.json docs/data/ultravasan-data.js "reports/automatic-${{ needs.date-gate.outputs.target_year }}-import.json"
+          git add -- config/races.json data/ultravasan.sqlite docs/data/manifest.json docs/data/ultravasan.json docs/data/ultravasan-data.js docs/data/u3 "reports/automatic-${{ needs.date-gate.outputs.target_year }}-import.json"
           git diff --cached --check
           git diff --cached --quiet && { echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; }
           git commit -m "Import official Ultravasan ${{ needs.date-gate.outputs.target_year }} results"
