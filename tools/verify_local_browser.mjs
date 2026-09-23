@@ -205,33 +205,56 @@ caseResults.push(await openRunnerCase(uv45Cases[0]));
 const additionalCases=[...uv90Cases,...uv45Cases];
 
 // Open the standalone map through shared URLs, without a session-data shortcut.
-// These navigations verify that result_id -> family routing can lazy-load the
-// correct family even when no session payload is available.
+// These navigations verify that result_id -> edition routing loads only the
+// requested RaceEdition payloads. The third case verifies a two-year UV90 duel.
+const mapRequests=[
+  {items:[uv90Cases[2]],expectedScope:'race-edition'},
+  {items:[uv45Cases[0]],expectedScope:'race-edition'},
+  {items:[uv90Cases[2],uv90Cases[3]],expectedScope:'merged-editions'},
+];
 const mapCases=[];
-for(const item of [uv90Cases[2],uv45Cases[0]]){
-  if(!item){mapCases.push({item,loaded:false,state:null,verified:false});continue}
-  await command('Page.navigate',{url:'http://127.0.0.1:8765/karta.html?runners='+item.id});
+for(const request of mapRequests){
+  const items=request.items.filter(Boolean);
+  if(items.length!==request.items.length){mapCases.push({items,loaded:false,state:null,verified:false});continue}
+  const ids=items.map(item=>item.id).join(',');
+  await command('Page.navigate',{url:'http://127.0.0.1:8765/karta.html?runners='+ids});
   let loaded=false;
   for(let attempt=0;attempt<200;attempt++){
     if(await evaluate("Boolean(document.querySelector('#mapLoading')?.classList.contains('hidden'))")){loaded=true;break}
     await delay(100);
   }
   const state=loaded?await evaluate(`(() => ({
-    raceKey:app.models[0]?.race?.race_key,
-    family:window.RaceContracts.familyForRace(app.models[0]?.race),
-    route:app.models[0]?.route?.id,
-    expected:window.RaceContracts.courseForRace(app.models[0]?.race)?.display_route_id,
+    raceKeys:app.models.map(model=>model.race?.race_key),
+    families:[...new Set(app.models.map(model=>window.RaceContracts.familyForRace(model.race)))],
+    routes:app.models.map(model=>model.route?.id),
+    expectedRoutes:app.models.map(model=>window.RaceContracts.courseForRace(model.race)?.display_route_id),
     audio:document.querySelector('#raceSoundtrack')?.getAttribute('src'),
     expectedAudio:window.RACE_MEDIA_CONFIG.musicForRace(app.models[0]?.race),
     note:document.querySelector('#courseNote')?.textContent,
     loaderMode:window.UltravasanDataLoader?.mode?.(),
+    dataScope:app.data?.meta?.data_scope?.kind||null,
+    loadedRaceCount:app.data?.races?.length||0,
   }))()`):null;
-  mapCases.push({item,loaded,state,verified:loaded&&state.raceKey===item.label&&state.route===state.expected&&state.audio===state.expectedAudio&&state.note.includes('kartspår')&&state.loaderMode==='modular'});
+  const expectedKeys=items.map(item=>item.label);
+  mapCases.push({
+    items,loaded,state,
+    verified:Boolean(
+      loaded&&
+      state.loaderMode==='modular'&&
+      state.dataScope===request.expectedScope&&
+      state.loadedRaceCount===new Set(expectedKeys).size&&
+      state.raceKeys.join(',')===expectedKeys.join(',')&&
+      state.routes.every((route,index)=>route===state.expectedRoutes[index])&&
+      state.families.length===1&&
+      state.audio===state.expectedAudio&&
+      state.note.includes('kartspår')
+    )
+  });
 }
 
 const checks = {
   contracts:Object.values(contractChecks).every(Boolean),
-  maps:mapCases.length===2&&mapCases.every(item=>item.verified),
+  maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
   result: initial.result?.bib === "1025" && initial.result?.finish_seconds === 26280 && initial.result?.overall_place === 22,

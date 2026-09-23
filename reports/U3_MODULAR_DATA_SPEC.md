@@ -1,86 +1,135 @@
-# U3 modulär/lazy webbdata – grundkontrakt
+# U3 modulär/lazy webbdata – kontrakt
 
 ## Mål
 
-U3 ska minska startkostnaden för webbläsaren utan att ändra resultat, splits,
-analysmatematik, personhistorik eller offline-stöd.
+U3 ska minska browserns datakostnad utan att ändra resultat, splits,
+analysmatematik, personhistorik, kartlogik eller offline-stöd.
 
-Den tidigare publika monoliten är 42 688 494 byte och innehåller:
+Den verifierade legacy-monoliten är 42 688 494 byte och innehåller:
 
 - 22 lopp,
 - 24 422 resultat,
 - 139 910 splits.
 
-U3 inför därför ett transportlager framför samma publicerade datapayload.
+Alla U3-lager genereras deterministiskt ur exakt denna publika payload och måste
+kunna verifieras tillbaka mot den rad för rad.
 
-## Första steg: familjechunks
+## U3.0–U3.2: race-family-lager
 
-Den verifierade exporten delar monoliten i två race-family-moduler:
+Startsidan och flerårshistoriken använder två family-moduler:
 
 | Familj | Resultat | Splits | JSON |
 | --- | ---: | ---: | ---: |
 | UV90 | 15 521 | 108 640 | 32 062 461 byte |
 | UV45 | 8 901 | 31 270 | 10 627 860 byte |
 
-Datakatalogen är cirka 356 kB och innehåller bland annat totalsummor,
-filreferenser, race-id per familj och result_id → race_family för direkta
-kartlänkar.
+Största initiala familjepayloaden är 24,9 % mindre än monoliten. Family-lagret
+finns både som JSON för vanlig webb och JavaScript för file://-offline.
 
-Största första familjepayloaden är därmed 24,9 % mindre än den tidigare monoliten.
-Detta är en grundnivå, inte slutmålet för U3.
+## U3.3: RaceEdition-lager för kartlänkar
+
+Direkta kartlänkar och flerårsdueller behöver inte hela familjens historik.
+Exporten skriver därför dessutom en JSON-fil per explicit RaceEdition.
+
+Verifierad storlek:
+
+- 22 edition-filer,
+- största edition: 5 072 378 byte,
+- minsta edition: 581 025 byte,
+- editionsfiler tillsammans: 42 725 482 byte,
+- största enskilda edition är 88,1 % mindre än legacy-monoliten.
+
+Routingkatalogen är 250 426 byte. För varje publikt result-ID lagras endast dess
+numeriska race_id. Editionsregistret översätter race_id till race_key,
+race_family, år och fysisk JSON-fil. Redundant result→family-routing publiceras
+inte.
+
+Edition-lagret är medvetet JSON-only. Vid file:// används family-JavaScript som
+fallback. Därmed bevaras offline-funktionen utan att ytterligare cirka 43 MB
+edition-data behöver dupliceras som JavaScript i repot.
 
 ## Loader-kontrakt
 
 docs/assets/data-loader.js är den enda browserkomponent som väljer fysisk
 datakälla.
 
-Den stöder två lägen:
+Den stöder:
 
-- legacy: dagens monolit används oförändrad,
-- modular: endast begärd race family laddas och cachas.
+- legacy: verifierad monolit,
+- modular family: vald UV90/UV45-familj,
+- modular edition: exakt ett eller flera loppår för result-ID-baserade länkar.
 
-På vanlig webb försöker loadern läsa JSON. Vid file:// används motsvarande
-JavaScript-payload, vilket bevarar den befintliga offline-egenskapen.
+Prioritet för en kartlänk på vanlig webb:
 
-Direkta kartlänkar använder resultatindexet för att ladda rätt familj även när
-kartvyn öppnas utan session-data.
+1. result-ID → race_id,
+2. ladda exakt motsvarande RaceEdition-JSON,
+3. mergea endast de editioner som faktiskt behövs,
+4. vid editionsfel: falla tillbaka till berörd race family.
+
+På file:// går result-ID-länkar direkt till family-fallbacken eftersom lokal
+fetch av JSON normalt blockeras. Family-JavaScript gör därför offline-läget
+fortsatt självförsörjande.
 
 ## Paritetskrav
 
-tools/u3_modularize.py verifierar payload-paritet på radnivå mellan monoliten och
-modulära filer för races, checkpoints, results, splits och result→family-routing.
+tools/u3_modularize.py verifierar att både family-lagret och samtliga
+RaceEdition-filer tillsammans är exakt lika med monoliten för:
 
-JSON- och JavaScript-versionen av varje family chunk måste dessutom representera
-exakt samma objekt.
+- races,
+- checkpoints,
+- results,
+- splits,
+- result→race_id-routing,
+- edition→race_key/family-routing.
 
-Legacy-monoliten behålls tills hela U3 är färdig som golden parity source,
-rollback/fallback och jämförelsegrund under övergången.
+Verifieraren kräver dessutom exakt 22 edition-JSON-filer och avvisar både
+saknade, extra och gamla edition-filer. Edition-JavaScript är inte tillåtet.
+
+Vanliga framtida uvtool-exporter känner efter produktionskatalogens mode. När
+modular mode är aktiverat regenereras family- och edition-lagret automatiskt och
+gamla edition-artifakter städas bort.
 
 ## Browsergrind
 
-Ordinarie CI bygger modulära filer i sin temporära arbetskopia före Chromium-
-smoketestet. Det verkliga browserflödet körs alltså i modular mode även innan
-produktionsaktiveringen är gjord.
+Ordinarie CI bygger modulära filer i sin arbetskopia före Chromium-smoketestet.
+Det verkliga browserflödet körs alltså i det framtida produktionsläget även när
+main ännu använder legacy-katalogen.
 
-Smoketestet omfattar bland annat UV90 startsida, runner search, löpardialog,
-Replay, historiska specialfall, byte mellan UV90 och UV45, fristående kartlänk
-för båda loppfamiljerna, race/course/media-kontrakt och noll console-/networkfel.
+Smoketestet verifierar bland annat:
+
+- UV90 startsida,
+- runner search och löpardialog,
+- Replay,
+- historiska specialfall,
+- lazy byte UV90 → UV45,
+- direkt UV90-kartlänk med race-edition-scope,
+- direkt UV45-kartlänk med race-edition-scope,
+- flerårsduell mellan två UV90-editioner med merged-editions-scope,
+- rätt CourseVersion och media,
+- noll console- och networkfel.
 
 ## Produktionsaktivering
 
-Workflow "Aktivera U3 modulär data" skapar en backup-tag och bygger family chunks
-direkt från den redan verifierade docs/data/ultravasan.json.
+Workflow "Aktivera U3 modulär data" kräver explicit bekräftelse, verifierar U2
+golden master, skapar backup-tag och bygger allt från den oförändrade
+docs/data/ultravasan.json.
 
-Det får bara ändra modulär datakatalog, UV90 JSON/JS, UV45 JSON/JS och
-U3-aktiveringsrapport. Databasen, U2-golden master och legacy-monoliten får inte
-ändras.
+Aktiveringen får endast ändra:
+
+- modulär katalog JSON/JS,
+- UV90 family JSON/JS,
+- UV45 family JSON/JS,
+- exakt 22 RaceEdition-JSON-filer,
+- U3-aktiveringsrapport.
+
+SQLite-databasen, U2-baslinjen och legacy-monoliten får inte ändras.
 
 ## Fortsättning inom U3
 
-Familjesplitten är medvetet första säkra steget. Den beslutade fortsättningen är
-att gå från race-family-lazy till finare lazy loading för enskild RaceEdition
-och direkta kartlänkar, aktivt lopp kontra historikdata, splits/Replay på
-efterfrågan samt historikmoduler först när historikfunktioner faktiskt används.
+Nästa flaskhals är startsidan: UV90 family-filen innehåller fortfarande 108 640
+splits och är cirka 32 MB. Nästa etapp separerar därför initialt
+resultat-/metadataunderlag från split-/Replay-data och därefter historikdata, så
+stora analyslager kan hämtas först när de faktiskt behövs.
 
-Målet är att startsidan inte ska behöva bära 32 MB UV90-splits bara för att visa
-den första analysvyn.
+Slutmålet för U3 är att första analysvyn inte ska behöva ladda hela
+flerårshistorikens splitdata.
