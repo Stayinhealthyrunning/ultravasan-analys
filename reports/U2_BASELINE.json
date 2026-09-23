@@ -5,8 +5,7 @@
   "files": {
     "database": {
       "path": "data/ultravasan.sqlite",
-      "bytes": 75825152,
-      "sha256": "a5918ff12f4613642e2fa6d345f6e942fa7ff43d71975a1b2861581d5ed9b17c"
+      "bytes": 75825152
     },
     "web_json": {
       "path": "docs/data/ultravasan.json",
