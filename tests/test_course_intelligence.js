@@ -59,9 +59,17 @@ assert.strictEqual(postFinish.source,'terminal-finish-anchor');
 assert.strictEqual(postFinish.distance_km,92);
 
 const course2026=contracts.catalog.courses['uv90-2026-v1'];
-const warning=intelligence.displayAnchorForCheckpoint(course2026,'mora_warning');
-assert.strictEqual(warning.source,'interpolated-between-course-anchors');
-assert.deepStrictEqual([...warning.between],['eldris','mora']);
+assert.strictEqual(course2026.checkpoint_catalog.find(row=>row.checkpoint_key==='mora_warning').distance_km,null);
+assert.strictEqual(intelligence.displayAnchorForCheckpoint(course2026,'mora_warning'),null,'okänd 2026-distans får inte interpoleras eller gissas');
+const segments2026=intelligence.segmentContracts(course2026);
+const highPoint2026=segments2026.find(segment=>segment.to_key==='high_point');
+const warning2026=segments2026.find(segment=>segment.to_key==='mora_warning');
+assert.strictEqual(highPoint2026.distance_km,null);
+assert.strictEqual(highPoint2026.distance_source,'unavailable');
+assert.strictEqual(highPoint2026.display_to_km,null);
+assert.strictEqual(warning2026.distance_km,null);
+assert.strictEqual(warning2026.distance_source,'unavailable');
+assert.strictEqual(warning2026.display_to_km,null);
 
 const syntheticRace={id:900,race_key:'ultravasan90-2016',year:2016,distance_km:90};
 const syntheticResults=[
