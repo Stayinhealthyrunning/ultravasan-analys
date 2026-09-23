@@ -97,6 +97,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const filterRowsForSexControl=(rows,key)=>{const v=sexVisibility(key);return rows.filter(r=>(v.M&&sexKey(r)==='M')||(v.F&&sexKey(r)==='F'))};
 
   function buildCaches(){
+    advanced.resultById.clear();
+    advanced.clubKeyByResult.clear();
+    advanced.clubDisplay.clear();
+    advanced.smIndex.clear();
+    advanced.classEvolutionCache.clear();
+    advanced.classEvolutionModel=null;
+    advanced.classEvolutionKey='';
     state.data.results.forEach(r=>advanced.resultById.set(r.id,r));
     advanced.splitsByResult=state.data.splitsByResult;
     advanced.splitEvidence=state.data.splitEvidence;
@@ -518,7 +525,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
