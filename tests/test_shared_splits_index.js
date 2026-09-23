@@ -197,3 +197,5 @@ assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'
 assert.ok(appSource.includes('function renderHeadToHead(model)')&&appSource.includes('whole_course_comparable'),'UI ska respektera CourseVersion-jämförbarhet');
 assert.ok(appSource.includes("$$('.runner-chip').forEach"),'alla valda löparchips ska ha fungerande borttagning');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Head-to-head'),'Head-to-head ska ha responsiv U5-layout');
+
+assert.ok(appSource.includes("h2hClose.onclick=()=>h2hDialog.close()"),'Head-to-head-dialogen ska ha fungerande stängknapp');
