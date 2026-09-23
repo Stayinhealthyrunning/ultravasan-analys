@@ -5,6 +5,7 @@
   if(root)root.UltravasanDataLoader=api;
 })(typeof window!=='undefined'?window:globalThis,function(root){
   const familyCache=new Map();
+  const editionCache=new Map();
   let legacyPromise=null;
 
   const normalizeFamily=value=>value==='uv45'?'uv45':'uv90';
@@ -56,9 +57,17 @@
     try{return await legacyPromise}catch(error){legacyPromise=null;throw error}
   }
 
+  function editionForResultId(resultId,sourceCatalog=catalog()){
+    const value=sourceCatalog?.result_edition?.[String(resultId)];
+    return typeof value==='string'&&value?value:null;
+  }
+
   function familyForResultId(resultId,sourceCatalog=catalog()){
-    const value=sourceCatalog?.result_family?.[String(resultId)];
-    return value==='uv90'||value==='uv45'?value:null;
+    const direct=sourceCatalog?.result_family?.[String(resultId)];
+    if(direct==='uv90'||direct==='uv45')return direct;
+    const editionKey=editionForResultId(resultId,sourceCatalog);
+    const derived=editionKey?sourceCatalog?.editions?.[editionKey]?.race_family:null;
+    return derived==='uv90'||derived==='uv45'?derived:null;
   }
 
   function familySpec(family){
@@ -97,6 +106,41 @@
     try{return await promise}catch(error){familyCache.delete(family);throw error}
   }
 
+  function editionSpec(editionKey){
+    const spec=catalog()?.editions?.[editionKey];
+    if(!spec)throw new Error(`Datakatalogen saknar utgåvan ${editionKey}.`);
+    return spec;
+  }
+
+  async function loadModularEdition(editionKey){
+    if(editionCache.has(editionKey))return editionCache.get(editionKey);
+    const globals=root.ULTRAVASAN_DATA_EDITIONS||(root.ULTRAVASAN_DATA_EDITIONS={});
+    if(globals[editionKey]){
+      editionCache.set(editionKey,Promise.resolve(globals[editionKey]));
+      return globals[editionKey];
+    }
+    const spec=editionSpec(editionKey);
+    const promise=(async()=>{
+      const canFetch=typeof location==='undefined'||location.protocol!=='file:';
+      if(canFetch&&spec.json){
+        try{
+          const data=await fetchJson(spec.json);
+          globals[editionKey]=data;
+          return data;
+        }catch(error){
+          if(!spec.js)throw error;
+          console.warn?.(`JSON för ${editionKey} kunde inte läsas; använder offline-JavaScript.`,error);
+        }
+      }
+      if(!spec.js)throw new Error(`Ingen datamodul angiven för ${editionKey}.`);
+      await loadScript(spec.js);
+      if(!globals[editionKey])throw new Error(`Datamodulen för ${editionKey} laddades utan payload.`);
+      return globals[editionKey];
+    })();
+    editionCache.set(editionKey,promise);
+    try{return await promise}catch(error){editionCache.delete(editionKey);throw error}
+  }
+
   async function loadFamily(family){
     if(catalog().mode!=='modular')return loadLegacy();
     return loadModularFamily(family);
@@ -117,8 +161,10 @@
     const splits=unique(list.flatMap(d=>d.splits||[]),s=>`${s.result_id}|${s.checkpoint_key}`);
     const sources=unique(list.flatMap(d=>d.sources||[]),s=>s.code||s.name);
     const stats=Object.assign({},...list.map(d=>d.stats||{}));
+    const scopes=list.map(d=>d?.meta?.data_scope?.kind).filter(Boolean);
+    const mergedKind=scopes.length&&scopes.every(kind=>kind==='race-edition')?'merged-editions':'merged-modules';
     return {
-      meta:{...(list[0].meta||{}),data_scope:{kind:'merged-families'}},
+      meta:{...(list[0].meta||{}),data_scope:{kind:mergedKind}},
       races,checkpoints,results,splits,stats,sources
     };
   }
@@ -127,6 +173,13 @@
     const ids=[...new Set((resultIds||[]).map(Number).filter(Number.isFinite))];
     const current=catalog();
     if(current.mode!=='modular')return loadLegacy();
+
+    const editionKeys=ids.map(id=>editionForResultId(id,current));
+    if(ids.length&&editionKeys.every(Boolean)&&current.editions){
+      const uniqueEditions=[...new Set(editionKeys)];
+      return mergeDatasets(await Promise.all(uniqueEditions.map(loadModularEdition)));
+    }
+
     const families=[...new Set(ids.map(id=>familyForResultId(id,current)).filter(Boolean))];
     if(!families.length){
       if(preferredFamily)return loadModularFamily(preferredFamily);
@@ -145,8 +198,8 @@
   }
 
   function clearCaches(){
-    familyCache.clear();legacyPromise=null;
+    familyCache.clear();editionCache.clear();legacyPromise=null;
   }
 
-  return {normalizeFamily,catalog,mode,totals,familyForResultId,mergeDatasets,loadFamily,loadForResultIds,clearCaches};
+  return {normalizeFamily,catalog,mode,totals,editionForResultId,familyForResultId,mergeDatasets,loadFamily,loadForResultIds,clearCaches};
 });
