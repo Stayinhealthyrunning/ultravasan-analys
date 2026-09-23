@@ -659,3 +659,28 @@ html,body{max-width:100%;overflow-x:hidden}
   .course-intelligence-card{margin-left:-2px;margin-right:-2px}
   .course-intelligence-table-wrap{margin-left:-4px;margin-right:-4px}
 }
+
+
+.course-view-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 0}
+.course-view-head span{font-size:.55rem;font-weight:900;letter-spacing:.1em;color:var(--muted)}
+.course-view-head strong{font-size:.61rem;color:var(--forest)}
+.course-route-view svg,.course-elevation-view svg{display:block;width:100%;height:170px;padding:4px 7px 8px}
+.course-route-base{fill:none;stroke:#dbe2dc;stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.course-route-segment{fill:none;stroke:#789185;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;cursor:pointer;transition:stroke-width .12s ease,stroke .12s ease,opacity .12s ease}
+.course-route-segment:hover,.course-route-segment:focus{stroke:#315f4d;stroke-width:8;outline:none}
+.course-route-segment.selected{stroke:#0d5b42;stroke-width:9}
+.course-elevation-line{fill:none;stroke:#315f4d;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.course-elevation-hit{fill:rgba(23,109,83,.04);stroke:transparent;cursor:pointer}
+.course-elevation-hit:hover,.course-elevation-hit:focus{fill:rgba(23,109,83,.11);outline:none}
+.course-elevation-hit.selected{fill:rgba(23,109,83,.18);stroke:#176d53;stroke-width:1}
+.course-pace-list{display:grid;gap:4px;padding:8px 10px 12px;max-height:174px;overflow:auto}
+.course-pace-row{display:grid;grid-template-columns:minmax(90px,1.3fr) minmax(65px,1fr) auto;gap:7px 9px;align-items:center;width:100%;padding:6px 8px;border:1px solid transparent;border-radius:9px;background:transparent;text-align:left;color:var(--ink);cursor:pointer}
+.course-pace-row:hover,.course-pace-row:focus{background:#f0f6f1;outline:none}
+.course-pace-row.selected{border-color:#9fb7a8;background:#e7f1e9}
+.course-pace-row:disabled{opacity:.5;cursor:default}
+.course-pace-row>span{font-size:.58rem;line-height:1.25}
+.course-pace-row>i{position:relative;height:7px;border-radius:99px;background:#e5ebe6;overflow:hidden}
+.course-pace-row>i>b{display:block;height:100%;border-radius:inherit;background:#648778}
+.course-pace-row.selected>i>b{background:#176d53}
+.course-pace-row>strong{font-size:.59rem;white-space:nowrap}
+.course-pace-row>small{grid-column:1/-1;color:var(--muted);font-size:.51rem;margin-top:-4px}
