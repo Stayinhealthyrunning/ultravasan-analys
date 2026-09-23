@@ -282,6 +282,8 @@ await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySel
 await evaluate("document.querySelector('#raceSwitch90')?.click()");
 const uv90Reloaded=await waitForActiveFamily('uv90');
 await evaluate(`(() => {
+  const year=document.querySelector('#compareYear');
+  if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
   compareState.selected=[];
   addCompareRunner(${uv90Cases[2]?.id||0});
   addCompareRunner(${uv90Cases[3]?.id||0});
