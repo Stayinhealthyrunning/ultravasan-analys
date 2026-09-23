@@ -46,7 +46,7 @@ await command("Page.navigate", {url:"http://127.0.0.1:8765/?race=uv90"});
 await delay(1200);
 let ready = false;
 for (let attempt = 0; attempt < 100; attempt++) {
-  if (await evaluate("Boolean(window.ULTRAVASAN_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
+  if (await evaluate("Boolean(window.ULTRAVASAN_ACTIVE_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
     ready = true;
     break;
   }
@@ -55,7 +55,7 @@ for (let attempt = 0; attempt < 100; attempt++) {
 if (!ready) throw new Error("Local application did not finish loading");
 
 const contractChecks = await evaluate(`(() => {
-  const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA;
+  const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   return {
     editions:data.races.length===Object.keys(contracts.catalog.editions).length,
     routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
@@ -66,7 +66,7 @@ const contractChecks = await evaluate(`(() => {
 })()`);
 
 const initial = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA;
+  const data=window.ULTRAVASAN_ACTIVE_DATA;
   const race=data.races.find(item=>item.id===9);
   const result=data.results.find(item=>item.id===11545);
   const splits=data.splits.filter(item=>item.result_id===11545);
@@ -106,7 +106,7 @@ const replayProgress = await evaluate(`(() => ({
 }))()`);
 
 const additionalCases = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA,counts=new Map();
+  const data=window.ULTRAVASAN_ACTIVE_DATA,counts=new Map();
   data.splits.forEach(split=>counts.set(split.result_id,(counts.get(split.result_id)||0)+1));
   const race=key=>data.races.find(item=>item.race_key===key);
   const pick=(raceKey,predicate)=>{
@@ -126,7 +126,7 @@ const additionalCases = await evaluate(`(() => {
 async function openRunnerCase(item) {
   if (!item) return {verified:false, reason:'No representative result found'};
   const setup = await evaluate(`(() => {
-    const data=window.ULTRAVASAN_DATA,result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
+    const data=window.ULTRAVASAN_ACTIVE_DATA,result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
     const dialog=document.querySelector('#runnerDialog');if(dialog?.open)dialog.close();
     const family=window.RaceContracts.familyForRace(race)==='uv45'?'45':'90';document.querySelector('#raceSwitch'+family)?.click();
     return {family,raceKey:race.race_key,year:race.year};
