@@ -45,14 +45,24 @@ await command("Network.enable");
 await command("Page.navigate", {url:"http://127.0.0.1:8765/?race=uv90"});
 await delay(1200);
 let ready = false;
-for (let attempt = 0; attempt < 100; attempt++) {
+for (let attempt = 0; attempt < 300; attempt++) {
   if (await evaluate("Boolean(window.ULTRAVASAN_ACTIVE_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
     ready = true;
     break;
   }
   await delay(100);
 }
-if (!ready) throw new Error("Local application did not finish loading");
+if (!ready) {
+  const diagnostics = await evaluate(`(() => ({
+    loaderMode: window.UltravasanDataLoader?.mode?.() || null,
+    hasCatalog: Boolean(window.ULTRAVASAN_DATA_CATALOG),
+    hasLegacyData: Boolean(window.ULTRAVASAN_DATA),
+    hasActiveData: Boolean(window.ULTRAVASAN_ACTIVE_DATA),
+    loadingText: document.querySelector('#loading')?.innerText || '',
+    loadingHidden: document.querySelector('#loading')?.classList.contains('hidden') || false
+  }))()`);
+  throw new Error("Local application did not finish loading: " + JSON.stringify(diagnostics));
+}
 
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
