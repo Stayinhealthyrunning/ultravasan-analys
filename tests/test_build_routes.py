@@ -22,12 +22,24 @@ class RouteBuildTests(unittest.TestCase):
             ], cwd=ROOT, check=True)
             registry = json.loads(out_json.read_text(encoding="utf-8"))
             js = out_js.read_text(encoding="utf-8")
-            from_js = json.loads(js.split("=", 1)[1].split(";\nwindow.", 1)[0])
+            prefix = "window.ULTRAVASAN_ROUTES = "
+            self.assertTrue(js.startswith(prefix) and js.endswith(";\n"))
+            from_js = json.loads(js[len(prefix):-2])
             self.assertEqual(registry, from_js)
+            self.assertNotIn("default_route_id", registry)
+            self.assertNotIn("window.ULTRAVASAN_ROUTE =", js)
             self.assertIn("ultravasan90-pre2023", registry["routes"])
             self.assertIn("ultravasan90-post2023", registry["routes"])
             self.assertIn("ultravasan45-current", registry["routes"])
-            self.assertTrue(any(rule.get("race_key_prefix") == "ultravasan45-" for rule in registry["route_for_race"]))
+            race_config = json.loads((ROOT / "config" / "races.json").read_text(encoding="utf-8"))
+            course_config = json.loads((ROOT / "config" / "course_versions.json").read_text(encoding="utf-8"))
+            expected_routes = {
+                race["race_key"]: course_config["courses"][race["course_version_id"]]["display_route_id"]
+                for race in race_config["races"]
+            }
+            self.assertEqual(expected_routes, registry["route_for_edition"])
+            self.assertNotIn("route_for_race", registry)
+            self.assertNotIn("route_for_year", registry)
             uv45 = registry["routes"]["ultravasan45-current"]
             self.assertEqual("data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx", uv45["source_file"])
             self.assertEqual(45.0, uv45["official_distance_km"])
@@ -86,6 +98,8 @@ class RouteBuildTests(unittest.TestCase):
             ], cwd=ROOT, check=True)
             self.assertEqual(out_json.read_bytes(), second_json.read_bytes())
             self.assertEqual(out_js.read_bytes(), second_js.read_bytes())
+            self.assertEqual(out_json.read_bytes(), (ROOT / "data" / "routes" / "ultravasan90-routes.json").read_bytes())
+            self.assertEqual(out_js.read_bytes(), (ROOT / "docs" / "data" / "ultravasan-routes.js").read_bytes())
 
 
 if __name__ == "__main__":

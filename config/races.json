@@ -3,11 +3,11 @@
     "event_key": "ultravasan",
     "name": "Ultravasan",
     "product_title": "Ultravasan Analys",
+    "official_site_url": "https://www.vasaloppet.se/lopp/loplopp/ultravasan/",
     "storage_namespace": "ultravasan"
   },
   "race_families": {
     "uv90": {
-      "race_key_prefix": "ultravasan90-",
       "validation": {
         "finish_seconds_min": 14400,
         "finish_seconds_max": 86400
@@ -23,7 +23,6 @@
       "music": "assets/Eldspar-till-Mora.mp3?v=20260713-multirace1"
     },
     "uv45": {
-      "race_key_prefix": "ultravasan45-",
       "validation": {
         "finish_seconds_min": 5400,
         "finish_seconds_max": 54000
@@ -54,15 +53,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2014",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -79,15 +132,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2015",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -104,15 +211,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2017",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -129,15 +290,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2018",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -154,15 +369,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2019",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -179,15 +448,69 @@
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 1, "distance_km": 8.83},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 2, "distance_km": 23.27},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 3, "distance_km": 33.96},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 4, "distance_km": 46.15},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 5, "distance_km": 60.73},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 6, "distance_km": 69.72},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 7, "distance_km": 79.61},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 8, "distance_km": 90.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 1,
+          "distance_km": 8.83
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 2,
+          "distance_km": 23.27
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 3,
+          "distance_km": 33.96
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 4,
+          "distance_km": 46.15
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 5,
+          "distance_km": 60.73
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 6,
+          "distance_km": 69.72
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 7,
+          "distance_km": 79.61
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 8,
+          "distance_km": 90.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2022",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -204,16 +527,75 @@
       "course_version": "post2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "high_point", "name": "Högsta punkten", "sequence_no": 1, "distance_km": 3.3},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 2, "distance_km": 10.84},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 3, "distance_km": 25.34},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 4, "distance_km": 36.4},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 5, "distance_km": 48.73},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 6, "distance_km": 63.5},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 7, "distance_km": 72.67},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 8, "distance_km": 82.81},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 9, "distance_km": 92.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 10.84
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 25.34
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 36.4
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 48.73
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 63.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 72.67
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.81
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 9,
+          "distance_km": 92.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2023",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -230,16 +612,75 @@
       "course_version": "post2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
       "checkpoints": [
-        {"checkpoint_key": "start", "name": "Start Sälen", "sequence_no": 0, "distance_km": 0.0},
-        {"checkpoint_key": "high_point", "name": "Högsta punkten", "sequence_no": 1, "distance_km": 3.3},
-        {"checkpoint_key": "smagan", "name": "Smågan", "sequence_no": 2, "distance_km": 10.84},
-        {"checkpoint_key": "mangsbodarna", "name": "Mångsbodarna", "sequence_no": 3, "distance_km": 25.34},
-        {"checkpoint_key": "risberg", "name": "Risberg", "sequence_no": 4, "distance_km": 36.4},
-        {"checkpoint_key": "evertsberg", "name": "Evertsberg", "sequence_no": 5, "distance_km": 48.73},
-        {"checkpoint_key": "oxberg", "name": "Oxberg", "sequence_no": 6, "distance_km": 63.5},
-        {"checkpoint_key": "hokberg", "name": "Hökberg", "sequence_no": 7, "distance_km": 72.67},
-        {"checkpoint_key": "eldris", "name": "Eldris", "sequence_no": 8, "distance_km": 82.81},
-        {"checkpoint_key": "mora", "name": "Mora mål", "sequence_no": 9, "distance_km": 92.0}
+        {
+          "checkpoint_key": "start",
+          "name": "Start Sälen",
+          "sequence_no": 0,
+          "distance_km": 0.0
+        },
+        {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3
+        },
+        {
+          "checkpoint_key": "smagan",
+          "name": "Smågan",
+          "sequence_no": 2,
+          "distance_km": 10.84
+        },
+        {
+          "checkpoint_key": "mangsbodarna",
+          "name": "Mångsbodarna",
+          "sequence_no": 3,
+          "distance_km": 25.34
+        },
+        {
+          "checkpoint_key": "risberg",
+          "name": "Risberg",
+          "sequence_no": 4,
+          "distance_km": 36.4
+        },
+        {
+          "checkpoint_key": "evertsberg",
+          "name": "Evertsberg",
+          "sequence_no": 5,
+          "distance_km": 48.73
+        },
+        {
+          "checkpoint_key": "oxberg",
+          "name": "Oxberg",
+          "sequence_no": 6,
+          "distance_km": 63.5
+        },
+        {
+          "checkpoint_key": "hokberg",
+          "name": "Hökberg",
+          "sequence_no": 7,
+          "distance_km": 72.67
+        },
+        {
+          "checkpoint_key": "eldris",
+          "name": "Eldris",
+          "sequence_no": 8,
+          "distance_km": 82.81
+        },
+        {
+          "checkpoint_key": "mora",
+          "name": "Mora mål",
+          "sequence_no": 9,
+          "distance_km": 92.0
+        }
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2024",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -267,51 +708,57 @@
           "distance_km": 0.0
         },
         {
+          "checkpoint_key": "high_point",
+          "name": "Högsta punkten",
+          "sequence_no": 1,
+          "distance_km": 3.3
+        },
+        {
           "checkpoint_key": "smagan",
           "name": "Smågan",
-          "sequence_no": 1,
-          "distance_km": 9.2
+          "sequence_no": 2,
+          "distance_km": 10.84
         },
         {
           "checkpoint_key": "mangsbodarna",
           "name": "Mångsbodarna",
-          "sequence_no": 2,
-          "distance_km": 23.7
+          "sequence_no": 3,
+          "distance_km": 25.34
         },
         {
           "checkpoint_key": "risberg",
           "name": "Risberg",
-          "sequence_no": 3,
-          "distance_km": 35.0
+          "sequence_no": 4,
+          "distance_km": 36.4
         },
         {
           "checkpoint_key": "evertsberg",
           "name": "Evertsberg",
-          "sequence_no": 4,
-          "distance_km": 47.1
+          "sequence_no": 5,
+          "distance_km": 48.73
         },
         {
           "checkpoint_key": "oxberg",
           "name": "Oxberg",
-          "sequence_no": 5,
-          "distance_km": 62.2
+          "sequence_no": 6,
+          "distance_km": 63.5
         },
         {
           "checkpoint_key": "hokberg",
           "name": "Hökberg",
-          "sequence_no": 6,
-          "distance_km": 71.4
+          "sequence_no": 7,
+          "distance_km": 72.67
         },
         {
           "checkpoint_key": "eldris",
           "name": "Eldris",
-          "sequence_no": 7,
-          "distance_km": 82.8
+          "sequence_no": 8,
+          "distance_km": 82.81
         },
         {
           "checkpoint_key": "mora",
           "name": "Mora mål",
-          "sequence_no": 8,
+          "sequence_no": 9,
           "distance_km": 92.0
         }
       ],
@@ -320,7 +767,21 @@
         "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=search",
         "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=list"
       ],
-      "partition_by_sex": true
+      "partition_by_sex": true,
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2025",
+          "role": "primary"
+        },
+        {
+          "source_event": "mika-results-2026",
+          "race": "ultravasan90-2025",
+          "role": "enrichment"
+        }
+      ]
     },
     {
       "race_key": "ultravasan90-2016",
@@ -400,6 +861,20 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=search",
         "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "vasanerd-ultravasan",
+          "race": "ultravasan90-2016",
+          "role": "primary"
+        },
+        {
+          "source_event": "mika-results-2017",
+          "race": "ultravasan90-2016",
+          "role": "enrichment"
+        }
       ]
     },
     {
@@ -456,6 +931,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=search",
         "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2015",
+          "race": "ultravasan45-2014",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -512,6 +996,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=search",
         "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2016",
+          "race": "ultravasan45-2015",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -568,6 +1061,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
         "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2017",
+          "race": "ultravasan45-2016",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -624,6 +1126,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=search",
         "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2018",
+          "race": "ultravasan45-2017",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -680,6 +1191,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=search",
         "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2019",
+          "race": "ultravasan45-2018",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -736,6 +1256,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=search",
         "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2020",
+          "race": "ultravasan45-2019",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -792,6 +1321,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=search",
         "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2023",
+          "race": "ultravasan45-2022",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -848,6 +1386,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=search",
         "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2024",
+          "race": "ultravasan45-2023",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -904,6 +1451,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=search",
         "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2025",
+          "race": "ultravasan45-2024",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -973,6 +1529,15 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=search",
         "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2026",
+          "race": "ultravasan45-2025",
+          "role": "primary"
+        }
       ]
     },
     {
@@ -1066,7 +1631,16 @@
         "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&num_results=100&pid=list"
       ],
       "partition_by_sex": true,
-      "notes": "Event code discovered from the official Mika catalogue; import is quality-gated."
+      "notes": "Event code discovered from the official Mika catalogue; import is quality-gated.",
+      "data_status": "available",
+      "competition_profile": "solo-medal",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2027",
+          "race": "ultravasan90-2026",
+          "role": "primary"
+        }
+      ]
     },
     {
       "race_key": "ultravasan45-2026",
@@ -1135,7 +1709,423 @@
       "page_url_templates": [
         "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=search",
         "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=list"
+      ],
+      "data_status": "available",
+      "competition_profile": "solo",
+      "source_bindings": [
+        {
+          "source_event": "mika-results-2027",
+          "race": "ultravasan45-2026",
+          "role": "primary"
+        }
       ]
     }
-  ]
+  ],
+  "contract_schema_version": 2,
+  "competition_profiles": {
+    "solo": {
+      "participant": {
+        "entity": "person",
+        "singular": "löpare",
+        "plural": "löpare"
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
+      "capabilities": {
+        "replay": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "sex_filter": true,
+        "age_analysis": true,
+        "club_analysis": true,
+        "class_analysis": true,
+        "segment_analysis": true,
+        "team_members": false
+      }
+    },
+    "solo-medal": {
+      "participant": {
+        "entity": "person",
+        "singular": "löpare",
+        "plural": "löpare"
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
+      "capabilities": {
+        "replay": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "sex_filter": true,
+        "age_analysis": true,
+        "club_analysis": true,
+        "class_analysis": true,
+        "segment_analysis": true,
+        "team_members": false
+      }
+    }
+  },
+  "source_events": {
+    "vasanerd-ultravasan": {
+      "provider": "vasanerd",
+      "base_url": "https://vasanerd.se/data/ultravasan",
+      "race_bindings": {
+        "ultravasan90-2014": {
+          "year": 2014,
+          "result_file": "2014.json"
+        },
+        "ultravasan90-2015": {
+          "year": 2015,
+          "result_file": "2015.json"
+        },
+        "ultravasan90-2017": {
+          "year": 2017,
+          "result_file": "2017.json"
+        },
+        "ultravasan90-2018": {
+          "year": 2018,
+          "result_file": "2018.json"
+        },
+        "ultravasan90-2019": {
+          "year": 2019,
+          "result_file": "2019.json"
+        },
+        "ultravasan90-2022": {
+          "year": 2022,
+          "result_file": "2022.json"
+        },
+        "ultravasan90-2023": {
+          "year": 2023,
+          "result_file": "2023.json"
+        },
+        "ultravasan90-2024": {
+          "year": 2024,
+          "result_file": "2024.json"
+        },
+        "ultravasan90-2025": {
+          "year": 2025,
+          "result_file": "2025.json"
+        },
+        "ultravasan90-2016": {
+          "year": 2016,
+          "result_file": "2016.json"
+        }
+      }
+    },
+    "mika-results-2026": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan90-2025": {
+          "event_code": "UL90_HCH8NDMR2501",
+          "result_year_path": 2026,
+          "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL90_HCH8NDMR2501",
+          "page_url_template": "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2026/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_HCH8NDMR2501",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2026/?page={page}&event=UL90_HCH8NDMR2501&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": true,
+          "year": 2025,
+          "min_results": 1200,
+          "expected_label": "Ultravasan 90"
+        },
+        "ultravasan45-2025": {
+          "event_code": "UL45_HCH8NDMR2501",
+          "result_year_path": 2026,
+          "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL45_HCH8NDMR2501",
+          "page_url_template": "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2026/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2501",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2026/?page={page}&event=UL45_HCH8NDMR2501&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": true,
+          "year": 2025,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2017": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan90-2016": {
+          "event_code": "UL90_9999991678885A00000004CC",
+          "result_year_path": 2017,
+          "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL90_9999991678885A00000004CC",
+          "page_url_template": "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2017/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_9999991678885A00000004CC",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2017/?page={page}&event=UL90_9999991678885A00000004CC&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2016,
+          "min_results": 1200,
+          "expected_label": "Ultravasan 90"
+        },
+        "ultravasan45-2016": {
+          "event_code": "UL45_9999991678885A00000004CB",
+          "result_year_path": 2017,
+          "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL45_9999991678885A00000004CB",
+          "page_url_template": "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2017/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A00000004CB",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2017/?page={page}&event=UL45_9999991678885A00000004CB&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2016,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2015": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2014": {
+          "event_code": "UL45_000017167888590000000399",
+          "result_year_path": 2015,
+          "official_url": "https://results.vasaloppet.se/2015/?pid=search&event=UL45_000017167888590000000399",
+          "page_url_template": "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2015/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_000017167888590000000399",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2015/?page={page}&event=UL45_000017167888590000000399&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2014,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2016": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2015": {
+          "event_code": "UL45_9999991678885A000000043D",
+          "result_year_path": 2016,
+          "official_url": "https://results.vasaloppet.se/2016/?pid=search&event=UL45_9999991678885A000000043D",
+          "page_url_template": "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2016/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A000000043D",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2016/?page={page}&event=UL45_9999991678885A000000043D&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2015,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2018": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2017": {
+          "event_code": "UL45_9999991678885A0000000620",
+          "result_year_path": 2018,
+          "official_url": "https://results.vasaloppet.se/2018/?pid=search&event=UL45_9999991678885A0000000620",
+          "page_url_template": "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2018/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885A0000000620",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2018/?page={page}&event=UL45_9999991678885A0000000620&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2017,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2019": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2018": {
+          "event_code": "UL45_9999991678885B00000006D3",
+          "result_year_path": 2019,
+          "official_url": "https://results.vasaloppet.se/2019/?pid=search&event=UL45_9999991678885B00000006D3",
+          "page_url_template": "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2019/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885B00000006D3",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2019/?page={page}&event=UL45_9999991678885B00000006D3&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2018,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2020": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2019": {
+          "event_code": "UL45_9999991678885C0000000709",
+          "result_year_path": 2020,
+          "official_url": "https://results.vasaloppet.se/2020/?pid=search&event=UL45_9999991678885C0000000709",
+          "page_url_template": "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2020/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_9999991678885C0000000709",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2020/?page={page}&event=UL45_9999991678885C0000000709&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2019,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2023": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2022": {
+          "event_code": "UL45_HCH8NDMR2201",
+          "result_year_path": 2023,
+          "official_url": "https://results.vasaloppet.se/2023/?pid=search&event=UL45_HCH8NDMR2201",
+          "page_url_template": "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2023/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2201",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2023/?page={page}&event=UL45_HCH8NDMR2201&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2022,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2024": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2023": {
+          "event_code": "UL45_HCH8NDMR2301",
+          "result_year_path": 2024,
+          "official_url": "https://results.vasaloppet.se/2024/?pid=search&event=UL45_HCH8NDMR2301",
+          "page_url_template": "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2024/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2301",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2024/?page={page}&event=UL45_HCH8NDMR2301&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2023,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2025": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan45-2024": {
+          "event_code": "UL45_HCH8NDMR2401",
+          "result_year_path": 2025,
+          "official_url": "https://results.vasaloppet.se/2025/?pid=search&event=UL45_HCH8NDMR2401",
+          "page_url_template": "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2025/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2401",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2025/?page={page}&event=UL45_HCH8NDMR2401&num_results=100&pid=list"
+          ],
+          "max_pages": 200,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": false,
+          "year": 2024,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    },
+    "mika-results-2027": {
+      "provider": "mika",
+      "base_url": "https://results.vasaloppet.se/",
+      "race_bindings": {
+        "ultravasan90-2026": {
+          "event_code": "UL90_HCH8NDMR2601",
+          "result_year_path": 2027,
+          "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL90_HCH8NDMR2601",
+          "page_url_template": "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2027/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_HCH8NDMR2601",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2027/?page={page}&event=UL90_HCH8NDMR2601&num_results=100&pid=list"
+          ],
+          "max_pages": 250,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": true,
+          "year": 2026,
+          "min_results": 1200,
+          "expected_label": "Ultravasan 90"
+        },
+        "ultravasan45-2026": {
+          "event_code": "UL45_HCH8NDMR2601",
+          "result_year_path": 2027,
+          "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL45_HCH8NDMR2601",
+          "page_url_template": "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&pid=search",
+          "detail_url_template": "https://results.vasaloppet.se/2027/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL45_HCH8NDMR2601",
+          "page_url_templates": [
+            "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=search",
+            "https://results.vasaloppet.se/2027/?page={page}&event=UL45_HCH8NDMR2601&num_results=100&pid=list"
+          ],
+          "max_pages": 250,
+          "empty_pages_to_stop": 2,
+          "partition_by_sex": true,
+          "year": 2026,
+          "min_results": 500,
+          "expected_label": "Ultravasan 45"
+        }
+      }
+    }
+  }
 }

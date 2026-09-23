@@ -25,6 +25,10 @@ from urllib.parse import urlparse
 
 import configure_discovered_event
 import mika_import
+try:
+    from . import source_bindings
+except ImportError:
+    import source_bindings
 import uvtool
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,26 +47,28 @@ def publication_date(year: int) -> date:
     return PUBLICATION_DATE_OVERRIDES.get(year, date(year, DEFAULT_PUBLICATION_MONTH, DEFAULT_PUBLICATION_DAY))
 
 
-def targets_for_year(year: int) -> dict[str, dict[str, Any]]:
-    """Build annual targets from the immediately preceding verified edition.
-
-    There is deliberately no upper participant limit: a record field is valid.
-    The lower limits only protect against incomplete official publication.
-    """
-    return {
-        "uv90": {
-            "race_key": f"ultravasan90-{year}", "template_key": f"ultravasan90-{year - 1}",
-            "name": "Ultravasan 90", "min_results": 1200,
-        },
-        "uv45": {
-            "race_key": f"ultravasan45-{year}", "template_key": f"ultravasan45-{year - 1}",
-            "name": "Ultravasan 45", "min_results": 500,
-        },
-    }
+TARGETS = ("uv90", "uv45")
+MIN_RESULTS = {"uv90": 1200, "uv45": 500}
 
 
-# Kept for import compatibility with focused tests and external callers.
-TARGETS = targets_for_year(2026)
+def targets_for_year(config: dict[str, Any], year: int) -> dict[str, dict[str, Any]]:
+    """Resolve annual targets from explicit edition fields and Mika bindings."""
+    source_bindings.validate_config(config)
+    targets: dict[str, dict[str, Any]] = {}
+    for family in TARGETS:
+        matches = [race for race in config["races"]
+                   if race["race_family"] == family and race["year"] == year
+                   and race["data_status"] == "available"]
+        if len(matches) != 1:
+            raise source_bindings.SourceBindingError(
+                f"Expected one explicitly configured available {family} RaceEdition "
+                f"for {year}, found {len(matches)}"
+            )
+        race = matches[0]
+        source_bindings.source_binding(config, race["race_key"], "mika")
+        targets[family] = {"race_key": race["race_key"], "name": race["name"],
+                           "min_results": MIN_RESULTS[family]}
+    return targets
 
 
 def utc_now() -> str:
@@ -138,52 +144,38 @@ def add_current_uv90_official_checkpoints(race: dict[str, Any]) -> None:
 
 
 def configured_targets(base_config: dict[str, Any], selected: dict[str, dict[str, Any]], year: int = 2026) -> dict[str, Any]:
-    """Return a new config; never expose an empty future race in the current export."""
+    """Verify preconfigured editions; never synthesize a future race contract."""
     config = copy.deepcopy(base_config)
-    targets = targets_for_year(year)
-    target_keys = {meta["race_key"] for meta in targets.values()}
-    config["races"] = [race for race in config.get("races", []) if race.get("race_key") not in target_keys]
+    targets = targets_for_year(config, year)
     for family, meta in targets.items():
-        template = next(race for race in config["races"] if race.get("race_key") == meta["template_key"])
+        try:
+            race = source_bindings.provider_race_config(config, meta["race_key"], "mika")
+        except source_bindings.SourceBindingError as error:
+            raise ValueError(
+                f"{meta['race_key']} must be explicitly configured before automatic import"
+            ) from error
         event = selected[family]
         if int(event.get("year") or 0) != year:
             raise ValueError(f"Discovered {family} event belongs to {event.get('year')}, not {year}")
-        label = uvtool.normalize(str(event.get("label") or ""))
-        distance = "90" if family == "uv90" else "45"
-        code = str(event.get("event_code") or "")
-        if "ultravasan" not in label or not re.search(rf"\b{distance}\b", label):
-            raise ValueError(f"Discovered event label does not identify {meta['name']}: {event!r}")
-        if "elit" in label or "elite" in label or code.startswith(("UL4E_", "UL9E_")):
-            raise ValueError(f"Elite event must not be imported: {event!r}")
-        path_year = int(event["result_year_path"])
-        base = f"https://{OFFICIAL_HOST}/{path_year}/"
-        race = copy.deepcopy(template)
-        race.update({
-            "race_key": meta["race_key"], "race_family": family, "name": meta["name"],
-            "year": year, "race_date": f"{year}-08-15", "event_code": code,
-            "result_year_path": path_year,
-            "official_url": f"{base}?pid=search&event={code}",
-            "page_url_template": f"{base}?page={{page}}&event={code}&pid=search",
-            "detail_url_template": f"{base}?content=detail&fpid=search&pid=search&idp={{idp}}&lang=SE&event={code}",
-            "page_url_templates": [
-                f"{base}?page={{page}}&event={code}&num_results=100&pid=search",
-                f"{base}?page={{page}}&event={code}&num_results=100&pid=list",
-            ],
-            # 250 pages x 100 official rows permits 25,000 rows per partition.
-            "max_pages": 250,
-            "notes": "Event code discovered from the official Mika catalogue; import is quality-gated.",
-        })
-        if family == "uv90":
-            add_current_uv90_official_checkpoints(race)
+        if (event.get("event_code"), event.get("result_year_path")) != (
+            race.get("event_code"), race.get("result_year_path")
+        ):
+            raise ValueError(f"Discovered source differs from explicit binding for {meta['race_key']}")
+        if uvtool.normalize(str(event.get("label") or "")) != uvtool.normalize(race["expected_label"]):
+            raise ValueError(f"Discovered label differs from explicit binding for {meta['race_key']}")
         for field in ("official_url", "page_url_template", "detail_url_template"):
             require_official_url(race[field])
-        config["races"].append(race)
     if target_race(config, targets["uv90"]["race_key"])["event_code"] == target_race(config, targets["uv45"]["race_key"])["event_code"]:
         raise ValueError("UV90 and UV45 resolved to the same event")
     return config
 
 
-def discover_events(year: int, raw: Path, delay: float, force: bool = False) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+def discover_events(
+    year: int, raw: Path, delay: float, force: bool = False,
+    config: dict[str, Any] | None = None,
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    if config is None:
+        raise SystemExit(f"RaceEditions and Mika bindings for {year} must be configured first")
     fetcher = mika_import.Fetcher(delay, browser_fallback=False, force=force)
     found: dict[tuple[int, str], dict[str, Any]] = {}
     try:
@@ -202,14 +194,14 @@ def discover_events(year: int, raw: Path, delay: float, force: bool = False) -> 
         fetcher.close()
     discovered = sorted(found.values(), key=lambda item: (item["year"], item["event_code"]))
     selected: dict[str, dict[str, Any]] = {}
-    targets = targets_for_year(year)
-    synthetic_config = {
-        family: {"name": meta["name"], "year": year}
-        for family, meta in targets.items()
-    }
+    targets = targets_for_year(config, year)
     for family, meta in targets.items():
+        try:
+            configured = source_bindings.provider_race_config(config, meta["race_key"], "mika")
+        except source_bindings.SourceBindingError as error:
+            raise SystemExit(str(error)) from error
         selected[family] = configure_discovered_event.select_discovered_event(
-            meta["race_key"], synthetic_config[family], discovered,
+            meta["race_key"], configured, discovered,
         )
     return selected, discovered
 
@@ -286,8 +278,7 @@ def probe_details(race: dict[str, Any], entries: list[dict[str, Any]], raw: Path
 
 
 def availability_blockers(family: str, count: int, probe: dict[str, Any], *, representative: bool = False, year: int = 2026) -> list[str]:
-    meta = targets_for_year(year)[family]
-    lower = 5 if representative else int(meta["min_results"])
+    lower = 5 if representative else MIN_RESULTS[family]
     blockers: list[str] = []
     if count < lower:
         blockers.append(f"participant-count={count}, expected at least {lower}")
@@ -334,7 +325,7 @@ def target_semantic_digest(conn: sqlite3.Connection, race_keys: Iterable[str]) -
     return stable_digest(target_semantic_state(conn, race_keys))
 
 
-def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[str, Any], *, representative: bool = False, year: int = 2026) -> dict[str, Any]:
+def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[str, Any], *, family: str, representative: bool = False, year: int = 2026) -> dict[str, Any]:
     race = conn.execute("SELECT * FROM races WHERE race_key=?", (race_key,)).fetchone()
     if not race:
         return {"race_key": race_key, "blockers": ["race missing"]}
@@ -383,8 +374,7 @@ def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[st
     count = len(results)
     official_records = int(import_report.get("records") or 0)
     with_splits = sum(bool(by_result.get(row["id"])) for row in starters)
-    family = "uv45" if "45" in race_key else "uv90"
-    lower = 5 if representative else targets_for_year(year)[family]["min_results"]
+    lower = 5 if representative else MIN_RESULTS[family]
     blockers: list[str] = []
     checks = {
         "participant_count": count, "official_records": official_records,
@@ -457,10 +447,19 @@ def command_window(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_availability(args: argparse.Namespace) -> dict[str, Any]:
     year = int(getattr(args, "year", 2026))
-    targets = targets_for_year(year)
     base = uvtool.load_config(args.config)
     try:
-        selected, discovered = discover_events(year, args.raw, args.delay, args.force)
+        targets = targets_for_year(base, year)
+    except source_bindings.SourceBindingError as exc:
+        report = {"generated_at": utc_now(), "mode": "availability", "ready": False,
+                  "source_host": OFFICIAL_HOST, "discovered": [], "races": {},
+                  "blockers": [str(exc)]}
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        write_github_output(args.github_output, {"ready": False, "uv90_results": 0, "uv45_results": 0})
+        return report
+    try:
+        selected, discovered = discover_events(year, args.raw, args.delay, args.force, base)
     except SystemExit as exc:
         report = {
             "generated_at": utc_now(), "mode": "availability", "ready": False,
@@ -492,7 +491,8 @@ def command_availability(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
     year = int(getattr(args, "year", 2026))
-    targets = targets_for_year(year)
+    generated_config = uvtool.load_config(args.generated_config)
+    targets = targets_for_year(generated_config, year)
     availability = json.loads(args.availability_report.read_text(encoding="utf-8"))
     if not availability.get("ready"):
         raise RuntimeError("Availability report is not ready")
@@ -510,7 +510,7 @@ def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
     for family, meta in targets.items():
         first_reports[family] = import_one(meta["race_key"], args.work_db, args.generated_config, args.raw, args.report.parent / f"{meta['race_key']}-pass1.json", args.delay)
     with uvtool.connect(args.work_db) as work:
-        qualities = {family: race_quality(work, meta["race_key"], first_reports[family], year=year) for family, meta in targets.items()}
+        qualities = {family: race_quality(work, meta["race_key"], first_reports[family], family=family, year=year) for family, meta in targets.items()}
         first_digest = target_semantic_digest(work, race_keys)
         first_counts = {family: {key: qualities[family][key] for key in ("participant_count", "splits")} for family in targets}
         history_after_first = protected_history_digest(work, year)
@@ -520,7 +520,7 @@ def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         second_reports[family] = import_one(meta["race_key"], args.work_db, args.generated_config, args.raw, args.report.parent / f"{meta['race_key']}-pass2.json", 0.0)
     with uvtool.connect(args.work_db) as work:
         second_digest = target_semantic_digest(work, race_keys)
-        second_qualities = {family: race_quality(work, meta["race_key"], second_reports[family], year=year) for family, meta in targets.items()}
+        second_qualities = {family: race_quality(work, meta["race_key"], second_reports[family], family=family, year=year) for family, meta in targets.items()}
         second_counts = {family: {key: second_qualities[family][key] for key in ("participant_count", "splits")} for family in targets}
         history_after_second = protected_history_digest(work, year)
         global_blockers.extend(database_gates(work))
@@ -575,7 +575,9 @@ def command_apply(args: argparse.Namespace) -> dict[str, Any]:
     for name in ("ultravasan.json", "ultravasan-data.js", "manifest.json"):
         atomic_copy(staging / name, args.web_dir / name)
     with uvtool.connect(args.production_db) as conn:
-        race_keys = [meta["race_key"] for meta in targets_for_year(int(getattr(args, "year", 2026))).values()]
+        race_keys = [meta["race_key"] for meta in targets_for_year(
+            uvtool.load_config(args.config), int(getattr(args, "year", 2026))
+        ).values()]
         digest = target_semantic_digest(conn, race_keys)
         blockers = database_gates(conn)
     if digest != dry["target_digest_after"] or blockers:
@@ -590,7 +592,7 @@ def command_apply(args: argparse.Namespace) -> dict[str, Any]:
 def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
     """Finish an interrupted full dry-run from its verified cache/work database."""
     year = int(args.year)
-    targets = targets_for_year(year)
+    targets = targets_for_year(uvtool.load_config(args.generated_config), year)
     availability = json.loads(args.availability_report.read_text(encoding="utf-8"))
     if not availability.get("ready") or not args.work_db.exists():
         raise RuntimeError("A ready availability report and existing work database are required")
@@ -605,7 +607,7 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         before_digest = target_semantic_digest(production, race_keys)
     with uvtool.connect(args.work_db) as work:
         history_before = protected_history_digest(work, year)
-        qualities = {family: race_quality(work, meta["race_key"], first_reports[family], year=year) for family, meta in targets.items()}
+        qualities = {family: race_quality(work, meta["race_key"], first_reports[family], family=family, year=year) for family, meta in targets.items()}
         first_digest = target_semantic_digest(work, race_keys)
         first_counts = {family: {key: qualities[family][key] for key in ("participant_count", "splits")} for family in targets}
     second_reports = {}
@@ -613,7 +615,7 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         second_reports[family] = import_one(meta["race_key"], args.work_db, args.generated_config, args.raw, args.report.parent / f"{meta['race_key']}-pass2.json", 0.0)
     with uvtool.connect(args.work_db) as work:
         second_digest = target_semantic_digest(work, race_keys)
-        second_qualities = {family: race_quality(work, meta["race_key"], second_reports[family], year=year) for family, meta in targets.items()}
+        second_qualities = {family: race_quality(work, meta["race_key"], second_reports[family], family=family, year=year) for family, meta in targets.items()}
         second_counts = {family: {key: second_qualities[family][key] for key in ("participant_count", "splits")} for family in targets}
         history_after = protected_history_digest(work, year)
         global_blockers = database_gates(work)
@@ -640,15 +642,15 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_simulate_2025(args: argparse.Namespace) -> dict[str, Any]:
     base = uvtool.load_config(args.config)
-    selected, _ = discover_events(2025, args.raw, args.delay, args.force)
-    expected = {
-        "uv90": target_race(base, "ultravasan90-2025")["event_code"],
-        "uv45": target_race(base, "ultravasan45-2025")["event_code"],
-    }
+    targets = targets_for_year(base, 2025)
+    selected, _ = discover_events(2025, args.raw, args.delay, args.force, base)
+    expected = {family: source_bindings.provider_race_config(
+        base, meta["race_key"], "mika"
+    )["event_code"] for family, meta in targets.items()}
     if any(selected[family]["event_code"] != expected[family] for family in TARGETS):
         raise RuntimeError(f"2025 discovery differs from verified config: {selected!r}")
     simulation_config = copy.deepcopy(base)
-    add_current_uv90_official_checkpoints(target_race(simulation_config, "ultravasan90-2025"))
+    add_current_uv90_official_checkpoints(target_race(simulation_config, targets["uv90"]["race_key"]))
     simulation_config_path = args.report.parent / "simulation-config.json"
     simulation_config_path.parent.mkdir(parents=True, exist_ok=True)
     simulation_config_path.write_text(json.dumps(simulation_config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -656,19 +658,19 @@ def command_simulate_2025(args: argparse.Namespace) -> dict[str, Any]:
         args.work_db.unlink()
     uvtool.init_db(args.work_db, simulation_config_path)
     reports: dict[str, Any] = {}
-    keys = {"uv90": "ultravasan90-2025", "uv45": "ultravasan45-2025"}
+    keys = {family: meta["race_key"] for family, meta in targets.items()}
     for family, key in keys.items():
         reports[family] = import_one(key, args.work_db, simulation_config_path, args.raw, args.report.parent / f"{key}-simulation-pass1.json", args.delay, limit=10, probe=True)
     with uvtool.connect(args.work_db) as conn:
         digest1 = target_semantic_digest(conn, keys.values())
-        quality1 = {family: race_quality(conn, key, reports[family], representative=True, year=2025) for family, key in keys.items()}
+        quality1 = {family: race_quality(conn, key, reports[family], family=family, representative=True, year=2025) for family, key in keys.items()}
         counts1 = {family: (quality1[family]["participant_count"], quality1[family]["splits"]) for family in keys}
     second: dict[str, Any] = {}
     for family, key in keys.items():
         second[family] = import_one(key, args.work_db, simulation_config_path, args.raw, args.report.parent / f"{key}-simulation-pass2.json", 0.0, limit=10, probe=True)
     with uvtool.connect(args.work_db) as conn:
         digest2 = target_semantic_digest(conn, keys.values())
-        quality2 = {family: race_quality(conn, key, second[family], representative=True, year=2025) for family, key in keys.items()}
+        quality2 = {family: race_quality(conn, key, second[family], family=family, representative=True, year=2025) for family, key in keys.items()}
         counts2 = {family: (quality2[family]["participant_count"], quality2[family]["splits"]) for family in keys}
         blockers = database_gates(conn)
     blockers.extend(f"{family}: {item}" for family, quality in quality1.items() for item in quality["blockers"])

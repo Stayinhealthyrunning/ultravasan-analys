@@ -29,7 +29,7 @@ function ensureLeaflet(){if(window.L)return Promise.resolve();setLoading('Förbe
 
 
 function raceForResult(result){return app.data.races.find(r=>r.id===result.race_id)}
-function routeForRace(race){return mapContracts.routeForRace(app.registry,race)}
+function routeForRace(race){return mapContracts.supports(race,'map_duel')?mapContracts.routeForRace(app.registry,race):null}
 
 function boot(){
   if(!app.data||!app.registry)throw new Error('Datafilerna kunde inte läsas.');
@@ -56,7 +56,8 @@ function showFatal(message){$('#mapLoading').innerHTML=`<p><strong>Kartjämföre
 function buildModel(result,color,index){
   const race=raceForResult(result);if(!race)throw new Error(`Loppår saknas för ${result.name_as_published||result.id}.`);const route=routeForRace(race);if(!route||!Array.isArray(route.points)||route.points.length<2)throw new Error(`Banlager saknas för ${race.year}.`);const routeCp=new Map((route.checkpoints||[]).map(c=>[c.key,c]));
   const raw=(app.data.splitsByResult.get(result.id)||window.UltravasanDataIndex.EMPTY_SPLITS).filter(s=>Number.isFinite(s.elapsed_seconds)).sort((a,b)=>a.elapsed_seconds-b.elapsed_seconds);
-  let anchors=[{time:0,distance:0,name:route.id==='ultravasan45-current'?'Start Oxberg':'Start Sälen',exact:true,kind:'start'}];
+  const startName=mapContracts.family(mapRaceFamily(race))?.start_name||route.checkpoints?.[0]?.name||'Start';
+  let anchors=[{time:0,distance:0,name:startName,exact:true,kind:'start'}];
   for(const s of raw){
     if(s.elapsed_seconds<=0)continue;const cp=routeCp.get(s.checkpoint_key);const dist=splitRouteDistance(s,cp);
     if(!Number.isFinite(dist)||dist<=0)continue;anchors.push({time:Number(s.elapsed_seconds),distance:Math.min(route.official_distance_km,Number(dist)),name:s.checkpoint_name,exact:!s.is_estimated,kind:'split'})

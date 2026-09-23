@@ -28,6 +28,10 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import requests
+try:
+    from . import source_bindings
+except ImportError:
+    import source_bindings
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -393,83 +397,34 @@ def parse_record(record: dict[str, Any], fallback_year: int | None, source_url: 
     return year, parsed
 
 
-def checkpoint_template(year: int) -> tuple[float, str, list[dict[str, Any]]]:
-    """Checkpoint distances derived from the source segment times/paces and GPS total."""
-    if year >= 2023:
-        distance, version = 92.0, "post2023"
-        values = [
-            ("start", "Start Sälen", 0.0),
-            ("high_point", "Högsta punkten", 3.30),
-            ("smagan", "Smågan", 10.84),
-            ("mangsbodarna", "Mångsbodarna", 25.34),
-            ("risberg", "Risberg", 36.40),
-            ("evertsberg", "Evertsberg", 48.73),
-            ("oxberg", "Oxberg", 63.50),
-            ("hokberg", "Hökberg", 72.67),
-            ("eldris", "Eldris", 82.81),
-            ("mora", "Mora mål", 92.0),
-        ]
-    else:
-        distance, version = 90.0, "pre2023"
-        values = [
-            ("start", "Start Sälen", 0.0),
-            ("smagan", "Smågan", 8.83),
-            ("mangsbodarna", "Mångsbodarna", 23.27),
-            ("risberg", "Risberg", 33.96),
-            ("evertsberg", "Evertsberg", 46.15),
-            ("oxberg", "Oxberg", 60.73),
-            ("hokberg", "Hökberg", 69.72),
-            ("eldris", "Eldris", 79.61),
-            ("mora", "Mora mål", 90.0),
-        ]
-    cps = [
-        {"checkpoint_key": key, "name": name, "sequence_no": i, "distance_km": km}
-        for i, (key, name, km) in enumerate(values)
-    ]
-    return distance, version, cps
-
-
-def ensure_race(conn: sqlite3.Connection, year: int) -> tuple[sqlite3.Row, list[dict[str, Any]]]:
-    distance, version, cps = checkpoint_template(year)
-    key = f"ultravasan90-{year}"
-    conn.execute(
-        """
-        INSERT INTO races(race_key,name,year,distance_km,course_version,official_url,notes)
-        VALUES(?,?,?,?,?,?,?)
-        ON CONFLICT(race_key) DO UPDATE SET distance_km=excluded.distance_km,
-        course_version=excluded.course_version,updated_at=CURRENT_TIMESTAMP
-        """,
-        (
-            key,
-            "Ultravasan 90",
-            year,
-            distance,
-            version,
-            "https://results.vasaloppet.se/",
-            "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
-        ),
-    )
-    race_id = conn.execute("SELECT id FROM races WHERE race_key=?", (key,)).fetchone()[0]
-    # Move existing sequence numbers temporarily so a changed checkpoint layout
-    # (for example the post-2023 High Point split) cannot violate the unique
-    # sequence constraint while rows are updated one by one.
-    conn.execute("UPDATE checkpoints SET sequence_no=sequence_no+1000 WHERE race_id=?", (race_id,))
-    for cp in cps:
-        conn.execute(
-            """
-            INSERT INTO checkpoints(race_id,checkpoint_key,name,sequence_no,distance_km)
-            VALUES(?,?,?,?,?)
-            ON CONFLICT(race_id,checkpoint_key) DO UPDATE SET name=excluded.name,
-            sequence_no=excluded.sequence_no,distance_km=excluded.distance_km
-            """,
-            (race_id, cp["checkpoint_key"], cp["name"], cp["sequence_no"], cp["distance_km"]),
+def ensure_race(
+    conn: sqlite3.Connection, config: dict[str, Any], year: int,
+) -> tuple[sqlite3.Row, list[dict[str, Any]]]:
+    """Resolve an already configured VasaNerd edition without year heuristics."""
+    mappings = source_bindings.races_for_provider(config, "vasanerd")
+    item = mappings.get(year)
+    if not item:
+        raise source_bindings.SourceBindingError(
+            f"VasaNerd year {year} has no explicit RaceEdition/SourceBinding"
         )
-    desired = [cp["checkpoint_key"] for cp in cps]
-    placeholders = ",".join("?" for _ in desired)
-    conn.execute(f"DELETE FROM checkpoints WHERE race_id=? AND checkpoint_key NOT IN ({placeholders})", (race_id, *desired))
-    id_rows = {row["checkpoint_key"]: row for row in conn.execute("SELECT id,checkpoint_key,distance_km FROM checkpoints WHERE race_id=?", (race_id,))}
-    hydrated = [{**cp, "id": id_rows[cp["checkpoint_key"]]["id"]} for cp in cps]
-    return conn.execute("SELECT * FROM races WHERE id=?", (race_id,)).fetchone(), hydrated
+    key = item["race_key"]
+    race = conn.execute("SELECT * FROM races WHERE race_key=?", (key,)).fetchone()
+    if race is None:
+        raise source_bindings.SourceBindingError(f"Configured RaceEdition is missing from database: {key}")
+    checkpoints = [dict(row) for row in conn.execute(
+        "SELECT id,checkpoint_key,name,sequence_no,distance_km,elevation_m "
+        "FROM checkpoints WHERE race_id=? ORDER BY sequence_no,id", (race["id"],),
+    )]
+    configured = item["race"]["checkpoints"]
+    observed = [{field: cp.get(field) for field in
+                 ("checkpoint_key", "name", "sequence_no", "distance_km", "elevation_m")}
+                for cp in checkpoints]
+    expected = [{field: cp.get(field) for field in
+                 ("checkpoint_key", "name", "sequence_no", "distance_km", "elevation_m")}
+                for cp in configured]
+    if observed != expected:
+        raise source_bindings.SourceBindingError(f"Database checkpoints differ from {key} contract")
+    return race, checkpoints
 
 
 def cache_buster() -> str:
@@ -592,17 +547,8 @@ def import_payloads(
     fallback_year: int | None = None,
     replace_years: bool = True,
 ) -> dict[str, Any]:
-    init_db(db, config)
-    conn = connect(db)
-    conn.execute(
-        """
-        INSERT INTO sources(code,name,base_url,source_type,terms_note)
-        VALUES('vasanerd','VasaNerd','https://vasanerd.se/','json',
-        'Publik sammanställd resultatdata. Ange VasaNerd som källa och följ källans villkor.')
-        ON CONFLICT(code) DO UPDATE SET name=excluded.name,base_url=excluded.base_url,terms_note=excluded.terms_note
-        """
-    )
-    source_id = conn.execute("SELECT id FROM sources WHERE code='vasanerd'").fetchone()[0]
+    loaded_config = json.loads(config.read_text(encoding="utf-8"))
+    configured_years = source_bindings.races_for_provider(loaded_config, "vasanerd")
     payloads = load_payloads(path)
     candidates: list[tuple[float, int, Path, str, str, list[dict[str, Any]]]] = []
     for file, payload, source_url in payloads:
@@ -617,16 +563,35 @@ def import_payloads(
             if year:
                 candidate_years.add(year)
 
+    unbound_years = candidate_years - set(configured_years)
+    if unbound_years:
+        raise source_bindings.SourceBindingError(
+            f"VasaNerd payload contains unbound years: {sorted(unbound_years)}"
+        )
+
+    init_db(db, config)
+    conn = connect(db)
+    conn.execute(
+        """
+        INSERT INTO sources(code,name,base_url,source_type,terms_note)
+        VALUES('vasanerd','VasaNerd','https://vasanerd.se/','json',
+        'Publik sammanställd resultatdata. Ange VasaNerd som källa och följ källans villkor.')
+        ON CONFLICT(code) DO UPDATE SET name=excluded.name,base_url=excluded.base_url,terms_note=excluded.terms_note
+        """
+    )
+    source_id = conn.execute("SELECT id FROM sources WHERE code='vasanerd'").fetchone()[0]
+
     if replace_years and candidate_years:
-        placeholders = ",".join("?" for _ in candidate_years)
+        race_keys = [configured_years[year]["race_key"] for year in sorted(candidate_years)]
+        placeholders = ",".join("?" for _ in race_keys)
         conn.execute(
             f"""
             DELETE FROM results
             WHERE source_id=? AND race_id IN (
-              SELECT id FROM races WHERE year IN ({placeholders})
+              SELECT id FROM races WHERE race_key IN ({placeholders})
             )
             """,
-            (source_id, *sorted(candidate_years)),
+            (source_id, *race_keys),
         )
         conn.commit()
 
@@ -669,7 +634,7 @@ def import_payloads(
             seen.add(fingerprint)
             try:
                 if year not in race_cache:
-                    race_cache[year] = ensure_race(conn, year)
+                    race_cache[year] = ensure_race(conn, loaded_config, year)
                 race, cps = race_cache[year]
                 _, is_new = save_result(conn, race["id"], source_id, race["distance_km"], cps, parsed, store_raw=False)
                 inserted += int(is_new)

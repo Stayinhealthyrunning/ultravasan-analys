@@ -12,6 +12,11 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+try:
+    from . import source_bindings
+except ImportError:  # Direct script execution from tools/.
+    import source_bindings
+
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = "config/course_version_lock.json"
 JSON_PATH = "docs/data/race-catalog.json"
@@ -61,6 +66,11 @@ def expected_segments(checkpoints):
          if a["distance_km"] is not None and b["distance_km"] is not None else None}
         for a, b in zip(checkpoints, checkpoints[1:])
     ]
+
+
+def checkpoint_contract(checkpoints):
+    fields = ("checkpoint_key", "name", "sequence_no", "distance_km", "elevation_m")
+    return [{field: checkpoint.get(field) for field in fields} for checkpoint in checkpoints]
 
 
 def course_material(course_id, definition, registry, root=ROOT):
@@ -116,6 +126,7 @@ def observed_editions(root=ROOT):
 
 
 def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
+    resolved_sources = source_bindings.validate_config(config)
     require(definitions["schema_version"] == 1 and lock["schema_version"] == 1, "Unsupported schema")
     event = config["event"]
     event_key = event["event_key"]
@@ -141,11 +152,29 @@ def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
         require(race["event_key"] == event_key and course["race_family"] == race["race_family"],
                 f"{key}: family/event mismatch")
         require(race["medal_profile"] in (None, "pre2023", "post2023"), f"{key}: unknown medal profile")
-        require(race["medal_profile"] is None or race["race_family"] == "uv90", f"{key}: invalid medal family")
-        editions[key] = {field: race[field] for field in
-                        ("race_key", "event_key", "race_family", "course_version_id", "medal_profile")}
+        require(checkpoint_contract(race.get("checkpoints", [])) == checkpoint_contract(course["checkpoint_catalog"]),
+                f"{key}: configured controls differ from CourseVersion")
+        competition = source_bindings.competition_contract(config, race)
+        editions[key] = {
+            **{field: race[field] for field in ("race_key", "event_key", "race_family",
+                                                "course_version_id", "medal_profile", "year",
+                                                "race_date", "data_status")},
+            **competition,
+            "source_available": bool(resolved_sources[key]),
+            "analyzable": race["data_status"] == "available" and bool(resolved_sources[key]),
+        }
     observed_keys = {race["race_key"] for race in observed}
-    require(observed_keys <= set(editions), "Observed edition missing from contracts")
+    available_keys = {key for key, edition in editions.items() if edition["data_status"] == "available"}
+    require(observed_keys == available_keys,
+            "Available/observed RaceEditions differ; planned editions must not enter the database")
+    expected_routes = {
+        key: courses[edition["course_version_id"]]["display_route_id"]
+        for key, edition in editions.items()
+    }
+    require(registry.get("route_for_edition") == expected_routes,
+            "Route registry does not match explicit RaceEdition/CourseVersion assignments")
+    require("route_for_race" not in registry and "route_for_year" not in registry,
+            "Implicit route rules are not allowed")
     for race in observed:
         course = courses[editions[race["race_key"]]["course_version_id"]]
         require(race["checkpoints"] == course["checkpoint_catalog"], f"{race['race_key']}: observed controls differ from course")
@@ -168,7 +197,7 @@ def verify_route_export(registry, root=ROOT):
     prefix = "window.ULTRAVASAN_ROUTES = "
     require(script.startswith(prefix) and script.endswith(";"), "Invalid browser route export")
     payload, end = json.JSONDecoder().raw_decode(script[len(prefix):])
-    suffix = ";\nwindow.ULTRAVASAN_ROUTE = window.ULTRAVASAN_ROUTES.routes[window.ULTRAVASAN_ROUTES.default_route_id];"
+    suffix = ";"
     require(script[len(prefix) + end:] == suffix, "Unexpected browser route assignment")
     require(payload == registry, "Browser routes differ from fingerprinted registry")
 

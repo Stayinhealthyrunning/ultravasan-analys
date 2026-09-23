@@ -15,6 +15,9 @@ for(const [key,edition] of Object.entries(contracts.catalog.editions)){
   assert.strictEqual(audience.audienceRaceFamily(misleading),edition.race_family);
   assert.strictEqual(map.mapRaceFamily(misleading),edition.race_family);
   assert.strictEqual(media.familyForRace(misleading),edition.race_family);
+  assert.strictEqual(contracts.supports(misleading,'replay'),edition.capabilities.replay);
+  assert.strictEqual(contracts.supports(misleading,'map_duel'),edition.capabilities.map_duel);
+  assert.strictEqual(contracts.supports(misleading,'not-a-capability'),false);
   assert.strictEqual(replay.routeForRace(registry,misleading),registry.routes[contracts.courseForRace(key).display_route_id]);
   assert.strictEqual(replay.medalTimeForRace(misleading,'M'),edition.medal_profile==='pre2023'?34199:edition.medal_profile==='post2023'?35999:null);
 }
@@ -31,10 +34,11 @@ assert.ok(map.mixedRaceFamilyError([{race_id:999}],[]),'Missing race contract mu
 assert.strictEqual(map.activeReferenceRoute([],[],registry),null,'No default UV90 route for missing selection');
 
 // Another event and opaque edition key work without changing the resolver.
-const other={schema_version:1,event:{event_key:'other'},families:{short:{event_key:'other'}},courses:{v7:{event_key:'other',race_family:'short',display_route_id:'shape-b'}},editions:{'opaque/id':{race_key:'opaque/id',event_key:'other',race_family:'short',course_version_id:'v7',medal_profile:null}}};
+const other={schema_version:1,event:{event_key:'other'},families:{short:{event_key:'other'}},courses:{v7:{event_key:'other',race_family:'short',display_route_id:'shape-b'}},editions:{'opaque/id':{race_key:'opaque/id',event_key:'other',race_family:'short',course_version_id:'v7',medal_profile:null,capabilities:{replay:false,map_duel:false}}}};
 const custom=contracts.create(other),shape={id:'shape-b'};
 assert.strictEqual(custom.familyForRace({race_key:'opaque/id',name:'Ultravasan 90',year:2037,distance_km:90}),'short');
 assert.strictEqual(custom.routeForRace({routes:{'shape-b':shape}},'opaque/id'),shape);
+assert.strictEqual(custom.supports('opaque/id','replay'),false);
 other.editions['opaque/id'].race_family='uv90';
 assert.strictEqual(custom.familyForRace('opaque/id'),'short','Input mutation cannot change snapshot');
 assert.throws(()=>{custom.catalog.editions['opaque/id'].race_family='uv90'},TypeError);

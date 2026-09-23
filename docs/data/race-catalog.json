@@ -1002,163 +1002,802 @@
   },
   "editions": {
     "ultravasan45-2014": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2014-08-23",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2014"
+      "race_key": "ultravasan45-2014",
+      "source_available": true,
+      "year": 2014
     },
     "ultravasan45-2015": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2015-08-22",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2015"
+      "race_key": "ultravasan45-2015",
+      "source_available": true,
+      "year": 2015
     },
     "ultravasan45-2016": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2016-08-20",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2016"
+      "race_key": "ultravasan45-2016",
+      "source_available": true,
+      "year": 2016
     },
     "ultravasan45-2017": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2017-08-19",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2017"
+      "race_key": "ultravasan45-2017",
+      "source_available": true,
+      "year": 2017
     },
     "ultravasan45-2018": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2018-08-18",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2018"
+      "race_key": "ultravasan45-2018",
+      "source_available": true,
+      "year": 2018
     },
     "ultravasan45-2019": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2019-08-17",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2019"
+      "race_key": "ultravasan45-2019",
+      "source_available": true,
+      "year": 2019
     },
     "ultravasan45-2022": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2022-08-20",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2022"
+      "race_key": "ultravasan45-2022",
+      "source_available": true,
+      "year": 2022
     },
     "ultravasan45-2023": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2023-08-19",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2023"
+      "race_key": "ultravasan45-2023",
+      "source_available": true,
+      "year": 2023
     },
     "ultravasan45-2024": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2014-2024-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2024-08-17",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2024"
+      "race_key": "ultravasan45-2024",
+      "source_available": true,
+      "year": 2024
     },
     "ultravasan45-2025": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2025-2026-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2025-08-16",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2025"
+      "race_key": "ultravasan45-2025",
+      "source_available": true,
+      "year": 2025
     },
     "ultravasan45-2026": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": false,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv45-2025-2026-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": null,
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2026-08-15",
       "race_family": "uv45",
-      "race_key": "ultravasan45-2026"
+      "race_key": "ultravasan45-2026",
+      "source_available": true,
+      "year": 2026
     },
     "ultravasan90-2014": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2014-08-23",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2014"
+      "race_key": "ultravasan90-2014",
+      "source_available": true,
+      "year": 2014
     },
     "ultravasan90-2015": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2015-08-22",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2015"
+      "race_key": "ultravasan90-2015",
+      "source_available": true,
+      "year": 2015
     },
     "ultravasan90-2016": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2016-08-20",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2016"
+      "race_key": "ultravasan90-2016",
+      "source_available": true,
+      "year": 2016
     },
     "ultravasan90-2017": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2017-08-19",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2017"
+      "race_key": "ultravasan90-2017",
+      "source_available": true,
+      "year": 2017
     },
     "ultravasan90-2018": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2018-08-18",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2018"
+      "race_key": "ultravasan90-2018",
+      "source_available": true,
+      "year": 2018
     },
     "ultravasan90-2019": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2019-08-17",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2019"
+      "race_key": "ultravasan90-2019",
+      "source_available": true,
+      "year": 2019
     },
     "ultravasan90-2022": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-pre2023-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "pre2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2022-08-20",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2022"
+      "race_key": "ultravasan90-2022",
+      "source_available": true,
+      "year": 2022
     },
     "ultravasan90-2023": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-2023-2025-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "post2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2023-08-19",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2023"
+      "race_key": "ultravasan90-2023",
+      "source_available": true,
+      "year": 2023
     },
     "ultravasan90-2024": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-2023-2025-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "post2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2024-08-17",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2024"
+      "race_key": "ultravasan90-2024",
+      "source_available": true,
+      "year": 2024
     },
     "ultravasan90-2025": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-2023-2025-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "post2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2025-08-16",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2025"
+      "race_key": "ultravasan90-2025",
+      "source_available": true,
+      "year": 2025
     },
     "ultravasan90-2026": {
+      "analyzable": true,
+      "capabilities": {
+        "age_analysis": true,
+        "class_analysis": true,
+        "club_analysis": true,
+        "map_duel": true,
+        "medal": true,
+        "person_history": true,
+        "replay": true,
+        "segment_analysis": true,
+        "sex_filter": true,
+        "team_members": false
+      },
+      "competition": {
+        "format": "solo",
+        "team_structure": {
+          "kind": "none",
+          "member_assignment": "unknown"
+        }
+      },
       "course_version_id": "uv90-2026-v1",
+      "data_status": "available",
       "event_key": "ultravasan",
       "medal_profile": "post2023",
+      "participant": {
+        "entity": "person",
+        "plural": "löpare",
+        "singular": "löpare"
+      },
+      "race_date": "2026-08-15",
       "race_family": "uv90",
-      "race_key": "ultravasan90-2026"
+      "race_key": "ultravasan90-2026",
+      "source_available": true,
+      "year": 2026
     }
   },
   "event": {
     "event_key": "ultravasan",
     "name": "Ultravasan",
+    "official_site_url": "https://www.vasaloppet.se/lopp/loplopp/ultravasan/",
     "product_title": "Ultravasan Analys",
     "storage_namespace": "ultravasan"
   },

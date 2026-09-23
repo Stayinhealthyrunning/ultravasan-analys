@@ -8,7 +8,7 @@ Python-installation behövs för normal användning.
 
 Startsidan har en mjuk växlare mellan **Ultravasan 90** (standard) och **Ultravasan 45**. Varje lopp har egen rubrikbild, egna loppår, egna resultatfilter, egna analyser, egen GPS-rutt och egen musik i kartduellen. Familj och kartreferens slås upp explicit per loppnyckel i `docs/data/race-catalog.json`; namn, prefix, årtal och distans avgör inte valet.
 
-Ultravasan 45 visas med GPX-spåret `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`. Äldre utgåvor behåller sin historiska kontrollmodell; kartspåret är en gemensam visningsreferens. `tools/mika_import.py discover` söker eventkoder för både 90 och 45 km. Importadaptrarna migreras vidare i kommande U1-etapper.
+Ultravasan 45 visas med GPX-spåret `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`. Äldre utgåvor behåller sin historiska kontrollmodell; kartspåret är en gemensam visningsreferens. Alla importadaptrar kräver en explicit `SourceBinding`; de härleder inte längre lopp från namn, nyckelprefix, distans eller årtal.
 
 ## Öppna verktyget
 
@@ -34,8 +34,10 @@ Den medföljande resultatdatabasen innehåller 22 loppår, 24 422 resultat och
 139 910 mellantider. Den exakta U0-baslinjen inför Ultravasan Analys 2.0 finns i
 `reports/U0_BASELINE.json` och verifieras automatiskt i CI.
 
-U1:s explicita event-, familje- och bankontrakt beskrivs i
+U1:s explicita event-, utgåve-, käll-, tävlings- och bankontrakt beskrivs i
 [`reports/U1_EVENT_COURSE_CONTRACTS.md`](reports/U1_EVENT_COURSE_CONTRACTS.md).
+Den slutförda käll- och utgåvemodellen finns i
+[`reports/U1_SOURCE_EDITION_SPEC.md`](reports/U1_SOURCE_EDITION_SPEC.md).
 `config/races.json` tilldelar utgåvorna fem låsta ban-/kontrollmodeller från
 `config/course_versions.json`. För att bygga och verifiera katalogen:
 
@@ -49,8 +51,7 @@ ID och lägg till dess fingeravtryck i `config/course_version_lock.json` när
 geometri, kontrollmodell, ankare eller segment ändras. Gamla versioner behålls.
 Katalogen ska regenereras efter ändrad utgåvetilldelning; CI stoppar inaktuella
 exporter och ändrade versionslås. Befintliga resultatfiler migreras inte av detta
-kommando. Fullständig RaceEdition, SourceBinding och CompetitionCapabilities
-återstår i U1.
+kommando. Webblagret läser funktionsstöd från explicita `CompetitionCapabilities`.
 
 
 ## Historisk engångsimport från VasaNerd
@@ -72,8 +73,8 @@ råfiler och deras URL/hash och analyserar sedan strukturen. Den klarar både:
 - JSON-data inbäddad i en JavaScript-fil.
 
 Alla originalfält sparas dessutom i SQLite som rå JSON även om de ännu inte har
-en egen normaliserad kolumn. Importen skapar automatiskt historiska loppår och
-väljer 90-kilometersbanan före 2023 och 92-kilometersbanan från 2023.
+en egen normaliserad kolumn. Importen accepterar endast redan konfigurerade
+utgåvor och använder deras låsta `CourseVersion`; okända år stoppas före databasändring.
 
 Kör helt online:
 
@@ -161,17 +162,13 @@ Resultattjänsten kan ändra HTML, villkor eller åtkomstregler. Använd låg
 anropshastighet, återanvänd cache och be helst Vasaloppet om en officiell export innan
 en fullständig offentlig spegling publiceras.
 
-## Lägg till ett nytt år
+## Registrera en framtida utgåva
 
-Öppna:
-
-```text
-Actions → Lägg till ett nytt loppår → Run workflow
-```
-
-Ange år, datum, eventkod, resultatsidans årssökväg och officiell distans. För år från
-2023 används banversionen `post2023`; äldre lopp ska anges som `pre2023` i
-`config/races.json` om de läggs in manuellt.
+`tools/add_race.py` registrerar endast en explicit, planerad `RaceEdition`.
+Loppnyckel, familj, datum, `CourseVersion` och tävlingsprofil måste anges; verktyget
+gissar inget från år eller distans. En planerad utgåva saknar källbindning och läggs
+inte i databasen. Lägg därefter till en granskad `SourceBinding` och ändra
+`data_status` till `available` i en separat ändring innan import aktiveras.
 
 ## Banversioner
 
