@@ -175,7 +175,7 @@ const u7History=await evaluate(`(() => {
   const verified=window.HistoryIntelligence?.verifiedHistories(data,'uv90')||[];
   let candidate=null,model=null;
   for(const group of verified){
-    const result=group.rows.at(-1);
+    const result=[...group.rows].reverse().find(row=>window.HistoryIntelligence.isFinished(data,row))||group.rows.at(-1);
     const current=window.HistoryIntelligence.personHistory(data,result.id);
     if(!candidate||current.comparable_series.length>model.comparable_series.length){candidate=result;model=current}
     if(current.comparable_series.length>1)break;
@@ -195,7 +195,7 @@ const u7History=await evaluate(`(() => {
     candidateId:candidate?.id||null,
     verifiedPerson:model?.verified_person===true,
     expectedSeries:model?.comparable_series?.length||0,
-    expectedSeparate:model?.incomparable_to_focus_count||0,
+    expectedSeparate:model?model.rows.filter(item=>!new Set((model.focus_series?.rows||[]).map(row=>String(row.id))).has(String(item.result.id))).length:0,
     seriesRendered:document.querySelectorAll('#runnerHistory .history-series').length,
     separateRendered:document.querySelectorAll('#runnerHistory .history-year.separate-series').length,
     historyNote:(document.querySelector('#runnerHistory .history-identity-note')?.textContent||'').trim(),
