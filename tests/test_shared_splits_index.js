@@ -79,6 +79,7 @@ for(const html of [indexHtml,mapHtml]){
   assert.ok(html.includes('assets/data-adapter.js'),'båda applikationsytorna ska ladda U4 DataAdapter');
   assert.ok(html.includes('assets/race-ui.js'),'båda applikationsytorna ska ladda U4 RaceUI');
   assert.ok(html.includes('assets/map-engine.js'),'båda applikationsytorna ska ladda U4 MapEngine');
+  assert.ok(html.includes('assets/playback.js'),'båda applikationsytorna ska ladda U4 Playback');
   assert.ok(html.includes('assets/app-state.js'),'båda applikationsytorna ska ladda U4 AppState');
   assert.ok(html.includes('assets/charts.js'),'båda applikationsytorna ska ladda U4 Charts');
   assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
@@ -89,6 +90,9 @@ assert.ok(indexHtml.indexOf('assets/data-loader.js')<indexHtml.indexOf('assets/a
 assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/data-adapter.js'),'indexmodulen ska laddas före DataAdapter');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/race-ui.js'),'loppkontrakten ska laddas före RaceUI');
 assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/map-engine.js'),'RaceUI ska laddas före MapEngine');
+assert.ok(indexHtml.indexOf('assets/map-engine.js')<indexHtml.indexOf('assets/playback.js'),'MapEngine ska laddas före Playback');
+assert.ok(indexHtml.indexOf('assets/playback.js')<indexHtml.indexOf('assets/runner-replay.js'),'Playback ska laddas före Replay');
+assert.ok(indexHtml.indexOf('assets/playback.js')<indexHtml.indexOf('assets/app-state.js'),'Playback ska laddas före AppState');
 assert.ok(indexHtml.indexOf('assets/map-engine.js')<indexHtml.indexOf('assets/runner-replay.js'),'MapEngine ska laddas före Replay');
 assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/app.js'),'RaceUI ska laddas före huvudappen');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/data-adapter.js'),'loppkontrakten ska laddas före DataAdapter');
@@ -102,6 +106,9 @@ assert.ok(mapHtml.indexOf('assets/data-loader.js')<mapHtml.indexOf('assets/map.j
 assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans indexmodul ska laddas före DataAdapter');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/race-ui.js'),'kartans loppkontrakt ska laddas före RaceUI');
 assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map-engine.js'),'Kartans RaceUI ska laddas före MapEngine');
+assert.ok(mapHtml.indexOf('assets/map-engine.js')<mapHtml.indexOf('assets/playback.js'),'Kartans MapEngine ska laddas före Playback');
+assert.ok(mapHtml.indexOf('assets/playback.js')<mapHtml.indexOf('assets/app-state.js'),'Kartans Playback ska laddas före AppState');
+assert.ok(mapHtml.indexOf('assets/playback.js')<mapHtml.indexOf('assets/map.js'),'Playback ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/map-engine.js')<mapHtml.indexOf('assets/map.js'),'MapEngine ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map.js'),'RaceUI ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans loppkontrakt ska laddas före DataAdapter');
@@ -153,3 +160,9 @@ assert.ok(mapSource.includes("require('./map-engine.js')")&&mapSource.includes('
 assert.ok(!mapSource.includes('function routePosition(route,distance)'),'kartduellen får inte återinföra lokal routePosition');
 assert.ok(!replaySourceU4.includes('function pointAtDistance(points,distance)'),'Replay får inte återinföra lokal pointAtDistance');
 assert.ok(mapEngineSource.includes('terrainAtDistance')&&mapEngineSource.includes('routeSlice'),'MapEngine ska äga rutt- och terränggeometri');
+
+
+const playbackSourceU4=fs.readFileSync(path.join(root,'docs/assets/playback.js'),'utf8');
+assert.ok(mapSource.includes("require('./playback.js')")&&mapSource.includes('mapPlayback.rateFor'),'kartduellen ska använda U4 Playback');
+assert.ok(replaySourceU4.includes("require('./playback.js')")&&replaySourceU4.includes('playback.distanceStep'),'Replay ska använda samma U4 Playback');
+assert.ok(playbackSourceU4.includes('DURATIONS')&&playbackSourceU4.includes('DEFAULT_DURATION=120'),'Playback ska äga tillåtna tidslägen och standard');
