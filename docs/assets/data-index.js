@@ -25,6 +25,18 @@
     return index;
   }
 
+  function refreshSplitsByResult(dataset){
+    if(!dataset||typeof dataset!=='object')return new Map();
+    const index=ensureSplitsByResult(dataset);
+    index.clear();
+    for(const split of Array.isArray(dataset.splits)?dataset.splits:[]){
+      let rows=index.get(split.result_id);
+      if(!rows){rows=[];index.set(split.result_id,rows)}
+      rows.push(split);
+    }
+    return index;
+  }
+
   function splitsForResult(dataset,resultId){
     const index=ensureSplitsByResult(dataset);
     return index.get(resultId)||index.get(Number(resultId))||EMPTY_SPLITS;
@@ -43,5 +55,5 @@
     return out;
   }
 
-  return {buildSplitsByResult,ensureSplitsByResult,splitsForResult,splitsForResults,EMPTY_SPLITS};
+  return {buildSplitsByResult,ensureSplitsByResult,refreshSplitsByResult,splitsForResult,splitsForResults,EMPTY_SPLITS};
 });
