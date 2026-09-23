@@ -62,35 +62,32 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
     edition_sizes: dict[str, int] = {}
 
     for family, spec in catalog["families"].items():
-        if any(key in spec for key in ("json", "js", "json_bytes", "js_bytes")):
-            raise RuntimeError(f"Legacy full-family transport still present for {family}")
-        core_spec = spec.get("core") or {}
-        split_spec = spec.get("split_data") or {}
+        core_spec = spec.get("core")
+        split_spec = spec.get("split_data")
+        if not core_spec or not split_spec:
+            raise RuntimeError(f"Family {family} must define core and split_data modules")
+
         core_path = output_dir / Path(core_spec["json"]).name
         core_js_path = output_dir / Path(core_spec["js"]).name
         split_path = output_dir / Path(split_spec["json"]).name
         split_js_path = output_dir / Path(split_spec["js"]).name
-        if not all(path.exists() for path in (core_path, core_js_path, split_path, split_js_path)):
-            raise RuntimeError(f"Missing progressive family chunk files for {family}")
+        for path in (core_path, core_js_path, split_path, split_js_path):
+            if not path.exists():
+                raise RuntimeError(f"Missing family module for {family}: {path.name}")
 
         core = load_json(core_path)
         split_data = load_json(split_path)
-        if core.get("meta", {}).get("data_scope", {}) != {
-            "kind": "race-family-core",
-            "race_family": family,
-        }:
-            raise RuntimeError(f"Wrong core data scope for {family}")
-        if split_data.get("meta", {}).get("data_scope", {}) != {
-            "kind": "race-family-splits",
-            "race_family": family,
-        }:
-            raise RuntimeError(f"Wrong split data scope for {family}")
+
+        core_scope = core.get("meta", {}).get("data_scope", {})
+        split_scope = split_data.get("meta", {}).get("data_scope", {})
+        if core_scope != {"kind": "race-family-core", "race_family": family}:
+            raise RuntimeError(f"Wrong core scope for {family}: {core_scope!r}")
+        if split_scope != {"kind": "race-family-splits", "race_family": family}:
+            raise RuntimeError(f"Wrong split scope for {family}: {split_scope!r}")
         if core.get("splits") != []:
-            raise RuntimeError(f"Family core unexpectedly contains splits for {family}")
-        if any(split_data.get(key) for key in ("races", "checkpoints", "results", "sources")):
-            raise RuntimeError(f"Family split module contains duplicated core rows for {family}")
-        if split_data.get("stats") != {}:
-            raise RuntimeError(f"Family split module contains duplicated stats for {family}")
+            raise RuntimeError(f"Family core {family} must not contain splits")
+        if split_data.get("races") or split_data.get("checkpoints") or split_data.get("results"):
+            raise RuntimeError(f"Family split module {family} must contain split rows only")
 
         for race in core["races"]:
             expected = race_family_by_key.get(race["race_key"])
@@ -125,14 +122,24 @@ def validate(source: dict[str, Any], output_dir: Path, config: dict[str, Any]) -
             + ";\n"
         )
         if core_js_path.read_text(encoding="utf-8") != expected_core_js:
-            raise RuntimeError(f"Core JSON/JavaScript payload mismatch for {family}")
+            raise RuntimeError(f"JSON/JavaScript core payload mismatch for {family}")
         if split_js_path.read_text(encoding="utf-8") != expected_split_js:
-            raise RuntimeError(f"Split JSON/JavaScript payload mismatch for {family}")
+            raise RuntimeError(f"JSON/JavaScript split payload mismatch for {family}")
 
         if spec["results"] != len(core["results"]) or spec["splits"] != len(split_data["splits"]):
             raise RuntimeError(f"Catalog count mismatch for {family}")
+
         family_core_sizes[family] = core_path.stat().st_size
         family_split_sizes[family] = split_path.stat().st_size
+
+    if merged_races != source_races:
+        raise RuntimeError("Family core race payload differs from monolith")
+    if merged_checkpoints != source_checkpoints:
+        raise RuntimeError("Family core checkpoint payload differs from monolith")
+    if merged_results != source_results:
+        raise RuntimeError("Family core result payload differs from monolith")
+    if merged_splits != source_splits:
+        raise RuntimeError("Family split payload differs from monolith")
 
     if set(catalog.get("editions", {})) != {
         str(int(race["id"])) for race in source["races"]
