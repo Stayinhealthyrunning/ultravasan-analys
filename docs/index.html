@@ -64,7 +64,7 @@
 <div class="runner-suggestions" hidden="" id="runnerSuggestions"></div>
 </div>
 <div class="selected-runners" id="selectedCompareRunners"><span class="selection-empty">Inga löpare valda ännu</span></div><p class="course-comparison-warning" hidden="" id="courseComparisonWarning">Från 2023 förändrades bansträckningen så exakta jämförelser är inte möjliga.</p>
-<button class="compare-map-button" disabled="" id="compareMapButton">Jämför på karta <span>→</span></button>
+<div class="compare-actions"><button class="secondary compare-h2h-button" disabled="" id="compareH2HButton">Head-to-head</button><button class="compare-map-button" disabled="" id="compareMapButton">Jämför på karta <span>→</span></button></div>
 </div>
 </section><section class="analysis-scope field-scope panel" id="overview"><div><p class="eyebrow">LOPP- OCH FÄLTSTATISTIK</p><h2>Hela loppet och det valda startfältet</h2><p>Filtren nedan påverkar alla efterföljande diagram, klassanalyser, klubbanalyser och resultatlistan. De påverkas inte av löparna som valts till kartduellen.</p></div><span class="scope-chip field">Hela urvalet</span></section><section aria-label="Filter" class="toolbar panel">
 <label>År<select id="yearFilter"></select></label>
@@ -258,6 +258,10 @@
 <dialog id="runnerDialog">
 <button aria-label="Stäng" class="dialog-close">×</button>
 <div id="runnerDetail"></div>
+</dialog>
+<dialog id="headToHeadDialog" class="head-to-head-dialog">
+<button aria-label="Stäng jämförelsen" class="dialog-close">×</button>
+<div id="headToHeadDetail"></div>
 </dialog>
 <dialog class="hall-map-dialog" id="hallMapDialog">
 <button aria-label="Stäng kartan" class="dialog-close">×</button>
