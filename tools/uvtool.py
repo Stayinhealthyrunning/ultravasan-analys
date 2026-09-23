@@ -1225,6 +1225,20 @@ def assert_no_same_race_identity_collisions(conn: sqlite3.Connection) -> None:
         raise IdentityCollisionError(format_identity_collision_error(collisions))
 
 
+def resolve_modular_output_dir(output: Path, requested: Path | None) -> Path | None:
+    """Keep modular production data in sync once U3 has been activated."""
+    if requested is not None:
+        return requested
+    catalog_path = output.parent / "ultravasan-data-catalog.json"
+    if not catalog_path.exists():
+        return None
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return None
+    return output.parent if catalog.get("mode") == "modular" else None
+
+
 def write_modular_web_data(
     payload: dict[str, Any],
     output_dir: Path,
@@ -1511,8 +1525,9 @@ def export_web(args: argparse.Namespace) -> None:
     manifest = {"generated_at": payload["meta"]["generated_at"], "races": len(races), "results": len(results), "splits": len(splits), "bytes": args.output.stat().st_size}
     (args.output.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    if args.modular_dir:
-        modular_catalog = write_modular_web_data(payload, args.modular_dir, load_config(args.config))
+    modular_dir = resolve_modular_output_dir(args.output, args.modular_dir)
+    if modular_dir:
+        modular_catalog = write_modular_web_data(payload, modular_dir, load_config(args.config))
         manifest["modular"] = {
             "catalog": "ultravasan-data-catalog.json",
             "families": {
