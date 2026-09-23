@@ -107,6 +107,14 @@ korrekt knappsemantik i loppväxlaren, tydliga fokusmarkeringar och reduced-moti
 stöd. Primära användartexter är konsekvent svenska utan att tekniska kontrakts-
 identifierare ändras.
 
+U9:s slutgranskning och release-freeze beskrivs i
+[`reports/U9_RELEASE_FREEZE.md`](reports/U9_RELEASE_FREEZE.md).
+`tools/u9_release_audit.py` fryser U2:s skyddade data, kräver U1–U8:s
+obligatoriska artefakter, bevakar U3:s storleksbudgetar och ingår i CI. Den
+verkliga Chromium-grinden verifierar dessutom 390×844, 900×900 och 1536×1024
+utan dokumentöverflöde. U9 är en releasegrind och ska inte introducera nya
+analysfunktioner.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
