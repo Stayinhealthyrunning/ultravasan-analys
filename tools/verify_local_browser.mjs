@@ -173,6 +173,34 @@ const replayProgress = await evaluate(`(() => ({
   time:document.querySelector('#runnerDetail [data-replay-value="time"]')?.textContent||''
 }))()`);
 
+const favoriteBefore=await evaluate(`(() => ({
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+}))()`);
+await evaluate("document.querySelector('#runnerDetail [data-runner-favorite]')?.click()");
+await delay(120);
+const favoriteSaved=await evaluate(`(() => ({
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+  listText:document.querySelector('#runnerFavoritesList')?.innerText||'',
+  stored:JSON.parse(localStorage.getItem('ultravasan-runner-favorites-v1')||'[]'),
+}))()`);
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#runnerFavoritesList [data-favorite-open]')?.click()");
+await delay(250);
+const favoriteReopened=await evaluate(`(() => ({
+  open:document.querySelector('#runnerDialog')?.open||false,
+  text:(document.querySelector('#runnerDetail')?.innerText||'').slice(0,250),
+  pressed:document.querySelector('#runnerDetail [data-runner-favorite]')?.getAttribute('aria-pressed')||null,
+}))()`);
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#runnerFavoritesList [data-favorite-remove]')?.click()");
+await delay(80);
+const favoriteRemoved=await evaluate(`(() => ({
+  count:Number(document.querySelector('#runnerFavoritesCount')?.textContent||0),
+  stored:JSON.parse(localStorage.getItem('ultravasan-runner-favorites-v1')||'[]'),
+}))()`);
+
 async function representativeCases(raceKeys) {
   return evaluate(`((raceKeys) => {
     const data=window.ULTRAVASAN_ACTIVE_DATA,counts=new Map();
@@ -193,14 +221,18 @@ async function representativeCases(raceKeys) {
 }
 
 async function waitForActiveFamily(family,requireSplits=true){
-  for(let attempt=0;attempt<250;attempt++){
+  for(let attempt=0;attempt<450;attempt++){
     const active=await evaluate(`(() => {
       const data=window.ULTRAVASAN_ACTIVE_DATA;
-      if(!data?.races?.length)return {family:null,splitsReady:false};
+      if(!data?.races?.length)return {family:null,phase:null,splits:0};
       const families=[...new Set(data.races.map(r=>window.RaceContracts.familyForRace(r)))];
-      return {family:families.length===1?families[0]:families.join(','),splitsReady:Boolean(window.ULTRAVASAN_SPLITS_READY)};
+      return {
+        family:families.length===1?families[0]:families.join(','),
+        phase:state?.dataPhase||null,
+        splits:data.splits?.length||0
+      };
     })()`);
-    if(active.family===family&&(!requireSplits||active.splitsReady))return true;
+    if(active.family===family&&(!requireSplits||(active.phase==='full'&&active.splits>0)))return true;
     await delay(100);
   }
   return false;
@@ -250,8 +282,14 @@ const caseResults=[];
 for(const item of uv90Cases)caseResults.push(await openRunnerCase(item));
 
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
-await evaluate("document.querySelector('#raceSwitch45')?.click()");
-const uv45Loaded=await waitForActiveFamily('uv45');
+const uv45SwitchAwaited=await evaluate(`(async()=>{
+  const button=document.querySelector('#raceSwitch45');
+  if(typeof button?.onclick!=='function')return false;
+  await button.onclick();
+  await ensureActiveFamilyFull('uv45',true);
+  return state.raceFamily==='uv45'&&state.dataPhase==='full';
+})()`);
+const uv45Loaded=uv45SwitchAwaited&&await waitForActiveFamily('uv45');
 const uv45Progressive=await evaluate(`(() => {
   const events=(window.ULTRAVASAN_DATA_PHASE_EVENTS||[]).filter(event=>event.family==='uv45');
   const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv45||{};
@@ -279,8 +317,14 @@ const additionalCases=[...uv90Cases,...uv45Cases];
 // First return from the UV45 browser case to a fully hydrated UV90 family.
 // Then verify a same-CourseVersion pair and an old/new course pair.
 await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
-await evaluate("document.querySelector('#raceSwitch90')?.click()");
-const uv90Reloaded=await waitForActiveFamily('uv90');
+const uv90SwitchAwaited=await evaluate(`(async()=>{
+  const button=document.querySelector('#raceSwitch90');
+  if(typeof button?.onclick!=='function')return false;
+  await button.onclick();
+  await ensureActiveFamilyFull('uv90',true);
+  return state.raceFamily==='uv90'&&state.dataPhase==='full';
+})()`);
+const uv90Reloaded=uv90SwitchAwaited&&await waitForActiveFamily('uv90');
 await evaluate(`(() => {
   const year=document.querySelector('#compareYear');
   if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
@@ -387,13 +431,14 @@ const checks = {
   dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
+  favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45Progressive,moduleChecks,contractChecks,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

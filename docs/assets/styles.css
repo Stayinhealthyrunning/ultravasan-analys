@@ -586,3 +586,36 @@ html,body{max-width:100%;overflow-x:hidden}
   .head-to-head-shell{padding:24px 14px}
   .h2h-segment-list{grid-template-columns:1fr}
 }
+
+
+/* ===== U5 Runner Analysis 2.0: local favorites ===== */
+.runner-title{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.runner-title-copy{min-width:0}
+.runner-favorite-toggle{flex:0 0 auto;margin-right:42px;padding:8px 11px;border:1px solid var(--line);border-radius:99px;background:#f6f8f3;color:var(--forest);font-size:.68rem;font-weight:850}
+.runner-favorite-toggle:hover{filter:none;background:#edf3ea}
+.runner-favorite-toggle.active{background:#fff1b8;border-color:#e2c85a;color:#765b00}
+.runner-favorite-toggle span{font-size:.9rem;line-height:1}
+.runner-favorites-panel{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.runner-favorites-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.runner-favorites-head>div{display:grid;gap:2px}
+.runner-favorites-head strong{font-size:.72rem;color:var(--forest)}
+.runner-favorites-head small{font-size:.59rem;color:var(--muted)}
+.runner-favorites-head>span{display:grid;place-items:center;min-width:24px;height:24px;padding:0 7px;border-radius:99px;background:#eef3ec;color:var(--forest);font-size:.62rem;font-weight:850}
+.runner-favorites-list{display:grid;gap:6px;max-height:186px;overflow-y:auto;overscroll-behavior:contain}
+.runner-favorites-empty{padding:9px 10px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:.65rem}
+.runner-favorite-item{display:grid;grid-template-columns:minmax(0,1fr) 32px;gap:5px;align-items:stretch}
+.runner-favorite-open{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:8px 10px;border-radius:10px;background:#f7f9f4;color:var(--ink);text-align:left}
+.runner-favorite-open:hover{filter:none;background:#edf3ea}
+.runner-favorite-open span{min-width:0}
+.runner-favorite-open strong,.runner-favorite-open small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.runner-favorite-open strong{font-size:.67rem}
+.runner-favorite-open small{margin-top:2px;color:var(--muted);font-size:.57rem}
+.runner-favorite-open em{flex:0 0 auto;color:var(--green);font-size:.57rem;font-style:normal;font-weight:800}
+.runner-favorite-remove{padding:0;border-radius:9px;background:#f0f2ee;color:var(--muted);font-size:1rem}
+.runner-favorite-remove:hover{filter:none;background:#ece3df;color:#874a3c}
+
+@media(max-width:720px){
+  .runner-title{display:grid;grid-template-columns:1fr}
+  .runner-favorite-toggle{justify-self:start;margin-right:0}
+  .runner-favorites-list{max-height:150px}
+}

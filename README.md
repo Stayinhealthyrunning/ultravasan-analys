@@ -74,6 +74,13 @@ testbara kontrakt som delas av huvudanalysen, RunnerReplay och kartduellen.
 Leaflet 1.9.4 är vendrad lokalt med verifierad SRI och licens, medan kartans
 förenklade banvy finns kvar som fallback.
 
+U5:s individuella Löparanalys 2.0 beskrivs i
+[`reports/U5_RUNNER_ANALYSIS.md`](reports/U5_RUNNER_ANALYSIS.md).
+RunnerAnalysis bygger en verifierbar Journey ovanpå officiella checkpoints och
+splits, flerårshistorik kräver U2-verifierad identitet och Head-to-head respekterar
+CourseVersion-kontrakten. Favoriter sparas endast lokalt som referenser till
+specifika publicerade resultat och skapar ingen egen personmatchning.
+
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
