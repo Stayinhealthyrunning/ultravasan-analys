@@ -154,7 +154,7 @@ async function load(){
     $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
   }
 }
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase!=='full')requestAnimationFrame(()=>{if(state.dataPhase!=='full')startFamilyCompletion(state.raceFamily)})}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=async()=>{const family=state.raceFamily,target=Number(year.value);if(state.dataPhase==='active'&&!state.data.results.some(r=>r.race_id===target)){try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för årbyte',error);return}if(state.raceFamily!==family)return}state.raceId=target;state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase!=='full')requestAnimationFrame(()=>{if(state.dataPhase!=='full')startFamilyCompletion(state.raceFamily)})}
 let speedUnitControlsReady=false;
 function syncSpeedUnitControls(unit=speedUnit()){
   const select=$('#speedUnitFilter');if(select)select.value=unit;
@@ -420,7 +420,12 @@ function setupMapCompare(rebuild=false){
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
-function renderCompareSuggestions(){
+async function renderCompareSuggestions(){
+  const family=state.raceFamily;
+  if(state.dataPhase==='active'){
+    try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för kartduell',error);return}
+    if(state.raceFamily!==family)return;
+  }
   const q=$('#compareRunnerSearch').value.trim().toLowerCase(),box=$('#runnerSuggestions');
   if(!q){box.hidden=true;return}
   const selectedIds=new Set(compareState.selected.map(r=>r.id));
@@ -450,7 +455,12 @@ function setupMainRunnerSearch(rebuild=false){
   input.dataset.suggestionsReady='1';
   populateYears();
   const rowsForYear=()=>year.value==='all'?familyResults():state.data.results.filter(r=>r.race_id===Number(year.value));
-  const show=()=>{
+  const show=async()=>{
+    const family=state.raceFamily;
+    if(state.dataPhase==='active'){
+      try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för löparsökning',error);return}
+      if(state.raceFamily!==family)return;
+    }
     const q=input.value.trim().toLowerCase();
     if(q.length<1){box.hidden=true;box.innerHTML='';return}
     const rows=rowsForYear().filter(r=>`${r.name_as_published||''} ${r.club||''} ${r.bib||''}`.toLowerCase().includes(q));
