@@ -78,6 +78,7 @@ for(const html of [indexHtml,mapHtml]){
   assert.ok(html.includes('assets/data-index.js'),'båda applikationsytorna ska ladda samma indexmodul');
   assert.ok(html.includes('assets/data-adapter.js'),'båda applikationsytorna ska ladda U4 DataAdapter');
   assert.ok(html.includes('assets/race-ui.js'),'båda applikationsytorna ska ladda U4 RaceUI');
+  assert.ok(html.includes('assets/map-engine.js'),'båda applikationsytorna ska ladda U4 MapEngine');
   assert.ok(html.includes('assets/app-state.js'),'båda applikationsytorna ska ladda U4 AppState');
   assert.ok(html.includes('assets/charts.js'),'båda applikationsytorna ska ladda U4 Charts');
   assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
@@ -87,6 +88,8 @@ assert.ok(indexHtml.indexOf('data/ultravasan-data-catalog.js')<indexHtml.indexOf
 assert.ok(indexHtml.indexOf('assets/data-loader.js')<indexHtml.indexOf('assets/app.js'),'DataLoader ska laddas före appen');
 assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/data-adapter.js'),'indexmodulen ska laddas före DataAdapter');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/race-ui.js'),'loppkontrakten ska laddas före RaceUI');
+assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/map-engine.js'),'RaceUI ska laddas före MapEngine');
+assert.ok(indexHtml.indexOf('assets/map-engine.js')<indexHtml.indexOf('assets/runner-replay.js'),'MapEngine ska laddas före Replay');
 assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/app.js'),'RaceUI ska laddas före huvudappen');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/data-adapter.js'),'loppkontrakten ska laddas före DataAdapter');
 assert.ok(indexHtml.indexOf('assets/data-adapter.js')<indexHtml.indexOf('assets/app-state.js'),'DataAdapter ska laddas före AppState');
@@ -98,6 +101,8 @@ assert.ok(mapHtml.indexOf('data/ultravasan-data-catalog.js')<mapHtml.indexOf('as
 assert.ok(mapHtml.indexOf('assets/data-loader.js')<mapHtml.indexOf('assets/map.js'),'kartvyn ska läsa DataLoader före kartduellen');
 assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans indexmodul ska laddas före DataAdapter');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/race-ui.js'),'kartans loppkontrakt ska laddas före RaceUI');
+assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map-engine.js'),'Kartans RaceUI ska laddas före MapEngine');
+assert.ok(mapHtml.indexOf('assets/map-engine.js')<mapHtml.indexOf('assets/map.js'),'MapEngine ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map.js'),'RaceUI ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans loppkontrakt ska laddas före DataAdapter');
 assert.ok(mapHtml.indexOf('assets/data-adapter.js')<mapHtml.indexOf('assets/app-state.js'),'Kartans DataAdapter ska laddas före AppState');
@@ -139,3 +144,12 @@ const chartsSource=fs.readFileSync(path.join(root,'docs/assets/charts.js'),'utf8
 assert.ok(appSource.includes('window.UltravasanCharts.median')&&appSource.includes('window.UltravasanCharts.quantile'),'huvudappen ska använda U4 Charts');
 assert.ok(mapSource.includes('window.UltravasanCharts.median'),'kartappen ska använda samma Charts-kärna');
 assert.ok(chartsSource.includes('fixedFinishTimeBins')&&chartsSource.includes('barGeometry'),'Charts ska äga gemensam statistik och histogramgeometri');
+
+
+const replaySourceU4=fs.readFileSync(path.join(root,'docs/assets/runner-replay.js'),'utf8');
+const mapEngineSource=fs.readFileSync(path.join(root,'docs/assets/map-engine.js'),'utf8');
+assert.ok(replaySourceU4.includes("require('./map-engine.js')")&&replaySourceU4.includes('mapEngine.pointAtDistance'),'Replay ska använda U4 MapEngine');
+assert.ok(mapSource.includes("require('./map-engine.js')")&&mapSource.includes('mapEngine.routePosition'),'kartduellen ska använda samma U4 MapEngine');
+assert.ok(!mapSource.includes('function routePosition(route,distance)'),'kartduellen får inte återinföra lokal routePosition');
+assert.ok(!replaySourceU4.includes('function pointAtDistance(points,distance)'),'Replay får inte återinföra lokal pointAtDistance');
+assert.ok(mapEngineSource.includes('terrainAtDistance')&&mapEngineSource.includes('routeSlice'),'MapEngine ska äga rutt- och terränggeometri');
