@@ -124,53 +124,61 @@ def build_snapshot(
     web_js: Path = DEFAULT_WEB_JS,
     manifest: Path = DEFAULT_MANIFEST,
 ) -> dict[str, Any]:
+    # Never hash the SQLite file while a connection is still open. A connection
+    # close may checkpoint SQLite bookkeeping and thereby change the physical
+    # file hash even though every logical row is unchanged.
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     try:
         migrated = u2_identity_migration.migrated_state(conn)
         protected = u2_identity_migration.protected_state(conn)
-        web = json.loads(web_json.read_text(encoding="utf-8"))
-        web_person_keys = [
-            row["person_key"] for row in web["results"] if row.get("person_key")
-        ]
-        return {
-            "schema_version": 1,
-            "phase": "U2",
-            "identity_contract": "u2-person-key-v1",
-            "files": {
-                "database": file_identity(db),
-                "web_json": file_identity(web_json),
-                "web_javascript": file_identity(web_js),
-                "manifest": file_identity(manifest),
-            },
-            "totals": {
-                "race_editions": conn.execute("SELECT COUNT(*) FROM races").fetchone()[0],
-                "results": conn.execute("SELECT COUNT(*) FROM results").fetchone()[0],
-                "splits": conn.execute("SELECT COUNT(*) FROM splits").fetchone()[0],
-                "athletes": conn.execute("SELECT COUNT(*) FROM athletes").fetchone()[0],
-                "external_ids": conn.execute("SELECT COUNT(*) FROM athlete_external_ids").fetchone()[0],
-                "person_keys": conn.execute("SELECT COUNT(*) FROM athletes WHERE person_key IS NOT NULL").fetchone()[0],
-                "identity_evidence": conn.execute("SELECT COUNT(*) FROM identity_evidence").fetchone()[0],
-                "pending_review_candidates": conn.execute(
-                    "SELECT COUNT(*) FROM athlete_match_candidates WHERE decision='pending-review'"
-                ).fetchone()[0],
-            },
-            "source_results": source_distribution(conn),
-            "identity_state": migrated,
-            "identity_evidence_distribution": evidence_distribution(conn),
-            "protected_payload": protected,
-            "checks": database_checks(conn),
-            "web_export": {
-                "identity_contract": web.get("meta", {}).get("identity_contract"),
-                "results": len(web.get("results", [])),
-                "splits": len(web.get("splits", [])),
-                "person_key_rows": len(web_person_keys),
-                "distinct_person_keys": len(set(web_person_keys)),
-                "person_key_prefixes": dict(sorted(Counter(key[:4] for key in web_person_keys).items())),
-            },
+        totals = {
+            "race_editions": conn.execute("SELECT COUNT(*) FROM races").fetchone()[0],
+            "results": conn.execute("SELECT COUNT(*) FROM results").fetchone()[0],
+            "splits": conn.execute("SELECT COUNT(*) FROM splits").fetchone()[0],
+            "athletes": conn.execute("SELECT COUNT(*) FROM athletes").fetchone()[0],
+            "external_ids": conn.execute("SELECT COUNT(*) FROM athlete_external_ids").fetchone()[0],
+            "person_keys": conn.execute("SELECT COUNT(*) FROM athletes WHERE person_key IS NOT NULL").fetchone()[0],
+            "identity_evidence": conn.execute("SELECT COUNT(*) FROM identity_evidence").fetchone()[0],
+            "pending_review_candidates": conn.execute(
+                "SELECT COUNT(*) FROM athlete_match_candidates WHERE decision='pending-review'"
+            ).fetchone()[0],
         }
+        sources = source_distribution(conn)
+        evidence = evidence_distribution(conn)
+        checks = database_checks(conn)
     finally:
         conn.close()
+
+    web = json.loads(web_json.read_text(encoding="utf-8"))
+    web_person_keys = [
+        row["person_key"] for row in web["results"] if row.get("person_key")
+    ]
+    return {
+        "schema_version": 1,
+        "phase": "U2",
+        "identity_contract": "u2-person-key-v1",
+        "files": {
+            "database": file_identity(db),
+            "web_json": file_identity(web_json),
+            "web_javascript": file_identity(web_js),
+            "manifest": file_identity(manifest),
+        },
+        "totals": totals,
+        "source_results": sources,
+        "identity_state": migrated,
+        "identity_evidence_distribution": evidence,
+        "protected_payload": protected,
+        "checks": checks,
+        "web_export": {
+            "identity_contract": web.get("meta", {}).get("identity_contract"),
+            "results": len(web.get("results", [])),
+            "splits": len(web.get("splits", [])),
+            "person_key_rows": len(web_person_keys),
+            "distinct_person_keys": len(set(web_person_keys)),
+            "person_key_prefixes": dict(sorted(Counter(key[:4] for key in web_person_keys).items())),
+        },
+    }
 
 
 def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
