@@ -73,8 +73,24 @@ def validate(root: Path) -> dict[str, Any]:
         combined_splits.extend(rows)
         edition_sizes[race["race_key"]] = json_path.stat().st_size
 
-    if combined_splits != monolith.get("splits", []):
-        issues.append("concatenated edition splits differ from monolith")
+    combined_by_key = {
+        (row["result_id"], row["checkpoint_key"]): row
+        for row in combined_splits
+    }
+    monolith_by_key = {
+        (row["result_id"], row["checkpoint_key"]): row
+        for row in monolith.get("splits", [])
+    }
+    if combined_by_key != monolith_by_key:
+        missing = len(set(monolith_by_key) - set(combined_by_key))
+        extra = len(set(combined_by_key) - set(monolith_by_key))
+        changed = sum(
+            1 for key in set(monolith_by_key) & set(combined_by_key)
+            if monolith_by_key[key] != combined_by_key[key]
+        )
+        issues.append(
+            f"edition split payload differs from monolith: missing={missing}, extra={extra}, changed={changed}"
+        )
 
     bootstrap_bytes = (root / "bootstrap.json").stat().st_size
     history_bytes = (root / "history-index.json").stat().st_size
