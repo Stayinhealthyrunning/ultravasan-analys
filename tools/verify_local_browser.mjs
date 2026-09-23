@@ -54,7 +54,19 @@ for (let attempt = 0; attempt < 100; attempt++) {
   }
   await delay(100);
 }
-if (!ready) throw new Error("Local application did not finish loading");
+if (!ready) {
+  const diagnostic=await evaluate(`(() => ({
+    href:location.href,
+    readyState:document.readyState,
+    loadingText:document.querySelector('#loading')?.innerText||'',
+    loadingClass:document.querySelector('#loading')?.className||'',
+    hasData:Boolean(window.ULTRAVASAN_DATA),
+    hasBootstrap:Boolean(window.ULTRAVASAN_U3_BOOTSTRAP),
+    loaderStatus:window.UltravasanDataLoader?.status?.()||null,
+    bodyText:(document.body?.innerText||'').slice(0,1200),
+  }))()`).catch(error=>({evaluateError:String(error)}));
+  throw new Error("Local application did not finish loading: "+JSON.stringify({diagnostic,browserErrors,networkErrors}));
+}
 
 const lazyInitial = await evaluate(`(() => window.UltravasanDataLoader?.status?.() || null)()`);
 await evaluate("window.ensureUltravasanHistory?.({rerender:false})");
