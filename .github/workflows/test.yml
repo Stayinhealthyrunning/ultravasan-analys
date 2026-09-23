@@ -36,6 +36,9 @@ jobs:
           CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python tools/race_contracts.py --check --base-ref "$CONTRACT_BASE_REF"
 
+      - name: Audita U2 legacy-identiteter read-only
+        run: python tools/u2_identity_audit.py --expect-u0-audit --report "$RUNNER_TEMP/u2-identity-audit.json"
+
       - name: Kör Python-tester
         run: python -m pytest -q
 
