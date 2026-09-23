@@ -1,10 +1,11 @@
 'use strict';
 (function(root,factory){
   const contracts=typeof module==='object'&&module.exports?require('./race-contracts.js'):root.RaceContracts;
-  const api=factory(contracts);
+  const mapEngine=typeof module==='object'&&module.exports?require('./map-engine.js'):root.UltravasanMapEngine;
+  const api=factory(contracts,mapEngine);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.RunnerReplay=api;
-})(typeof window!=='undefined'?window:globalThis,function(contracts){
+})(typeof window!=='undefined'?window:globalThis,function(contracts,mapEngine){
   const SVG_W=920,SVG_H=430,MAP_PAD=42;
   const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.35;
   const MIN_REFERENCE_SIZE=5,MEDAL_MIN_SIZE=20,MEDAL_SIDE_SIZE=40;
@@ -39,25 +40,10 @@
 
   const routeForRace=(registry,race)=>contracts.supports(race,'replay')?contracts.routeForRace(registry,race):null;
 
-  function pointAtDistance(points,distance){
-    if(!Array.isArray(points)||!points.length)return null;
-    const d=clamp(distance,0,Number(points.at(-1)?.[2]||0));
-    let lo=0,hi=points.length-1;
-    while(lo<hi){const mid=(lo+hi)>>1;if(Number(points[mid][2])<d)lo=mid+1;else hi=mid}
-    const b=points[lo],a=points[Math.max(0,lo-1)],span=Number(b[2])-Number(a[2]),t=span>0?(d-Number(a[2]))/span:0;
-    return [Number(a[0])+(Number(b[0])-Number(a[0]))*t,Number(a[1])+(Number(b[1])-Number(a[1]))*t,d];
-  }
+  const pointAtDistance=mapEngine.pointAtDistance;
+  const terrainAtDistance=mapEngine.terrainAtDistance;
+  const elevationAtDistance=mapEngine.elevationAtDistance;
 
-  function terrainAtDistance(profile,distance){
-    if(!Array.isArray(profile)||!profile.length)return null;
-    const d=clamp(distance,0,Number(profile.at(-1)?.[0]||0));
-    let lo=0,hi=profile.length-1;
-    while(lo<hi){const mid=(lo+hi)>>1;if(Number(profile[mid][0])<d)lo=mid+1;else hi=mid}
-    const b=profile[lo],a=profile[Math.max(0,lo-1)],span=Number(b[0])-Number(a[0]),t=span>0?(d-Number(a[0]))/span:0;
-    const interpolate=index=>finite(a[index])&&finite(b[index])?Number(a[index])+(Number(b[index])-Number(a[index]))*t:(finite(a[index])?Number(a[index]):finite(b[index])?Number(b[index]):null);
-    return {distance:d,elevation:interpolate(1),grade:interpolate(2),cumulativeAscent:interpolate(3),cumulativeDescent:interpolate(4)};
-  }
-  function elevationAtDistance(profile,distance){return terrainAtDistance(profile,distance)?.elevation??null}
 
   function paceColor(pace,allPaces){
     if(!finite(pace))return {color:NEUTRAL_COLOR,colorIndex:null,label:'Tid saknas',icon:'—'};
