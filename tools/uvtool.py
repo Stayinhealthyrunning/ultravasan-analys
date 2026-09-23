@@ -1238,9 +1238,11 @@ def export_web(args: argparse.Namespace) -> None:
     # Several sources can describe the same race performance. Keep all source
     # rows locally, but publish one merged record per race + canonical athlete.
     priority = {"vasaloppet_mika": 0, "vasaloppet_media": 1, "vasanerd": 2, "vasaloppet_pdf": 3, "duv": 4, "itra": 5, "manual": 6}
+    athlete_columns = {row[1] for row in conn.execute("PRAGMA table_info(athletes)")}
+    person_key_select = "a.person_key person_key" if "person_key" in athlete_columns else "NULL person_key"
     raw_results = []
-    for row in conn.execute("""
-      SELECT r.*, a.canonical_name, a.athlete_match_status, s.code source_code
+    for row in conn.execute(f"""
+      SELECT r.*, a.canonical_name, a.athlete_match_status, {person_key_select}, s.code source_code
       FROM results r JOIN athletes a ON a.id=r.athlete_id JOIN sources s ON s.id=r.source_id
       ORDER BY r.race_id, r.athlete_id
     """):
@@ -1265,6 +1267,25 @@ def export_web(args: argparse.Namespace) -> None:
         merged = dict(items[0])
         merged["source_codes"] = sorted({r["source_code"] for r in items}, key=lambda c: priority.get(c, 99))
         merged["source_count"] = len(items)
+
+        # Publish only verified person identity. Legacy athlete_id remains in the
+        # payload for local result plumbing but must not be interpreted as a
+        # cross-edition person key.
+        verified_person_keys = {
+            str(r["person_key"]).strip()
+            for r in items
+            if r.get("person_key") not in (None, "")
+        }
+        verified_person_keys.update(
+            identity_contracts.stable_person_key("vasanerd", "idpe", r["source_result_id"])
+            for r in items
+            if r.get("source_code") == "vasanerd" and r.get("source_result_id") not in (None, "")
+        )
+        if len(verified_person_keys) > 1:
+            raise IdentityCollisionError(
+                f"Conflicting verified person identities for race_id={merged['race_id']} athlete_id={merged['athlete_id']}"
+            )
+        merged["person_key"] = next(iter(verified_person_keys), None)
         for other in items[1:]:
             for field in merge_fields:
                 if merged.get(field) in (None, "", "UNKNOWN") and other.get(field) not in (None, "", "UNKNOWN"):
@@ -1315,7 +1336,13 @@ def export_web(args: argparse.Namespace) -> None:
         stats[str(race["id"])] = {"count": len([r for r in results if r["race_id"] == race["id"]]), "finishers": len(times), "times": percentiles(times), "statuses": statuses}
     sources = [dict(r) for r in conn.execute("SELECT code,name,base_url,source_type,terms_note FROM sources ORDER BY id")]
     latest_import = conn.execute("SELECT MAX(finished_at) FROM import_runs WHERE status='complete'").fetchone()[0]
-    meta = {"schema_version": 1, "generated_at": utc_now(), "latest_import": latest_import, "data_notice": "Resultatdata ska verifieras mot officiell källa. Personmatchning mellan år är konservativ och kan kräva manuell granskning."}
+    meta = {
+        "schema_version": 1,
+        "generated_at": utc_now(),
+        "latest_import": latest_import,
+        "identity_contract": "u2-person-key-v1",
+        "data_notice": "Resultatdata ska verifieras mot officiell källa. Flerårshistorik kräver verifierad personidentitet och explicit bankompatibilitet.",
+    }
     incomplete_years = [str(r["year"]) for r in races if stats.get(str(r["id"]), {}).get("count", 0) < 100]
     if incomplete_years:
         meta["coverage_note"] = "Ofullständig datatäckning för loppår: " + ", ".join(incomplete_years) + ". Kör onlineimporten eller ladda upp en officiell CSV-fil."
@@ -1325,7 +1352,7 @@ def export_web(args: argparse.Namespace) -> None:
         "id", "race_id", "athlete_id", "bib", "name_as_published", "canonical_name",
         "sex", "age_class", "nationality", "club", "city", "start_group", "status",
         "finish_seconds", "overall_place", "gender_place", "class_place",
-        "pace_seconds_per_km", "source_code", "source_result_id", "athlete_match_status"
+        "pace_seconds_per_km", "source_code", "source_result_id", "athlete_match_status", "person_key"
     }
     split_fields = {
         "result_id", "checkpoint_key", "elapsed_seconds", "segment_seconds",
