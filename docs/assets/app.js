@@ -2,9 +2,9 @@
 const state=window.UltravasanAppState.createMain();
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const fmtTime=s=>{if(s==null)return '–';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.round(s%60);return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`};
-const fixedFinishTimeBins=(times,step=900)=>{const values=(times||[]).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);if(!values.length)return{start:null,step,bins:[]};const start=Math.floor(values[0]/step)*step,count=Math.floor((values.at(-1)-start)/step)+1,bins=Array.from({length:count},(_,i)=>({from:start+i*step,to:start+(i+1)*step,count:0}));for(const value of values)bins[Math.floor((value-start)/step)].count++;return{start,step,bins}};
-const finishBinTime=seconds=>{const value=Math.max(0,Math.floor(Number(seconds)||0)),hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60);return `${hours}:${String(minutes).padStart(2,'0')}`};
-const baseFinishHistogramGeometry=(binCount,width=1000,left=44,right=14)=>{const cellWidth=(width-left-right)/Math.max(1,Number(binCount)||1),barWidth=Math.max(2,Math.min(28,cellWidth*.78));return{cellWidth,barWidth,barOffset:(cellWidth-barWidth)/2}};
+const fixedFinishTimeBins=window.UltravasanCharts.fixedFinishTimeBins;
+const finishBinTime=window.UltravasanCharts.finishBinTime;
+const baseFinishHistogramGeometry=window.UltravasanCharts.barGeometry;
 const speedUnit=()=>window.SpeedUnits?.get?.()||'pace';
 const fmtPace=s=>{if(window.SpeedUnits?.formatPace)return window.SpeedUnits.formatPace(s,speedUnit());if(s==null||!Number.isFinite(Number(s))||Number(s)<=0)return'–';const rounded=Math.round(Number(s));return`${Math.floor(rounded/60)}:${String(rounded%60).padStart(2,'0')} /km`};
 const fmtSpeed=s=>window.SpeedUnits?.formatSpeed?.(s,speedUnit())??(Number.isFinite(Number(s))?`${Number(s).toFixed(1)} km/h`:'–');
@@ -14,8 +14,8 @@ const classOrderInfo=v=>{const s=normClassLabel(v),sex=s.startsWith('W')?0:s.sta
 const compareClasses=(a,b)=>{const A=classOrderInfo(a),B=classOrderInfo(b);return A.sex-B.sex||A.age-B.age||A.tail.localeCompare(B.tail,'sv')||A.s.localeCompare(B.s,'sv')};
 const cleanCheckpointName=v=>String(v||'').replace('Mora mål','Mora').replace('Start Sälen','Start').trim();
 const segmentRangeLabel=(from,to)=>`${cleanCheckpointName(from)||'Start'} – ${cleanCheckpointName(to)}`;
-const median=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
-const quantile=(a,q)=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),p=(b.length-1)*q,l=Math.floor(p),h=Math.ceil(p);return b[l]+(b[h]-b[l])*(p-l)};
+const median=window.UltravasanCharts.median;
+const quantile=window.UltravasanCharts.quantile;
 
 const raceFamilyOf=r=>window.RaceUI.familyKey(r);
 const familyRaces=()=>state.data.races.filter(r=>raceFamilyOf(r)===state.raceFamily);
