@@ -2,6 +2,7 @@
 /* Advanced cross-year analytics. Works entirely in the browser on exported data. */
 const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null,courseSegmentKey:null,courseRaceId:null,coursePlanTargets:{uv90:'10:00:00',uv45:'5:00:00'}};
 const nHistoryEngine=typeof module!=='undefined'&&module.exports?require('./history-engine.js'):globalThis.UltravasanHistoryEngine;
+const nHistoryIntelligence=typeof module!=='undefined'&&module.exports?require('./history-intelligence.js'):globalThis.HistoryIntelligence;
 const nCourseIntelligence=typeof module!=='undefined'&&module.exports?require('./course-intelligence.js'):globalThis.CourseIntelligence;
 const n$=s=>document.querySelector(s), n$$=s=>[...document.querySelectorAll(s)];
 const nEsc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -26,6 +27,23 @@ const nIsDns=r=>nResultStatus(r).dns;
 
 const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för publicerade medianmått. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Difficulty är ett relativt segmentindex inom valt lopp/CourseVersion, inte ett absolut banbetyg. Fyra komponenter används med lika vikt: stigning per km, pacing loss per km, fartspridning och DNF-exit. Varje komponent omvandlas till percentil bland segmenten; alla fyra komponenterna och n≥5 krävs för en sammanvägd poäng.';
 const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansfallback. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
+const HISTORY_ARCHIVE_METHOD_HELP='Löpararkivet använder endast verifierad personidentitet från U2. Namn, startnummer eller legacy athlete_id får aldrig ensamma länka en person mellan år. Alla verifierat länkade resultat visas, men sluttidsutveckling och bästa tid delas upp i separata jämförbarhetsserier enligt CourseVersion/whole-course-kontraktet. Ett banbyte visas därför som en ny serie i stället för att räknas som förbättring eller försämring. DNF och DNS kan visas i personens tidslinje men ingår inte i sluttidsserier. Om personidentiteten inte är verifierad visar arkivet endast det enskilda publicerade resultatet.';
+const HISTORY_HALL_METHOD_HELP='Hall of Fame använder History Intelligence i stället för namnmatchning. Flest lopp kräver verifierad personidentitet men kan räkna fullföljda starter över banversioner eftersom måttet bara är antal genomföranden. Mest förbättrad och Jämnast kräver verifierad personidentitet och räknas endast inom en uttryckligen jämförbar whole-course-serie; tider från andra CourseVersions blandas inte in. Starkast avslutning är ett enskilt-loppmått: endast exakta, ej estimerade placeringspassager används. Segmentet väljs strukturellt från CourseVersion (Evertsberg→mål när det finns, annars Eldris→mål) och placeringslyftet normaliseras mot antal faktiska startande för att minska fältstorleksbias. Kvinnor och män redovisas separat.';
+const HISTORY_FINGERPRINT_METHOD_HELP='Årets fingeravtryck sätter index 100 till historisk normalnivå. Mediantidsindex, fartnivå och DNF-belastning jämför endast med andra RaceEditions som har samma whole-course-jämförbarhetsnyckel som valt lopp. Varje jämförbart loppår sammanfattas först separat och normalnivån är medianen av loppårsmedianerna, så ett stort startfält får inte automatiskt större vikt än ett litet. Minst två andra jämförbara loppår krävs. Kvinnorepresentation och fältstorlek är deltagandemått och får därför använda andra CourseVersions inom samma RaceFamily; kvinnorepresentation döljs när könsfilter är aktivt. Index beskriver observerad skillnad, inte orsak.';
+const CLASS_HISTORY_METHOD_HELP='Klasshistorik och Klassutveckling visar deltagande över alla importerade år, men fart- och sluttidstrender får endast bindas samman när två år tillhör samma whole-course-jämförbarhetsserie. Vid CourseVersion-byte bryts linjen, animationen tonar ut och in i stället för att interpolera en påhittad mellanprestation och diagrammet markerar banversionsgränsen. Deltagarantal kan fortfarande jämföras över banbytet eftersom det inte är ett prestationsmått. DNS räknas inte som startande; medianfart och sluttid bygger på fullföljande med giltig sluttid.';
+function replaceInfoPopup(seed,text){
+  const card=seed?.matches?.('article,.panel')?seed:seed?.closest?.('article,.panel');
+  if(!card)return;
+  const popup=card.querySelector('.info-tip .info-popup');
+  if(popup)popup.textContent=text;else globalThis.addCardInfo?.(card,text);
+}
+function installHistoryMethodInfo(){
+  replaceInfoPopup(n$('.history-lab'),HISTORY_ARCHIVE_METHOD_HELP);
+  replaceInfoPopup(n$('.hall-card'),HISTORY_HALL_METHOD_HELP);
+  replaceInfoPopup(n$('.fingerprint-card'),HISTORY_FINGERPRINT_METHOD_HELP);
+  replaceInfoPopup(n$('#classEvolutionChart'),CLASS_HISTORY_METHOD_HELP);
+  replaceInfoPopup(n$('#classHistoryChart'),CLASS_HISTORY_METHOD_HELP);
+}
 function installCourseMethodInfo(){
   const card=n$('#courseIntelligenceCard');
   if(card){
@@ -49,7 +67,7 @@ function nComparableFinishSeries(rows,minCount=1){
 function initNerdLab(){
   if(nerd.ready||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
-  installCourseMethodInfo();
+  installCourseMethodInfo();installHistoryMethodInfo();
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
@@ -331,27 +349,26 @@ function renderFieldFlow(){
 function allHistories(){
   return groupAthleteHistories(familyResults(),state.data.races);
 }
+const nNormClub=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/&/g,' OCH ').replace(/\bIDROTTSKLUBB\b/g,' IK ').replace(/\bIDROTTSFORENING\b/g,' IF ').replace(/\bFRIIDROTTSKLUBB\b/g,' FK ').replace(/\bAKTIEBOLAG\b|\bAB\b|\bSWEDEN\b|\bSVERIGE\b/g,' ').replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+function historyFilteredRows(){
+  const sex=n$('#sexFilter')?.value||'',cls=n$('#classFilter')?.value||'',club=n$('#clubFilter')?.value||'',status=n$('#statusFilter')?.value||'';
+  return familyResults().filter(row=>(!sex||nSex(row)===sex)&&(!cls||String(row.age_class||'')===cls)&&(!club||nNormClub(row.club||row.city)===club)&&(!status||String(row.status||'')===status));
+}
 function renderHall(){
   const el=n$('#hallOfFame'),explain=n$('#hallExplanation');if(!el)return;
-  const histories=allHistories(),copy={
-    veterans:'Flest fullföljda Ultravasan. DNS och DNF räknas inte som genomförda lopp.',
-    improved:'Störst förbättring inom en uttryckligen jämförbar banserie mellan löparens första och senaste fullföljda Ultravasan.',
-    consistent:'Minst tidsspridning inom en uttryckligen jämförbar banserie för löpare med minst tre målgångar.',
-    chargers:'Flest vunna totalplaceringar från Evertsberg till Mora i ett och samma lopp.'
+  const copy={
+    veterans:'Flest fullföljda Ultravasan för verifierade personer. DNS och DNF räknas inte som genomförda lopp.',
+    improved:'Störst förbättring inom samma uttryckliga whole-course-jämförbarhetsserie. Andra CourseVersions blandas inte in.',
+    consistent:'Minst tidsspridning inom samma uttryckliga whole-course-jämförbarhetsserie och minst tre målgångar.',
+    chargers:'Starkast avslutning i ett enskilt lopp med exakta placeringspassager; lyftet normaliseras mot startfältets storlek.'
   };
   if(explain)explain.textContent=copy[nerd.hall]+' Fem kvinnor och fem män visas när underlaget räcker.';
-  let rows=[];
-  if(nerd.hall==='veterans')rows=histories.map(x=>({...x,completed:x.rows.filter(nIsFinished)})).filter(x=>x.completed.length>1).map(x=>{const years=x.completed.map(r=>state.data.races.find(q=>q.id===r.race_id)?.year).filter(Boolean);return{...x,rows:x.completed,score:x.completed.length,label:`${x.completed.length} fullföljda lopp`,detail:`${Math.min(...years)}–${Math.max(...years)}`,reason:`Har fullföljt ${x.completed.length} Ultravasan under ${years.length} registrerade loppår.`}}).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='improved')rows=histories.map(x=>{
-    const candidates=nComparableFinishSeries(x.rows,2).map(series=>{const f=series.rows,first=f[0],last=f.at(-1),delta=first.finish_seconds-last.finish_seconds,fy=state.data.races.find(q=>q.id===first.race_id)?.year,ly=state.data.races.find(q=>q.id===last.race_id)?.year;return{...x,rows:f,score:delta,label:delta>0?`${Math.round(delta/60)} min snabbare`:`${Math.round(-delta/60)} min långsammare`,detail:`${fy} → ${ly}`,reason:`Förbättrade sluttiden från ${nTime(first.finish_seconds)} till ${nTime(last.finish_seconds)} inom samma jämförbarhetskontrakt.`}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-    return candidates[0]||null;
-  }).filter(Boolean).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='consistent')rows=histories.map(x=>{
-    const candidates=nComparableFinishSeries(x.rows,3).map(series=>{const f=series.rows,t=f.map(r=>r.finish_seconds),range=Math.max(...t)-Math.min(...t);return{...x,rows:f,score:-range,label:`${Math.round(range/60)} min spridning`,detail:`${f.length} jämförbara målgångar`,reason:`Skillnaden mellan snabbaste och långsammaste lopp är ${Math.round(range/60)} minuter inom samma jämförbarhetskontrakt.`}}).sort((a,b)=>b.score-a.score);
-    return candidates[0]||null;
-  }).filter(Boolean).sort((a,b)=>b.score-a.score);
-  if(nerd.hall==='chargers')rows=familyResults().map(r=>{const a=[...splitMap(r.id).values()].filter(s=>s.place_overall).sort((x,y)=>x.sequence_no-y.sequence_no),mid=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='evertsberg'||/evertsberg/i.test(s.checkpoint_name||'')),finish=a.find(s=>String(s.checkpoint_key||'').toLowerCase()==='mora'||/mora/i.test(s.checkpoint_name||''))||a.at(-1);if(!mid||!finish||finish.sequence_no<=mid.sequence_no)return null;const gain=Number(mid.place_overall)-Number(finish.place_overall);return gain>0?{rows:[r],score:gain,label:`+${gain} platser`,detail:`${mid.place_overall} → ${finish.place_overall}`,reason:`Avancerade från plats ${mid.place_overall} i Evertsberg till plats ${finish.place_overall} i Mora.`}:null}).filter(Boolean).sort((a,b)=>b.score-a.score);
-  const renderGroup=(sex,title)=>{const list=rows.filter(x=>nSex(x.rows.at(-1))===sex).slice(0,5);return `<section class="hall-sex-group ${sex==='F'?'women':'men'}"><h4>${title}</h4>${list.length?list.map((x,i)=>{const r=x.rows.at(-1);return `<button class="hall-row" data-id="${r.id}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(x.detail||'')}</small><em>${nEsc(x.reason||x.label)}</em></span><i>${nEsc(x.label)}</i><u aria-hidden="true">Karta ↗</u></button>`}).join(''):'<div class="empty compact-empty">Underlaget räcker inte till fem placeringar.</div>'}</section>`};
+  const model=nHistoryIntelligence?.hallOfFame?.(state.data,state.raceFamily,nerd.hall,{minRuns:3});
+  const rows=model?.rows||[];
+  const renderGroup=(sex,title)=>{
+    const list=rows.filter(x=>nSex(x.rows.at(-1))===sex).slice(0,5);
+    return `<section class="hall-sex-group ${sex==='F'?'women':'men'}"><h4>${title}</h4>${list.length?list.map((x,i)=>{const r=x.rows.at(-1);return `<button class="hall-row" data-id="${r.id}" data-history-scope="${nEsc(x.scope||'')}"><b>${i+1}</b><span><strong>${nEsc(r.name_as_published)}</strong><small>${nEsc(x.detail||'')}</small><em>${nEsc(x.reason||x.label)}</em></span><i>${nEsc(x.label)}</i><u aria-hidden="true">Karta ↗</u></button>`}).join(''):'<div class="empty compact-empty">Underlaget räcker inte till fem placeringar.</div>'}</section>`;
+  };
   el.innerHTML=`<div class="hall-columns">${renderGroup('F','Kvinnor')}${renderGroup('M','Män')}</div>`;
   n$$('.hall-row').forEach(b=>b.onclick=()=>openHallMap(Number(b.dataset.id)));
 }
@@ -398,28 +415,42 @@ async function openHallMap(resultId){
 }
 
 function renderFingerprint(){
-  const el=n$('#raceFingerprint');if(!el)return;const race=activeRace(),current=state.filtered.filter(nIsFinished),all=familyResults().filter(nIsFinished),raceMed=nMedian(current.map(r=>r.finish_seconds)),histMed=nMedian(all.map(r=>r.finish_seconds));
-  if(!raceMed||!histMed){el.innerHTML='<div class="empty">Historik behövs för index</div>';return}
-  const pace=nSplitsForResults(current).filter(s=>s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km),allPace=nSplitsForResults(familyResults()).filter(s=>s.pace_seconds_per_km).map(s=>s.pace_seconds_per_km);
-  const starters=state.filtered.filter(nIsStarter),dnf=starters.filter(nIsDnf).length/(starters.length||1),allResults=familyResults(),allStarters=allResults.filter(nIsStarter),allDnf=allStarters.filter(nIsDnf).length/(allStarters.length||1),women=starters.filter(r=>r.sex==='F').length/(starters.length||1),allWomen=allStarters.filter(r=>r.sex==='F').length/(allStarters.length||1);
-  const metrics=[['Svårighetsgrad',raceMed/histMed*100],['Fartnivå',allPace.length&&pace.length?nMedian(allPace)/nMedian(pace)*100:100],['DNF-belastning',allDnf?dnf/allDnf*100:100],['Kvinnorepresentation',allWomen?women/allWomen*100:100],['Fältstorlek',state.filtered.length/(allResults.length/(familyRaces().length||1)||1)*100]];
-  el.innerHTML=metrics.map(([name,v])=>`<div class="finger-row"><span>${nEsc(name)}</span><div><i style="width:${Math.max(4,Math.min(100,v/1.6))}%"></i><b style="left:${Math.max(4,Math.min(96,v/1.6))}%"></b></div><strong>${Math.round(v)}</strong></div>`).join('')+`<p class="microcopy">${race.year}: över 100 betyder mer av egenskapen än genomsnittet i importerad historik.</p>`;
+  const el=n$('#raceFingerprint'),race=activeRace();if(!el||!race)return;
+  const referenceRows=historyFilteredRows(),sexFilterActive=Boolean(n$('#sexFilter')?.value);
+  let model;
+  try{model=nHistoryIntelligence?.fingerprint?.(state.data,race,{currentResults:state.filtered,referenceResults:referenceRows,minReferenceYears:2,sexFilterActive})}
+  catch(error){console.error('Historiskt fingeravtryck kunde inte byggas',error);el.innerHTML='<div class="empty">Historiskt jämförelseunderlag kunde inte verifieras.</div>';return}
+  if(!model){el.innerHTML='<div class="empty">Historik behövs för index.</div>';return}
+  el.innerHTML=model.metrics.map(metric=>{
+    const v=metric.index,available=metric.available&&Number.isFinite(Number(v)),width=available?Math.max(4,Math.min(100,Number(v)/1.6)):4,left=available?Math.max(4,Math.min(96,Number(v)/1.6)):50;
+    const years=metric.reference_years?.length?(metric.reference_years[0]+(metric.reference_years.length>1?'–'+metric.reference_years.at(-1):'')):'saknas';
+    return `<div class="finger-row ${available?'':'unavailable'}" data-history-metric="${nEsc(metric.id)}" data-history-scope="${nEsc(metric.reference_scope||'')}"><span>${nEsc(metric.label)}<small>${nEsc(years)} · ${metric.reference_n??0} referensår</small></span><div><i style="width:${width}%"></i><b style="left:${left}%"></b></div><strong>${available?Math.round(v):'–'}</strong><em>${nEsc(metric.note||'')}</em></div>`;
+  }).join('')+`<p class="microcopy">${race.year}: prestationsmått använder ${model.performance_reference_years.length} whole-course-jämförbara referensår. Index 100 = medianen av loppårsnormalerna.</p>`;
 }
+
 function renderHistorySuggestions(){
   const input=n$('#historySearch'),box=n$('#historySuggestions');if(!input||!box)return;const q=input.value.trim().toLowerCase();if(q.length<2){box.hidden=true;return}
-  const groups=allHistories().filter(g=>{const r=g.rows[0];return `${r.name_as_published} ${g.rows.map(x=>x.bib||'').join(' ')}`.toLowerCase().includes(q)}).sort((a,b)=>b.rows.length-a.rows.length).slice(0,10);
-  box.innerHTML=groups.length?groups.map(g=>{const r=g.rows.at(-1),years=g.rows.map(x=>state.data.races.find(y=>y.id===x.race_id)?.year).filter(Boolean),identity=[r.bib?'#'+r.bib:'',r.age_class||'',r.club||r.city||''].filter(Boolean).join(' · ');return `<button data-key="${nEsc(g.key)}"><strong>${nEsc(r.name_as_published)}</strong><small>${g.rows.length} lopp · ${years.join(', ')}${identity?' · '+nEsc(identity):''}</small></button>`}).join(''):'<div class="empty">Ingen löpare hittades</div>';box.hidden=false;
-  n$$('#historySuggestions button').forEach(b=>b.onclick=()=>{const g=allHistories().find(x=>x.key===b.dataset.key);if(g){input.value=g.rows.at(-1).name_as_published;box.hidden=true;renderRunnerHistory(g)}});
+  const groups=allHistories().filter(g=>{const r=g.rows[0];return (String(r.name_as_published||'')+' '+g.rows.map(x=>x.bib||'').join(' ')).toLowerCase().includes(q)}).sort((a,b)=>b.rows.length-a.rows.length).slice(0,10);
+  box.innerHTML=groups.length?groups.map(g=>{const r=g.rows.at(-1),years=g.rows.map(x=>state.data.races.find(y=>y.id===x.race_id)?.year).filter(Boolean),identity=[r.bib?'#'+r.bib:'',r.age_class||'',r.club||r.city||''].filter(Boolean).join(' · '),verified=g.verified_person?'verifierad person':'enskilt resultat';return `<button data-id="${r.id}"><strong>${nEsc(r.name_as_published)}</strong><small>${g.rows.length} lopp · ${years.join(', ')} · ${nEsc(verified)}${identity?' · '+nEsc(identity):''}</small></button>`}).join(''):'<div class="empty">Ingen löpare hittades</div>';box.hidden=false;
+  n$$('#historySuggestions button').forEach(b=>b.onclick=()=>{const r=state.data.results.find(x=>String(x.id)===String(b.dataset.id));if(r){input.value=r.name_as_published;box.hidden=true;renderRunnerHistory(r.id)}});
 }
-function renderRunnerHistory(g){
+function renderRunnerHistory(resultId){
   const el=n$('#runnerHistory');if(!el)return;
-  const rows=g.rows,finish=rows.filter(nIsFinished),series=nComparableFinishSeries(rows,1)[0]?.rows||[];
-  const best=series.slice().sort((a,b)=>a.finish_seconds-b.finish_seconds)[0];
-  const timeline=rows.map(r=>{const race=state.data.races.find(x=>x.id===r.race_id);return `<button class="history-year ${r.id===best?.id?'best':''}" data-id="${r.id}"><b>${race?.year||'–'}</b><strong>${nTime(r.finish_seconds)}</strong><span>plats ${r.overall_place??'–'} · ${nEsc(r.age_class||'')}</span></button>`}).join('');
-  const improvement=series.length>1?series[0].finish_seconds-series.at(-1).finish_seconds:null;
-  const development=improvement!=null?`${improvement>=0?'−':'+'}${Math.abs(Math.round(improvement/60))} min`:finish.length>1?'Ej jämförbart':'–';
-  el.innerHTML=`<div class="history-head"><div><span>${rows.length} starter</span><strong>${nEsc(rows.at(-1).name_as_published)}</strong></div><div><span>Bästa tid i jämförbar serie</span><strong>${nTime(best?.finish_seconds)}</strong></div><div><span>Utveckling</span><strong>${development}</strong></div></div><div class="history-timeline">${timeline}</div><button id="historyMap" class="compare-map-button">Spela upp åren på karta →</button>`;
-  n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(rows.slice(-5)):window.open(`karta.html?runners=${rows.slice(-5).map(r=>r.id).join(',')}`,'_blank');
+  const model=nHistoryIntelligence?.personHistory?.(state.data,resultId);
+  if(!model){el.innerHTML='<div class="empty">Personhistoriken kunde inte byggas.</div>';return}
+  const rows=model.rows,focus=model.focus_series,best=focus?.best||null,improvement=focus?.delta_seconds;
+  const development=Number.isFinite(Number(improvement))?(improvement>=0?'−':'+')+Math.abs(Math.round(improvement/60))+' min':model.finished_count>1?'Ej jämförbart':'–';
+  const focusIds=new Set((focus?.rows||[]).map(row=>String(row.id)));
+  const timeline=rows.map(item=>{const r=item.result,comparable=focusIds.has(String(r.id)),status=item.finished?nTime(r.finish_seconds):String(r.status||'–');return `<button class="history-year ${r.id===best?.id?'best':''} ${comparable?'comparable':'separate-series'}" data-id="${r.id}" data-history-scope="${nEsc(item.comparison_key||'')}"><b>${item.year||'–'}</b><strong>${status}</strong><span>plats ${r.overall_place??'–'} · ${nEsc(r.age_class||'')} · ${nEsc(item.course_version_id||'okänd banversion')}</span></button>`}).join('');
+  const series=model.comparable_series.map(series=>`<span class="history-series ${series.key===model.focus_series_key?'active':''}" data-history-scope="${nEsc(series.key)}"><strong>${series.year_from===series.year_to?series.year_from:series.year_from+'–'+series.year_to}</strong><small>${series.count} målgångar · ${nEsc(series.course_version_ids.join(', '))}</small></span>`).join('');
+  const identityNote=model.verified_person
+    ?`Verifierad personidentitet. ${model.incomparable_to_focus_count?model.incomparable_to_focus_count+' fullföljda lopp ligger i annan banjämförbarhetsserie och påverkar inte utvecklingen.':'Alla fullföljda lopp i den fokuserade historiken är banjämförbara.'}`
+    :'Ingen verifierad flerårslänk finns. Namn och startnummer används inte för att slå ihop personer.';
+  const displayName=rows.at(-1)?.result?.name_as_published||'Löpare';
+  el.innerHTML=`<div class="history-head"><div><span>${rows.length} registrerade lopp</span><strong>${nEsc(displayName)}</strong></div><div><span>Bästa tid i fokuserad serie</span><strong>${nTime(best?.finish_seconds)}</strong></div><div><span>Utveckling inom serien</span><strong>${development}</strong></div></div><p class="history-identity-note ${model.verified_person?'verified':'unverified'}">${nEsc(identityNote)}</p>${series?`<div class="history-series-list" aria-label="Jämförbara banserier">${series}</div>`:''}<div class="history-timeline">${timeline}</div><button id="historyMap" class="compare-map-button" ${rows.length?'':'disabled'}>Spela upp åren på karta →</button>`;
+  n$$('.history-year').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
+  const mapRows=rows.map(item=>item.result).slice(-5);
+  n$('#historyMap').onclick=()=>window.openUltravasanMap?window.openUltravasanMap(mapRows):window.open('karta.html?runners='+mapRows.map(r=>r.id).join(','),'_blank');
 }
 
 
