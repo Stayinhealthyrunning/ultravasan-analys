@@ -618,7 +618,7 @@ function removeCompareRunner(id){compareState.selected=compareState.selected.fil
 function hideCompareSuggestions(){const box=$('#runnerSuggestions');if(box)box.hidden=true}
 function renderCompareSelection(){
   const box=$('#selectedCompareRunners');box.innerHTML=compareState.selected.length?compareState.selected.map((r,i)=>`<button class="runner-chip" data-id="${r.id}" title="Ta bort ${esc(r.name_as_published)}"><span>${i+1}. ${esc(r.name_as_published)} · ${state.data.races.find(x=>x.id===r.race_id)?.year||''}${r.bib?' #'+esc(r.bib):''}</span><span>×</span></button>`).join(''):'<span class="selection-empty">Inga löpare valda ännu · välj upp till fem</span>';
-  $('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h)h2h.disabled=compareState.selected.length<2;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
+  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h)h2h.disabled=compareState.selected.length<2;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
   const routeIds=compareState.selected.map(r=>window.RaceContracts.courseForRace(state.data.races.find(x=>x.id===r.race_id))?.display_route_id).filter(Boolean),mixed=new Set(routeIds).size>1,warning=$('#courseComparisonWarning');if(warning)warning.hidden=!mixed;
 }
 
