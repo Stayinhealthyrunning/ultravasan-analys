@@ -74,8 +74,16 @@ assert.deepStrictEqual(aggregates(indexedSelection),aggregates(filteredSelection
 
 const indexHtml=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const mapHtml=fs.readFileSync(path.join(root,'docs/karta.html'),'utf8');
-for(const html of [indexHtml,mapHtml])assert.ok(html.includes('assets/data-index.js'),'båda applikationsytorna ska ladda samma indexmodul');
+for(const html of [indexHtml,mapHtml]){
+  assert.ok(html.includes('assets/data-index.js'),'båda applikationsytorna ska ladda samma indexmodul');
+  assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
+  assert.ok(html.includes('data/ultravasan-data-catalog.js'),'båda applikationsytorna ska ladda datakatalogen');
+}
+assert.ok(indexHtml.indexOf('data/ultravasan-data-catalog.js')<indexHtml.indexOf('assets/data-loader.js'),'katalogen ska laddas före DataLoader');
+assert.ok(indexHtml.indexOf('assets/data-loader.js')<indexHtml.indexOf('assets/app.js'),'DataLoader ska laddas före appen');
 assert.ok(indexHtml.indexOf('assets/data-index.js')<indexHtml.indexOf('assets/app.js'),'indexmodulen ska laddas före appen');
+assert.ok(mapHtml.indexOf('data/ultravasan-data-catalog.js')<mapHtml.indexOf('assets/data-loader.js'),'kartvyn ska läsa katalogen före DataLoader');
+assert.ok(mapHtml.indexOf('assets/data-loader.js')<mapHtml.indexOf('assets/map.js'),'kartvyn ska läsa DataLoader före kartduellen');
 assert.ok(mapHtml.indexOf('assets/data-index.js')<mapHtml.indexOf('assets/map.js'),'indexmodulen ska laddas före kartduellen');
 
 for(const file of ['app.js','audience-analytics.js','nerdlab.js','map.js']){

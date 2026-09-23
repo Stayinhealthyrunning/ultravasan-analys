@@ -45,19 +45,37 @@ await command("Network.enable");
 await command("Page.navigate", {url:"http://127.0.0.1:8765/?race=uv90"});
 await delay(1200);
 let ready = false;
-for (let attempt = 0; attempt < 100; attempt++) {
-  if (await evaluate("Boolean(window.ULTRAVASAN_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
+for (let attempt = 0; attempt < 300; attempt++) {
+  if (await evaluate("Boolean(window.ULTRAVASAN_ACTIVE_DATA && document.querySelector('#loading')?.classList.contains('hidden'))")) {
     ready = true;
     break;
   }
   await delay(100);
 }
-if (!ready) throw new Error("Local application did not finish loading");
+if (!ready) {
+  const diagnostics = await evaluate(`(() => ({
+    loaderMode: window.UltravasanDataLoader?.mode?.() || null,
+    hasCatalog: Boolean(window.ULTRAVASAN_DATA_CATALOG),
+    hasLegacyData: Boolean(window.ULTRAVASAN_DATA),
+    hasActiveData: Boolean(window.ULTRAVASAN_ACTIVE_DATA),
+    loadingText: document.querySelector('#loading')?.innerText || '',
+    loadingHidden: document.querySelector('#loading')?.classList.contains('hidden') || false
+  }))()`);
+  throw new Error("Local application did not finish loading: " + JSON.stringify(diagnostics));
+}
 
 const contractChecks = await evaluate(`(() => {
-  const contracts=window.RaceContracts,data=window.ULTRAVASAN_DATA;
+  const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
+  const loadedKeys=new Set(data.races.map(race=>race.race_key));
+  const activeFamilies=[...new Set(data.races.map(race=>contracts.familyForRace(race)))];
+  const activeFamily=activeFamilies.length===1?activeFamilies[0]:null;
+  const expectedKeys=new Set(
+    Object.entries(contracts.catalog.editions)
+      .filter(([,edition])=>edition.race_family===activeFamily)
+      .map(([key])=>key)
+  );
   return {
-    editions:data.races.length===Object.keys(contracts.catalog.editions).length,
+    editions:activeFamily!==null&&loadedKeys.size===expectedKeys.size&&[...loadedKeys].every(key=>expectedKeys.has(key)),
     routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
     families:data.races.every(race=>raceFamilyOf(race)===contracts.familyForRace(race)),
     unknown:window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,{race_key:'ultravasan90-2099',year:2025})===null,
@@ -66,7 +84,7 @@ const contractChecks = await evaluate(`(() => {
 })()`);
 
 const initial = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA;
+  const data=window.ULTRAVASAN_ACTIVE_DATA;
   const race=data.races.find(item=>item.id===9);
   const result=data.results.find(item=>item.id===11545);
   const splits=data.splits.filter(item=>item.result_id===11545);
@@ -105,33 +123,49 @@ const replayProgress = await evaluate(`(() => ({
   time:document.querySelector('#runnerDetail [data-replay-value="time"]')?.textContent||''
 }))()`);
 
-const additionalCases = await evaluate(`(() => {
-  const data=window.ULTRAVASAN_DATA,counts=new Map();
-  data.splits.forEach(split=>counts.set(split.result_id,(counts.get(split.result_id)||0)+1));
-  const race=key=>data.races.find(item=>item.race_key===key);
-  const pick=(raceKey,predicate)=>{
-    const selectedRace=race(raceKey);
-    const result=data.results.find(item=>item.race_id===selectedRace?.id&&predicate(item,counts.get(item.id)||0));
-    return result?{label:raceKey,id:result.id,raceId:result.race_id,name:result.name_as_published,status:result.status,splitCount:counts.get(result.id)||0}:null;
-  };
-  return [
-    pick('ultravasan90-2016',(item,count)=>item.status==='DNF'&&count>0),
-    pick('ultravasan90-2016',(item,count)=>item.status==='FINISHED'&&count>0&&count<8),
-    pick('ultravasan90-2015',(item,count)=>item.status==='FINISHED'&&count>0),
-    pick('ultravasan90-2017',(item,count)=>item.status==='FINISHED'&&count>0),
-    pick('ultravasan45-2016',(item,count)=>item.status==='FINISHED'&&count>0),
-  ];
-})()`);
+async function representativeCases(raceKeys) {
+  return evaluate(`((raceKeys) => {
+    const data=window.ULTRAVASAN_ACTIVE_DATA,counts=new Map();
+    data.splits.forEach(split=>counts.set(split.result_id,(counts.get(split.result_id)||0)+1));
+    const race=key=>data.races.find(item=>item.race_key===key);
+    const pick=(raceKey,predicateName)=>{
+      const selectedRace=race(raceKey);
+      const predicates={
+        dnf:item=>item.status==='DNF'&&(counts.get(item.id)||0)>0,
+        partial:item=>item.status==='FINISHED'&&(counts.get(item.id)||0)>0&&(counts.get(item.id)||0)<8,
+        finisher:item=>item.status==='FINISHED'&&(counts.get(item.id)||0)>0,
+      };
+      const result=data.results.find(item=>item.race_id===selectedRace?.id&&predicates[predicateName](item));
+      return result?{label:raceKey,id:result.id,raceId:result.race_id,name:result.name_as_published,status:result.status,splitCount:counts.get(result.id)||0}:null;
+    };
+    return raceKeys.map(([key,predicate])=>pick(key,predicate));
+  })(${JSON.stringify(raceKeys)})`);
+}
+
+async function waitForActiveFamily(family){
+  for(let attempt=0;attempt<150;attempt++){
+    const active=await evaluate(`(() => {
+      const data=window.ULTRAVASAN_ACTIVE_DATA;
+      if(!data?.races?.length)return null;
+      const families=[...new Set(data.races.map(r=>window.RaceContracts.familyForRace(r)))];
+      return families.length===1?families[0]:families.join(',');
+    })()`);
+    if(active===family)return true;
+    await delay(100);
+  }
+  return false;
+}
 
 async function openRunnerCase(item) {
   if (!item) return {verified:false, reason:'No representative result found'};
   const setup = await evaluate(`(() => {
-    const data=window.ULTRAVASAN_DATA,result=data.results.find(row=>row.id===${item.id}),race=data.races.find(row=>row.id===result.race_id);
+    const data=window.ULTRAVASAN_ACTIVE_DATA,result=data.results.find(row=>row.id===${item.id});
+    if(!result)return {available:false};
+    const race=data.races.find(row=>row.id===result.race_id);
     const dialog=document.querySelector('#runnerDialog');if(dialog?.open)dialog.close();
-    const family=window.RaceContracts.familyForRace(race)==='uv45'?'45':'90';document.querySelector('#raceSwitch'+family)?.click();
-    return {family,raceKey:race.race_key,year:race.year};
+    return {available:true,family:window.RaceContracts.familyForRace(race),raceKey:race.race_key,year:race.year};
   })()`);
-  await delay(650);
+  if(!setup.available)return {item,setup,verified:false,reason:'Result is not in active family dataset'};
   const search = await evaluate(`(() => {
     const year=document.querySelector('#mainSearchYear'),option=[...year.options].find(item=>item.value==='${item.raceId}');
     if(!option)return {yearAvailable:false};
@@ -153,15 +187,32 @@ async function openRunnerCase(item) {
   })()`);
   return {item,setup,search,suggestion:suggestionResult,view,verified:Boolean(search.yearAvailable&&suggestionResult.found&&view.open&&view.replay&&view.map&&view.segments>0&&view.comparisons>=2)};
 }
-const caseResults = [];
-for (const item of additionalCases) caseResults.push(await openRunnerCase(item));
+
+const uv90Cases=await representativeCases([
+  ['ultravasan90-2016','dnf'],
+  ['ultravasan90-2016','partial'],
+  ['ultravasan90-2015','finisher'],
+  ['ultravasan90-2017','finisher'],
+]);
+const caseResults=[];
+for(const item of uv90Cases)caseResults.push(await openRunnerCase(item));
+
+await evaluate("document.querySelector('#runnerDialog')?.open&&document.querySelector('#runnerDialog').close()");
+await evaluate("document.querySelector('#raceSwitch45')?.click()");
+const uv45Loaded=await waitForActiveFamily('uv45');
+const uv45Cases=uv45Loaded?await representativeCases([['ultravasan45-2016','finisher']]):[null];
+caseResults.push(await openRunnerCase(uv45Cases[0]));
+const additionalCases=[...uv90Cases,...uv45Cases];
 
 // Open the standalone map through shared URLs, without a session-data shortcut.
+// These navigations verify that result_id -> family routing can lazy-load the
+// correct family even when no session payload is available.
 const mapCases=[];
-for(const item of [additionalCases[2],additionalCases[4]]){
+for(const item of [uv90Cases[2],uv45Cases[0]]){
+  if(!item){mapCases.push({item,loaded:false,state:null,verified:false});continue}
   await command('Page.navigate',{url:'http://127.0.0.1:8765/karta.html?runners='+item.id});
   let loaded=false;
-  for(let attempt=0;attempt<150;attempt++){
+  for(let attempt=0;attempt<200;attempt++){
     if(await evaluate("Boolean(document.querySelector('#mapLoading')?.classList.contains('hidden'))")){loaded=true;break}
     await delay(100);
   }
@@ -173,8 +224,9 @@ for(const item of [additionalCases[2],additionalCases[4]]){
     audio:document.querySelector('#raceSoundtrack')?.getAttribute('src'),
     expectedAudio:window.RACE_MEDIA_CONFIG.musicForRace(app.models[0]?.race),
     note:document.querySelector('#courseNote')?.textContent,
+    loaderMode:window.UltravasanDataLoader?.mode?.(),
   }))()`):null;
-  mapCases.push({item,loaded,state,verified:loaded&&state.raceKey===item.label&&state.route===state.expected&&state.audio===state.expectedAudio&&state.note.includes('kartspår')});
+  mapCases.push({item,loaded,state,verified:loaded&&state.raceKey===item.label&&state.route===state.expected&&state.audio===state.expectedAudio&&state.note.includes('kartspår')&&state.loaderMode==='modular'});
 }
 
 const checks = {

@@ -1225,6 +1225,146 @@ def assert_no_same_race_identity_collisions(conn: sqlite3.Connection) -> None:
         raise IdentityCollisionError(format_identity_collision_error(collisions))
 
 
+def resolve_modular_output_dir(output: Path, requested: Path | None) -> Path | None:
+    """Keep modular production data in sync once U3 has been activated."""
+    if requested is not None:
+        return requested
+    catalog_path = output.parent / "ultravasan-data-catalog.json"
+    if not catalog_path.exists():
+        return None
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return None
+    return output.parent if catalog.get("mode") == "modular" else None
+
+
+def write_modular_web_data(
+    payload: dict[str, Any],
+    output_dir: Path,
+    config: dict[str, Any],
+    *,
+    public_prefix: str = "data/",
+) -> dict[str, Any]:
+    """Write race-family chunks plus a small browser routing catalogue.
+
+    The legacy monolith remains the canonical parity source during U3 rollout.
+    Each modular family payload keeps the exact public result/split rows for its
+    editions; only transport/storage is changed.
+    """
+    family_by_race_key = {
+        race["race_key"]: race.get("race_family")
+        for race in config.get("races", [])
+        if race.get("race_family")
+    }
+    family_by_race_id: dict[int, str] = {}
+    for race in payload["races"]:
+        family = family_by_race_key.get(race["race_key"])
+        if family not in {"uv90", "uv45"}:
+            raise RuntimeError(f"Race family missing for modular export: {race['race_key']}")
+        family_by_race_id[int(race["id"])] = family
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    total_results = len(payload["results"])
+    total_splits = len(payload["splits"])
+    catalog: dict[str, Any] = {
+        "schema_version": 1,
+        "mode": "modular",
+        "generated_at": payload["meta"]["generated_at"],
+        "identity_contract": payload["meta"].get("identity_contract"),
+        "legacy": {
+            "json": public_prefix + "ultravasan.json",
+            "js": public_prefix + "ultravasan-data.js",
+        },
+        "totals": {
+            "races": len(payload["races"]),
+            "results": total_results,
+            "splits": total_splits,
+        },
+        "families": {},
+        "result_family": {},
+    }
+
+    results_by_family: dict[str, list[dict[str, Any]]] = {"uv90": [], "uv45": []}
+    for result in payload["results"]:
+        family = family_by_race_id[int(result["race_id"])]
+        results_by_family[family].append(result)
+        catalog["result_family"][str(result["id"])] = family
+
+    result_family_lookup = {
+        int(result["id"]): family
+        for family, rows in results_by_family.items()
+        for result in rows
+    }
+    splits_by_family: dict[str, list[dict[str, Any]]] = {"uv90": [], "uv45": []}
+    for split in payload["splits"]:
+        family = result_family_lookup.get(int(split["result_id"]))
+        if family is None:
+            raise RuntimeError(f"Split references unknown public result {split['result_id']}")
+        splits_by_family[family].append(split)
+
+    for family in ("uv90", "uv45"):
+        race_ids = {
+            race_id for race_id, race_family in family_by_race_id.items()
+            if race_family == family
+        }
+        family_results = results_by_family[family]
+        family_splits = splits_by_family[family]
+        family_payload = {
+            "meta": {
+                **payload["meta"],
+                "data_scope": {"kind": "race-family", "race_family": family},
+                "global_totals": {
+                    "races": len(payload["races"]),
+                    "results": total_results,
+                    "splits": total_splits,
+                },
+            },
+            "races": [race for race in payload["races"] if int(race["id"]) in race_ids],
+            "checkpoints": [
+                checkpoint for checkpoint in payload["checkpoints"]
+                if int(checkpoint["race_id"]) in race_ids
+            ],
+            "results": family_results,
+            "splits": family_splits,
+            "stats": {
+                key: value for key, value in payload["stats"].items()
+                if int(key) in race_ids
+            },
+            "sources": payload["sources"],
+        }
+        compact = json.dumps(family_payload, ensure_ascii=False, separators=(",", ":"))
+        stem = f"ultravasan-{family}"
+        json_path = output_dir / f"{stem}.json"
+        js_path = output_dir / f"{stem}.js"
+        json_path.write_text(compact, encoding="utf-8")
+        js_path.write_text(
+            "window.ULTRAVASAN_DATA_FAMILIES=window.ULTRAVASAN_DATA_FAMILIES||{};"
+            f"window.ULTRAVASAN_DATA_FAMILIES[{json.dumps(family)}]="
+            + compact
+            + ";\n",
+            encoding="utf-8",
+        )
+        catalog["families"][family] = {
+            "race_ids": sorted(race_ids),
+            "races": len(race_ids),
+            "results": len(family_results),
+            "splits": len(family_splits),
+            "json": public_prefix + json_path.name,
+            "js": public_prefix + js_path.name,
+            "json_bytes": json_path.stat().st_size,
+            "js_bytes": js_path.stat().st_size,
+        }
+
+    catalog_json = json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))
+    (output_dir / "ultravasan-data-catalog.json").write_text(catalog_json, encoding="utf-8")
+    (output_dir / "ultravasan-data-catalog.js").write_text(
+        "window.ULTRAVASAN_DATA_CATALOG=" + catalog_json + ";\n",
+        encoding="utf-8",
+    )
+    return catalog
+
+
 def export_web(args: argparse.Namespace) -> None:
     conn = connect(args.db)
     try:
@@ -1384,6 +1524,24 @@ def export_web(args: argparse.Namespace) -> None:
 
     manifest = {"generated_at": payload["meta"]["generated_at"], "races": len(races), "results": len(results), "splits": len(splits), "bytes": args.output.stat().st_size}
     (args.output.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    modular_dir = resolve_modular_output_dir(args.output, args.modular_dir)
+    if modular_dir:
+        modular_catalog = write_modular_web_data(payload, modular_dir, load_config(args.config))
+        manifest["modular"] = {
+            "catalog": "ultravasan-data-catalog.json",
+            "families": {
+                family: {
+                    key: spec[key]
+                    for key in ("races", "results", "splits", "json_bytes", "js_bytes")
+                }
+                for family, spec in modular_catalog["families"].items()
+            },
+        }
+        (args.output.parent / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
     conn.close()
     print(f"Webbdata exporterad: {args.output} och {js_output} ({len(results)} resultat, {len(splits)} mellantider)")
 
@@ -1475,6 +1633,11 @@ def parser() -> argparse.ArgumentParser:
     e = sub.add_parser("export")
     e.add_argument("--output", type=Path, default=DEFAULT_WEB_JSON)
     e.add_argument("--js-output", type=Path, help="Valfri JavaScript-version för direktöppning utan webbserver")
+    e.add_argument(
+        "--modular-dir",
+        type=Path,
+        help="Skriv även U3-katalog och familjechunks för lazy browserdata",
+    )
     sub.add_parser("validate")
     return p
 

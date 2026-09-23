@@ -24,7 +24,18 @@ const hydrateData=d=>{d=d||{};d.races=Array.isArray(d.races)?d.races:[];d.result
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
 function loadScript(src,timeout=90000){return new Promise((resolve,reject)=>{const el=document.createElement('script');let done=false;const finish=(err)=>{if(done)return;done=true;clearTimeout(timer);err?reject(err):resolve()};el.src=src;el.async=true;el.onload=()=>finish();el.onerror=()=>finish(new Error(`Kunde inte läsa ${src}`));document.head.appendChild(el);const timer=setTimeout(()=>finish(new Error(`Tidsgränsen överskreds för ${src}`)),timeout)})}
-async function ensureRaceData(){const quick=readSessionData();if(quick){setLoading('Läser de valda löparna…');return quick}if(window.ULTRAVASAN_DATA)return window.ULTRAVASAN_DATA;setLoading('Läser historikdatabasen för den delade kartlänken…');await loadScript('data/ultravasan-data.js');if(!window.ULTRAVASAN_DATA)throw new Error('Historikdatabasen laddades inte.');return window.ULTRAVASAN_DATA}
+async function ensureRaceData(){
+  const quick=readSessionData();
+  if(quick){setLoading('Läser de valda löparna…');return quick}
+  if(!window.UltravasanDataLoader)throw new Error('DataLoader saknas för kartvyn.');
+  const params=new URLSearchParams(location.search);
+  const ids=(params.get('runners')||'').split(',').map(Number).filter(Number.isFinite);
+  const preferred=['uv90','uv45'].includes(params.get('race'))?params.get('race'):'uv90';
+  setLoading(ids.length?'Läser data för de valda löparna…':'Läser loppdata…');
+  return ids.length
+    ?window.UltravasanDataLoader.loadForResultIds(ids,preferred)
+    :window.UltravasanDataLoader.loadFamily(preferred);
+}
 function ensureLeaflet(){if(window.L)return Promise.resolve();setLoading('Förbereder karta och banlager…');return new Promise(resolve=>{const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);const script=document.createElement('script');let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve()};script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=finish;script.onerror=finish;document.head.appendChild(script);const timer=setTimeout(finish,2200)})}
 
 

@@ -1,0 +1,89 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+TOOLS = ROOT / "tools"
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
+
+import u3_modularize
+import uvtool
+
+
+def tiny_payload() -> dict:
+    return {
+        "meta": {
+            "schema_version": 1,
+            "generated_at": "2026-09-23T00:00:00+00:00",
+            "identity_contract": "u2-person-key-v1",
+        },
+        "races": [
+            {"id": 1, "race_key": "uv90-a", "year": 2025},
+            {"id": 2, "race_key": "uv45-a", "year": 2025},
+        ],
+        "checkpoints": [
+            {"race_id": 1, "checkpoint_key": "mora", "sequence_no": 1},
+            {"race_id": 2, "checkpoint_key": "mora", "sequence_no": 1},
+        ],
+        "results": [
+            {"id": 10, "race_id": 1, "name_as_published": "A"},
+            {"id": 20, "race_id": 2, "name_as_published": "B"},
+        ],
+        "splits": [
+            {"result_id": 10, "checkpoint_key": "mora", "elapsed_seconds": 100},
+            {"result_id": 20, "checkpoint_key": "mora", "elapsed_seconds": 200},
+        ],
+        "stats": {"1": {"count": 1}, "2": {"count": 1}},
+        "sources": [{"code": "test"}],
+    }
+
+
+def tiny_config() -> dict:
+    return {
+        "races": [
+            {"race_key": "uv90-a", "race_family": "uv90"},
+            {"race_key": "uv45-a", "race_family": "uv45"},
+        ]
+    }
+
+
+def test_modular_export_round_trips_exact_public_rows(tmp_path: Path) -> None:
+    payload = tiny_payload()
+    config = tiny_config()
+    catalog = uvtool.write_modular_web_data(payload, tmp_path, config)
+    assert catalog["mode"] == "modular"
+    assert catalog["result_family"] == {"10": "uv90", "20": "uv45"}
+    assert catalog["families"]["uv90"]["results"] == 1
+    assert catalog["families"]["uv45"]["splits"] == 1
+
+    summary = u3_modularize.validate(payload, tmp_path, config)
+    assert summary["results"] == 2
+    assert summary["splits"] == 2
+
+    uv90 = json.loads((tmp_path / "ultravasan-uv90.json").read_text(encoding="utf-8"))
+    uv45 = json.loads((tmp_path / "ultravasan-uv45.json").read_text(encoding="utf-8"))
+    assert uv90["results"] == [payload["results"][0]]
+    assert uv45["results"] == [payload["results"][1]]
+
+
+def test_export_auto_detects_activated_modular_catalog(tmp_path: Path) -> None:
+    output = tmp_path / "ultravasan.json"
+    assert uvtool.resolve_modular_output_dir(output, None) is None
+
+    (tmp_path / "ultravasan-data-catalog.json").write_text(
+        json.dumps({"schema_version": 1, "mode": "legacy"}),
+        encoding="utf-8",
+    )
+    assert uvtool.resolve_modular_output_dir(output, None) is None
+
+    (tmp_path / "ultravasan-data-catalog.json").write_text(
+        json.dumps({"schema_version": 1, "mode": "modular"}),
+        encoding="utf-8",
+    )
+    assert uvtool.resolve_modular_output_dir(output, None) == tmp_path
+
+    explicit = tmp_path / "other"
+    assert uvtool.resolve_modular_output_dir(output, explicit) == explicit

@@ -27,15 +27,65 @@ function waitForRacePaint(){return new Promise(resolve=>requestAnimationFrame(()
 function waitForRaceDelay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 function setRaceLoading(active,error=false){const status=$('#raceLoadStatus'),sw=$('.race-switch'),main=$('main');document.body.classList.toggle('race-is-loading',active);sw?.setAttribute('aria-busy',String(active));main?.setAttribute('aria-busy',String(active));$$('.race-switch-button').forEach(b=>{b.disabled=active;b.setAttribute('aria-disabled',String(active))});if(!status)return;status.classList.toggle('is-visible',active||error);status.classList.toggle('is-error',error);status.setAttribute('aria-hidden',String(!active&&!error));$('.race-load-copy strong').textContent=error?'Det gick inte att ladda loppdata.':'Laddar data...';$('.race-load-copy small').textContent=error?'Försök igen.':'Byter lopp och uppdaterar analyser'}
 function updateRaceHero(img,ui,initial){if(!img)return Promise.resolve();if(img.src&&!initial)img.classList.add('switching');return new Promise((resolve,reject)=>{let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timeout);img.removeEventListener('load',loaded);img.removeEventListener('error',failed);img.classList.remove('switching');ok?resolve():reject(new Error('Rubrikbilden kunde inte laddas.'))},loaded=()=>finish(true),failed=()=>finish(false),timeout=setTimeout(failed,8000);img.addEventListener('load',loaded,{once:true});img.addEventListener('error',failed,{once:true});setTimeout(()=>{img.src=ui.hero;img.alt=ui.alt;if(img.complete)Promise.resolve().then(()=>finish(img.naturalWidth>0))},initial?0:140)})}
-async function switchRaceFamily(family,initial=false){if(!['uv90','uv45'].includes(family)||raceSwitchBusy||(!initial&&!raceSwitchHasError&&family===state.raceFamily))return false;raceSwitchBusy=true;raceSwitchHasError=false;setRaceLoading(true);const started=performance.now();try{if(!initial)await waitForRacePaint();state.raceFamily=family;document.body.classList.toggle('race-uv45',family==='uv45');const sw=$('.race-switch');if(sw)sw.dataset.active=family;$$('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});const heroReady=updateRaceHero($('#heroHeaderImage'),raceUi[family],initial);document.title=raceUi[family].title;populateRaceYears();state.page=1;compareState.selected=[];refreshFilters();applyFilters();setupMapCompare(true);setupMainRunnerSearch(true);try{localStorage.setItem('ultravasan-race-family',family)}catch{}await heroReady;await waitForRacePaint();const remaining=360-(performance.now()-started);if(remaining>0)await waitForRaceDelay(remaining);setRaceLoading(false);return true}catch(error){console.error('Loppväxlingen misslyckades',error);raceSwitchHasError=true;setRaceLoading(false,true);return false}finally{raceSwitchBusy=false}}
-function setupRaceSwitch(){const saved=new URLSearchParams(location.search).get('race')||localStorage.getItem('ultravasan-race-family')||'uv90';$$('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));switchRaceFamily(saved==='uv45'?'uv45':'uv90',true)}
+function preferredRaceFamily(){
+  const query=new URLSearchParams(location.search).get('race');
+  if(query==='uv45'||query==='uv90')return query;
+  try{
+    const saved=localStorage.getItem('ultravasan-race-family');
+    if(saved==='uv45'||saved==='uv90')return saved;
+  }catch{}
+  return 'uv90';
+}
+async function switchRaceFamily(family,initial=false){
+  if(!['uv90','uv45'].includes(family)||raceSwitchBusy||(!initial&&!raceSwitchHasError&&family===state.raceFamily))return false;
+  raceSwitchBusy=true;raceSwitchHasError=false;setRaceLoading(true);const started=performance.now();
+  try{
+    if(!initial)await waitForRacePaint();
+    const nextData=await window.UltravasanDataLoader.loadFamily(family);
+    if(nextData!==state.data){
+      state.data=hydrateData(nextData);
+      window.ULTRAVASAN_ACTIVE_DATA=state.data;
+    }
+    state.raceFamily=family;
+    document.body.classList.toggle('race-uv45',family==='uv45');
+    const sw=$('.race-switch');if(sw)sw.dataset.active=family;
+    document.querySelectorAll('.race-switch-button').forEach(b=>{const active=b.dataset.raceFamily===family;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+    const heroReady=updateRaceHero($('#heroHeaderImage'),raceUi[family],initial);
+    document.title=raceUi[family].title;
+    populateRaceYears();state.page=1;compareState.selected=[];
+    refreshFilters();applyFilters();setupMapCompare(true);setupMainRunnerSearch(true);
+    try{localStorage.setItem('ultravasan-race-family',family)}catch{}
+    await heroReady;await waitForRacePaint();
+    const remaining=360-(performance.now()-started);if(remaining>0)await waitForRaceDelay(remaining);
+    setRaceLoading(false);return true;
+  }catch(error){
+    console.error('Loppväxlingen misslyckades',error);raceSwitchHasError=true;setRaceLoading(false,true);return false;
+  }finally{raceSwitchBusy=false}
+}
+function setupRaceSwitch(){
+  const saved=preferredRaceFamily();
+  document.querySelectorAll('.race-switch-button').forEach(b=>b.onclick=()=>switchRaceFamily(b.dataset.raceFamily));
+  switchRaceFamily(saved,true);
+}
 
 const hydrateData=d=>{window.RaceContracts.assertKnownRaces(d.races);const rr=new Map(d.results.map(r=>[r.id,r.race_id])),cp=new Map(d.checkpoints.map(c=>[`${c.race_id}|${c.checkpoint_key}`,c]));d.splits.forEach(s=>{const c=cp.get(`${rr.get(s.result_id)}|${s.checkpoint_key}`);if(c){s.checkpoint_name=c.name;s.sequence_no=c.sequence_no;s.distance_km=c.distance_km}if(s.is_estimated==null)s.is_estimated=0});window.UltravasanDataIndex.ensureSplitsByResult(d);Object.defineProperty(d,'splitEvidence',{value:window.ResultStatus.buildSplitEvidence(d.splits),enumerable:false});const overallPlacements=window.RunnerReplay?.deriveOverallPlacements(d.results,d.splits);if(overallPlacements)Object.defineProperty(d,'overallPlacementLookup',{value:overallPlacements,enumerable:false});const classPlacements=window.RunnerReplay?.deriveClassPlacements(d.results,d.splits);if(classPlacements)Object.defineProperty(d,'classPlacementLookup',{value:classPlacements,enumerable:false});return d};
 const splitsForResult=id=>window.UltravasanDataIndex.splitsForResult(state.data,id);
 const splitsForResults=rows=>window.UltravasanDataIndex.splitsForResults(state.data,rows);
 
-async function load(){try{if(window.ULTRAVASAN_DATA){state.data=hydrateData(window.ULTRAVASAN_DATA);setup();return}const r=await fetch('data/ultravasan.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);state.data=hydrateData(await r.json());setup();}catch(e){console.error(e);$('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera att filen <code>data/ultravasan-data.js</code> finns bredvid webbplatsen.<br><small>${esc(e.message)}</small></p>`;}}
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');$('#databaseSize').textContent=state.data.results.length.toLocaleString('sv-SE');$('#splitCount').textContent=state.data.splits.length.toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
+async function load(){
+  try{
+    if(!window.UltravasanDataLoader)throw new Error('DataLoader saknas.');
+    const family=preferredRaceFamily();
+    state.raceFamily=family;
+    state.data=hydrateData(await window.UltravasanDataLoader.loadFamily(family));
+    window.ULTRAVASAN_ACTIVE_DATA=state.data;
+    setup();
+  }catch(e){
+    console.error(e);
+    $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
+  }
+}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();const year=$('#yearFilter');year.onchange=()=>{state.raceId=Number(year.value);state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden')}
 let speedUnitControlsReady=false;
 function syncSpeedUnitControls(unit=speedUnit()){
   const select=$('#speedUnitFilter');if(select)select.value=unit;
