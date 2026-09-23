@@ -1,6 +1,6 @@
 'use strict';
 /* Advanced cross-year analytics. Works entirely in the browser on exported data. */
-const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null,courseSegmentKey:null,courseRaceId:null};
+const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null,courseSegmentKey:null,courseRaceId:null,coursePlanTargets:{uv90:'10:00:00',uv45:'5:00:00'}};
 const nHistoryEngine=typeof module!=='undefined'&&module.exports?require('./history-engine.js'):globalThis.UltravasanHistoryEngine;
 const nCourseIntelligence=typeof module!=='undefined'&&module.exports?require('./course-intelligence.js'):globalThis.CourseIntelligence;
 const n$=s=>document.querySelector(s), n$$=s=>[...document.querySelectorAll(s)];
@@ -41,6 +41,11 @@ function initNerdLab(){
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
   n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
   const hallDialog=n$('#hallMapDialog');hallDialog?.querySelector('.dialog-close')?.addEventListener('click',()=>hallDialog.close());
+  n$('#courseTargetTime')?.addEventListener('change',event=>{
+    const race=activeRace(),family=globalThis.RaceContracts?.familyForRace?.(race);
+    if(family)nerd.coursePlanTargets[family]=event.target.value;
+    renderCourseRacePlan(currentCourseModel());
+  });
   populateSegmentSelectors();renderNerdLab();
 }
 
@@ -185,6 +190,41 @@ function renderCoursePaceView(model,selected){
   bindCourseSegmentClicks(el);
 }
 
+function parseCourseTargetTime(value){
+  const parts=String(value||'').trim().split(':');
+  if(parts.length<2||parts.length>3)return null;
+  const numbers=parts.map(Number);if(numbers.some(number=>!Number.isFinite(number)||number<0))return null;
+  const [hours,minutes,seconds=0]=numbers;
+  if(minutes>=60||seconds>=60)return null;
+  const total=hours*3600+minutes*60+seconds;
+  return total>0?total:null;
+}
+function renderCourseRacePlan(existingModel=null){
+  const input=n$('#courseTargetTime'),status=n$('#coursePlanStatus'),rowsEl=n$('#coursePlanRows');
+  if(!input||!status||!rowsEl)return;
+  const model=existingModel||currentCourseModel(),race=model?.race;
+  if(!model||!race){status.innerHTML='<span>CourseVersion saknas.</span>';rowsEl.innerHTML='';return}
+  const family=model.race_family||globalThis.RaceContracts?.familyForRace?.(race)||'uv90';
+  const stored=nerd.coursePlanTargets[family]||(family==='uv45'?'5:00:00':'10:00:00');
+  if(document.activeElement!==input&&input.value!==stored)input.value=stored;
+  const target=parseCourseTargetTime(input.value);
+  if(target===null){status.innerHTML='<strong>Ogiltig måltid</strong><span>Ange HH:MM eller HH:MM:SS.</span>';rowsEl.innerHTML='';return}
+  nerd.coursePlanTargets[family]=input.value;
+  let plan;
+  try{plan=nCourseIntelligence.buildRacePlan(state.data,race,target,{minSample:5})}
+  catch(error){console.error('Loppplan kunde inte byggas',error);status.innerHTML='<strong>Loppplan saknas</strong><span>CourseVersion-underlaget kunde inte verifieras.</span>';rowsEl.innerHTML='';return}
+  const years=plan.cohort_years.length?`${plan.cohort_years[0]}${plan.cohort_years.length>1?'–'+plan.cohort_years.at(-1):''}`:'inga loppår';
+  if(plan.complete){
+    status.innerHTML=`<strong>${nTime(plan.target_finish_seconds)} · ${nEsc(plan.course_version_id)}</strong><span>${plan.cohort_finishers.toLocaleString('sv-SE')} fullföljande · ${nEsc(years)} · ${plan.historical_segments} historiska segment${plan.fallback_segments?' · '+plan.fallback_segments+' distansfallback':''}</span>`;
+  }else{
+    status.innerHTML=`<strong>Komplett loppplan kan inte beräknas</strong><span>${plan.unavailable_segments} segment saknar både tillräcklig historik och explicit distans. Ingen resttid fördelas genom gissning.</span>`;
+  }
+  rowsEl.innerHTML=plan.rows.map(row=>{
+    const source=row.source==='historical-course-version'?`Historisk CourseVersion · n=${row.sample_n}`:row.source==='distance-fallback'?'Distansfallback':'Underlag saknas';
+    return `<tr class="${row.source}"><td><strong>${nEsc(row.to_name)}</strong><small>${nEsc(row.from_name)} → ${nEsc(row.to_name)}</small></td><td>${row.target_segment_seconds==null?'–':nTime(row.target_segment_seconds)}</td><td>${row.target_cumulative_seconds==null?'–':nTime(row.target_cumulative_seconds)}</td><td>${row.target_pace_seconds_per_km==null?'–':nPace(row.target_pace_seconds_per_km)}</td><td><span class="course-plan-source ${row.source}">${nEsc(source)}</span></td></tr>`;
+  }).join('');
+}
+
 function renderCourseIntelligence(existingModel=null){
   const rowsEl=n$('#courseIntelligenceRows'),summary=n$('#courseIntelligenceSummary'),version=n$('#courseIntelligenceVersion'),narrative=n$('#courseSegmentNarrative');
   if(!rowsEl||!summary||!version||!narrative)return;
@@ -213,6 +253,7 @@ function renderCourseIntelligence(existingModel=null){
   renderCourseRouteView(model,selected);
   renderCourseElevationView(model,selected);
   renderCoursePaceView(model,selected);
+  renderCourseRacePlan(model);
   bindCourseSegmentClicks(rowsEl);
 }
 
