@@ -79,6 +79,7 @@ for(const html of [indexHtml,mapHtml]){
   assert.ok(html.includes('assets/data-adapter.js'),'båda applikationsytorna ska ladda U4 DataAdapter');
   assert.ok(html.includes('assets/race-ui.js'),'båda applikationsytorna ska ladda U4 RaceUI');
   assert.ok(html.includes('assets/app-state.js'),'båda applikationsytorna ska ladda U4 AppState');
+  assert.ok(html.includes('assets/charts.js'),'båda applikationsytorna ska ladda U4 Charts');
   assert.ok(html.includes('assets/data-loader.js'),'båda applikationsytorna ska ladda U3 DataLoader');
   assert.ok(html.includes('data/ultravasan-data-catalog.js'),'båda applikationsytorna ska ladda datakatalogen');
 }
@@ -89,6 +90,8 @@ assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('asset
 assert.ok(indexHtml.indexOf('assets/race-ui.js')<indexHtml.indexOf('assets/app.js'),'RaceUI ska laddas före huvudappen');
 assert.ok(indexHtml.indexOf('assets/race-contracts.js')<indexHtml.indexOf('assets/data-adapter.js'),'loppkontrakten ska laddas före DataAdapter');
 assert.ok(indexHtml.indexOf('assets/data-adapter.js')<indexHtml.indexOf('assets/app-state.js'),'DataAdapter ska laddas före AppState');
+assert.ok(indexHtml.indexOf('assets/app-state.js')<indexHtml.indexOf('assets/charts.js'),'AppState ska laddas före Charts');
+assert.ok(indexHtml.indexOf('assets/charts.js')<indexHtml.indexOf('assets/app.js'),'Charts ska laddas före appen');
 assert.ok(indexHtml.indexOf('assets/app-state.js')<indexHtml.indexOf('assets/app.js'),'AppState ska laddas före appen');
 assert.ok(indexHtml.indexOf('assets/data-adapter.js')<indexHtml.indexOf('assets/app.js'),'DataAdapter ska laddas före appen');
 assert.ok(mapHtml.indexOf('data/ultravasan-data-catalog.js')<mapHtml.indexOf('assets/data-loader.js'),'kartvyn ska läsa katalogen före DataLoader');
@@ -98,6 +101,8 @@ assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/ra
 assert.ok(mapHtml.indexOf('assets/race-ui.js')<mapHtml.indexOf('assets/map.js'),'RaceUI ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/race-contracts.js')<mapHtml.indexOf('assets/data-adapter.js'),'kartans loppkontrakt ska laddas före DataAdapter');
 assert.ok(mapHtml.indexOf('assets/data-adapter.js')<mapHtml.indexOf('assets/app-state.js'),'Kartans DataAdapter ska laddas före AppState');
+assert.ok(mapHtml.indexOf('assets/app-state.js')<mapHtml.indexOf('assets/charts.js'),'Kartans AppState ska laddas före Charts');
+assert.ok(mapHtml.indexOf('assets/charts.js')<mapHtml.indexOf('assets/map.js'),'Charts ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/app-state.js')<mapHtml.indexOf('assets/map.js'),'AppState ska laddas före kartduellen');
 assert.ok(mapHtml.indexOf('assets/data-adapter.js')<mapHtml.indexOf('assets/map.js'),'DataAdapter ska laddas före kartduellen');
 
@@ -128,3 +133,9 @@ const appStateSource=fs.readFileSync(path.join(root,'docs/assets/app-state.js'),
 assert.ok(appSource.includes('UltravasanAppState.createMain'),'huvudappen ska initiera state via U4 AppState');
 assert.ok(mapSource.includes('UltravasanAppState.createMap'),'kartappen ska initiera state via samma U4 AppState');
 assert.ok(appStateSource.includes('createMain')&&appStateSource.includes('createMap'),'AppState ska exponera båda ytkontrakten');
+
+
+const chartsSource=fs.readFileSync(path.join(root,'docs/assets/charts.js'),'utf8');
+assert.ok(appSource.includes('window.UltravasanCharts.median')&&appSource.includes('window.UltravasanCharts.quantile'),'huvudappen ska använda U4 Charts');
+assert.ok(mapSource.includes('window.UltravasanCharts.median'),'kartappen ska använda samma Charts-kärna');
+assert.ok(chartsSource.includes('fixedFinishTimeBins')&&chartsSource.includes('barGeometry'),'Charts ska äga gemensam statistik och histogramgeometri');
