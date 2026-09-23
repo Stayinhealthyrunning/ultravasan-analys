@@ -1,0 +1,155 @@
+name: Publicera U3 modular webbdata
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Jag vill aktivera U3 modular/lazy webbdata på main"
+        required: true
+        default: false
+        type: boolean
+      confirmation_text:
+        description: "Skriv exakt: PUBLISH-U3-WEBDATA"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-u3-webdata-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ inputs.confirm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Hämta main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Kontrollera bekräftelse och baslinje
+        shell: bash
+        env:
+          CONFIRMATION_TEXT: ${{ inputs.confirmation_text }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION_TEXT" = "PUBLISH-U3-WEBDATA"
+          test "$(git branch --show-current)" = "main"
+          git diff --quiet
+          python -m pip install -r requirements-test.txt
+          python tools/u2_baseline.py --check
+
+      - name: Bygg och validera U3-data
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf docs/data/u3
+          python tools/u3_webdata.py \
+            --input docs/data/ultravasan.json \
+            --config config/races.json \
+            --output docs/data/u3
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path("docs/data/u3/manifest.json").read_text(encoding="utf-8"))
+          assert manifest["data_contract"] == "u3-modular-v1"
+          assert manifest["races"] == 22
+          assert manifest["results"] == 24422
+          assert manifest["splits"] == 139910
+          assert manifest["bootstrap_bytes"] < manifest["legacy_compact_bytes"]
+          assert manifest["largest_race_chunk_bytes"] < manifest["legacy_compact_bytes"]
+          assert len(list(Path("docs/data/u3/races").glob("*.js"))) == 22
+          print(manifest)
+          PY
+          python -m pytest -q
+          while IFS= read -r file; do
+            node --check "$file"
+          done < <(find docs/assets tests tools -type f \( -name "*.js" -o -name "*.mjs" \) | sort)
+          while IFS= read -r file; do
+            node "$file"
+          done < <(find tests -maxdepth 1 -type f -name "test_*.js" | sort)
+
+      - name: Installera Chromium
+        run: |
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Verifiera HTTP och file-protokoll
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory docs >"$RUNNER_TEMP/u3-http.log" 2>&1 &
+          browser_path="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          "$browser_path" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --remote-debugging-port=9223 \
+            --user-data-dir="$RUNNER_TEMP/u3-chromium" \
+            http://127.0.0.1:8765/ >"$RUNNER_TEMP/u3-browser.log" 2>&1 &
+          for attempt in {1..60}; do
+            curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null && break
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null
+          node tools/verify_local_browser.mjs
+
+      - name: Skapa återställningspunkt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BACKUP_TAG="backup-before-u3-webdata-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git tag -a "$BACKUP_TAG" "$GITHUB_SHA" -m "Återställningspunkt före U3 webbdataaktivering"
+          git push origin "$BACKUP_TAG"
+          echo "BACKUP_TAG=$BACKUP_TAG" >> "$GITHUB_ENV"
+
+      - name: Kontrollera ändringsyta och publicera
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r changed; do
+            case "$changed" in
+              docs/data/u3/*|docs/data/u3/races/*) ;;
+              *)
+                echo "::error::Otillåten U3-ändring: $changed"
+                exit 1
+                ;;
+            esac
+          done < <(git status --porcelain | sed 's/^...//')
+
+          git add -f docs/data/u3
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "U3-bundles är redan aktuella."
+            exit 0
+          fi
+          git commit -m "Publish U3 modular web data"
+          git push origin HEAD:main
+
+      - name: Sammanfattning
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## U3 modular webbdata"
+            echo ""
+            echo "- Återställningspunkt: \`${BACKUP_TAG:-inte skapad}\`"
+            echo "- Legacy-monoliten behålls som fallback."
+            echo "- Normal startsida använder efter lyckad körning U3 modular/lazy data."
+          } >> "$GITHUB_STEP_SUMMARY"
