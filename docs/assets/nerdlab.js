@@ -36,11 +36,30 @@ function initNerdLab(){
   if(nerd.ready||!window.ULTRAVASAN_DATA||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
-  n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
+  const historyInput=n$('#historySearch');historyInput?.addEventListener('input',async()=>{try{await window.ensureUltravasanHistory?.({rerender:false});renderHistorySuggestions()}catch(error){console.warn('Löpararkivets historik kunde inte laddas',error)}});
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
-  n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
+  n$('#hallTabs button').forEach(b=>b.onclick=async()=>{nerd.hall=b.dataset.hall;n$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));if(nerd.hall==='chargers')await ensureNerdFamilyData();renderHall()});
   const hallDialog=n$('#hallMapDialog');hallDialog?.querySelector('.dialog-close')?.addEventListener('click',()=>hallDialog.close());
-  populateSegmentSelectors();renderNerdLab();
+  populateSegmentSelectors();setupNerdLazyData();renderNerdLab();
+}
+
+let nerdLabVisible=false,nerdFamilyPromise=null;
+async function ensureNerdFamilyData(){
+  if(!window.ensureUltravasanFamilyData)return state.data;
+  if(nerdFamilyPromise)return nerdFamilyPromise;
+  nerdFamilyPromise=window.ensureUltravasanFamilyData(state.raceFamily).catch(error=>{nerdFamilyPromise=null;throw error});
+  try{return await nerdFamilyPromise}finally{nerdFamilyPromise=null}
+}
+function setupNerdLazyData(){
+  const section=n$('.nerd-lab');if(!section)return;
+  const load=()=>ensureNerdFamilyData().then(()=>renderNerdLab()).catch(error=>console.warn('Race Intelligence-historiken kunde inte laddas',error));
+  if(typeof IntersectionObserver==='function'){
+    const observer=new IntersectionObserver(entries=>{nerdLabVisible=entries.some(entry=>entry.isIntersecting);if(nerdLabVisible)load()},{rootMargin:'350px 0px'});
+    observer.observe(section);
+  }else{nerdLabVisible=true;load()}
+  window.addEventListener('ultravasan:race-family-changed',()=>{if(nerdLabVisible)load()});
+  window.addEventListener('ultravasan:history-ready',()=>renderNerdLab());
+  window.addEventListener('ultravasan:family-data-ready',()=>renderNerdLab());
 }
 
 function populateSegmentSelectors(){
