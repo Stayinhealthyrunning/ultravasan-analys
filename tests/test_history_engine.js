@@ -30,6 +30,7 @@ const explicit=[
 ];
 assert.strictEqual(H.groupHistories(explicit,races).length,1,'person_key ska länka utgåvor');
 
+assert.strictEqual(H.wholeCourseComparable({id:33,race_id:2},{id:34,race_id:2},races,courses),true,'samma RaceEdition är alltid direkt jämförbar med sig själv');
 assert.strictEqual(H.wholeCourseComparable(explicit[0],explicit[1],races,courses),false,'CourseVersion är inte helbanans jämförbarhetsbevis');
 assert.strictEqual(H.wholeCourseComparable(stableVasaNerd[0],stableVasaNerd[1],races,courses),false,'olika CourseVersion får inte jämföras implicit');
 
