@@ -24,6 +24,16 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     assert report["whole_course_groups"] == []
     assert report["rejected_or_pending_groups"][0]["group"] == "ultravasan90-post2023"
     assert report["rejected_or_pending_groups"][0]["status"] == "not verified"
-    assert report["geometry_comparisons"][0]["result"]["symmetric_nearest_max_m"] > 0
-    assert "diagnostic only" in report["geometry_comparisons"][0]["decision"]
-    assert "prevents this similarity metric from establishing" in report["geometry_comparisons"][0]["decision"]
+    assert by_key["ultravasan90-2026"]["source_provider"] == "Vasaloppet"
+    assert by_key["ultravasan90-2026"]["source_url"].endswith("UV-90_20260610.kmz")
+    assert any(item["evidence_type"] == "official-organizer-kmz"
+               for item in by_key["ultravasan90-2026"]["external_route_evidence"])
+
+    assert len(report["geometry_comparisons"]) == 3
+    pairs = {(item["left"], item["right"]): item for item in report["geometry_comparisons"]}
+    pair_22_24 = pairs[("Ultravasan 90 2022 exact-year geometry", "Ultravasan 90 2024 exact-year geometry")]
+    pair_24_26 = pairs[("Ultravasan 90 2024 exact-year geometry", "Ultravasan 90 2026 exact-year geometry")]
+    assert pair_22_24["result"]["symmetric_nearest_median_m"] > 100
+    assert pair_24_26["result"]["symmetric_nearest_median_m"] < 100
+    assert all("diagnostic only" in item["decision"] for item in report["geometry_comparisons"])
+    assert all("not by itself" in item["decision"] for item in report["geometry_comparisons"])
