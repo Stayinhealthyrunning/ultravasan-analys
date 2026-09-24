@@ -392,3 +392,12 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
   .runner-replay-marker,.runner-replay-segment,.runner-elevation-segment,.runner-replay-segment-card,.runner-elevation-chart{transition:none}
   .runner-replay-marker .pulse{animation:none;opacity:.35}
 }
+
+
+/* Runner-dialog responsive layout: keep auto-placed analysis sections from
+   creating an empty grid cell above Replay on wide/tablet-landscape viewports. */
+@media(min-width:1181px){
+  #runnerDialog .runner-detail{align-items:start}
+  #runnerDialog .runner-development{grid-column:1/-1;width:100%;min-width:0}
+  #runnerDialog .runner-development .table-wrap{max-width:100%;overflow-x:auto}
+}
