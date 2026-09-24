@@ -20,7 +20,7 @@ def check(condition: bool, message: str) -> None:
 
 def ready(page) -> None:
     page.wait_for_function("() => window.ULTRAVASAN_ACTIVE_DATA?.results?.length > 0", timeout=60_000)
-    page.wait_for_function("() => !document.querySelector('#loading') || document.querySelector('#loading').hidden", timeout=60_000)
+    page.wait_for_function("() => !document.querySelector('#loading') || document.querySelector('#loading').classList.contains('hidden')", timeout=60_000)
 
 
 def family_full(page, family: str) -> None:

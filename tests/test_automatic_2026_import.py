@@ -302,16 +302,23 @@ def test_full_dry_run_fail_closed_for_negative_fixtures(monkeypatch: pytest.Monk
     monkeypatch.setattr(automatic, "import_one", fake_import)
     if failure == "identity-collision":
         def collisions(conn):
-            target_ids = {row[0] for row in conn.execute("SELECT id FROM races WHERE year=2026")}
-            return [{"race_id": race_id, "identity": "synthetic-collision"} for race_id in target_ids]
+            targets = conn.execute("SELECT id,race_key,year FROM races WHERE year=2026").fetchall()
+            return [{"race_id": row["id"], "race_key": row["race_key"], "year": row["year"],
+                     "athlete_id": 0, "canonical_name": "Synthetic Collision",
+                     "source_codes": ["vasanerd", "vasaloppet_mika"],
+                     "results": [{"result_id": 1, "bib": "1", "status": "FINISHED", "source_result_id": "one"}]}
+                    for row in targets]
         monkeypatch.setattr(uvtool, "collect_same_race_identity_collisions", collisions)
-    with pytest.raises(RuntimeError) as error:
-        automatic.command_full_dry_run(args)
-    message = str(error.value).lower()
-    expected = {"protected-history": "protected pre-2026 data changed",
-                "identity-collision": "strict data-quality checks failed",
-                "strict-parser": "strict data-quality checks failed"}[failure]
-    assert expected in message
+    if failure == "identity-collision":
+        with pytest.raises(uvtool.IdentityCollisionError, match="same-race-identitetskollisioner"):
+            automatic.command_full_dry_run(args)
+    else:
+        with pytest.raises(RuntimeError) as error:
+            automatic.command_full_dry_run(args)
+        message = str(error.value).lower()
+        expected = {"protected-history": "protected pre-2026 data changed",
+                    "strict-parser": "strict data-quality checks failed"}[failure]
+        assert expected in message
     assert automatic.sha256_file(args.production_db) == before
     assert args.work_db.exists(), "work-db remains available for failure diagnosis"
 

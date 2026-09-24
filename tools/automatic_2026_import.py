@@ -454,11 +454,11 @@ def import_one(race_key: str, db: Path, config: Path, raw: Path, report: Path, d
     return json.loads(report.read_text(encoding="utf-8"))
 
 
-def export_to(db: Path, directory: Path) -> dict[str, Any]:
+def export_to(db: Path, directory: Path, config: Path = uvtool.DEFAULT_CONFIG) -> dict[str, Any]:
     directory.mkdir(parents=True, exist_ok=True)
     json_path = directory / "ultravasan.json"
     js_path = directory / "ultravasan-data.js"
-    uvtool.export_web(SimpleNamespace(db=db, output=json_path, js_output=js_path))
+    uvtool.export_web(SimpleNamespace(db=db, output=json_path, js_output=js_path, modular_dir=None, config=config))
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     if len(payload["results"]) != manifest["results"] or len(payload["splits"]) != manifest["splits"]:
@@ -573,7 +573,7 @@ def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         blockers.append("semantic idempotency failed")
     if not (history_before == history_after_first == history_after_second):
         blockers.append(f"protected pre-{year} data changed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.generated_config)
     changed = first_digest != before_digest
     report = {
         "generated_at": utc_now(), "mode": "full-dry-run", "target_year": year, "decision": "READY" if not blockers else "BLOCKED",
@@ -613,7 +613,7 @@ def command_apply(args: argparse.Namespace) -> dict[str, Any]:
     atomic_copy(args.work_db, args.production_db)
     atomic_copy(args.generated_config, args.config)
     staging = args.export_dir / "apply-staging"
-    export = export_to(args.production_db, staging)
+    export = export_to(args.production_db, staging, args.config)
     for name in ("ultravasan.json", "ultravasan-data.js", "manifest.json"):
         atomic_copy(staging / name, args.web_dir / name)
     with uvtool.connect(args.production_db) as conn:
@@ -672,7 +672,7 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         blockers.append("semantic idempotency failed")
     if history_before != history_after:
         blockers.append(f"protected pre-{year} data changed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.generated_config)
     report = {"generated_at": utc_now(), "mode": "resume-full-dry-run", "target_year": year,
               "decision": "READY" if not blockers else "BLOCKED", "changed": first_digest != before_digest,
               "production_target_digest_before": before_digest, "target_digest_after": first_digest,
@@ -723,7 +723,7 @@ def command_simulate_2025(args: argparse.Namespace) -> dict[str, Any]:
     blockers.extend(f"second-{family}: {item}" for family, quality in quality2.items() for item in quality["blockers"])
     if digest1 != digest2 or counts1 != counts2:
         blockers.append("2025 semantic idempotency failed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.config)
     report = {"generated_at": utc_now(), "mode": "simulate-2025", "decision": "PASS" if not blockers else "BLOCKED", "qualities": quality1, "second_pass_qualities": quality2, "idempotent": digest1 == digest2 and counts1 == counts2, "export": export, "blockers": blockers}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
