@@ -19,8 +19,8 @@ specificHelp('#histogram',['FINISHED-resultat','15-minutersintervall','Q25–Q75
 specificHelp('#paceChart',['CourseVersion-segment','exakta segmenttider','estimerade mellantider','separat för varje segment']);
 specificHelp('#fieldFlow',['sammanhängande följd','estimerad passage bryter','råobservation fyller inte luckan','DNS räknas inte']);
 specificHelp('#placementScatter',['Varje punkt är en löpare','slutplacering','män och kvinnor']);
-specificHelp('#classHistoryChart',['median sluttid','CourseVersion','DNS räknas inte']);
-specificHelp('#clubHistoryChart',['deltagandestaplar','prestationslinje bryts','CourseVersion']);
+specificHelp('#classHistoryChart',['median sluttid','verifierade helbaneserie','DNS räknas inte']);
+specificHelp('#clubHistoryChart',['deltagandestaplar','prestationslinje kräver','verifierade helbanenyckel']);
 specificHelp('#percentileLadder',['FINISHED','linjära kvantilmetod','DNS och DNF']);
 specificHelp('.runner-development',['faktiskt registrerad checkpoint','kompletta finished-kohort','courseversion','startar inte uppspelning eller musik']);
 assert.ok(app.includes('class="h2h-method"')&&app.includes('samma whole-course-jämförbarhetsserie')&&app.includes('banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna'),'H2H ska visa synlig metodtext för kohort och CourseVersion-blockering');
