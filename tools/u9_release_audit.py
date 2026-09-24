@@ -110,7 +110,7 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
             "assets/styles.css?v=20260924-r3",
             "assets/course-intelligence.js?v=20260924-r3",
             "assets/app.js?v=20260924-r3",
-            "assets/nerdlab.js?v=20260924-r3",
+            "assets/nerdlab.js?v=20260924-r4",
             "assets/audience-analytics.js?v=20260924-r3",
         )),
     }

@@ -111,8 +111,12 @@ def run(base_url: str) -> None:
 
         # Block the local vendor files and prove the real GPS route still renders through SVG fallback.
         fallback_page = context.new_page()
+        intentional_fallback_errors: list[str] = []
+        blocked_vendor_requests: list[str] = []
         fallback_page.on("pageerror", lambda error: errors.append(f"fallback:{error}"))
-        fallback_page.on("console", lambda message: errors.append(f"fallback:{message.text}") if message.type == "error" else None)
+        fallback_page.on("console", lambda message: intentional_fallback_errors.append(message.text) if message.type == "error" else None)
+        fallback_page.on("requestfailed", lambda request: blocked_vendor_requests.append(request.url)
+                         if "/vendor/leaflet-1.9.4/leaflet." in request.url else None)
         fallback_page.route("**/vendor/leaflet-1.9.4/leaflet.*", lambda route: route.abort())
         fallback_page.goto(base_url, wait_until="domcontentloaded")
         ready(fallback_page)
@@ -123,6 +127,10 @@ def run(base_url: str) -> None:
         fallback = fallback_page.evaluate("() => ({svg:!!document.querySelector('#hallMapCanvas .hall-fallback-svg'),note:document.querySelector('#hallMapCanvas .hall-map-fallback-note')?.textContent||'',dialog:!!document.querySelector('#hallMapDialog')?.open})")
         check(fallback["svg"] and fallback["dialog"] and "GPS-rutten" in fallback["note"],
               f"Hall map SVG fallback failed when local Leaflet was unavailable: {fallback}")
+        check({url.rsplit("/", 1)[-1] for url in blocked_vendor_requests} == {"leaflet.css", "leaflet.js"},
+              f"SVG fallback did not exercise failed local Leaflet JS and CSS requests: {blocked_vendor_requests}")
+        check(all(message == "Failed to load resource: net::ERR_FAILED" for message in intentional_fallback_errors),
+              f"unexpected browser console error during intentional vendor blocking: {intentional_fallback_errors}")
         fallback_page.close()
 
         # Browser history: mutate a real filter and race/year, then prove back/forward sync URL and state.
