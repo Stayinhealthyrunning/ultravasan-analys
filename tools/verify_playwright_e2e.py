@@ -25,7 +25,7 @@ def ready(page) -> None:
 
 def family_full(page, family: str) -> None:
     page.evaluate("async family => { await ensureActiveFamilyFull(family, true); }", family)
-    page.wait_for_function("family => state.raceFamily === family && state.dataPhase === 'full'", family, timeout=60_000)
+    page.wait_for_function("family => state.raceFamily === family && state.dataPhase === 'full'", arg=family, timeout=60_000)
 
 
 def choose_result(page, family: str, race_key: str, status: str):
