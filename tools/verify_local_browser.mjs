@@ -205,30 +205,41 @@ const u7History=await evaluate(`(() => {
 })()`);
 await delay(100);
 
+const clubHistorySearch=await evaluate(`(() => {
+  const input=document.querySelector('#clubCompareSearch');
+  if(!input)return {available:false};
+  input.value='STOCKHOLM';
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  return {available:true};
+})()`);
+await delay(120);
+const clubHistorySelection=await evaluate(`(() => {
+  const buttons=[...document.querySelectorAll('#clubCompareSuggestions .club-search-option')];
+  const match=buttons.find(button=>(button.textContent||'').toUpperCase().includes('STOCKHOLM'))||buttons[0]||null;
+  if(!match)return {found:false};
+  const text=(match.textContent||'').trim();
+  match.click();
+  return {found:true,text};
+})()`);
+await delay(180);
 const clubHistoryCourseVersion=await evaluate(`(() => {
-  const races=familyRaces().slice().sort((a,b)=>a.year-b.year);
-  const currentRace=state.data.races.find(r=>String(r.id)===String(state.raceId));
-  const currentScope=historyComparisonKey(currentRace);
-  const stats=clubStatsCurrent();
-  const candidates=stats.map(club=>{
-    const rows=familyResults().filter(result=>advanced.clubKeyByResult.get(result.id)===club.key&&isFinished(result));
-    const points=races.map((race,i)=>{const values=rows.filter(result=>result.race_id===race.id).map(result=>advanced.smIndex.get(result.id)).filter(Number.isFinite);return values.length>=3?{i,year:race.year,scope:historyComparisonKey(race),n:values.length}:null}).filter(Boolean);
-    const scopes=[...new Set(points.map(point=>point.scope).filter(Boolean))];
-    const currentPoints=points.filter(point=>point.scope===currentScope);
-    return {club,points,scopes,currentPoints};
-  }).filter(item=>item.scopes.length>=2&&item.currentPoints.length>=2);
-  const preferred=candidates.find(item=>String(item.club.name||'').trim().toUpperCase()==='STOCKHOLM')||candidates[0]||null;
-  if(!preferred)return {available:false,currentScope,candidateCount:candidates.length};
-  advanced.clubSelection=[preferred.club.key];
-  const select=document.querySelector('#clubProfileSelect');if(select)select.value=preferred.club.key;
-  renderClubWorld();
+  const races=state.data.races.filter(race=>window.RaceContracts.familyForRace(race)===state.raceFamily);
+  const scopeForYear=year=>{const race=races.find(item=>Number(item.year)===Number(year));return race?window.HistoryIntelligence.comparisonKeyForRace(race):null};
+  const currentRace=state.data.races.find(race=>String(race.id)===String(state.raceId));
+  const currentScope=currentRace?window.HistoryIntelligence.comparisonKeyForRace(currentRace):null;
   const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')].map(path=>({scope:path.dataset.historyScope||'',from:Number(path.dataset.historyFrom),to:Number(path.dataset.historyTo)}));
-  const scopeForYear=year=>historyComparisonKey(races.find(race=>Number(race.year)===Number(year)));
   const pathScopesValid=paths.length>=2&&paths.every(path=>path.scope&&scopeForYear(path.from)===path.scope&&scopeForYear(path.to)===path.scope);
-  const improvement=clubHistoryImprovement(preferred.club.key);
-  const improvementValid=Boolean(improvement&&improvement.comparisonKey===currentScope&&scopeForYear(improvement.fromYear)===currentScope&&scopeForYear(improvement.toYear)===currentScope);
+  const improvedButton=document.querySelector('#clubRankingTabs button[data-metric="improved"]');
+  improvedButton?.click();
+  const rankingRows=[...document.querySelectorAll('#clubRankings button')].map(button=>{
+    const text=(button.querySelector('em')?.textContent||'').trim();
+    const match=text.match(/(\\d{4})–(\\d{4})/);
+    const from=match?Number(match[1]):null,to=match?Number(match[2]):null;
+    return {text,from,to,fromScope:from?scopeForYear(from):null,toScope:to?scopeForYear(to):null};
+  });
+  const improvementValid=rankingRows.length>0&&rankingRows.every(row=>row.from&&row.to&&row.fromScope===currentScope&&row.toScope===currentScope);
   const method=(document.querySelector('#clubHistoryChart')?.closest('article')?.querySelector('.info-popup')?.textContent||'').trim();
-  return {available:true,key:preferred.club.key,name:preferred.club.name,currentScope,historicalScopes:preferred.scopes,paths,pathScopesValid,improvement,improvementValid,method};
+  return {available:true,currentScope,paths,pathScopesValid,rankingRows,improvementValid,method};
 })()`);
 
 const u8Ux=await evaluate(`(() => {
