@@ -23,11 +23,19 @@ const mapDataAdapter=typeof module==='object'&&module.exports?require('./data-ad
 const mapRaceFamily=r=>mapRaceUi.familyKey(r);
 function mixedRaceFamilyError(results,races){const selected=(results||[]).map(result=>mapRaceFamily((races||[]).find(r=>r.id===result.race_id)));if(selected.some(family=>family===null))return 'Loppkontrakt saknas för någon av de valda löparna.';const families=[...new Set(selected)];return families.length>1?'Löpare från Ultravasan 90 och Ultravasan 45 kan inte jämföras i samma kartduell. Välj löpare från ett och samma lopp.':null}
 function activeReferenceRoute(models,usedRoutes,registry){return models?.[0]?.route||usedRoutes?.[0]||null}
+function displayGeometryStatus(registry,race,route){
+  const contract=registry?.edition_route_contracts?.[race?.race_key];
+  if(!contract)return `kartreferens ${route?.source_year??'okänt år'}`;
+  const sourceYear=contract.display_geometry_source_year??route?.source_year??'okänt år';
+  return contract.display_geometry_usage==='exact-source-year'
+    ?`verifierad årsgeometri ${sourceYear}`
+    :`kartreferens från ${sourceYear}`;
+}
 function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
 function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
 const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?.elevation_profile,distance);
 
-if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,duelPlaybackRate,elevationAtDistance};
+if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,duelPlaybackRate,elevationAtDistance};
 const hydrateData=d=>mapDataAdapter.hydrate(d);
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
@@ -64,7 +72,8 @@ function boot(){
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;
   $('#raceTitle').textContent=mapRaceUi.selectionTitle(app.models.map(model=>model.race));
-  $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km · kartreferens ${esc(r.source_year)}</span>`).join('');
+  const editionModels=[...new Map(app.models.map(model=>[model.race.race_key,model])).values()];
+  $('#courseNote').innerHTML=editionModels.map(model=>`<span class="course-pill"><i style="background:${model.route.style.color}"></i>${esc(model.race.year)} · ${esc(displayGeometryStatus(app.registry,model.race,model.route))} · ${model.route.official_distance_km.toFixed(1)} km</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
   $('#stripLeader').textContent='Start';const distances=[...new Set(app.usedRoutes.map(r=>Number(r.official_distance_km).toFixed(0)))];$('#stripFinishDistance').textContent=`${distances.join('/')} km · Mora`;
   buildCheckpointJump();buildRaceStrip();buildDuelElevation();initMap();bindControls();initAudio();update(true);$('#mapLoading').classList.add('hidden');
