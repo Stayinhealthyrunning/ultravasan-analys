@@ -1,7 +1,7 @@
 # Ultravasan route and GPX audit
 
 Inventoried 22 imported editions; exact local source-year route files found: 4.
-Curated external year-specific route evidence exists for 10 editions, of which 6 have strong/strong-secondary evidence.
+Curated external year-specific route evidence exists for 10 editions, of which 7 have strong/strong-secondary evidence.
 
 CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.
 
@@ -22,17 +22,17 @@ CourseVersion is not treated as whole-course comparability. Reference tracks and
 | ultravasan45-2022 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
 | ultravasan90-2022 | Yes | exact-source-year · source 2022 | local-exact-source-year | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | Not assigned |
 | ultravasan45-2023 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2023 | No | reference-only · source 2024 | external-candidate | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
+| ultravasan90-2023 | No | reference-only · source 2024 | external-year-specific | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet/Mynewsdesk (official-course-change-notice, strong); plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
 | ultravasan45-2024 | No | reference-only · source 2026 | external-year-specific | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | ITRA/Trace de Trail (itra-year-specific-course-track, strong) | Not assigned |
-| ultravasan90-2024 | Yes | exact-source-year · source 2024 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | ITRA/Trace de Trail (itra-year-specific-course-track, strong); plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | Not assigned |
+| ultravasan90-2024 | Yes | exact-source-year · source 2024 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet/Mynewsdesk (official-course-change-notice, strong); ITRA/Trace de Trail (itra-year-specific-course-track, strong); plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | ultravasan90-2024-2025 |
 | ultravasan45-2025 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2025 | No | reference-only · source 2024 | external-year-specific | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasahistorier (race-day-gps-track, strong-secondary) | Not assigned |
+| ultravasan90-2025 | No | reference-only · source 2024 | external-year-specific | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet (official-no-course-change-notice, strong); Vasahistorier (race-day-gps-track, strong-secondary) | ultravasan90-2024-2025 |
 | ultravasan45-2026 | Yes | exact-source-year · source 2026 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2026 | Yes | reference-only · source 2024 | local-exact-source-year | UV-90_20260610.kmz · 2026 | Vasaloppet (official-organizer-kmz, strong) | Not assigned |
+| ultravasan90-2026 | Yes | reference-only · source 2024 | local-exact-source-year | UV-90_20260610.kmz · 2026 | Vasaloppet (official-course-change-notice, strong); Vasaloppet (official-organizer-kmz, strong) | Not assigned |
 
 ## Whole-course conclusion
 
-The previously proposed ultravasan90-post2023 group is not verified. The 2024 route evidence explicitly records a rerouting around km 57-59, while the remaining annual evidence has not been pairwise established as performance-equivalent. U20 therefore recommends no multi-year whole-course group at this stage.
+The broad ultravasan90-post2023 group is rejected. Organizer evidence establishes route changes from 2023 to 2024, no course changes for 2025, and a return from the temporary Evertsberg–Oxberg routing in 2026. U20 therefore verifies only ultravasan90-2024-2025 as a multi-year whole-course comparison group.
 
 ## Geometry review
 
@@ -92,18 +92,22 @@ The exact-source-year 2022, 2024 and 2026 UV90 geometries receive pairwise coars
 - **ultravasan90-2018** — plotaroute.com: Year-labelled downloadable route exists, but organizer provenance is not established. (https://www.plotaroute.com/route/2311944)
 - **ultravasan90-2019** — plotaroute.com: Year-labelled downloadable route exists, but organizer provenance is not established. (https://www.plotaroute.com/route/2311126)
 - **ultravasan90-2022** — plotaroute.com: Route description states it is based on a KMZ supplied by the organizer on 2022-06-16; GPX/KML downloads are offered. (https://www.plotaroute.com/route/1942022)
+- **ultravasan90-2023** — Vasaloppet/Mynewsdesk: Organizer documents the new 2023 start routing via the first Vasalopp hill, extending the running course to 92 km. (https://vasaloppet.mynewsdesk.com/pressreleases/ny-banstraeckning-2023-cyklister-och-loepare-tar-sig-an-vasaloppets-foersta-backe-3254898)
 - **ultravasan90-2023** — plotaroute.com: A 2023-labelled downloadable route exists; the page itself does not establish organizer provenance. (https://www.plotaroute.com/route/2311089)
 - **ultravasan45-2024** — ITRA/Trace de Trail: ITRA track created 2024-08-13 for Ultravasan 45; 44.1 km geometry and GPX download are exposed. (https://tracedetrail.fr/en/trace/267130)
+- **ultravasan90-2024** — Vasaloppet/Mynewsdesk: Organizer states that 2024 differs from 2023 after the first hill and between Evertsberg and Oxberg, including the temporary Björnarvet rerouting caused by roadworks. (https://vasaloppet.mynewsdesk.com/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188)
 - **ultravasan90-2024** — ITRA/Trace de Trail: ITRA track created 2024-08-13 for the 2024 race; 92.15 km course metadata is exposed. (https://tracedetrail.fr/en/trace/267129)
 - **ultravasan90-2024** — plotaroute.com: Route description states it came from organizer KMZ dated 2024-08-16 and was updated after the race; it explicitly records a rerouting around km 57-59 due to road construction. (https://www.plotaroute.com/route/2710347)
+- **ultravasan90-2025** — Vasaloppet: Organizer explicitly states that there are no changes to the 2025 Ultravasan 90 course, establishing continuity from the 2024 edition. (https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025)
 - **ultravasan90-2025** — Vasahistorier: Published course analysis states its profile is based on a GPX track recorded during Ultravasan 90 on race day 2025-08-16. (https://vasahistorier.se/ask/banan/ultravasan)
+- **ultravasan90-2026** — Vasaloppet: Organizer states that 2026 returns to the ordinary Vasaloppsleden route between Evertsberg and Oxberg after several years of a temporary roadworks rerouting. (https://vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2026-rekordmanga-lopare-anmalda/)
 - **ultravasan90-2026** — Vasaloppet: Vasaloppets official Ultravasan 90 page exposes this GPS file for the 2026 course and labels it updated 2026-06-10. (https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz)
 
 ## Limitations
 
 - Repository reference geometry is not treated as exact annual route evidence unless its source year matches the RaceEdition.
 - External references are curated evidence metadata; the audit does not silently download or promote third-party geometry into the repository.
-- A year-specific route or race-day GPS trace proves evidence for that year, not equivalence to another year.
+- A year-specific route or race-day GPS trace proves evidence for that year; cross-year equivalence additionally requires explicit continuity evidence such as an organizer no-change statement.
 - The sampled nearest-track distance is a diagnostic and cannot establish course identity or equal performance difficulty on its own.
 - A missing original source file is never substituted by hashing a derived repository artifact; source_sha256 remains null in that case.
 - Display geometry, exact annual geometry evidence and whole-course performance comparability are separate contracts.
