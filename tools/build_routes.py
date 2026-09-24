@@ -6,9 +6,10 @@ file is a browser wrapper containing the same parsed payload.
 
 Verified GPX sources
 --------------------
-The three files in ``data/routes`` are the primary, reproducible geometry and
-elevation sources.  UV90 uses separate pre/post-2023 versions while UV45 uses
-one geometry with year-specific checkpoint models supplied by race data.
+The three GPX files in ``data/routes`` are primary reproducible source-year
+geometries: UV90 has verified 2022 and 2024 tracks and UV45 has a verified 2026
+track. Other RaceEditions may use these as display references only; display
+geometry never establishes whole-course performance comparability.
 
 Fallback
 --------
@@ -470,18 +471,19 @@ def build_uv45_route(course_config):
         try:
             route = verified_route(
                 route_id=route_id,
-                name="Ultravasan 45 – Oxberg till Mora",
+                name="Ultravasan 45 – referensgeometri 2026",
                 years={"from": 2014, "to": 2099},
                 official_distance=float(checkpoints[-1]["distance_km"]),
                 source_path=UV45_PRIMARY_GPX,
                 source_year=2026,
                 race_family="uv45",
-                style={"color": "#d28b22", "dashArray": None, "label": "Ultravasan 45"},
+                style={"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
                 checkpoints=checkpoints,
                 expected_start=[61.1263, 14.17957],
                 expected_finish=[61.006997, 14.542826],
             )
-            route["geometry_note"] = "Verifierad UV45-GPX 2026 används för geometri och höjd för samtliga år; kontrollmodellen kommer från respektive loppår."
+            route["geometry_note"] = "Verifierad GPX-geometri för loppåret 2026. När denna geometri visas för tidigare loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet."
+            route["historical_note"] = "Källåret är 2026. Bindningar till tidigare Ultravasan 45-år används endast som visningsreferens tills årsvis geometri har verifierats."
             print(f"Använder {UV45_PRIMARY_GPX.name}: {route['source_point_count']} källpunkter till {route['point_count']} webbpunkter")
             return route
         except ValueError as error:
@@ -514,7 +516,7 @@ def build_uv45_route(course_config):
         "id": "ultravasan45-current",
         "route_version": "ultravasan45-current",
         "race_family": "uv45",
-        "name": "Ultravasan 45 – Oxberg till Mora",
+        "name": "Ultravasan 45 – referensgeometri 2026",
         "years": {"from": min(r["year"] for r in uv45_races), "to": 2099},
         "official_distance_km": official_distance,
         "total_distance_km": round(raw_total, 3),
@@ -524,7 +526,7 @@ def build_uv45_route(course_config):
         "source_type": "fallback-kmz",
         "source_year": 2026,
         "geometry_quality": "uploaded-gps",
-        "geometry_note": "GPS-geometri från den uppladdade UV45-KMZ-filen. Distansaxeln är normaliserad till officiell distans.",
+        "geometry_note": "GPS-geometri för källåret 2026. När den visas för tidigare loppår är den endast en kartografisk referens.",
         "elevation_available": bool(elevation_profile),
         "elevation_note": (
             "Höjddata extraherad reproducerbart från UV45-KMZ-filen."
@@ -532,7 +534,7 @@ def build_uv45_route(course_config):
             else "KMZ-filens höjdkolumn är ofullständig och innehåller orimliga värden. Höjddata används därför inte."
         ),
         "elevation_profile": elevation_profile,
-        "style": {"color": "#d28b22", "dashArray": None, "label": "Ultravasan 45"},
+        "style": {"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
         "bounds": bounds(points),
         "checkpoints": checkpoints,
         "points": points,
@@ -621,19 +623,21 @@ def main():
         try:
             old = verified_route(
                 route_id="ultravasan90-pre2023",
-                name="Ultravasan 90 – äldre sträckning",
+                name="Ultravasan 90 – referensgeometri 2022",
                 years={"from": 2014, "to": 2022},
                 official_distance=OLD_TOTAL,
                 source_path=OLD_PRIMARY_GPX,
                 source_year=2022,
                 race_family="uv90",
-                style={"color": "#7c3aed", "dashArray": "10 8", "label": "2014–2022"},
+                style={"color": "#7c3aed", "dashArray": "10 8", "label": "Referens 2022"},
                 checkpoints=make_old_checkpoints(current, current["points"]),
                 expected_start=current["points"][0],
                 expected_finish=current["points"][-1],
             )
             old["source_reference"] = OLD_SOURCE
             old["source_note"] = "Verifierad Ultravasan 90-rutt för 2022."
+            old["geometry_note"] = "Verifierad GPX-geometri för loppåret 2022. När denna geometri visas för andra loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet."
+            old["historical_note"] = "Källåret är 2022. Bindningar till 2014–2019 används endast som visningsreferens tills årsvis geometri har verifierats."
             print(f"Använder {OLD_PRIMARY_GPX.name}: {old['source_point_count']} källpunkter till {old['point_count']} webbpunkter")
         except ValueError as error:
             print(f"VARNING: {error}. Befintlig äldre rutt används som fallback.")
@@ -657,12 +661,12 @@ def main():
             write_reference_gpx(old_points, geometry_note)
         old = {
             "id": "ultravasan90-pre2023", "route_version": "ultravasan90-pre2023", "race_family": "uv90",
-            "name": "Ultravasan 90 – äldre sträckning", "years": {"from": 2014, "to": 2022},
+            "name": "Ultravasan 90 – referensgeometri 2022", "years": {"from": 2014, "to": 2022},
             "official_distance_km": OLD_TOTAL, "total_distance_km": round(raw_total, 3), "gps_distance_km": round(raw_total, 3),
             "point_count": len(old_points), "source_file": source_file, "source_type": "fallback",
             "source_year": 2022, "geometry_quality": geometry_quality, "geometry_note": geometry_note,
             "elevation_available": bool(old_elevation_profile), "elevation_profile": old_elevation_profile,
-            "style": {"color": "#7c3aed", "dashArray": "10 8", "label": "2014–2022"},
+            "style": {"color": "#7c3aed", "dashArray": "10 8", "label": "Referens 2022"},
             "bounds": bounds(old_points), "checkpoints": make_old_checkpoints(current, old_points), "points": old_points,
         }
 
@@ -671,18 +675,19 @@ def main():
         try:
             post = verified_route(
                 route_id="ultravasan90-post2023",
-                name="Ultravasan 90 – sträckning från 2023",
+                name="Ultravasan 90 – referensgeometri 2024",
                 years={"from": 2023, "to": 2099},
                 official_distance=float(current["official_distance_km"]),
                 source_path=CURRENT_PRIMARY_GPX,
                 source_year=2024,
                 race_family="uv90",
-                style={"color": "#176d53", "dashArray": None, "label": "2023–"},
+                style={"color": "#176d53", "dashArray": None, "label": "Referens 2024"},
                 checkpoints=current["checkpoints"],
                 expected_start=current["points"][0],
                 expected_finish=current["points"][-1],
             )
-            post["historical_note"] = "Från 2023 används den längre inledande sträckningen; geometri och höjd kommer från verifierad GPX 2024."
+            post["geometry_note"] = "Verifierad GPX-geometri för loppåret 2024. När denna geometri visas för 2023, 2025 eller 2026 är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet."
+            post["historical_note"] = "Källåret är 2024. Extern evidens dokumenterar dessutom en tillfällig omläggning 2024; bindningar till andra år är därför uttryckligen reference-only tills årsvis geometri har verifierats."
             print(f"Använder {CURRENT_PRIMARY_GPX.name}: {post['source_point_count']} källpunkter till {post['point_count']} webbpunkter")
         except ValueError as error:
             print(f"VARNING: {error}. Befintlig post-2023-rutt används som fallback.")
@@ -699,7 +704,7 @@ def main():
             "years": {"from": 2023, "to": 2099}, "source_type": "fallback", "source_year": 2026,
             "geometry_quality": "uploaded-gps", "geometry_note": "Befintlig KMZ-baserad fallbackgeometri.",
             "elevation_available": bool(current_elevation_profile), "elevation_profile": current_elevation_profile,
-            "style": {"color": "#176d53", "dashArray": None, "label": "2023–"},
+            "style": {"color": "#176d53", "dashArray": None, "label": "Referens 2026"},
         }
     uv45 = build_uv45_route(course_config)
     routes = {old["id"]: old, post["id"]: post}
@@ -707,6 +712,7 @@ def main():
         routes[uv45["id"]] = uv45
     courses = course_config.get("courses", {})
     route_for_edition = {}
+    edition_route_contracts = {}
     for race in config.get("races", []):
         race_key = race.get("race_key")
         course_id = race.get("course_version_id")
@@ -717,8 +723,19 @@ def main():
         if route_id not in routes:
             raise ValueError(f"CourseVersion {course_id!r} has unknown display route {route_id!r}")
         route_for_edition[race_key] = route_id
+        display_route = routes[route_id]
+        source_year = display_route.get("source_year")
+        exact_display_geometry = source_year is not None and int(source_year) == int(race.get("year"))
+        edition_route_contracts[race_key] = {
+            "display_route_id": route_id,
+            "display_geometry_usage": "exact-source-year" if exact_display_geometry else "reference-only",
+            "display_geometry_source_year": source_year,
+            "course_version_id": course_id,
+            "whole_course_comparison_group": race.get("whole_course_comparison_group"),
+        }
     registry = {
         "route_for_edition": route_for_edition,
+        "edition_route_contracts": edition_route_contracts,
         "routes": routes,
     }
 
