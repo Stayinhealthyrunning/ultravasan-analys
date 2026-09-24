@@ -13,9 +13,11 @@ U7 omfattar:
 - Hall of Fame,
 - Årets fingeravtryck.
 
-Grundprincipen är att **deltagande kan beskrivas över banbyten, men
-prestationsmått får inte bindas samman över en CourseVersion-gräns utan ett
-explicit whole-course-jämförbarhetskontrakt**.
+Grundprincipen är att **deltagande kan beskrivas över loppår, men
+whole-course-prestationsmått får inte bindas samman mellan olika RaceEditions
+utan ett explicit verifierat whole-course-jämförbarhetskontrakt**. CourseVersion
+är i första hand kontraktet för checkpoints och segment och är inte i sig bevis
+för att två hela loppbanor är prestationsmässigt likvärdiga.
 
 ## Gemensam History Intelligence
 
@@ -32,14 +34,16 @@ Modulen återanvänder:
 
 ## Jämförbarhetsnyckel
 
-För ett lopp används i första hand CourseVersions explicita
-`whole_course_comparison_group`. Om ingen sådan grupp är deklarerad används
-CourseVersion-ID som jämförbarhetsnyckel.
+För whole-course-prestation används endast RaceEditionens explicita
+`whole_course_comparison_group`. Om ingen sådan grupp är deklarerad skapas
+ingen flerårig whole-course-jämförbarhetsserie; RaceEditionen förblir isolerad
+för sluttid och helbanefart.
 
-Det innebär att två år med olika CourseVersion som standard **inte** betraktas
-som direkt jämförbara i sluttid eller fart. Ett framtida uttryckligt
-jämförbarhetskontrakt kan öppna en sådan jämförelse utan att U7-koden behöver
-gissa.
+Två resultat inom **samma RaceEdition** är naturligtvis direkt jämförbara i
+sluttid. Mellan olika RaceEditions krävs däremot en gemensam, uttryckligen
+verifierad whole-course-grupp. Samma CourseVersion kan fortfarande tillåta
+checkpoint- och segmentjämförelser, men får inte ensam öppna en flerårig
+sluttidsjämförelse.
 
 ## Personhistorik
 
@@ -59,7 +63,7 @@ fullföljda resultat delas upp i separata whole-course-jämförbarhetsserier.
 För varje serie redovisas:
 
 - ingående år,
-- CourseVersion,
+- whole-course-jämförbarhetsgrupp och CourseVersion som metodkontext,
 - antal jämförbara målgångar,
 - bästa tid,
 - första och senaste jämförbara lopp,
@@ -86,7 +90,7 @@ När två efterföljande observationer tillhör samma jämförbarhetsserie:
 - spåret får bindas samman,
 - animationen får interpolera mellan punkterna.
 
-När jämförbarhetsnyckeln ändras eller saknas:
+När whole-course-jämförbarhetsnyckeln ändras eller saknas:
 
 - fartdelta sätts till saknat,
 - spåret bryts,
@@ -96,8 +100,10 @@ När jämförbarhetsnyckeln ändras eller saknas:
 - en markerad banversionsgräns visas i Klassutveckling,
 - tooltip/status förklarar att farttrenden bryts.
 
-Det förhindrar att en förändring i banlängd eller CourseVersion presenteras som
-en fysiologisk eller prestationsmässig utveckling.
+Det förhindrar att en förändring i banlängd, årssträckning eller annan
+whole-course-evidens presenteras som en fysiologisk eller prestationsmässig
+utveckling. En oförändrad CourseVersion räcker inte för att överbrygga denna
+gräns.
 
 ## Årets fingeravtryck
 
