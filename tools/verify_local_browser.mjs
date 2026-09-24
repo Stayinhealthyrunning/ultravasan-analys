@@ -205,6 +205,32 @@ const u7History=await evaluate(`(() => {
 })()`);
 await delay(100);
 
+const clubHistoryCourseVersion=await evaluate(`(() => {
+  const races=familyRaces().slice().sort((a,b)=>a.year-b.year);
+  const currentRace=state.data.races.find(r=>String(r.id)===String(state.raceId));
+  const currentScope=historyComparisonKey(currentRace);
+  const stats=clubStatsCurrent();
+  const candidates=stats.map(club=>{
+    const rows=familyResults().filter(result=>advanced.clubKeyByResult.get(result.id)===club.key&&isFinished(result));
+    const points=races.map((race,i)=>{const values=rows.filter(result=>result.race_id===race.id).map(result=>advanced.smIndex.get(result.id)).filter(Number.isFinite);return values.length>=3?{i,year:race.year,scope:historyComparisonKey(race),n:values.length}:null}).filter(Boolean);
+    const scopes=[...new Set(points.map(point=>point.scope).filter(Boolean))];
+    const currentPoints=points.filter(point=>point.scope===currentScope);
+    return {club,points,scopes,currentPoints};
+  }).filter(item=>item.scopes.length>=2&&item.currentPoints.length>=2);
+  const preferred=candidates.find(item=>String(item.club.name||'').trim().toUpperCase()==='STOCKHOLM')||candidates[0]||null;
+  if(!preferred)return {available:false,currentScope,candidateCount:candidates.length};
+  advanced.clubSelection=[preferred.club.key];
+  const select=document.querySelector('#clubProfileSelect');if(select)select.value=preferred.club.key;
+  renderClubWorld();
+  const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')].map(path=>({scope:path.dataset.historyScope||'',from:Number(path.dataset.historyFrom),to:Number(path.dataset.historyTo)}));
+  const scopeForYear=year=>historyComparisonKey(races.find(race=>Number(race.year)===Number(year)));
+  const pathScopesValid=paths.length>=2&&paths.every(path=>path.scope&&scopeForYear(path.from)===path.scope&&scopeForYear(path.to)===path.scope);
+  const improvement=clubHistoryImprovement(preferred.club.key);
+  const improvementValid=Boolean(improvement&&improvement.comparisonKey===currentScope&&scopeForYear(improvement.fromYear)===currentScope&&scopeForYear(improvement.toYear)===currentScope);
+  const method=(document.querySelector('#clubHistoryChart')?.closest('article')?.querySelector('.info-popup')?.textContent||'').trim();
+  return {available:true,key:preferred.club.key,name:preferred.club.name,currentScope,historicalScopes:preferred.scopes,paths,pathScopesValid,improvement,improvementValid,method};
+})()`);
+
 const u8Ux=await evaluate(`(() => {
   const guide=document.querySelector('#analysisGuideDetails');if(guide)guide.open=true;
   const classNav=document.querySelector('.analysis-nav-button[data-target="klasser"]');classNav?.click();
@@ -630,6 +656,11 @@ const checks = {
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
   ),
+  clubHistoryCourseVersion:Boolean(
+    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.historicalScopes.length>=2&&
+    clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
+    clubHistoryCourseVersion.method.includes('CourseVersion')
+  ),
   uxMethodology:Boolean(
     u8Ux.skipHref==='#mainContent'&&u8Ux.h1Count===1&&u8Ux.mainFocusable==='-1'&&
     u8Ux.race90Pressed==='true'&&u8Ux.race45Pressed==='false'&&u8Ux.falseTabs===0&&
@@ -656,7 +687,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sourceStringSecurity,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sourceStringSecurity,clubHistoryCourseVersion,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
