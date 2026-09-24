@@ -668,7 +668,7 @@ const checks = {
     u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
   ),
   clubHistoryCourseVersion:Boolean(
-    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.historicalScopes.length>=2&&
+    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.paths.length>=2&&
     clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
     clubHistoryCourseVersion.method.includes('CourseVersion')
   ),
