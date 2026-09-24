@@ -246,7 +246,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     renderPercentiles=function(){
       const el=document.querySelector('#percentileLadder'),selected=visibleSexes('percentile');if(!el)return;if(!selected.length){el.innerHTML='<div class="empty">Välj minst ett kön</div>';return}
       const rows=filterRowsForSexControl(state.filtered.filter(isFinished),'percentile'),m=rows.filter(r=>sexKey(r)==='M').map(r=>r.finish_seconds),f=rows.filter(r=>sexKey(r)==='F').map(r=>r.finish_seconds);if(selected.every(s=>(s==='M'?m:f).length<2)){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
-      const levels=[[1,.01,'Topp 1 %'],[5,.05,'Topp 5 %'],[10,.10,'Topp 10 %'],[25,.25,'Topp 25 %'],[50,.50,'Median'],[75,.75,'75-percentilen']];el.innerHTML=levels.map(([,q,label])=>`<div class="percentile-sex-step"><span>${label}</span><div class="percentile-dual ${selected.length===1?'single-sex':''}">${selected.includes('M')?`<div class="male"><small>Män</small><strong>${fmtTime(quantile(m,q))}</strong></div>`:''}${selected.includes('F')?`<div class="female"><small>Kvinnor</small><strong>${fmtTime(quantile(f,q))}</strong></div>`:''}</div></div>`).join('');
+      const levels=[[10,.10,'10 % i mål'],[25,.25,'25 % i mål'],[50,.50,'50 % i mål · median'],[75,.75,'75 % i mål'],[90,.90,'90 % i mål']];el.innerHTML=levels.map(([,q,label])=>`<div class="percentile-sex-step"><span>${label}</span><div class="percentile-dual ${selected.length===1?'single-sex':''}">${selected.includes('M')?`<div class="male"><small>Män</small><strong>${fmtTime(quantile(m,q))}</strong></div>`:''}${selected.includes('F')?`<div class="female"><small>Kvinnor</small><strong>${fmtTime(quantile(f,q))}</strong></div>`:''}</div></div>`).join('');
     };
   }
 
