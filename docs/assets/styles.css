@@ -585,6 +585,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .h2h-segment-runner span{font-size:.64rem;font-variant-numeric:tabular-nums}
 .h2h-segment-runner small{grid-column:2;color:var(--muted);font-size:.56rem;text-align:right}
 .h2h-segment-runner .h2h-missing{color:var(--muted);font-style:italic}
+.h2h-checkpoints,.h2h-placement,.h2h-course-context{margin-top:20px}.h2h-checkpoint-table{min-width:760px}.h2h-checkpoint-table th,.h2h-checkpoint-table td{font-size:.66rem;padding:9px 10px}.h2h-checkpoint-table td strong,.h2h-checkpoint-table td small{display:block}.h2h-checkpoint-table td small{margin-top:3px;color:var(--muted);font-size:.56rem}.h2h-placement{padding:15px;border:1px solid var(--line);border-radius:14px;background:#fbfcf8}.h2h-placement svg{display:block;width:100%;height:auto;min-height:210px}.h2h-placement text{font-family:inherit;fill:var(--muted);font-size:10px}.h2h-placement-line{stroke-linecap:round;stroke-linejoin:round}.h2h-placement-point{stroke:#fff;stroke-width:2}.h2h-placement-legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}.h2h-placement-legend span{display:inline-flex;align-items:center;gap:5px;font-size:.61rem;color:var(--muted)}.h2h-placement-legend i{width:10px;height:10px;border-radius:50%}.h2h-course-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.h2h-course-map,.h2h-course-elevation{border:1px solid var(--line);border-radius:14px;background:#edf3ec;overflow:hidden;min-width:0}.h2h-course-map svg,.h2h-course-elevation svg{display:block;width:100%;height:100%}.h2h-course-map{min-height:250px}.h2h-course-route{fill:none;stroke:#176d53;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.h2h-course-checkpoint circle{fill:#e86f3b;stroke:#fff;stroke-width:2}.h2h-course-elevation{min-height:190px;background:#f8faf5}.h2h-elevation-line{fill:none;stroke:#176d53;stroke-width:3}.h2h-elevation-checkpoint{stroke:#c9d3cb;stroke-width:1;stroke-dasharray:4 4}.h2h-elevation-unavailable{padding:40px 20px;color:var(--muted);font-size:.68rem;text-align:center}
 
 @media(max-width:980px){
   .compare-actions{grid-column:3;grid-row:1/3}
@@ -594,6 +595,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .compare-actions .compare-map-button{min-height:50px}
   .head-to-head-shell{padding:24px 14px}
   .h2h-segment-list{grid-template-columns:1fr}
+  .h2h-course-grid{grid-template-columns:1fr}.h2h-course-map{min-height:220px}.h2h-placement{padding:10px 6px}
 }
 
 
