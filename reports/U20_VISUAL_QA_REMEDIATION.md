@@ -59,14 +59,13 @@ Keep separate:
 Do not let a new CourseVersion alone create a false performance break.
 
 ## 5. Årets fingeravtryck
-2026 currently shows 0 reference years for Mediantidsindex/Fartnivå/DNF because comparison falls back to CourseVersion.
+The route audit did not verify any multi-year whole-course comparison group for UV90. In particular, 2024 has documented year-specific rerouting, so CourseVersion/checkpoint similarity must not manufacture a historical performance reference.
 
-After route audit:
-- use all and only verified whole-course-comparable editions,
+Implemented outcome:
+- use all and only explicitly verified whole-course-comparable editions,
 - structural metrics may span CourseVersions,
-- show actual reference years/count,
-- explain exclusions,
-- 2026 must not say 0 references merely because checkpoint structure changed.
+- show actual reference years/count and explain exclusions,
+- 2026 therefore has 0 whole-course performance reference years until equivalence is positively verified; the UI explains that this is an evidence limitation, not merely a checkpoint-version break.
 
 ## 6. Club/location history
 Observed:
