@@ -25,11 +25,28 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
                for item in by_key["ultravasan90-2017"]["external_route_evidence"])
     assert any("rerouting" in item["note"]
                for item in by_key["ultravasan90-2024"]["external_route_evidence"])
+    assert any(item["evidence_type"] == "official-no-course-change-notice"
+               for item in by_key["ultravasan90-2025"]["external_route_evidence"])
+    assert any("returns to the ordinary" in item["note"]
+               for item in by_key["ultravasan90-2026"]["external_route_evidence"])
 
-    assert all(row["whole_course_comparison_group_recommended"] is None for row in report["routes"])
-    assert report["whole_course_groups"] == []
+    assert by_key["ultravasan90-2023"]["whole_course_comparison_group_recommended"] is None
+    assert by_key["ultravasan90-2024"]["whole_course_comparison_group_recommended"] == "ultravasan90-2024-2025"
+    assert by_key["ultravasan90-2025"]["whole_course_comparison_group_recommended"] == "ultravasan90-2024-2025"
+    assert by_key["ultravasan90-2026"]["whole_course_comparison_group_recommended"] is None
+    assert by_key["ultravasan90-2024"]["whole_course_comparison_group_current"] == "ultravasan90-2024-2025"
+    assert by_key["ultravasan90-2025"]["whole_course_comparison_group_current"] == "ultravasan90-2024-2025"
+    assert report["whole_course_groups"] == [{
+        "group": "ultravasan90-2024-2025",
+        "editions": ["ultravasan90-2024", "ultravasan90-2025"],
+        "status": "verified",
+        "reason": (
+            "Organizer evidence establishes 2024 changes from 2023, no course changes for 2025, and a 2026 "
+            "return from the multi-year temporary Evertsberg-Oxberg routing."
+        ),
+    }]
     assert report["rejected_or_pending_groups"][0]["group"] == "ultravasan90-post2023"
-    assert report["rejected_or_pending_groups"][0]["status"] == "not verified"
+    assert report["rejected_or_pending_groups"][0]["status"] == "rejected"
     assert by_key["ultravasan90-2026"]["source_provider"] == "Vasaloppet"
     assert by_key["ultravasan90-2026"]["source_url"].endswith("UV-90_20260610.kmz")
     assert any(item["evidence_type"] == "official-organizer-kmz"
