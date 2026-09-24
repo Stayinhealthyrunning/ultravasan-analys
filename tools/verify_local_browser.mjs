@@ -310,6 +310,33 @@ const suggestion = await evaluate(`(() => {
 })()`);
 await evaluate("document.querySelector('#mainRunnerSuggestions .main-runner-suggestion')?.click()");
 await delay(800);
+const sourceStringSecurity=await evaluate(`(() => {
+  const row=state.filtered?.[0];
+  if(!row)return {available:false,executed:null,handlerAttribute:null,statusClass:null,visibleText:null,injectedNodes:null};
+  const original={status:row.status,name:row.name_as_published,club:row.club,ageClass:row.age_class};
+  const payload='FINISHED" onmouseover="window.__ULTRAVASAN_AUDIT_XSS=1';
+  window.__ULTRAVASAN_AUDIT_XSS=0;
+  row.status=payload;
+  row.name_as_published='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=2">';
+  row.club='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=3">';
+  row.age_class='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=4">';
+  renderTable();
+  const status=document.querySelector('#resultsBody .status');
+  status?.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));
+  const result={
+    available:true,
+    executed:window.__ULTRAVASAN_AUDIT_XSS,
+    handlerAttribute:status?.getAttribute('onmouseover')||null,
+    statusClass:status?.className||null,
+    visibleText:status?.textContent||null,
+    injectedNodes:document.querySelectorAll('#resultsBody img').length
+  };
+  Object.assign(row,{status:original.status,name_as_published:original.name,club:original.club,age_class:original.ageClass});
+  renderTable();
+  delete window.__ULTRAVASAN_AUDIT_XSS;
+  return result;
+})()`);
+
 const dialog = await evaluate(`(() => {
   const root=document.querySelector('#runnerDetail');
   return {
@@ -621,6 +648,7 @@ const checks = {
   dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
+  sourceStringSecurity: sourceStringSecurity.available&&sourceStringSecurity.executed===0&&sourceStringSecurity.handlerAttribute===null&&sourceStringSecurity.injectedNodes===0&&sourceStringSecurity.statusClass==='status unknown'&&sourceStringSecurity.visibleText.includes('onmouseover'),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
@@ -628,7 +656,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sourceStringSecurity,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
