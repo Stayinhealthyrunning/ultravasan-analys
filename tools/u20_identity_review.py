@@ -22,10 +22,6 @@ def normalized_name(value: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", value).split())
 
 
-def age_class_age(value):
-    match = re.search(r"\d{1,3}", str(value or ""))
-    return int(match.group()) if match else None
-
 
 def collect_rows(conn):
     return [dict(row) for row in conn.execute("""
@@ -42,7 +38,6 @@ def build_candidate_report(conn):
     groups = defaultdict(list)
     for row in collect_rows(conn):
         row["normalized_name"] = normalized_name(row["name_as_published"])
-        row["class_age"] = age_class_age(row["age_class"])
         if row["normalized_name"]:
             groups[(row["race_family"], row["normalized_name"])].append(row)
     candidates, collisions = [], []
@@ -74,16 +69,12 @@ def build_candidate_report(conn):
             if row["athlete_id"] == target["athlete_id"]:
                 continue
             reasons = ["exact normalized name", "same race family", "sex consistent" if sex else "sex unavailable"]
-            ages = [r["class_age"] for r in rows if r["class_age"] is not None]
             classes_conflict = False
-            if len(ages) > 1:
-                ordered = sorted((r["year"], r["class_age"]) for r in rows if r["class_age"] is not None)
-                for (year_a, age_a), (year_b, age_b) in zip(ordered, ordered[1:]):
-                    elapsed = year_b - year_a
-                    delta = age_b - age_a
-                    if delta < 0 or delta > elapsed + 5:
-                        classes_conflict = True
-                reasons.append("age-class progression requires review" if not classes_conflict else "strong age-class progression conflict")
+            class_labels = {str(r["age_class"] or "").strip() for r in rows if str(r["age_class"] or "").strip()}
+            if len(class_labels) > 1:
+                reasons.append("age-class labels differ; treated as categorical eligibility labels, not exact-age evidence")
+            elif class_labels:
+                reasons.append("age-class label consistent")
             if row["birth_year"] and target["birth_year"]:
                 reasons.append("birth-year compatible" if row["birth_year"] == target["birth_year"] else "birth-year conflict")
                 classes_conflict |= row["birth_year"] != target["birth_year"]
