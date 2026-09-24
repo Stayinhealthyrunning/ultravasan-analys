@@ -31,7 +31,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamil
 if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:null,splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',classHeatStatistic:'median',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:''};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:null,splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',classHeatStatistic:'median',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:'',historyReady:false,historyRestoring:false,historyListenerReady:false};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const resultStatus=r=>window.ResultStatus.classify(r,{hasSplit:advanced.splitEvidence.has(r?.id)});
@@ -148,21 +148,56 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function patchFilters(){
     const legacyRefresh=refreshFilters;
     refreshFilters=function(){const oldClass=document.querySelector('#classFilter')?.value||'',oldStatus=document.querySelector('#statusFilter')?.value||'';legacyRefresh();if(oldClass&&[...document.querySelector('#classFilter').options].some(o=>o.value===oldClass))document.querySelector('#classFilter').value=oldClass;if(oldStatus&&[...document.querySelector('#statusFilter').options].some(o=>o.value===oldStatus))document.querySelector('#statusFilter').value=oldStatus;populateClubFilter()};
-    applyFilters=function(){
+    applyFilters=function(options={}){
       const f=filterValues();state.filtered=raceResults().filter(r=>(!f.sex||sexKey(r)===f.sex)&&(!f.cls||r.age_class===f.cls)&&(!f.club||advanced.clubKeyByResult.get(r.id)===f.club)&&(!f.status||r.status===f.status));
       state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));
-      syncUrl();renderAll();if(state.dataPhase!=='core')renderAudienceWorlds();
+      syncUrl({replace:options.history==='replace'});renderAll();if(state.dataPhase!=='core')renderAudienceWorlds();
     };
     const club=document.querySelector('#clubFilter');club?.addEventListener('change',()=>{state.page=1;applyFilters()});
     const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';const ci=document.querySelector('#clubFilterSearch');if(ci)ci.value='';applyFilters()};
   }
 
-  function syncUrl(){
-    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['race',state.raceFamily],['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));history.replaceState(null,'',u);
+  function syncUrl({replace=false}={}){
+    if(advanced.historyRestoring)return;
+    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['race',state.raceFamily],['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));
+    if(u.href===location.href)return;
+    const method=replace||!advanced.historyReady?'replaceState':'pushState';
+    history[method]({ultravasan:true},'',u);
   }
   function restoreUrl(){
     const p=new URLSearchParams(location.search),requestedFamily=['uv90','uv45'].includes(p.get('race'))?p.get('race'):state.raceFamily,race=selectAudienceRace(state.data.races,requestedFamily,p.get('year'));if(race){if(state.raceFamily!==requestedFamily)switchRaceFamily(requestedFamily,true);document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
     const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};Object.entries(map).forEach(([k,id])=>{const v=p.get(k),el=document.querySelector('#'+id);if(v&&el&&([...el.options||[]].length===0||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT'))el.value=v});const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');if(clubInput&&club?.value)clubInput.value=advanced.clubDisplay.get(club.value)||'';
+  }
+  async function restoreHistoryState(){
+    if(advanced.historyRestoring)return;
+    advanced.historyRestoring=true;
+    try{
+      const p=new URLSearchParams(location.search),requestedFamily=['uv90','uv45'].includes(p.get('race'))?p.get('race'):state.raceFamily;
+      if(state.raceFamily!==requestedFamily){
+        await switchRaceFamily(requestedFamily,true);
+        if(state.raceFamily!==requestedFamily)return;
+      }
+      const requestedYear=p.get('year');
+      if(requestedYear&&!state.data.races.some(r=>String(r.year)===String(requestedYear))){
+        await ensureActiveFamilyCore(requestedFamily,false);
+      }
+      populateRaceYears();
+      const race=selectAudienceRace(state.data.races,requestedFamily,requestedYear);
+      if(race){document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
+      const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};
+      Object.entries(map).forEach(([k,id])=>{
+        const v=p.get(k)||'',el=document.querySelector('#'+id);if(!el)return;
+        const valid=!v||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT';
+        el.value=valid?v:'';
+      });
+      const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');
+      if(clubInput)clubInput.value=club?.value?(advanced.clubDisplay.get(club.value)||''):'';
+      state.page=1;applyFilters({history:'replace'});
+    }catch(error){
+      console.error('Browserhistoriken kunde inte återställas',error);
+    }finally{
+      advanced.historyRestoring=false;
+    }
   }
 
   function patchOverviewCharts(){
@@ -541,13 +576,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     const navButtons=[...document.querySelectorAll('.analysis-nav-button')],scrollBehavior=()=>matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';
     navButtons.forEach(b=>b.onclick=()=>{document.querySelector('#'+b.dataset.target)?.scrollIntoView({behavior:scrollBehavior(),block:'start'});navButtons.forEach(x=>{const active=x===b;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','location');else x.removeAttribute('aria-current')})});
     document.querySelector('#shareView').onclick=async()=>{syncUrl();try{await navigator.clipboard.writeText(location.href);document.querySelector('#shareView').textContent='Länk kopierad ✓';setTimeout(()=>document.querySelector('#shareView').textContent='Dela vy',1800)}catch{prompt('Kopiera länken:',location.href)}};
-    document.querySelector('#playYears').onclick=()=>{const btn=document.querySelector('#playYears'),races=familyRaces().slice().sort((a,b)=>a.year-b.year);if(advanced.yearTimer){clearInterval(advanced.yearTimer);advanced.yearTimer=null;btn.textContent='▶ Spela år';return}let i=Math.max(0,races.findIndex(r=>r.id===state.raceId));btn.textContent='■ Stoppa';advanced.yearTimer=setInterval(()=>{i=(i+1)%races.length;document.querySelector('#yearFilter').value=String(races[i].id);state.raceId=races[i].id;state.page=1;refreshFilters();applyFilters()},1400)};
+    document.querySelector('#playYears').onclick=()=>{const btn=document.querySelector('#playYears'),races=familyRaces().slice().sort((a,b)=>a.year-b.year);if(advanced.yearTimer){clearInterval(advanced.yearTimer);advanced.yearTimer=null;btn.textContent='▶ Spela år';return}let i=Math.max(0,races.findIndex(r=>r.id===state.raceId));btn.textContent='■ Stoppa';advanced.yearTimer=setInterval(()=>{i=(i+1)%races.length;document.querySelector('#yearFilter').value=String(races[i].id);state.raceId=races[i].id;state.page=1;refreshFilters();applyFilters({history:'replace'})},1400)};
   }
 
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();advanced.historyRestoring=true;restoreUrl();installWorldInfo();applyFilters({history:'replace'});advanced.historyRestoring=false;syncUrl({replace:true});advanced.historyReady=true;if(!advanced.historyListenerReady){advanced.historyListenerReady=true;window.addEventListener('popstate',()=>restoreHistoryState())}
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data&&window.ULTRAVASAN_SPLITS_READY){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
