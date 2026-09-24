@@ -92,6 +92,15 @@ EXTERNAL_ROUTE_EVIDENCE = {
             "note": "Published course analysis states its profile is based on a GPX track recorded during Ultravasan 90 on race day 2025-08-16.",
         },
     ],
+    "ultravasan90-2026": [
+        {
+            "provider": "Vasaloppet",
+            "url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz",
+            "evidence_type": "official-organizer-kmz",
+            "strength": "strong",
+            "note": "Vasaloppets official Ultravasan 90 page exposes this GPS file for the 2026 course and labels it updated 2026-06-10.",
+        },
+    ],
     "ultravasan45-2024": [
         {
             "provider": "ITRA/Trace de Trail",
@@ -202,8 +211,10 @@ def build_report():
             route_id = "ultravasan90-2026"
             exact_source_year = True
             route = special_90
-            provider = "not recorded in derived JSON; source filename is an opaque KMZ name"
-            provenance = "Derived local JSON identifies a 2026 KMZ filename; original KMZ/provider metadata is not present in the audited route folder."
+            provider = special_90.get("source_provider", "not recorded")
+            provenance = special_90.get("provenance_note") or (
+                "Derived 2026 geometry is tied to an annual source file, but provenance metadata is incomplete."
+            )
         elif route:
             provider = "not independently verifiable from repository metadata"
             provenance = route.get("geometry_note") or route.get("historical_note") or route.get("elevation_note") or "Route file is tagged to its source year; other edition bindings are reference-only."
@@ -224,6 +235,7 @@ def build_report():
             "source_provider": provider,
             "source_year": route.get("source_year") if route else None,
             "source_path": special_90.get("source_file") if family == "uv90" and year == 2026 else (route.get("source_file") if route else source_path),
+            "source_url": special_90.get("source_url") if family == "uv90" and year == 2026 else None,
             "source_sha256": hashlib.sha256((ROOT / special_90.get("source_file", "")).read_bytes()).hexdigest() if family == "uv90" and year == 2026 and (ROOT / special_90.get("source_file", "")).exists() else (hashlib.sha256((ROOT / "data/routes/ultravasan90-2026.json").read_bytes()).hexdigest() if family == "uv90" and year == 2026 else (hashlib.sha256((ROOT / route["source_file"]).read_bytes()).hexdigest() if route and (ROOT / route["source_file"]).exists() else None)),
             "geometry_fingerprint_sha256": fingerprint(points) if points else None,
             "official_distance_km": route.get("official_distance_km") if route else edition.get("distance_km"),
@@ -236,9 +248,26 @@ def build_report():
             "whole_course_comparison_group_recommended": whole_group,
             "whole_course_comparison_decision": whole_decision,
         })
+    r22 = next((r for r in routes.values() if r.get("source_year") == 2022), None)
     r24 = next((r for r in routes.values() if r.get("source_year") == 2024), None)
     r26 = special_90
-    comparison = track_delta(r24.get("points", []), r26.get("points", [])) if r24 else None
+    geometry_comparisons = []
+    for left_label, left_route, right_label, right_route in (
+        ("Ultravasan 90 2022 exact-year geometry", r22, "Ultravasan 90 2024 exact-year geometry", r24),
+        ("Ultravasan 90 2022 exact-year geometry", r22, "Ultravasan 90 2026 exact-year geometry", r26),
+        ("Ultravasan 90 2024 exact-year geometry", r24, "Ultravasan 90 2026 exact-year geometry", r26),
+    ):
+        if not left_route or not right_route:
+            continue
+        geometry_comparisons.append({
+            "left": left_label,
+            "right": right_label,
+            "result": track_delta(left_route.get("points", []), right_route.get("points", [])),
+            "decision": (
+                "diagnostic only; geometric similarity or difference is evidence input, not by itself a "
+                "whole-course performance-equivalence contract"
+            ),
+        })
     external_keys = [item["race_key"] for item in editions if item["external_route_evidence"]]
     strong_external_keys = [
         item["race_key"] for item in editions
@@ -257,12 +286,7 @@ def build_report():
         ],
         "course_version_equals_whole_course_comparison": False,
         "routes": editions,
-        "geometry_comparisons": [{
-            "left": "Ultravasan 90 2024 local GPS reference",
-            "right": "Ultravasan 90 2026 derived KMZ route",
-            "result": comparison,
-            "decision": "diagnostic only; the documented 2024 rerouting prevents this similarity metric from establishing multi-year whole-course equivalence",
-        }],
+        "geometry_comparisons": geometry_comparisons,
         "whole_course_groups": [],
         "rejected_or_pending_groups": [{
             "group": "ultravasan90-post2023",
