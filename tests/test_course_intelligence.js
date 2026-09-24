@@ -103,6 +103,10 @@ const segments=intelligence.segmentContracts(contracts.courseForRace(syntheticRa
 const firstStats=intelligence.fieldStatsForSegment(synthetic,syntheticRace,segments[0]);
 assert.strictEqual(firstStats.timing_sample_n,5);
 assert.strictEqual(firstStats.sufficient_sample,true);
+assert.strictEqual(firstStats.q10_pace_seconds_per_km,383.2,'Q10 ska använda samma linjära kvantilmetod som övriga fältmått');
+assert.strictEqual(firstStats.q90_pace_seconds_per_km,405.0,'Q90 ska använda samma linjära kvantilmetod som övriga fältmått');
+assert.ok(firstStats.q10_pace_seconds_per_km<=firstStats.q25_pace_seconds_per_km);
+assert.ok(firstStats.q75_pace_seconds_per_km<=firstStats.q90_pace_seconds_per_km);
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds));
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds_per_km));
 assert.strictEqual(firstStats.located_dnf_n,1);
@@ -123,6 +127,8 @@ const tooSmall=intelligence.fieldStatsForSegment(
 assert.strictEqual(tooSmall.timing_sample_n,4);
 assert.strictEqual(tooSmall.sufficient_sample,false);
 assert.strictEqual(tooSmall.median_pace_seconds_per_km,null,'n<5 får inte publicera fältmedian');
+assert.strictEqual(tooSmall.q10_pace_seconds_per_km,null);
+assert.strictEqual(tooSmall.q90_pace_seconds_per_km,null);
 
 const scored=intelligence.applyDifficultyIndex([
   {key:'easy',terrain:{ascent_m_per_km:2},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:-5,pace_iqr_seconds_per_km:8,dnf_exit_rate_pct:0}},
