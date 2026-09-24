@@ -124,7 +124,18 @@ const u6Initial=await evaluate(`(() => ({
   planStatus:(document.querySelector('#coursePlanStatus')?.innerText||'').trim(),
   method:(document.querySelector('#courseIntelligenceCard > .panel-head .info-popup')?.textContent||'').trim(),
   planMethod:(document.querySelector('#courseRacePlan > .info-tip .info-popup')?.textContent||'').trim(),
+  outerQuantiles:(() => {
+    const field=currentCourseModel()?.segments?.map(segment=>segment.field).find(field=>field?.sufficient_sample);
+    return field?{q10:field.q10_pace_seconds_per_km,q25:field.q25_pace_seconds_per_km,q75:field.q75_pace_seconds_per_km,q90:field.q90_pace_seconds_per_km}:null;
+  })(),
 }))()`);
+const finishProgression=await evaluate(`(() => ({
+  shares:[...document.querySelectorAll('#percentileLadder [data-finish-share]')].map(node=>Number(node.dataset.finishShare)),
+  labels:[...document.querySelectorAll('#percentileLadder [data-finish-share] > span')].map(node=>(node.textContent||'').trim()),
+  primaryTimes:[...document.querySelectorAll('#percentileLadder .percentile-primary strong')].map(node=>(node.textContent||'').trim()),
+  help:(document.querySelector('#percentileLadder')?.closest('article')?.querySelector('.info-popup')?.textContent||'').trim(),
+}))()`);
+
 await evaluate(`(() => {
   const rows=[...document.querySelectorAll('#courseIntelligenceRows tr[data-course-segment]')];
   (rows[1]||rows[0])?.click();
@@ -648,6 +659,8 @@ const checks = {
   courseIntelligence:Boolean(
     u6Initial.api&&u6Initial.version&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
     u6Initial.elevationSegments>0&&u6Initial.paceSegments>0&&u6Initial.selectedRows===1&&u6Initial.planRows>0&&
+    u6Initial.outerQuantiles&&Number.isFinite(Number(u6Initial.outerQuantiles.q10))&&Number.isFinite(Number(u6Initial.outerQuantiles.q90))&&
+    Number(u6Initial.outerQuantiles.q10)<=Number(u6Initial.outerQuantiles.q25)&&Number(u6Initial.outerQuantiles.q75)<=Number(u6Initial.outerQuantiles.q90)&&
     u6Initial.method.includes('Fyra komponenter används med lika vikt')&&
     u6Initial.method.includes('inte i sig bevis för exakt historisk geometri')&&
     u6Initial.planMethod.includes('exakt samma CourseVersion')&&
@@ -671,6 +684,12 @@ const checks = {
     clubHistoryCourseVersion.available&&clubHistoryCourseVersion.paths.length>=2&&
     clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
     clubHistoryCourseVersion.method.includes('CourseVersion')
+  ),
+  finishProgression:Boolean(
+    finishProgression.shares.join(',')==='10,25,50,75,90'&&
+    finishProgression.labels.join('|')==='10 % i mål|25 % i mål|50 % i mål · median|75 % i mål|90 % i mål'&&
+    finishProgression.primaryTimes.length===5&&finishProgression.primaryTimes.every(Boolean)&&
+    finishProgression.help.includes('Q10, Q25, Q50, Q75 och Q90')
   ),
   uxMethodology:Boolean(
     u8Ux.skipHref==='#mainContent'&&u8Ux.h1Count===1&&u8Ux.mainFocusable==='-1'&&
@@ -698,7 +717,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sourceStringSecurity,clubHistoryCourseVersion,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sourceStringSecurity,clubHistoryCourseVersion,finishProgression,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
