@@ -398,7 +398,7 @@ def main():
         "",
         "## Whole-course conclusion",
         "",
-        "The previously proposed ultravasan90-post2023 group is not verified. The 2024 route evidence explicitly records a rerouting around km 57-59, while the remaining annual evidence has not been pairwise established as performance-equivalent. U20 therefore recommends no multi-year whole-course group at this stage.",
+        "The broad ultravasan90-post2023 group is rejected. Organizer evidence establishes route changes from 2023 to 2024, no course changes for 2025, and a return from the temporary Evertsberg–Oxberg routing in 2026. U20 therefore verifies only ultravasan90-2024-2025 as a multi-year whole-course comparison group.",
         "",
         "## Geometry review",
         "",
