@@ -182,20 +182,20 @@ def run(base_url: str) -> None:
               "<img" in security["checkpoint"] and "onerror" in security["checkpoint"],
               f"XSS source text/token contract failed: {security}")
 
-        # Club participation can span versions; performance paths/improvement cannot.
+        # Club participation can span versions; without a verified whole-course group,
+        # performance paths must fail closed while participation bars remain.
         page.locator("#clubCompareSearch").fill("STOCKHOLM")
         page.wait_for_timeout(120)
         if page.locator("#clubCompareSuggestions .club-search-option").count():
             page.locator("#clubCompareSuggestions .club-search-option").first.click()
             page.wait_for_timeout(150)
         club = page.evaluate("""() => {
-          const races=state.data.races.filter(r=>window.RaceContracts.familyForRace(r)===state.raceFamily);
-          const scope=y=>{const r=races.find(x=>Number(x.year)===Number(y));return r?window.HistoryIntelligence.comparisonKeyForRace(r):null;};
-          const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')].map(p=>({scope:p.dataset.historyScope,from:Number(p.dataset.historyFrom),to:Number(p.dataset.historyTo)}));
+          const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')];
           const bars=[...document.querySelectorAll('#clubHistoryChart .club-history-bar')];
-          return {paths,bars:bars.length,valid:paths.length>0&&paths.every(p=>p.scope&&scope(p.from)===p.scope&&scope(p.to)===p.scope)};
+          return {paths:paths.length,bars:bars.length};
         }""")
-        check(club["valid"] and club["bars"] > 0, f"Club history must retain participation while breaking incompatible performance paths: {club}")
+        check(club["paths"] == 0 and club["bars"] > 0,
+              f"Club history must retain participation while failing closed on unverified performance paths: {club}")
 
         # Finish progression method levels and visible output.
         levels = page.locator("#percentileLadder [data-finish-share]").evaluate_all("nodes => nodes.map(n=>Number(n.dataset.finishShare))")
@@ -235,7 +235,10 @@ def run(base_url: str) -> None:
                       "Runner Development seek unexpectedly autoplayed or failed to seek")
             page.locator("#runnerDialog").evaluate("d=>d.close()")
 
-        # H2H same-course evidence and incompatible-course blocking.
+        # H2H verifies three distinct contracts:
+        # same RaceEdition => finish + checkpoint dimensions;
+        # same CourseVersion but different unverified RaceEditions => checkpoint dimensions only;
+        # different CourseVersion => checkpoint/course dimensions blocked too.
         family_full(page, "uv90")
         h2h = page.evaluate("""() => {
           const data=window.ULTRAVASAN_ACTIVE_DATA;
@@ -243,10 +246,21 @@ def run(base_url: str) -> None:
           const a=data.results.find(r=>r.race_id===r25?.id&&r.status==='FINISHED'),b=data.results.find(r=>r.race_id===r24?.id&&r.status==='FINISHED'),c=data.results.find(r=>r.race_id===r19?.id&&r.status==='FINISHED');
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           compareState.raceId='all';compareState.selected=[];addCompareRunner(a?.id);addCompareRunner(b?.id);document.querySelector('#compareH2HButton')?.click();
-          return {same:!!a&&!!b,course:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,changed:!!c,id:c?.id};
+          return {same:!!a&&!!b,course:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,changed:!!c,id:c?.id};
         }""")
-        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0,
-              f"same-CourseVersion H2H dimensions missing: {h2h}")
+        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 0 and h2h["warnings"] > 0,
+              f"same-CourseVersion cross-edition H2H must retain checkpoints but block unverified finish gaps: {h2h}")
+
+        same_edition = page.evaluate("""() => {
+          document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
+          const data=window.ULTRAVASAN_ACTIVE_DATA,r25=data.races.find(r=>r.race_key==='ultravasan90-2025');
+          const finishers=data.results.filter(r=>r.race_id===r25?.id&&r.status==='FINISHED').slice(0,2);
+          compareState.selected=[];finishers.forEach(r=>addCompareRunner(r.id));document.querySelector('#compareH2HButton')?.click();
+          return {count:finishers.length,finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length};
+        }""")
+        check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0,
+              f"same-RaceEdition H2H must allow direct finish comparison: {same_edition}")
+
         blocked = page.evaluate("""id => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           const first=compareState.selected[0];compareState.selected=[];if(first)addCompareRunner(first.id);if(id)addCompareRunner(id);document.querySelector('#compareH2HButton')?.click();
@@ -264,7 +278,7 @@ def run(base_url: str) -> None:
 
         check(not errors, f"unexpected browser console/page errors: {errors}")
         check(not failed_responses, f"unexpected local HTTP errors: {failed_responses}")
-        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "Hall of Fame local Leaflet and CDN absence", "Hall of Fame SVG fallback", "history Back/Forward", "XSS DOM negative", "CourseVersion club history", "finish progression", "Runner Development seek", "H2H CourseVersion", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
+        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "Hall of Fame local Leaflet and CDN absence", "Hall of Fame SVG fallback", "history Back/Forward", "XSS DOM negative", "fail-closed club history", "finish progression", "Runner Development seek", "H2H comparison contracts", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
         context.close()
         browser.close()
 
