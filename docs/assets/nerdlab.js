@@ -1,7 +1,8 @@
 'use strict';
 /* Advanced cross-year analytics. Works entirely in the browser on exported data. */
-const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null};
+const nerd={ready:false,hall:'veterans',historyResultIds:[],hallMap:null,hallTile:null,courseSegmentKey:null,courseRaceId:null,coursePlanTargets:{uv90:'10:00:00',uv45:'5:00:00'}};
 const nHistoryEngine=typeof module!=='undefined'&&module.exports?require('./history-engine.js'):globalThis.UltravasanHistoryEngine;
+const nCourseIntelligence=typeof module!=='undefined'&&module.exports?require('./course-intelligence.js'):globalThis.CourseIntelligence;
 const n$=s=>document.querySelector(s), n$$=s=>[...document.querySelectorAll(s)];
 const nEsc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const nMedian=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
@@ -23,6 +24,19 @@ const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
 
+const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för publicerade medianmått. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Difficulty är ett relativt segmentindex inom valt lopp/CourseVersion, inte ett absolut banbetyg. Fyra komponenter används med lika vikt: stigning per km, pacing loss per km, fartspridning och DNF-exit. Varje komponent omvandlas till percentil bland segmenten; alla fyra komponenterna och n≥5 krävs för en sammanvägd poäng.';
+const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansfallback. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
+function installCourseMethodInfo(){
+  const card=n$('#courseIntelligenceCard');
+  if(card){
+    const popup=card.querySelector('.info-tip .info-popup');
+    if(popup)popup.textContent=COURSE_INTELLIGENCE_METHOD_HELP;
+    else globalThis.addCardInfo?.(card,COURSE_INTELLIGENCE_METHOD_HELP);
+  }
+  const plan=n$('#courseRacePlan');
+  if(plan&&!plan.querySelector('.info-tip'))globalThis.addCardInfo?.(plan,COURSE_PLAN_METHOD_HELP);
+}
+
 function athleteIdentityKey(r){return nHistoryEngine.identityKey(r)}
 function groupAthleteHistories(results,races=[]){return nHistoryEngine.groupHistories(results,races)}
 const nCourses=()=>globalThis.RACE_CATALOG?.courses||{};
@@ -35,11 +49,17 @@ function nComparableFinishSeries(rows,minCount=1){
 function initNerdLab(){
   if(nerd.ready||typeof state==='undefined'||!state.data)return;
   nerd.ready=true;
+  installCourseMethodInfo();
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
   n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
   const hallDialog=n$('#hallMapDialog');hallDialog?.querySelector('.dialog-close')?.addEventListener('click',()=>hallDialog.close());
+  n$('#courseTargetTime')?.addEventListener('change',event=>{
+    const race=activeRace(),family=globalThis.RaceContracts?.familyForRace?.(race);
+    if(family)nerd.coursePlanTargets[family]=event.target.value;
+    renderCourseRacePlan(currentCourseModel());
+  });
   populateSegmentSelectors();renderNerdLab();
 }
 
@@ -52,7 +72,7 @@ function populateSegmentSelectors(){
 }
 
 function renderNerdLab(){
-  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
+  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderCourseIntelligence();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
 }
 function populateSegmentSelectorsPreserve(){
   const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;const old=[from.value,to.value],oldRace=from.dataset.race;
@@ -66,6 +86,191 @@ function renderCoverage(){
   const resultIds=results.filter(r=>nSplitsForResult(r.id).length).length,coverage=results.length?resultIds/results.length:0;
   const el=n$('#intelligenceCoverage');if(el)el.textContent=`${years.size} loppår · ${results.length.toLocaleString('sv-SE')} resultat · ${Math.round(coverage*100)} % med passager`;
 }
+const nPace=s=>globalThis.SpeedUnits?.formatPace?.(s,globalThis.SpeedUnits.get())??(Number.isFinite(Number(s))?`${Math.floor(Number(s)/60)}:${String(Math.round(Number(s)%60)).padStart(2,'0')} /km`:'–');
+const nSigned=(value,suffix='')=>Number.isFinite(Number(value))?`${Number(value)>0?'+':''}${Number(value).toLocaleString('sv-SE',{maximumFractionDigits:1})}${suffix}`:'–';
+function currentCourseModel(){
+  const race=activeRace();if(!race||!nCourseIntelligence||!globalThis.ULTRAVASAN_ROUTES)return null;
+  try{return nCourseIntelligence.buildCourseModel(state.data,race,globalThis.ULTRAVASAN_ROUTES,{results:state.filtered,minSample:5})}
+  catch(error){console.error('Course Intelligence kunde inte byggas',error);return null}
+}
+function courseMax(segments,getter){
+  return (segments||[]).filter(segment=>Number.isFinite(Number(getter(segment)))).sort((a,b)=>Number(getter(b))-Number(getter(a)))[0]||null;
+}
+function courseSegmentSelection(model){
+  if(!model?.segments?.length)return null;
+  if(nerd.courseRaceId!==String(model.race.id)){
+    nerd.courseRaceId=String(model.race.id);nerd.courseSegmentKey=null;
+  }
+  let selected=model.segments.find(segment=>segment.key===nerd.courseSegmentKey);
+  if(!selected)selected=model.segments.find(segment=>segment.difficulty?.rank===1)||model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
+  nerd.courseSegmentKey=selected?.key||null;
+  return selected;
+}
+function syncLegacySegmentLab(segment){
+  if(!segment)return;
+  const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;
+  const fromValue=String(segment.from_sequence),toValue=String(segment.to_sequence);
+  if([...from.options].some(option=>option.value===fromValue))from.value=fromValue;
+  if([...to.options].some(option=>option.value===toValue))to.value=toValue;
+  renderSegmentLab();
+}
+function selectCourseSegment(key,{sync=true}={}){
+  nerd.courseSegmentKey=key;
+  const model=currentCourseModel(),segment=model?.segments?.find(item=>item.key===key);
+  if(sync&&segment)syncLegacySegmentLab(segment);
+  renderCourseIntelligence(model);
+}
+function courseNarrative(segment){
+  if(!segment)return'<div class="empty">Välj ett segment.</div>';
+  const terrain=segment.terrain||{},field=segment.field||{},difficulty=segment.difficulty||{};
+  const clauses=[];
+  if(Number.isFinite(Number(difficulty.score)))clauses.push(`relativ Difficulty ${Number(difficulty.score).toLocaleString('sv-SE',{maximumFractionDigits:1})}/100, rank ${difficulty.rank} av ${difficulty.segment_count_ranked}`);
+  else clauses.push('ingen Difficulty-poäng eftersom timingunderlaget inte når evidensgränsen');
+  if(Number.isFinite(Number(terrain.ascent_m)))clauses.push(`${Math.round(terrain.ascent_m)} höjdmeter upp och ${Math.round(terrain.descent_m||0)} ned`);
+  if(Number.isFinite(Number(field.median_pacing_loss_seconds_per_km)))clauses.push(`${nSigned(field.median_pacing_loss_seconds_per_km,' sek/km')} mot löparnas egen hel-loppsfart`);
+  if(Number.isFinite(Number(field.median_placement_movement)))clauses.push(`median ${nSigned(field.median_placement_movement,' platser')}`);
+  if(Number.isFinite(Number(field.dnf_exit_rate_pct)))clauses.push(`${Number(field.dnf_exit_rate_pct).toLocaleString('sv-SE',{maximumFractionDigits:1})} % DNF-exit bland registrerade segmententréer`);
+  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Difficulty är relativ inom valt lopp/CourseVersion och är inte ett absolut banbetyg.</small></div>`;
+}
+function courseSvgProjector(points,width=620,height=250,padding=18){
+  const valid=(points||[]).filter(point=>Number.isFinite(Number(point?.[0]))&&Number.isFinite(Number(point?.[1])));
+  if(!valid.length)return null;
+  const meanLat=valid.reduce((sum,point)=>sum+Number(point[0]),0)/valid.length;
+  const factor=Math.cos(meanLat*Math.PI/180);
+  const projected=valid.map(point=>({x:Number(point[1])*factor,y:Number(point[0])}));
+  const minX=Math.min(...projected.map(point=>point.x)),maxX=Math.max(...projected.map(point=>point.x));
+  const minY=Math.min(...projected.map(point=>point.y)),maxY=Math.max(...projected.map(point=>point.y));
+  const spanX=Math.max(1e-9,maxX-minX),spanY=Math.max(1e-9,maxY-minY);
+  return point=>{
+    const x=Number(point[1])*factor,y=Number(point[0]);
+    return [padding+(x-minX)/spanX*(width-padding*2),height-padding-(y-minY)/spanY*(height-padding*2)];
+  };
+}
+function courseSvgPath(points,project){
+  if(!project||!points?.length)return'';
+  const step=Math.max(1,Math.ceil(points.length/650)),sample=points.filter((_,index)=>index%step===0);
+  if(sample.at(-1)!==points.at(-1))sample.push(points.at(-1));
+  return sample.map((point,index)=>{const [x,y]=project(point);return `${index?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`}).join(' ');
+}
+function bindCourseSegmentClicks(root){
+  root?.querySelectorAll?.('[data-course-segment]').forEach(node=>{
+    node.onclick=()=>selectCourseSegment(node.dataset.courseSegment);
+    node.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCourseSegment(node.dataset.courseSegment)}};
+  });
+}
+function renderCourseRouteView(model,selected){
+  const el=n$('#courseRouteView');if(!el)return;
+  const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race);
+  if(!route?.points?.length){el.innerHTML='<div class="course-view-empty">Låst display-rutt saknas för denna CourseVersion.</div>';return}
+  const width=620,height=250,project=courseSvgProjector(route.points,width,height),base=courseSvgPath(route.points,project);
+  const paths=model.segments.map(segment=>{
+    if(!Number.isFinite(Number(segment.display_from_km))||!Number.isFinite(Number(segment.display_to_km)))return'';
+    const points=globalThis.UltravasanMapEngine.routeSlice(route,segment.display_from_km,segment.display_to_km);
+    const d=courseSvgPath(points,project);if(!d)return'';
+    return `<path d="${d}" class="course-route-segment ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0"><title>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</title></path>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>BANÖVERSIKT</span><strong>Klicka på en delsträcka</strong></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Course Intelligence banöversikt"><path d="${base}" class="course-route-base"></path>${paths}</svg>`;
+  bindCourseSegmentClicks(el);
+}
+function renderCourseElevationView(model,selected){
+  const el=n$('#courseElevationView');if(!el)return;
+  const route=nCourseIntelligence.routeForRace(globalThis.ULTRAVASAN_ROUTES,model?.race),profile=route?.elevation_profile||[];
+  if(!profile.length){el.innerHTML='<div class="course-view-empty">Höjdprofil saknas för denna låsta display-rutt.</div>';return}
+  const width=620,height=250,padX=20,padTop=30,padBottom=28,maxDistance=Number(profile.at(-1)?.[0]||1);
+  const elevations=profile.map(point=>Number(point[1])).filter(Number.isFinite),minE=Math.min(...elevations),maxE=Math.max(...elevations),span=Math.max(1,maxE-minE);
+  const x=distance=>padX+Number(distance)/maxDistance*(width-padX*2),y=elevation=>height-padBottom-(Number(elevation)-minE)/span*(height-padTop-padBottom);
+  const step=Math.max(1,Math.ceil(profile.length/600)),sample=profile.filter((point,index)=>index%step===0&&Number.isFinite(Number(point[1])));
+  if(sample.at(-1)!==profile.at(-1)&&Number.isFinite(Number(profile.at(-1)?.[1])))sample.push(profile.at(-1));
+  const path=sample.map((point,index)=>`${index?'L':'M'}${x(point[0]).toFixed(1)},${y(point[1]).toFixed(1)}`).join(' ');
+  const overlays=model.segments.map(segment=>{
+    if(!Number.isFinite(Number(segment.display_from_km))||!Number.isFinite(Number(segment.display_to_km)))return'';
+    const x1=x(segment.display_from_km),x2=x(segment.display_to_km),left=Math.min(x1,x2),w=Math.max(2,Math.abs(x2-x1));
+    return `<rect x="${left.toFixed(1)}" y="${padTop}" width="${w.toFixed(1)}" height="${height-padTop-padBottom}" class="course-elevation-hit ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0"><title>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</title></rect>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>HÖJDPROFIL</span><strong>${Math.round(minE)}–${Math.round(maxE)} m</strong></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Höjdprofil med valbara Course Intelligence-segment"><path d="${path}" class="course-elevation-line"></path>${overlays}</svg>`;
+  bindCourseSegmentClicks(el);
+}
+function renderCoursePaceView(model,selected){
+  const el=n$('#coursePaceView');if(!el)return;
+  const values=model.segments.map(segment=>segment.field?.median_pace_seconds_per_km).filter(value=>Number.isFinite(Number(value))).map(Number);
+  if(!values.length){el.innerHTML='<div class="course-view-empty">Minst fem exakta finisherpassager krävs för fartfördelningen.</div>';return}
+  const min=Math.min(...values),max=Math.max(...values),span=Math.max(1,max-min);
+  const rows=model.segments.map(segment=>{
+    const value=segment.field?.median_pace_seconds_per_km,width=Number.isFinite(Number(value))?20+(Number(value)-min)/span*80:0;
+    const spread=segment.field?.sufficient_sample?`${nPace(segment.field.q25_pace_seconds_per_km)}–${nPace(segment.field.q75_pace_seconds_per_km)}`:'underlag saknas';
+    return `<button type="button" class="course-pace-row ${segment.key===selected?.key?'selected':''}" data-course-segment="${nEsc(segment.key)}" ${width?'':'disabled'}><span>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</span><i><b style="width:${width}%"></b></i><strong>${Number.isFinite(Number(value))?nPace(value):'–'}</strong><small>${nEsc(spread)}</small></button>`;
+  }).join('');
+  el.innerHTML=`<div class="course-view-head"><span>FARTFÖRDELNING</span><strong>Median · Q25–Q75</strong></div><div class="course-pace-list">${rows}</div>`;
+  bindCourseSegmentClicks(el);
+}
+
+function parseCourseTargetTime(value){
+  const parts=String(value||'').trim().split(':');
+  if(parts.length<2||parts.length>3)return null;
+  const numbers=parts.map(Number);if(numbers.some(number=>!Number.isFinite(number)||number<0))return null;
+  const [hours,minutes,seconds=0]=numbers;
+  if(minutes>=60||seconds>=60)return null;
+  const total=hours*3600+minutes*60+seconds;
+  return total>0?total:null;
+}
+function renderCourseRacePlan(existingModel=null){
+  const input=n$('#courseTargetTime'),status=n$('#coursePlanStatus'),rowsEl=n$('#coursePlanRows');
+  if(!input||!status||!rowsEl)return;
+  const model=existingModel||currentCourseModel(),race=model?.race;
+  if(!model||!race){status.innerHTML='<span>CourseVersion saknas.</span>';rowsEl.innerHTML='';return}
+  const family=model.race_family||globalThis.RaceContracts?.familyForRace?.(race)||'uv90';
+  const stored=nerd.coursePlanTargets[family]||(family==='uv45'?'5:00:00':'10:00:00');
+  if(document.activeElement!==input&&input.value!==stored)input.value=stored;
+  const target=parseCourseTargetTime(input.value);
+  if(target===null){status.innerHTML='<strong>Ogiltig måltid</strong><span>Ange HH:MM eller HH:MM:SS.</span>';rowsEl.innerHTML='';return}
+  nerd.coursePlanTargets[family]=input.value;
+  let plan;
+  try{plan=nCourseIntelligence.buildRacePlan(state.data,race,target,{minSample:5})}
+  catch(error){console.error('Loppplan kunde inte byggas',error);status.innerHTML='<strong>Loppplan saknas</strong><span>CourseVersion-underlaget kunde inte verifieras.</span>';rowsEl.innerHTML='';return}
+  const years=plan.cohort_years.length?`${plan.cohort_years[0]}${plan.cohort_years.length>1?'–'+plan.cohort_years.at(-1):''}`:'inga loppår';
+  if(plan.complete){
+    status.innerHTML=`<strong>${nTime(plan.target_finish_seconds)} · ${nEsc(plan.course_version_id)}</strong><span>${plan.cohort_finishers.toLocaleString('sv-SE')} fullföljande · ${nEsc(years)} · ${plan.historical_segments} historiska segment${plan.fallback_segments?' · '+plan.fallback_segments+' distansfallback':''}</span>`;
+  }else{
+    status.innerHTML=`<strong>Komplett loppplan kan inte beräknas</strong><span>${plan.unavailable_segments} segment saknar både tillräcklig historik och explicit distans. Ingen resttid fördelas genom gissning.</span>`;
+  }
+  rowsEl.innerHTML=plan.rows.map(row=>{
+    const source=row.source==='historical-course-version'?`Historisk CourseVersion · n=${row.sample_n}`:row.source==='distance-fallback'?'Distansfallback':'Underlag saknas';
+    return `<tr class="${row.source}"><td><strong>${nEsc(row.to_name)}</strong><small>${nEsc(row.from_name)} → ${nEsc(row.to_name)}</small></td><td>${row.target_segment_seconds==null?'–':nTime(row.target_segment_seconds)}</td><td>${row.target_cumulative_seconds==null?'–':nTime(row.target_cumulative_seconds)}</td><td>${row.target_pace_seconds_per_km==null?'–':nPace(row.target_pace_seconds_per_km)}</td><td><span class="course-plan-source ${row.source}">${nEsc(source)}</span></td></tr>`;
+  }).join('');
+}
+
+function renderCourseIntelligence(existingModel=null){
+  const rowsEl=n$('#courseIntelligenceRows'),summary=n$('#courseIntelligenceSummary'),version=n$('#courseIntelligenceVersion'),narrative=n$('#courseSegmentNarrative');
+  if(!rowsEl||!summary||!version||!narrative)return;
+  const model=existingModel||currentCourseModel();
+  if(!model){rowsEl.innerHTML='<tr><td colspan="9">Course Intelligence saknar underlag.</td></tr>';summary.innerHTML='';narrative.innerHTML='';return}
+  version.textContent=model.course_version_id;
+  const selected=courseSegmentSelection(model);
+  const hardest=model.segments.find(segment=>segment.difficulty?.rank===1)||null;
+  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m);
+  const pacing=courseMax(model.segments,segment=>segment.field?.median_pacing_loss_seconds_per_km);
+  const attrition=courseMax(model.segments,segment=>segment.field?.dnf_exit_rate_pct);
+  const summaryItems=[
+    ['Tuffast relativt',hardest?`${hardest.from_name} → ${hardest.to_name}`:'Underlag saknas',hardest?.difficulty?.score!=null?`${hardest.difficulty.score}/100`:'–'],
+    ['Mest stigning',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m!=null?`+${Math.round(climb.terrain.ascent_m)} m`:'–'],
+    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' sek/km'):'–'],
+    ['Högst DNF-exit',attrition?`${attrition.from_name} → ${attrition.to_name}`:'Underlag saknas',attrition?.field?.dnf_exit_rate_pct!=null?`${attrition.field.dnf_exit_rate_pct} %`:'–'],
+  ];
+  summary.innerHTML=summaryItems.map(([label,title,value])=>`<article><span>${nEsc(label)}</span><strong>${nEsc(title)}</strong><em>${nEsc(value)}</em></article>`).join('');
+  rowsEl.innerHTML=model.segments.map(segment=>{
+    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{},difficulty=segment.difficulty||{};
+    const range=field.sufficient_sample&&field.q25_pace_seconds_per_km!=null&&field.q75_pace_seconds_per_km!=null?`${nPace(field.q25_pace_seconds_per_km)}–${nPace(field.q75_pace_seconds_per_km)}`:'–';
+    const distance=segment.distance_km==null?'underlag saknas':`${Number(segment.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:2})} km`;
+    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(range)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td><td>${difficulty.score==null?'–':`<strong>${difficulty.score}</strong><small>#${difficulty.rank}/${difficulty.segment_count_ranked}</small>`}</td></tr>`;
+  }).join('');
+  narrative.innerHTML=courseNarrative(selected);
+  renderCourseRouteView(model,selected);
+  renderCourseElevationView(model,selected);
+  renderCoursePaceView(model,selected);
+  renderCourseRacePlan(model);
+  bindCourseSegmentClicks(rowsEl);
+}
+
 function renderStories(){
   const el=n$('#raceStories');if(!el)return;const rows=state.filtered.filter(nIsFinished).sort((a,b)=>a.finish_seconds-b.finish_seconds),splits=activeSplits();
   if(!rows.length){el.innerHTML='<div class="empty">Inget underlag för berättelser</div>';return}

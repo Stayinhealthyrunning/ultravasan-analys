@@ -111,6 +111,55 @@ const moduleChecks=await evaluate(`(() => ({
 }))()`);
 moduleChecks.verified=Boolean(moduleChecks.nerdCoverage&&moduleChecks.nerdStories>=3&&moduleChecks.segmentOptions>0&&moduleChecks.genderKpis>=2);
 
+const u6Initial=await evaluate(`(() => ({
+  api:Boolean(window.CourseIntelligence),
+  version:(document.querySelector('#courseIntelligenceVersion')?.textContent||'').trim(),
+  rows:document.querySelectorAll('#courseIntelligenceRows tr[data-course-segment]').length,
+  routeSegments:document.querySelectorAll('#courseRouteView [data-course-segment]').length,
+  elevationSegments:document.querySelectorAll('#courseElevationView [data-course-segment]').length,
+  paceSegments:document.querySelectorAll('#coursePaceView [data-course-segment]').length,
+  selectedRows:document.querySelectorAll('#courseIntelligenceRows tr.selected').length,
+  planRows:document.querySelectorAll('#coursePlanRows tr').length,
+  planStatus:(document.querySelector('#coursePlanStatus')?.innerText||'').trim(),
+  method:(document.querySelector('#courseIntelligenceCard > .panel-head .info-popup')?.textContent||'').trim(),
+  planMethod:(document.querySelector('#courseRacePlan > .info-tip .info-popup')?.textContent||'').trim(),
+}))()`);
+await evaluate(`(() => {
+  const rows=[...document.querySelectorAll('#courseIntelligenceRows tr[data-course-segment]')];
+  (rows[1]||rows[0])?.click();
+})()`);
+await delay(120);
+const u6Synced=await evaluate(`(() => {
+  const model=currentCourseModel(),segment=model?.segments?.find(item=>item.key===nerd.courseSegmentKey);
+  return {
+    key:nerd.courseSegmentKey||null,
+    rowSelected:document.querySelectorAll('#courseIntelligenceRows tr.selected').length,
+    routeSelected:document.querySelectorAll('#courseRouteView .course-route-segment.selected').length,
+    elevationSelected:document.querySelectorAll('#courseElevationView .course-elevation-hit.selected').length,
+    paceSelected:document.querySelectorAll('#coursePaceView .course-pace-row.selected').length,
+    legacyFrom:document.querySelector('#segmentFrom')?.value||null,
+    legacyTo:document.querySelector('#segmentTo')?.value||null,
+    expectedFrom:segment?String(segment.from_sequence):null,
+    expectedTo:segment?String(segment.to_sequence):null,
+  };
+})()`);
+await evaluate(`(() => {
+  const input=document.querySelector('#courseTargetTime');
+  if(!input)return;
+  input.value='09:30:00';
+  input.dispatchEvent(new Event('change',{bubbles:true}));
+})()`);
+await delay(100);
+const u6Plan=await evaluate(`(() => ({
+  target:document.querySelector('#courseTargetTime')?.value||null,
+  rows:document.querySelectorAll('#coursePlanRows tr').length,
+  historical:document.querySelectorAll('#coursePlanRows .course-plan-source.historical-course-version').length,
+  fallback:document.querySelectorAll('#coursePlanRows .course-plan-source.distance-fallback').length,
+  unavailable:document.querySelectorAll('#coursePlanRows .course-plan-source.unavailable').length,
+  status:(document.querySelector('#coursePlanStatus')?.innerText||'').trim(),
+  lastCumulative:document.querySelector('#coursePlanRows tr:last-child td:nth-child(3)')?.textContent?.trim()||null,
+}))()`);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -422,6 +471,17 @@ const checks = {
   progressive:progressiveLoad.verified,
   uv45Progressive:uv45Progressive.verified,
   modules:moduleChecks.verified,
+  courseIntelligence:Boolean(
+    u6Initial.api&&u6Initial.version&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
+    u6Initial.elevationSegments>0&&u6Initial.paceSegments>0&&u6Initial.selectedRows===1&&u6Initial.planRows>0&&
+    u6Initial.method.includes('Fyra komponenter används med lika vikt')&&
+    u6Initial.method.includes('inte i sig bevis för exakt historisk geometri')&&
+    u6Initial.planMethod.includes('exakt samma CourseVersion')&&
+    u6Synced.key&&u6Synced.rowSelected===1&&u6Synced.routeSelected===1&&u6Synced.elevationSelected===1&&
+    u6Synced.paceSelected===1&&u6Synced.legacyFrom===u6Synced.expectedFrom&&u6Synced.legacyTo===u6Synced.expectedTo&&
+    u6Plan.target==='09:30:00'&&u6Plan.rows===u6Initial.rows&&u6Plan.historical>0&&u6Plan.unavailable===0&&
+    !u6Plan.status.includes('kan inte beräknas')&&u6Plan.lastCumulative&&u6Plan.lastCumulative!=='–'
+  ),
   maps:mapCases.length===3&&mapCases.every(item=>item.verified),
   title: initial.title.includes("Sälen") || initial.title.includes("Ultravasan"),
   race: initial.race?.race_key === "ultravasan90-2016" && initial.race?.year === 2016,
@@ -438,7 +498,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

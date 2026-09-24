@@ -190,7 +190,7 @@ assert.ok(appSource.includes('renderRunnerJourney(profile)')&&appSource.includes
 assert.ok(appSource.includes('renderRunnerVerifiedHistory(profile)'),'dialogen ska exponera verifierad historik utan namnmatchning');
 assert.ok(!appSource.includes('splits.map(s=>'),'den detaljerade mellantidstabellen får inte återgå till egen ad hoc-splitrendering');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Journey')&&stylesSourceU5.includes('.runner-journey-track'),'Journey ska ha egen responsiv layout');
-assert.ok(/assets\/styles\.css\?v=20260923-u5[a-z]*/.test(indexHtml)&&/assets\/app\.js\?v=20260923-u5[a-z]*/.test(indexHtml),'U5 UI-assets ska cache-bustas tillsammans');
+assert.ok(/assets\/styles\.css\?v=20260923-u6[a-z]*/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'U6 får föra gemensam CSS-generation framåt utan att ändra U5-appens JavaScript-generation');
 
 assert.ok(indexHtml.includes('id="compareH2HButton"')&&indexHtml.includes('id="headToHeadDialog"'),'U5 ska exponera Head-to-head från befintligt löparurval');
 assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'),'Head-to-head UI ska använda RunnerAnalysis-modellen');
@@ -209,4 +209,27 @@ assert.ok(appSource.includes('function openRunnerFavorite(key)')&&appSource.incl
 assert.ok(runnerFavoritesSource.includes("STORAGE_KEY='ultravasan-runner-favorites-v1'")&&runnerFavoritesSource.includes('MAX_ITEMS=40'),'favoritlagret ska vara lokalt, versionsstyrt och begränsat');
 assert.ok(!runnerFavoritesSource.includes('person_key')&&!runnerFavoritesSource.includes('identityKey'),'favoriter får inte skapa eget personidentitetsantagande');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: local favorites'),'favorit-UI ska ha egen responsiv U5-layout');
-assert.ok(indexHtml.includes('assets/styles.css?v=20260923-u5c')&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favorit-UI och app ska cache-bustas tillsammans');
+assert.ok(/assets\/styles\.css\?v=20260923-(?:u5c|u6[a-z]*)/.test(indexHtml)&&indexHtml.includes('assets/app.js?v=20260923-u5c'),'favoriternas appgeneration ska bevaras och aktuell UI-CSS ska vara cache-bustad');
+
+const courseIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/course-intelligence.js'),'utf8');
+const nerdSource=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
+assert.ok(indexHtml.includes('assets/course-intelligence.js?v=20260923-u6'),'huvudytan ska ladda U6 Course Intelligence');
+assert.ok(indexHtml.indexOf('assets/map-engine.js')<indexHtml.indexOf('assets/course-intelligence.js'),'MapEngine ska laddas före Course Intelligence');
+assert.ok(indexHtml.indexOf('assets/charts.js')<indexHtml.indexOf('assets/course-intelligence.js'),'Charts ska laddas före Course Intelligence');
+assert.ok(indexHtml.indexOf('assets/course-intelligence.js')<indexHtml.indexOf('assets/nerdlab.js'),'Course Intelligence ska laddas före NerdLab');
+assert.ok(indexHtml.includes('id="courseIntelligenceRows"')&&indexHtml.includes('id="courseSegmentNarrative"'),'Race Intelligence Lab ska innehålla U6 segmenttabell och berättelse');
+assert.ok(nerdSource.includes('renderCourseIntelligence()')&&nerdSource.includes('selectCourseSegment'),'NerdLab ska drivas av gemensam Course Intelligence-segmentstate');
+assert.ok(nerdSource.includes('syncLegacySegmentLab(segment)'),'U6-segmentval ska synka befintligt Delsträckelabb');
+assert.ok(courseIntelligenceSource.includes("relative_scope:'selected-race-course-version'")&&courseIntelligenceSource.includes("component_weighting:'equal-four-components'")&&courseIntelligenceSource.includes('completeEvidence=segment=>')&&courseIntelligenceSource.includes('available.length===definitions.length'),'Difficulty-kontraktet ska kräva samma kompletta fyrkomponentspopulation och vara explicit relativt');
+
+assert.ok(nerdSource.includes('renderCourseRouteView(model,selected)')&&nerdSource.includes('renderCourseElevationView(model,selected)')&&nerdSource.includes('renderCoursePaceView(model,selected)'),'U6 ska rendera karta, höjd och fart från samma valda segment');
+assert.ok(nerdSource.includes("querySelectorAll?.('[data-course-segment]')")&&nerdSource.includes('selectCourseSegment(node.dataset.courseSegment)'),'alla Course Intelligence-vyer ska använda samma segment-eventkontrakt');
+assert.ok(stylesSourceU5.includes('.course-route-segment.selected')&&stylesSourceU5.includes('.course-elevation-hit.selected')&&stylesSourceU5.includes('.course-pace-row.selected'),'valt U6-segment ska ha synkad visuell state i alla vyer');
+
+assert.ok(indexHtml.includes('id="courseTargetTime"')&&indexHtml.includes('id="coursePlanRows"'),'U6 ska exponera redigerbar måltid och loppplan');
+assert.ok(nerdSource.includes('buildRacePlan(state.data,race,target,{minSample:5})'),'måltempo ska byggas via Course Intelligence, inte egen UI-matematik');
+assert.ok(nerdSource.includes('Ingen resttid fördelas genom gissning'),'ofullständig CourseVersion ska ge explicit stopp, inte dold interpolering');
+assert.ok(courseIntelligenceSource.includes("source:historicalShare!==null?'historical-course-version':fallbackShare!==null?'distance-fallback':'unavailable'"),'loppplanen ska märka historik, fallback och saknat underlag per segment');
+assert.ok(stylesSourceU5.includes('.course-plan-source.distance-fallback')&&stylesSourceU5.includes('.course-plan-source.unavailable'),'loppplanens evidenskälla ska vara visuellt synlig');
+assert.ok(nerdSource.includes('COURSE_INTELLIGENCE_METHOD_HELP')&&nerdSource.includes('Fyra komponenter används med lika vikt')&&nerdSource.includes('Display-rutten kan vara en verifierad GPX från ett referensår'),'U6:s (i)-förklaring ska beskriva metod, komponenter och display-ruttens begränsning');
+assert.ok(nerdSource.includes('COURSE_PLAN_METHOD_HELP')&&nerdSource.includes('bara historiska fullföljare från exakt samma CourseVersion')&&nerdSource.includes('ingen resttid fördelas genom gissning'),'U6:s loppplan ska ha en utförlig metodförklaring och explicit anti-gissningsregel');
