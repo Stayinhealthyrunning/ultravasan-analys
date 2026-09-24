@@ -38,11 +38,22 @@ def test_candidate_queue_never_auto_merges_therese():
     assert len(therese) == 1
     assert therese[0]["result_id"] == 4
     assert therese[0]["candidate_athlete_id"] == 1
-    assert therese[0]["hard_conflict"] is True  # W35 -> W40 after one year is incompatible.
+    assert therese[0]["hard_conflict"] is False  # Age-class labels are categorical bands, not exact ages.
+    assert any("not exact-age evidence" in reason for reason in therese[0]["reasons"])
     assert therese[0]["decision"] == "pending-review"
     assert therese[0]["auto_merge"] is False
     assert conn.execute("SELECT id,athlete_id FROM results ORDER BY id").fetchall() == before
     assert conn.execute("SELECT COUNT(*) FROM identity_evidence").fetchone()[0] == 0
+
+
+def test_age_class_jumps_do_not_create_identity_hard_conflicts():
+    conn = fixture_db()
+    report = review.build_candidate_report(conn)
+    candidate = next(item for item in report["candidates"] if item["result_id"] == 4)
+    assert candidate["target_age_class"] == "W21"
+    assert candidate["age_class"] == "W40"
+    assert candidate["hard_conflict"] is False
+    assert any("categorical eligibility labels" in reason for reason in candidate["reasons"])
 
 
 def test_manual_approval_requires_explicit_review_and_records_evidence():
