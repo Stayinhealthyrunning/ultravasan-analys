@@ -75,6 +75,8 @@ assert.ok(audience.includes('compactSegmentLabel(pair)')&&audience.includes('rot
 assert.ok(audience.includes('aria-label="${esc(full)}"')&&audience.includes('data-chart-tip="${esc(full)}"'),'fullständiga delsträckenamn ska finnas för hjälptext och tangentbordsfokus');
 assert.ok(!audience.includes('<text x="${x(valid.at(-1)?.i||0)+5}"'),'klippta slutetiketter ska vara borttagna');
 assert.ok(audience.includes('class-history-bar starters')&&audience.includes('class-history-bar dnf'));
+assert.ok(audience.includes('class-history-line')&&audience.includes('class-history-hit'),'medianhistoriken ska använda linjer med osynliga interaktiva träffytor');
+assert.ok(!audience.includes('interactive-chart-point class-history-point'),'klasshistoriken ska inte rita separata synliga medianpunkter');
 assert.ok(audience.includes('median ${fmtTime(d.med)}')&&!audience.includes('median ${fmtTime(d.med)} · DNF'),'linjens tooltip ska inte innehålla DNF');
 assert.ok(audience.includes('relativeToplistWidth(classIndexMetric(x),maxBarValue)'),'topplistans staplar ska normaliseras mot listans maxvärde');
 assert.ok(audience.includes('Median sluttid')&&audience.includes('Antal personer'),'klasshistoriken ska ha separata y-axlar');
