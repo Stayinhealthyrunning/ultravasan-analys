@@ -643,6 +643,10 @@ await delay(250);
 const h2hComparable=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
   finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
+  elevation:Boolean(document.querySelector('#headToHeadDetail .h2h-course-elevation svg')),
   segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
   warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
   text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
@@ -664,6 +668,9 @@ await delay(250);
 const h2hChangedCourse=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
   finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
   warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
   text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
 }))()`);
@@ -800,8 +807,8 @@ const checks = {
   sourceStringSecurity: sourceStringSecurity.available&&sourceStringSecurity.executed===0&&sourceStringSecurity.handlerAttribute===null&&sourceStringSecurity.injectedNodes===0&&sourceStringSecurity.statusClass==='status unknown'&&sourceStringSecurity.visibleText.includes('onmouseover'),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
-  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('CHECKPOINTGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
+  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings>=2 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt') && h2hChangedCourse.text.includes('Checkpointgap och placeringsresa visas inte'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
