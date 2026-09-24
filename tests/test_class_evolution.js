@@ -56,9 +56,9 @@ assert.strictEqual(m35_2018.comparisonBreak,false,'samma explicit whole-course-g
 assert.ok(!evolution.pointTooltip(m35_2018,'Ultravasan 90','startande').includes('banversion'));
 
 const sameVersionRaces=[
-  {id:11,year:2023,course_version:'same-v1',comparison_key:null},
-  {id:12,year:2024,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
-  {id:13,year:2025,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
+  {id:11,year:2023,distance_km:92,course_version:'same-v1',comparison_key:null},
+  {id:12,year:2024,distance_km:92,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
+  {id:13,year:2025,distance_km:92,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
 ];
 const sameVersionResults=[
   {id:21,race_id:11,age_class:'M40',sex:'M',status:'FINISHED',finish_seconds:36000},
