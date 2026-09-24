@@ -52,6 +52,6 @@ assert.ok(html.includes('Q25–Q75')&&app.includes('p25:quantile(g.vals,.25)')&&
 assert.ok(html.includes('id="classCompareChart"')&&html.includes('id="clubCompareChart"'),'U8 ska behålla gruppvyer för både klass och klubb/ort');
 assert.ok(audience.includes('function renderClassCompare(stats)')&&audience.includes('function renderClubCompare(stats)'),'klass- och klubbgruppvyerna ska ha egna jämförelserenderare');
 assert.ok(app.includes("['#genderRetentionChart'")&&app.includes("['#classCompareChart'")&&app.includes("['#clubCompareChart'"),'U8:s grupp- och retentionvyer ska ha metodhjälp');
-assert.ok(html.includes('assets/styles.css?v=20260923-u8')&&html.includes('assets/app.js?v=20260924-r3')&&html.includes('assets/audience-analytics.js?v=20260924-r3'),'ändrade runtime-assets ska ha explicita cacheversioner');
+assert.ok(html.includes('assets/styles.css?v=20260923-u8')&&html.includes('assets/app.js?v=20260924-r4')&&html.includes('assets/audience-analytics.js?v=20260924-r4'),'ändrade runtime-assets ska ha explicita cacheversioner');
 
 console.log('OK: U8 UX/metodik låser målgångsprogression, fartretention, Q25–Q75, gruppvyer, metodhjälp och tillgänglighet');
