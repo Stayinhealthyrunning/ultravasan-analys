@@ -324,8 +324,8 @@ function renderSegmentLab(){
 function renderPercentiles(){
   const el=n$('#percentileLadder');if(!el)return;const rows=state.filtered.filter(nIsFinished),men=rows.filter(r=>nSex(r)==='M').map(r=>Number(r.finish_seconds)),women=rows.filter(r=>nSex(r)==='F').map(r=>Number(r.finish_seconds));
   if(men.length<2&&women.length<2){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
-  const levels=[[.01,'Topp 1 %'],[.05,'Topp 5 %'],[.10,'Topp 10 %'],[.25,'Topp 25 %'],[.50,'Median'],[.75,'75-percentilen']];
-  el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i urvalet</span></div><p>Tiden visar gränsen för respektive nivå. Lägre tid är bättre.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile"><span>${label}</span><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
+  const levels=[[.10,'10 % i mål'],[.25,'25 % i mål'],[.50,'50 % i mål · median'],[.75,'75 % i mål'],[.90,'90 % i mål']];
+  el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i urvalet</span></div><p>Tiden visar när respektive andel av gruppens fullföljande hade gått i mål.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile"><span>${label}</span><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
 }
 
 function renderFieldFlow(){
