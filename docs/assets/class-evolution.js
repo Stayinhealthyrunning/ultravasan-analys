@@ -16,13 +16,15 @@
   const formatPaceDelta=seconds=>{if(!Number.isFinite(Number(seconds)))return'–';const value=Math.abs(Math.round(Number(seconds))),minutes=Math.floor(value/60),rest=value%60;return`${minutes}:${String(rest).padStart(2,'0')} min/km`};
   const normalizeGender=value=>{const gender=String(value||'').toUpperCase();return gender==='M'||gender==='H'||gender==='MALE'?'male':gender==='F'||gender==='W'||gender==='K'||gender==='D'||gender==='FEMALE'?'female':'unknown'};
 
-  function aggregateClassHistory({races=[],results=[],getClass=result=>result.age_class,getGender=result=>result.sex,isStarter=()=>true,isFinished=result=>Number(result.finish_seconds)>0}={}){
+  function aggregateClassHistory({races=[],results=[],getClass=result=>result.age_class,getGender=result=>result.sex,isStarter=()=>true,isFinished=result=>Number(result.finish_seconds)>0,comparisonKeyForRace=()=>null,courseVersionForRace=race=>race?.course_version_id||race?.course_version||null}={}){
     const sortedRaces=[...races].filter(race=>Number.isFinite(Number(race?.year))).sort((a,b)=>Number(a.year)-Number(b.year)),raceById=new Map(sortedRaces.map(race=>[race.id,race])),groups=new Map();
+    const raceComparisonByYear=new Map(sortedRaces.map(race=>[Number(race.year),comparisonKeyForRace(race)||null]));
+    const raceCourseVersionByYear=new Map(sortedRaces.map(race=>[Number(race.year),courseVersionForRace(race)||null]));
     for(const result of results||[]){
       const race=raceById.get(result?.race_id),className=String(getClass(result)||'').trim();
       if(!race||!className)continue;
-      const key=`${Number(race.year)}|${className}`;
-      if(!groups.has(key))groups.set(key,{raceId:race.id,year:Number(race.year),className,genderCounts:{male:0,female:0,unknown:0},participantCount:0,finisherCount:0,speeds:[],times:[]});
+      const key=Number(race.year)+'|'+className;
+      if(!groups.has(key))groups.set(key,{raceId:race.id,year:Number(race.year),comparisonKey:comparisonKeyForRace(race)||null,className,genderCounts:{male:0,female:0,unknown:0},participantCount:0,finisherCount:0,speeds:[],times:[]});
       const group=groups.get(key),gender=normalizeGender(getGender(result));group.genderCounts[gender]++;
       if(isStarter(result))group.participantCount++;
       const finishSeconds=Number(result?.finish_seconds),distanceKm=Number(race?.distance_km);
@@ -34,14 +36,31 @@
       if(!group.participantCount&&!validResultCount)continue;
       if(!validResultCount)continue;
       const gender=Object.entries(group.genderCounts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0]?.[0]||'unknown';
-      points.push({raceId:group.raceId,year:group.year,className:group.className,gender,participantCount:group.participantCount,finisherCount:group.finisherCount,medianSpeedKmh:median(group.speeds),medianFinishTimeSeconds:median(group.times),validResultCount,previousYear:null,participantDelta:null,speedDelta:null,paceDeltaSeconds:null});
+      points.push({raceId:group.raceId,year:group.year,comparisonKey:group.comparisonKey,className:group.className,gender,participantCount:group.participantCount,finisherCount:group.finisherCount,medianSpeedKmh:median(group.speeds),medianFinishTimeSeconds:median(group.times),validResultCount,previousYear:null,participantDelta:null,speedDelta:null,paceDeltaSeconds:null,comparisonBreak:false});
     }
     points.sort((a,b)=>a.year-b.year||a.className.localeCompare(b.className,'sv'));
     const pointsByClass={};
     for(const point of points)(pointsByClass[point.className]||(pointsByClass[point.className]=[])).push(point);
-    for(const classPoints of Object.values(pointsByClass))for(let i=1;i<classPoints.length;i++){const previous=classPoints[i-1],current=classPoints[i];current.previousYear=previous.year;current.participantDelta=current.participantCount-previous.participantCount;current.speedDelta=current.medianSpeedKmh-previous.medianSpeedKmh;current.paceDeltaSeconds=Math.round((speedToPace(current.medianSpeedKmh)-speedToPace(previous.medianSpeedKmh))*60)}
+    for(const classPoints of Object.values(pointsByClass))for(let i=1;i<classPoints.length;i++){
+      const previous=classPoints[i-1],current=classPoints[i],comparable=Boolean(previous.comparisonKey&&current.comparisonKey&&previous.comparisonKey===current.comparisonKey);
+      current.previousYear=previous.year;
+      current.participantDelta=current.participantCount-previous.participantCount;
+      current.comparisonBreak=!comparable;
+      current.comparisonLabel=comparable?null:(previous.comparisonKey&&current.comparisonKey?'Ny jämförbarhetsserie':'Helbanans jämförbarhet ej verifierad');
+      if(comparable){
+        current.speedDelta=current.medianSpeedKmh-previous.medianSpeedKmh;
+        current.paceDeltaSeconds=Math.round((speedToPace(current.medianSpeedKmh)-speedToPace(previous.medianSpeedKmh))*60);
+      }
+    }
     const years=[...new Set(sortedRaces.map(race=>Number(race.year)))],classes=Object.keys(pointsByClass).sort((a,b)=>a.localeCompare(b,'sv')),speeds=points.map(point=>point.medianSpeedKmh).filter(Number.isFinite);
-    return{years,races:sortedRaces,points,pointsByClass,classes,maxParticipantCount:Math.max(1,...points.map(point=>point.participantCount)),minSpeed:speeds.length?Math.min(...speeds):null,maxSpeed:speeds.length?Math.max(...speeds):null,participantLabel:'startande'};
+    const comparisonBreaks=[];
+    for(let i=1;i<years.length;i++){
+      const fromYear=years[i-1],toYear=years[i],fromKey=raceComparisonByYear.get(fromYear)||null,toKey=raceComparisonByYear.get(toYear)||null,fromVersion=raceCourseVersionByYear.get(fromYear)||null,toVersion=raceCourseVersionByYear.get(toYear)||null;
+      if(fromVersion&&toVersion&&fromVersion!==toVersion&&!(fromKey&&toKey&&fromKey===toKey))comparisonBreaks.push({fromYear,toYear,fromKey,toKey,fromVersion,toVersion,label:fromKey&&toKey?'Ny jämförbarhetsserie':'Helbanans jämförbarhet ej verifierad'});
+    }
+    const calendarGaps=[];
+    for(let i=1;i<years.length;i++)if(years[i]-years[i-1]>1){const missing=Array.from({length:years[i]-years[i-1]-1},(_,offset)=>years[i-1]+offset+1);calendarGaps.push({fromYear:years[i-1],toYear:years[i],years:missing,label:`${missing[0]}–${missing.at(-1)}: inga importerade lopp`})}
+    return{years,races:sortedRaces,points,pointsByClass,classes,maxParticipantCount:Math.max(1,...points.map(point=>point.participantCount)),minSpeed:speeds.length?Math.min(...speeds):null,maxSpeed:speeds.length?Math.max(...speeds):null,participantLabel:'startande',comparisonBreaks,calendarGaps,raceComparisonByYear:Object.fromEntries(raceComparisonByYear),raceCourseVersionByYear:Object.fromEntries(raceCourseVersionByYear)};
   }
 
   const bubbleRadius=(count,maxCount,{min=6,max=34}={})=>{const total=Number(maxCount),value=Number(count);if(!Number.isFinite(value)||value<=0||!Number.isFinite(total)||total<=0)return 0;return clamp(max*Math.sqrt(value/total),min,max)};
@@ -49,7 +68,14 @@
   const classColor=(className,gender)=>{const normalized=normalizeGender(gender),age=Number(String(className||'').match(/\d{1,3}/)?.[0]||35),ageFactor=clamp(age/80,0,1);if(normalized==='male')return`hsl(${Math.round(207+ageFactor*17)} 72% ${Math.round(61-ageFactor*22)}%)`;if(normalized==='female')return`hsl(${Math.round(329+ageFactor*14)} 70% ${Math.round(64-ageFactor*21)}%)`;return'hsl(155 8% 48%)'};
   function transitionBubble(from,to,progress,{fromYear,toYear,maxParticipantCount=1}={}){
     const t=easeInOutCubic(progress);
-    if(from&&to)return{year:Number(from.year)+(Number(to.year)-Number(from.year))*t,medianSpeedKmh:from.medianSpeedKmh+(to.medianSpeedKmh-from.medianSpeedKmh)*t,participantCount:from.participantCount+(to.participantCount-from.participantCount)*t,opacity:1,sourcePoint:t<.5?from:to};
+    if(from&&to){
+      const comparable=Boolean(from.comparisonKey&&to.comparisonKey&&from.comparisonKey===to.comparisonKey);
+      if(!comparable){
+        if(t<.5)return{year:Number(from.year),medianSpeedKmh:from.medianSpeedKmh,participantCount:from.participantCount,opacity:1-t*2,sourcePoint:from,comparisonBreak:true};
+        return{year:Number(to.year),medianSpeedKmh:to.medianSpeedKmh,participantCount:to.participantCount,opacity:(t-.5)*2,sourcePoint:to,comparisonBreak:true};
+      }
+      return{year:Number(from.year)+(Number(to.year)-Number(from.year))*t,medianSpeedKmh:from.medianSpeedKmh+(to.medianSpeedKmh-from.medianSpeedKmh)*t,participantCount:from.participantCount+(to.participantCount-from.participantCount)*t,opacity:1,sourcePoint:t<.5?from:to,comparisonBreak:false};
+    }
     if(from)return{year:Number(fromYear??from.year)+(Number(toYear??from.year)-Number(fromYear??from.year))*t,medianSpeedKmh:from.medianSpeedKmh,participantCount:from.participantCount,opacity:1-t,sourcePoint:from};
     if(to)return{year:Number(to.year),medianSpeedKmh:to.medianSpeedKmh,participantCount:to.participantCount,opacity:t,sourcePoint:to};
     return null;
@@ -61,6 +87,7 @@
     const deltas=[];
     if(Number.isFinite(point.participantDelta))deltas.push(`${point.participantDelta>0?'+':point.participantDelta<0?'−':''}${Math.abs(point.participantDelta)} ${participantLabel}`);
     if(Number.isFinite(point.paceDeltaSeconds))deltas.push(`${point.paceDeltaSeconds>0?'+':point.paceDeltaSeconds<0?'−':''}${formatPaceDelta(point.paceDeltaSeconds)}`);
+    if(point.comparisonBreak&&point.previousYear)deltas.push(`${String(point.comparisonLabel||'Helbanans jämförbarhet ej verifierad').toLowerCase()} – farttrend visas inte`);
     return`${raceName} · ${point.year} · ${point.className} · ${point.participantCount} ${participantLabel} · ${point.finisherCount} fullföljande · median ${formatPaceFromSpeed(point.medianSpeedKmh)} · ${formatTime(point.medianFinishTimeSeconds)} · ${point.validResultCount} giltiga resultat${deltas.length?` · sedan ${point.previousYear}: ${deltas.join(' · ')}`:''}`;
   }
 
@@ -89,6 +116,8 @@
       const p=this._padding(),{min,max}=this._paceDomain();this.axisLayer.replaceChildren();
       for(let i=0;i<=5;i++){const value=min+(max-min)*i/5,y=this._yPace(value),line=svgElement('line',{x1:p.l,y1:y,x2:this.viewWidth-p.r,y2:y,class:'gridline'}),text=svgElement('text',{x:p.l-12,y:y+4,'text-anchor':'end'});text.textContent=formatPaceValue(value,false);this.axisLayer.append(line,text)}
       for(const year of this.model.years){const x=this._x(year),tick=svgElement('line',{x1:x,y1:560-p.b,x2:x,y2:560-p.b+6,class:'axis'}),text=svgElement('text',{x,y:535,'text-anchor':'middle',class:'class-evolution-year-tick'});text.textContent=String(year);this.axisLayer.append(tick,text)}
+      for(const boundary of this.model.comparisonBreaks||[]){const x=this._x((Number(boundary.fromYear)+Number(boundary.toYear))/2),line=svgElement('line',{x1:x,y1:p.t,x2:x,y2:560-p.b,class:'class-evolution-course-break'}),label=svgElement('text',{x,y:p.t+12,'text-anchor':'middle',class:'class-evolution-course-break-label'});label.textContent=boundary.label;this.axisLayer.append(line,label)}
+      for(const gap of this.model.calendarGaps||[]){const x=this._x((Number(gap.fromYear)+Number(gap.toYear))/2),label=svgElement('text',{x,y:560-p.b-8,'text-anchor':'middle',class:'class-evolution-calendar-gap-label'});label.textContent=gap.label;label.setAttribute('aria-label',gap.label);this.axisLayer.append(label)}
       const compact=this.viewWidth<=390,baseline=svgElement('line',{x1:p.l,y1:560-p.b,x2:this.viewWidth-p.r,y2:560-p.b,class:'axis'}),yTitle=svgElement('text',compact?{x:p.l,y:24,'text-anchor':'start',class:'class-evolution-axis-title'}:{x:20,y:270,'text-anchor':'middle',transform:'rotate(-90 20 270)',class:'class-evolution-axis-title'}),xTitle=svgElement('text',{x:(p.l+this.viewWidth-p.r)/2,y:555,'text-anchor':'middle',class:'class-evolution-axis-title'});yTitle.textContent='Medianfart, min/km';xTitle.textContent='Tävlingsår';this.axisLayer.append(baseline,yTitle,xTitle);
     }
     _createBubbles(){
@@ -112,13 +141,13 @@
     }
     _renderTrails(fromIndex,toIndex,progress,states){
       const moving=fromIndex!==toIndex&&progress>0,historyMax=moving?fromIndex:fromIndex-1,key=`${this.selected.join('|')}|${historyMax}`;
-      if(key!==this.trailKey){this.trailKey=key;this.trailLayer.replaceChildren();this.liveTrails.clear();for(const className of this.selected){const points=this.model.pointsByClass[className]||[],color=classColor(className,points[0]?.gender),historical=points.filter(point=>this.model.years.indexOf(point.year)<=historyMax);let pathData='',previousIndex=-2;historical.forEach((point,i)=>{const yearIndex=this.model.years.indexOf(point.year),x=this._x(point.year),y=this._y(point.medianSpeedKmh);pathData+=yearIndex===previousIndex+1?` L${x} ${y}`:` M${x} ${y}`;previousIndex=yearIndex;const shadow=svgElement('circle',{cx:x,cy:y,r:bubbleRadius(point.participantCount,this.model.maxParticipantCount),fill:color,opacity:Math.max(.08,.3-(historical.length-1-i)*.035),class:'class-evolution-shadow',tabindex:'0',role:'img'});this._setTooltipData(shadow,point,x,y);this._bindTooltipTarget(shadow);this.trailLayer.append(shadow)});if(pathData){const path=svgElement('path',{d:pathData,fill:'none',stroke:color,'stroke-width':'2.4',opacity:'.35',class:'class-evolution-trail'});this.trailLayer.prepend(path)}const live=svgElement('path',{fill:'none',stroke:color,'stroke-width':'3',opacity:'.45',class:'class-evolution-live-trail'});this.trailLayer.append(live);this.liveTrails.set(className,live)}}
-      for(const className of this.selected){const live=this.liveTrails.get(className),from=this._point(className,fromIndex),to=this._point(className,toIndex),state=states.get(className);if(!live||!moving||!from||!to||!state){live?.setAttribute('d','');continue}live.setAttribute('d',`M${this._x(from.year)} ${this._y(from.medianSpeedKmh)} L${this._x(state.year)} ${this._y(state.medianSpeedKmh)}`)}
+      if(key!==this.trailKey){this.trailKey=key;this.trailLayer.replaceChildren();this.liveTrails.clear();for(const className of this.selected){const points=this.model.pointsByClass[className]||[],color=classColor(className,points[0]?.gender),historical=points.filter(point=>this.model.years.indexOf(point.year)<=historyMax);let pathData='',previousIndex=-2;historical.forEach((point,i)=>{const yearIndex=this.model.years.indexOf(point.year),x=this._x(point.year),y=this._y(point.medianSpeedKmh),previousPoint=i?historical[i-1]:null,connected=yearIndex===previousIndex+1&&Boolean(point.comparisonKey&&previousPoint?.comparisonKey&&point.comparisonKey===previousPoint.comparisonKey);pathData+=connected?` L${x} ${y}`:` M${x} ${y}`;previousIndex=yearIndex;const shadow=svgElement('circle',{cx:x,cy:y,r:bubbleRadius(point.participantCount,this.model.maxParticipantCount),fill:color,opacity:Math.max(.08,.3-(historical.length-1-i)*.035),class:'class-evolution-shadow',tabindex:'0',role:'img'});this._setTooltipData(shadow,point,x,y);this._bindTooltipTarget(shadow);this.trailLayer.append(shadow)});if(pathData){const path=svgElement('path',{d:pathData,fill:'none',stroke:color,'stroke-width':'2.4',opacity:'.35',class:'class-evolution-trail'});this.trailLayer.prepend(path)}const live=svgElement('path',{fill:'none',stroke:color,'stroke-width':'3',opacity:'.45',class:'class-evolution-live-trail'});this.trailLayer.append(live);this.liveTrails.set(className,live)}}
+      for(const className of this.selected){const live=this.liveTrails.get(className),from=this._point(className,fromIndex),to=this._point(className,toIndex),state=states.get(className);if(!live||!moving||!from||!to||!state||!from.comparisonKey||from.comparisonKey!==to.comparisonKey){live?.setAttribute('d','');continue}live.setAttribute('d',`M${this._x(from.year)} ${this._y(from.medianSpeedKmh)} L${this._x(state.year)} ${this._y(state.medianSpeedKmh)}`)}
     }
     _showTooltip(circle){if(!this.tooltip||!circle.dataset.tip)return;this.tooltip.textContent=circle.dataset.tip;this.tooltip.hidden=false;this.tooltip.style.left=`${circle.dataset.x}%`;this.tooltip.style.top=`${circle.dataset.y}%`}
     _bindTooltipTarget(target){const show=()=>this._showTooltip(target),hide=()=>{this.tooltip.hidden=true};target.addEventListener('mouseenter',show);target.addEventListener('mouseleave',hide);target.addEventListener('focus',show);target.addEventListener('blur',hide);target.addEventListener('click',show)}
     _setTooltipData(target,point,x,y){const tip=pointTooltip(point,this.raceName,this.model.participantLabel);target.dataset.tip=tip;target.dataset.x=String(clamp(x/(this.viewWidth||1000)*100,12,88));target.dataset.y=String(clamp(y/5.6,14,88));target.setAttribute('aria-label',tip)}
-    _updateSummary(index){const year=this.model.years[index],points=this.model.points.filter(point=>point.year===year),selected=points.filter(point=>this.selected.includes(point.className));if(!points.length)this._setStatus(`Inga giltiga klassresultat finns för ${year}.`);else if(this.selected.length&&!selected.length)this._setStatus(`${year}: valda klasser saknar giltiga resultat. ${points.length} andra klasser visas.`);else this._setStatus(`${year}: ${points.length} klasser · ${points.reduce((sum,point)=>sum+point.participantCount,0).toLocaleString('sv-SE')} startande${selected.length?` · ${selected.length} valda klasser markerade`:''}.`)}
+    _updateSummary(index){const year=this.model.years[index],points=this.model.points.filter(point=>point.year===year),selected=points.filter(point=>this.selected.includes(point.className)),boundary=(this.model.comparisonBreaks||[]).find(item=>Number(item.toYear)===Number(year)),gapCopy=(this.model.calendarGaps||[]).map(gap=>gap.label).join('; '),suffix=boundary?` · ${boundary.label.toLowerCase()}: farttrend bryts`:'';if(!points.length)this._setStatus(`Inga giltiga klassresultat finns för ${year}.`);else if(this.selected.length&&!selected.length)this._setStatus(`${year}: valda klasser saknar giltiga resultat. ${points.length} andra klasser visas${suffix}${gapCopy?` · ${gapCopy}`:''}.`);else this._setStatus(`${year}: ${points.length} klasser · ${points.reduce((sum,point)=>sum+point.participantCount,0).toLocaleString('sv-SE')} startande${selected.length?` · ${selected.length} valda klasser markerade`:''}${suffix}${gapCopy?` · ${gapCopy}`:''}.`)}
     _setStatus(text){if(this.statusLabel)this.statusLabel.textContent=text}
     _setButtons(){const years=this.model?.years?.length||0;if(this.playButton){this.playButton.disabled=this.playing||years<2;this.playButton.setAttribute('aria-pressed',String(this.playing))}if(this.pauseButton)this.pauseButton.disabled=!this.playing;if(this.restartButton)this.restartButton.disabled=!years}
     play(){

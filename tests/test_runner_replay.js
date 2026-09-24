@@ -38,9 +38,22 @@ assert.ok(Math.abs(replay.wholeRacePace(olle,olleRace)-22043/92)<1e-9,'Helfart s
 assert.strictEqual(replay.fmtPace(replay.wholeRacePace(olle,olleRace)),'4:00 /km','239,6 sek/km får aldrig visas som 3:60 /km');
 assert.strictEqual(speedUnits.formatPace(replay.wholeRacePace(olle,olleRace),'speed'),'15,0 km/h','Olles helfart ska konverteras med 3600 / sekunder per km');
 assert.strictEqual(replay.wholeRacePace({finish_seconds:null},{distance_km:92}),null,'DNF utan sluttid ska sakna helfart');
-const formulaRace={race_key:'ultravasan90-formula',distance_km:20},formulaRoute={points:[[0,0,0],[0,1,20]],elevation_profile:[[0,100],[20,100]]},formulaCheckpoints=[{checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},{checkpoint_key:'a',name:'A',sequence_no:1,distance_km:10},{checkpoint_key:'b',name:'B',sequence_no:2,distance_km:20}],formulaSplits=[{checkpoint_key:'a',sequence_no:1,elapsed_seconds:600,segment_seconds:9999,pace_seconds_per_km:999},{checkpoint_key:'b',sequence_no:2,elapsed_seconds:1500,segment_seconds:9999,pace_seconds_per_km:999}],formulaModel=replay.createModel({race:formulaRace,result:{status:'FINISHED',finish_seconds:1500},route:formulaRoute,raceCheckpoints:formulaCheckpoints,splits:formulaSplits});
+const formulaRace={race_key:'ultravasan90-formula',distance_km:20},formulaRoute={points:[[0,0,0],[0,1,20]],elevation_profile:[[0,100],[20,100]]},formulaCheckpoints=[{checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},{checkpoint_key:'a',name:'A',sequence_no:1,distance_km:10},{checkpoint_key:'b',name:'B',sequence_no:2,distance_km:20}],formulaSplits=[{checkpoint_key:'a',sequence_no:1,elapsed_seconds:600,segment_seconds:9999,pace_seconds_per_km:999,place_overall:20,place_class:5},{checkpoint_key:'b',sequence_no:2,elapsed_seconds:1500,segment_seconds:9999,pace_seconds_per_km:999,place_overall:15,place_class:4}],formulaModel=replay.createModel({race:formulaRace,result:{status:'FINISHED',finish_seconds:1500},route:formulaRoute,raceCheckpoints:formulaCheckpoints,splits:formulaSplits});
 assert.deepStrictEqual(formulaModel.segments.map(segment=>segment.seconds),[600,900],'Delsträckstid ska vara skillnaden mellan två kumulativa kontrolltider');
 assert.deepStrictEqual(formulaModel.segments.map(segment=>segment.pace),[60,90],'Delsträckefart ska vara tidsskillnaden delat med kontrollernas distansskillnad');
+const reference=(times)=>({available:true,maxDistance:20,anchors:[{distance:0,time:0},{distance:10,time:times[0]},{distance:20,time:times[1]}]});
+formulaModel.comparisons={field:reference([700,1600]),sex:reference([650,1550]),class:reference([580,1450])};
+const development=replay.developmentForModel(formulaModel);
+assert.strictEqual(development.length,2,'Loppets utveckling ska endast innehålla registrerade checkpoints, inte syntetisk start');
+assert.deepStrictEqual(development.map(row=>row.checkpoint_key),['a','b']);
+assert.deepStrictEqual(development.map(row=>row.field_gap_seconds),[100,100],'fältgap ska vara referenstid minus löparens verkliga passagetid');
+assert.deepStrictEqual(development.map(row=>row.sex_gap_seconds),[50,50],'köngap ska använda samma checkpointreferens');
+assert.deepStrictEqual(development.map(row=>row.class_gap_seconds),[-20,-50],'klassgap ska kunna visa att löparen ligger efter referensen');
+assert.deepStrictEqual(development.map(row=>row.place_overall),[20,15]);
+assert.deepStrictEqual(development.map(row=>row.place_class),[5,4]);
+assert.deepStrictEqual(development.map(row=>row.pace_delta_seconds_per_km),[-15,15],'segmentfart ska jämföras med löparens egen hel-loppsfart');
+assert.ok(Math.abs(development[0].pace_index-125)<1e-9&&Math.abs(development[1].pace_index-83.33333333333334)<1e-9,'pace-index 100 ska vara löparens egen hel-loppsfart');
+
 for(const model of [uv90New,uv90Motion,uv90Old,uv45Current,uv90Dnf])for(const segment of model.segments.filter(item=>item.passed)){
   const start=model.anchors.find(anchor=>anchor.key===segment.from.key),end=model.anchors.find(anchor=>anchor.key===segment.to.key),elapsedDelta=end.time-start.time;
   assert.strictEqual(segment.seconds,elapsedDelta,`${model.race.race_key}: ${segment.from.key}–${segment.to.key} använder inte skillnaden mellan kumulativa tider`);

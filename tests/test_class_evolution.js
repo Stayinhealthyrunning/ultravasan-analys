@@ -6,9 +6,10 @@ const root=path.resolve(__dirname,'..');
 const evolution=require(path.join(root,'docs/assets/class-evolution.js'));
 
 const races=[
-  {id:1,year:2014,distance_km:90,name:'Ultravasan 90'},
-  {id:2,year:2015,distance_km:90,name:'Ultravasan 90'},
-  {id:3,year:2017,distance_km:92,name:'Ultravasan 90'}
+  {id:1,year:2014,distance_km:90,name:'Ultravasan 90',course_version:'old',comparison_key:'old-course'},
+  {id:2,year:2015,distance_km:90,name:'Ultravasan 90',course_version:'old',comparison_key:'old-course'},
+  {id:3,year:2017,distance_km:92,name:'Ultravasan 90',course_version:'post-2023-v1',comparison_key:'new-course'},
+  {id:4,year:2018,distance_km:92,name:'Ultravasan 90',course_version:'post-2023-v2',comparison_key:'new-course'}
 ];
 const results=[
   {id:1,race_id:1,age_class:'M35',sex:'M',status:'FINISHED',finish_seconds:9*3600},
@@ -19,13 +20,17 @@ const results=[
   {id:6,race_id:2,age_class:'M35',sex:'M',status:'DNF',finish_seconds:null},
   {id:7,race_id:2,age_class:'W35',sex:'F',status:'FINISHED',finish_seconds:10*3600},
   {id:8,race_id:1,age_class:'M50',sex:'M',status:'FINISHED',finish_seconds:11*3600},
-  {id:9,race_id:3,age_class:'M50',sex:'M',status:'FINISHED',finish_seconds:10*3600}
+  {id:9,race_id:3,age_class:'M50',sex:'M',status:'FINISHED',finish_seconds:10*3600},
+  {id:10,race_id:4,age_class:'M35',sex:'M',status:'FINISHED',finish_seconds:8.5*3600},
+  {id:11,race_id:4,age_class:'M50',sex:'M',status:'FINISHED',finish_seconds:9.5*3600},
+  {id:12,race_id:3,age_class:'M35',sex:'M',status:'FINISHED',finish_seconds:9*3600}
 ];
 const isStarter=result=>result.status!=='DNS';
 const isFinished=result=>result.status==='FINISHED'&&Number(result.finish_seconds)>0;
-const model=evolution.aggregateClassHistory({races,results,isStarter,isFinished});
+const model=evolution.aggregateClassHistory({races,results,isStarter,isFinished,comparisonKeyForRace:race=>race.comparison_key,courseVersionForRace:race=>race.course_version});
 
-assert.deepStrictEqual(model.years,[2014,2015,2017],'verkliga loppår ska styra x-axeln');
+assert.deepStrictEqual(model.years,[2014,2015,2017,2018],'verkliga loppår ska styra x-axeln');
+assert.deepStrictEqual(model.calendarGaps,[{fromYear:2015,toYear:2017,years:[2016],label:'2016–2016: inga importerade lopp'}]);
 assert.strictEqual(model.participantLabel,'startande');
 const m35_2014=model.points.find(point=>point.className==='M35'&&point.year===2014);
 const m35_2015=model.points.find(point=>point.className==='M35'&&point.year===2015);
@@ -40,6 +45,15 @@ assert.strictEqual(m35_2015.speedDelta,1.125);
 assert.strictEqual(m35_2015.paceDeltaSeconds,-40,'tempoförändringen ska beräknas i sekunder per kilometer');
 assert.ok(!model.points.some(point=>point.className==='W35'&&point.year===2014),'saknad klass får inte fyllas med påhittad data');
 assert.ok(!model.points.some(point=>point.className==='M50'&&point.year===2015),'klassluckor ska förbli tomma');
+const m50_2014=model.points.find(point=>point.className==='M50'&&point.year===2014);
+const m50_2017=model.points.find(point=>point.className==='M50'&&point.year===2017);
+assert.strictEqual(m50_2017.comparisonBreak,true,'overgång utan verifierad whole-course-grupp ska bryta farttrenden');
+assert.strictEqual(m50_2017.paceDeltaSeconds,null,'fartdelta får inte räknas över banjämförbarhetsgräns');
+assert.strictEqual(m50_2017.participantDelta,0,'deltagarutveckling får fortfarande beskrivas över banbytet');
+assert.deepStrictEqual(model.comparisonBreaks.map(x=>[x.fromYear,x.toYear,x.label]),[[2015,2017,'Ny jämförbarhetsserie']],'modellen ska exponera en explicit jämförbarhetsgräns utan generisk BANVERSION-etikett');
+const m35_2018=model.points.find(point=>point.className==='M35'&&point.year===2018);
+assert.strictEqual(m35_2018.comparisonBreak,false,'samma explicit whole-course-grupp ska hålla serien över ändrad CourseVersion');
+assert.ok(!evolution.pointTooltip(m35_2018,'Ultravasan 90','startande').includes('banversion'));
 
 const small=evolution.bubbleRadius(25,100),large=evolution.bubbleRadius(100,100);
 assert.ok(Math.abs((small*small)/(large*large)-.25)<1e-9,'bubbelarean ska vara proportionell mot deltagarantalet');
@@ -48,6 +62,10 @@ const interpolated=evolution.transitionBubble(m35_2014,m35_2015,.5,{fromYear:201
 assert.strictEqual(interpolated.year,2014.5);
 assert.strictEqual(interpolated.medianSpeedKmh,(9.5+10.625)/2);
 assert.strictEqual(interpolated.participantCount,2.5,'position och storlek ska interpoleras samtidigt');
+const broken=evolution.transitionBubble(m50_2014,m50_2017,.25,{fromYear:2014,toYear:2017,maxParticipantCount:model.maxParticipantCount});
+assert.strictEqual(broken.comparisonBreak,true);
+assert.strictEqual(broken.year,2014,'animation får inte skapa ett mellanår med interpolerad fart över banbyte');
+assert.strictEqual(broken.medianSpeedKmh,m50_2014.medianSpeedKmh,'animation får inte interpolera medianfart över banbyte');
 assert.strictEqual(evolution.transitionBubble(m35_2014,null,.5,{fromYear:2014,toYear:2015}).opacity,.5,'försvinnande klass ska tonas ut');
 assert.strictEqual(evolution.transitionBubble(null,m35_2015,.5,{fromYear:2014,toYear:2015}).opacity,.5,'tillkommande klass ska tonas in');
 
@@ -66,6 +84,8 @@ assert.deepStrictEqual(controller._paceDomain(),controller._paceDomain(),'Y-dom�
 const tooltip=evolution.pointTooltip(m35_2015,'Ultravasan 90','startande');
 assert.ok(tooltip.includes('5:39 min/km')&&tooltip.includes('8:30:00')&&tooltip.includes('+1 startande')&&tooltip.includes('−0:40 min/km'),'tooltip ska använda svenskt tempo, tid och förändringar');
 assert.ok(!tooltip.includes('median 10,63 km/h'),'min/km ska vara tooltipens primära medianmått');
+const breakTooltip=evolution.pointTooltip(m50_2017,'Ultravasan 90','startande');
+assert.ok(breakTooltip.includes('ny jämförbarhetsserie')&&!breakTooltip.includes('min/km · sedan 2014: −'),'tooltip ska förklara gruppgränsen i stället för att visa påhittat fartdelta');
 
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const source=fs.readFileSync(path.join(root,'docs/assets/class-evolution.js'),'utf8');
@@ -77,6 +97,10 @@ assert.ok(audience.includes('selectedClasses:advanced.classSelection')&&audience
 assert.ok(source.includes('requestAnimationFrame(tick)')&&source.includes('cancelAnimationFrame(this.frame)'),'animationen ska använda och städa requestAnimationFrame');
 assert.ok(source.includes("matchMedia('(prefers-reduced-motion: reduce)')")&&source.includes('Reducerad rörelse'),'reducerad rörelse ska respekteras');
 assert.ok(source.includes('historyMax=moving?fromIndex:fromIndex-1'),'framtida spår får inte visas');
+assert.ok(source.includes('point.comparisonKey===previousPoint.comparisonKey')&&source.includes('from.comparisonKey!==to.comparisonKey'),'historiska och levande fartspår ska brytas vid banjämförbarhetsgräns');
+assert.ok(source.includes('class-evolution-course-break')&&source.includes('label.textContent=boundary.label')&&!source.includes("label.textContent='banversion'"),'endast jämförbarhetsbeslutet ska märkas, inte en generell banversion');
+assert.ok(source.includes('calendarGaps')&&source.includes('class-evolution-calendar-gap-label'),'luckor utan tävling ska märkas separat');
+assert.ok(audience.includes('comparisonKeyForRace:historyComparisonKey')&&audience.includes('comparableHistoryRuns(valid,years)'),'både Klassutveckling och Klasshistorik ska använda U7:s jämförbarhetsgräns');
 assert.ok(source.includes("yTitle.textContent='Medianfart, min/km'")&&source.includes('formatPaceValue(value,false)'),'Y-axeln ska visa min/km');
 assert.ok(source.includes("class:'class-evolution-shadow',tabindex:'0',role:'img'")&&source.includes('this._bindTooltipTarget(shadow)'),'historiska skuggpunkter ska vara fokuserbara och återanvända tooltipen');
 assert.ok(css.includes('.class-evolution-chart{position:relative;width:100%;height:600px')&&css.includes('@media(max-width:620px)'),'diagrammet ska ha responsiva desktop- och mobilhöjder');

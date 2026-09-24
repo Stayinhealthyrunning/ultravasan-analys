@@ -52,11 +52,13 @@
     if(!race?.course_version)return null;
     const course=courseForRace(race,courses);
     if(!course)return null;
-    const explicit=course.whole_course_comparison_group;
-    return filled(explicit)?`group:${explicit}`:`course:${race.course_version}`;
+    const explicit=race.whole_course_comparison_group||course.whole_course_comparison_group;
+    return filled(explicit)?`group:${explicit}`:null;
   }
 
   function wholeCourseComparable(left,right,races=[],courses={}){
+    const leftRace=raceForResult(left,races),rightRace=raceForResult(right,races);
+    if(leftRace&&rightRace&&String(leftRace.id)===String(rightRace.id))return true;
     const a=wholeCourseComparisonKey(left,races,courses);
     const b=wholeCourseComparisonKey(right,races,courses);
     return !!a&&a===b;

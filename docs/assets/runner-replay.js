@@ -204,6 +204,36 @@
 
   function wholeRacePace(result,race){const finish=Number(result?.finish_seconds),distance=Number(race?.distance_km);return finite(finish)&&finish>0&&finite(distance)&&distance>0?finish/distance:null}
 
+  function developmentForModel(model){
+    if(!model)return [];
+    const anchorsByKey=new Map((model.anchors||[]).map(anchor=>[String(anchor.key),anchor]));
+    const segmentsByTo=new Map((model.segments||[]).map(segment=>[String(segment.to?.key),segment]));
+    const wholePace=wholeRacePace(model.result,model.race);
+    const references=model.comparisons||{};
+    return (model.checkpoints||[]).map(checkpoint=>{
+      const anchor=anchorsByKey.get(String(checkpoint.key));
+      if(!anchor||anchor.kind==='start'||!finite(anchor.time))return null;
+      const segment=segmentsByTo.get(String(checkpoint.key))||null,segmentPace=finite(segment?.pace)?Number(segment.pace):null;
+      const gap=(key)=>references[key]?.available?gapAtDistance(references[key],Number(checkpoint.distance),Number(anchor.time)):null;
+      return Object.freeze({
+        checkpoint_key:checkpoint.key,
+        checkpoint_name:checkpoint.name,
+        distance_km:Number(checkpoint.distance),
+        elapsed_seconds:Number(anchor.time),
+        place_overall:finite(anchor.rank)?Number(anchor.rank):null,
+        place_class:finite(anchor.classRank)?Number(anchor.classRank):null,
+        field_gap_seconds:gap('field'),
+        sex_gap_seconds:gap('sex'),
+        class_gap_seconds:gap('class'),
+        segment_pace_seconds_per_km:segmentPace,
+        whole_pace_seconds_per_km:finite(wholePace)?Number(wholePace):null,
+        pace_delta_seconds_per_km:finite(segmentPace)&&finite(wholePace)?segmentPace-Number(wholePace):null,
+        pace_index:finite(segmentPace)&&finite(wholePace)&&segmentPace>0?Number(wholePace)/segmentPace*100:null,
+        exact:true,
+      });
+    }).filter(Boolean);
+  }
+
   function segmentAt(model,distance){const d=clamp(distance,0,model.maxDistance);return model.segments.find(s=>d>=s.from.distance-.001&&d<=Math.min(s.to.distance,model.maxDistance)+.001)||model.segments.filter(s=>s.from.distance<=d).at(-1)||model.segments[0]||null}
   function timeAtDistance(model,distance){
     const d=clamp(distance,0,model.maxDistance),anchors=model.anchors;
@@ -435,5 +465,5 @@
   function stopActive(){if(activeController){activeController.destroy();activeController=null}}
   function motionAllowed(prefersReducedMotion){return !Boolean(prefersReducedMotion)}
 
-  return {PACE_COLORS,NEUTRAL_COLOR,DEFAULT_VOLUME,MIN_REFERENCE_SIZE,MEDAL_MIN_SIZE,REFERENCE_META,MEDAL_CONFIG,comparisonPreferences,sexCategory,medalConfigForRace,routeForRace,pointAtDistance,terrainAtDistance,elevationAtDistance,elevationProjection,paceColor,deriveOverallPlacements,deriveClassPlacements,completeProfilesForRace,buildReferenceProfiles,medianReference,selectMedalCandidates,medalTimeForRace,weightedMedian,gapAtDistance,formatGap,routeNormalAngle,createModel,wholeRacePace,stateAt,timeAtDistance,distanceAtTime,buildInsights,mapProjection,fitMapView,initialMapView,zoomMapView,panMapView,followMapView,activateFollowMapView,formatClassPlace,render,mount,stopActive,motionAllowed,fmtTime,fmtPace,cleanName};
+  return {PACE_COLORS,NEUTRAL_COLOR,DEFAULT_VOLUME,MIN_REFERENCE_SIZE,MEDAL_MIN_SIZE,REFERENCE_META,MEDAL_CONFIG,comparisonPreferences,sexCategory,medalConfigForRace,routeForRace,pointAtDistance,terrainAtDistance,elevationAtDistance,elevationProjection,paceColor,deriveOverallPlacements,deriveClassPlacements,completeProfilesForRace,buildReferenceProfiles,medianReference,selectMedalCandidates,medalTimeForRace,weightedMedian,gapAtDistance,formatGap,routeNormalAngle,createModel,wholeRacePace,developmentForModel,stateAt,timeAtDistance,distanceAtTime,buildInsights,mapProjection,fitMapView,initialMapView,zoomMapView,panMapView,followMapView,activateFollowMapView,formatClassPlace,render,mount,stopActive,motionAllowed,fmtTime,fmtPace,cleanName};
 });
