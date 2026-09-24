@@ -28,7 +28,7 @@ CourseVersion is not treated as whole-course comparability. Reference tracks and
 | ultravasan45-2025 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
 | ultravasan90-2025 | No | reference-only · source 2024 | external-year-specific | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasahistorier (race-day-gps-track, strong-secondary) | Not assigned |
 | ultravasan45-2026 | Yes | exact-source-year · source 2026 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2026 | Yes | reference-only · source 2024 | local-exact-source-year | UV-90_20260610.kmz · unknown | Vasaloppet (official-organizer-kmz, strong) | Not assigned |
+| ultravasan90-2026 | Yes | reference-only · source 2024 | local-exact-source-year | UV-90_20260610.kmz · 2026 | Vasaloppet (official-organizer-kmz, strong) | Not assigned |
 
 ## Whole-course conclusion
 
