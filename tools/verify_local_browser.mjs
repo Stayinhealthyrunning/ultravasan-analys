@@ -363,13 +363,13 @@ const historyUv45Switch=await evaluate(`(async()=>{
 for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv45'"))break;await delay(100)}
 const browserHistoryUv45=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
 await evaluate('history.back()');
-for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv90'&&new URL(location.href).searchParams.get('race')==='uv90'"))break;await delay(100)}
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("(() => {const u=new URL(location.href),race=state.data.races.find(item=>String(item.id)===String(state.raceId));return state.raceFamily==='uv90'&&u.searchParams.get('race')==='uv90'&&String(race?.year||'')===String(u.searchParams.get('year')||'')})()"))break;await delay(100)}
 const browserHistoryRaceBack=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),sex:document.querySelector('#sexFilter')?.value||'',urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
 await evaluate('history.forward()');
-for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv45'&&new URL(location.href).searchParams.get('race')==='uv45'"))break;await delay(100)}
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("(() => {const u=new URL(location.href),race=state.data.races.find(item=>String(item.id)===String(state.raceId));return state.raceFamily==='uv45'&&u.searchParams.get('race')==='uv45'&&String(race?.year||'')===String(u.searchParams.get('year')||'')})()"))break;await delay(100)}
 const browserHistoryRaceForward=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
 await evaluate('history.back()');
-for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv90'&&new URL(location.href).searchParams.get('race')==='uv90'"))break;await delay(100)}
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("(() => {const u=new URL(location.href),race=state.data.races.find(item=>String(item.id)===String(state.raceId));return state.raceFamily==='uv90'&&u.searchParams.get('race')==='uv90'&&String(race?.year||'')===String(u.searchParams.get('year')||'')})()"))break;await delay(100)}
 await evaluate("ensureActiveFamilyFull('uv90',true)");
 await waitForActiveFamily('uv90');
 const browserHistoryState=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),sex:document.querySelector('#sexFilter')?.value||'',urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
