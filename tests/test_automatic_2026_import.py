@@ -206,7 +206,143 @@ def test_list_pagination_collects_more_than_6000_unique_results(monkeypatch: pyt
 
     monkeypatch.setattr(mika_import, "Fetcher", FakeFetcher)
     monkeypatch.setattr(mika_import, "extract_entries", fake_entries)
+    monkeypatch.setattr(mika_import, "advertised_last_page", lambda _html: 63)
     race = {"race_key": "ultravasan90-2026", "event_code": "UL90_TEST", "max_pages": 250, "empty_pages_to_stop": 2}
     entries, pages = automatic.collect_list_entries(race, tmp_path, 0)
     assert len(entries) == 6001
     assert pages[-1]["page"] == 63
+    assert automatic.list_pagination_complete(pages)
+
+
+def test_list_pagination_fails_closed_when_boundary_missing_or_truncated() -> None:
+    assert not automatic.list_pagination_complete([])
+    assert not automatic.list_pagination_complete([
+        {"partition": "ALL", "page": 1, "advertised_last_page": None, "end_confirmed": False},
+    ])
+    assert not automatic.list_pagination_complete([
+        {"partition": "M", "page": 1, "advertised_last_page": 3, "end_confirmed": False},
+        {"partition": "M", "page": 2, "advertised_last_page": 3, "end_confirmed": False},
+    ])
+    assert automatic.list_pagination_complete([
+        {"partition": "M", "page": 1, "advertised_last_page": 2, "end_confirmed": False},
+        {"partition": "M", "page": 2, "advertised_last_page": 2, "end_confirmed": True},
+        {"partition": "W", "page": 1, "advertised_last_page": 1, "end_confirmed": True},
+    ])
+
+
+def test_official_page_boundary_is_read_from_pagination_metadata() -> None:
+    html = '''<ul class="pagination">
+      <li><a data-silver="112,97,103,101,61,49">1</a></li>
+      <li><a data-silver="112,97,103,101,61,52">4</a></li>
+    </ul>'''
+    assert mika_import.advertised_last_page(html) == 4
+    assert mika_import.advertised_last_page('<div class="result-list">no pagination</div>') is None
+
+
+def _dry_run_args(tmp_path: Path, *, pagination_complete: bool = True) -> argparse.Namespace:
+    base = uvtool.load_config(uvtool.DEFAULT_CONFIG)
+    generated = automatic.configured_targets(base, {family: discovered(family) for family in automatic.TARGETS})
+    config_path = tmp_path / "generated-races.json"
+    config_path.write_text(json.dumps(generated), encoding="utf-8")
+    availability_path = tmp_path / "availability.json"
+    availability_path.write_text(json.dumps({"ready": True, "races": {
+        family: {"pagination_complete": pagination_complete} for family in automatic.TARGETS
+    }}), encoding="utf-8")
+    production = tmp_path / "production.sqlite"
+    import shutil
+    shutil.copy2(uvtool.DEFAULT_DB, production)
+    return argparse.Namespace(
+        year=2026, generated_config=config_path, availability_report=availability_path,
+        work_db=tmp_path / "work.sqlite", production_db=production, raw=tmp_path / "raw",
+        delay=0.0, report=tmp_path / "reports" / "dry-run.json", export_dir=tmp_path / "exports",
+        github_output=None,
+    )
+
+
+def _safe_import_report(**overrides: object) -> dict:
+    report = {"records": 0, "warnings": 0, "details": [], "pagination_complete": True}
+    report.update(overrides)
+    return report
+
+
+def test_full_dry_run_refuses_availability_without_complete_pagination(tmp_path: Path) -> None:
+    args = _dry_run_args(tmp_path, pagination_complete=False)
+    before = automatic.sha256_file(args.production_db)
+    with pytest.raises(RuntimeError, match="did not prove complete official pagination"):
+        automatic.command_full_dry_run(args)
+    assert automatic.sha256_file(args.production_db) == before
+    assert not args.work_db.exists()
+
+
+def test_resume_dry_run_refuses_availability_without_complete_pagination(tmp_path: Path) -> None:
+    args = _dry_run_args(tmp_path, pagination_complete=False)
+    import shutil
+    shutil.copy2(args.production_db, args.work_db)
+    resume = argparse.Namespace(year=2026, generated_config=args.generated_config,
+                                availability_report=args.availability_report, work_db=args.work_db)
+    with pytest.raises(RuntimeError, match="did not prove complete official pagination"):
+        automatic.command_resume_full_dry_run(resume)
+
+
+@pytest.mark.parametrize("failure", ["protected-history", "identity-collision", "strict-parser"])
+def test_full_dry_run_fail_closed_for_negative_fixtures(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failure: str) -> None:
+    args = _dry_run_args(tmp_path)
+    before = automatic.sha256_file(args.production_db)
+
+    def fake_import(race_key, db, _config, _raw, _report, _delay, **_kwargs):
+        with uvtool.connect(db) as conn:
+            if failure == "protected-history":
+                conn.execute("""UPDATE results SET club='AUDIT MUTATION' WHERE id=(
+                  SELECT res.id FROM results res JOIN races r ON r.id=res.race_id WHERE r.year<2026 LIMIT 1)""")
+                conn.commit()
+        if failure == "strict-parser":
+            return _safe_import_report(details=[{"idp": "synthetic", "quality_issues": [{"severity": "error", "code": "unknown-checkpoint"}]}])
+        return _safe_import_report()
+
+    monkeypatch.setattr(automatic, "import_one", fake_import)
+    if failure == "identity-collision":
+        def collisions(conn):
+            targets = conn.execute("SELECT id,race_key,year FROM races WHERE year=2026").fetchall()
+            return [{"race_id": row["id"], "race_key": row["race_key"], "year": row["year"],
+                     "athlete_id": 0, "canonical_name": "Synthetic Collision",
+                     "source_codes": ["vasanerd", "vasaloppet_mika"],
+                     "results": [{"result_id": 1, "bib": "1", "status": "FINISHED", "source_result_id": "one"}]}
+                    for row in targets]
+        monkeypatch.setattr(uvtool, "collect_same_race_identity_collisions", collisions)
+    if failure == "identity-collision":
+        with pytest.raises(uvtool.IdentityCollisionError, match="same-race-identitetskollisioner"):
+            automatic.command_full_dry_run(args)
+    else:
+        with pytest.raises(RuntimeError) as error:
+            automatic.command_full_dry_run(args)
+        message = str(error.value).lower()
+        expected = {"protected-history": "protected pre-2026 data changed",
+                    "strict-parser": "strict data-quality checks failed"}[failure]
+        assert expected in message
+    assert automatic.sha256_file(args.production_db) == before
+    assert args.work_db.exists(), "work-db remains available for failure diagnosis"
+
+
+def test_apply_refuses_inputs_changed_after_ready_dry_run(tmp_path: Path) -> None:
+    args = argparse.Namespace(
+        confirmation=automatic.APPLY_CONFIRMATION, dry_run_report=tmp_path / "dry.json",
+        work_db=tmp_path / "work.sqlite", generated_config=tmp_path / "generated.json",
+        production_db=tmp_path / "production.sqlite", config=tmp_path / "config.json",
+        export_dir=tmp_path / "exports", web_dir=tmp_path / "web", report=tmp_path / "apply.json",
+        github_output=None,
+    )
+    import shutil
+    shutil.copy2(uvtool.DEFAULT_DB, args.production_db)
+    shutil.copy2(uvtool.DEFAULT_DB, args.work_db)
+    args.generated_config.write_text("{}", encoding="utf-8")
+    args.dry_run_report.write_text(json.dumps({
+        "decision": "READY", "changed": True, "work_db_sha256": automatic.sha256_file(args.work_db),
+        "generated_config_sha256": automatic.sha256_file(args.generated_config),
+    }), encoding="utf-8")
+    before = automatic.sha256_file(args.production_db)
+    with args.work_db.open("ab") as handle:
+        handle.write(b"mutated-after-review")
+    with pytest.raises(RuntimeError, match="inputs changed"):
+        automatic.command_apply(args)
+    assert automatic.sha256_file(args.production_db) == before
+    assert not args.config.exists() and not args.web_dir.exists()

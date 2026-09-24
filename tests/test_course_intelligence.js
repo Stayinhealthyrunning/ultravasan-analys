@@ -40,6 +40,17 @@ assert.ok(first.field.timing_sample_n>=5);
 assert.strictEqual(first.field.sufficient_sample,true);
 assert.ok(Number.isFinite(first.field.median_pace_seconds_per_km));
 assert.ok(Number.isFinite(first.field.median_pace_index));
+assert.ok(first.field.timing_sample_n>=20,'verkligt 2016-segment ska ha underlag för yttre kvantiler');
+assert.strictEqual(first.field.outer_quantile_min_sample,20);
+assert.strictEqual(first.field.outer_quantiles_available,true);
+assert.ok(Number.isFinite(first.field.q10_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q25_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q75_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q90_pace_seconds_per_km));
+assert.ok(first.field.q10_pace_seconds_per_km<=first.field.q25_pace_seconds_per_km);
+assert.ok(first.field.q25_pace_seconds_per_km<=first.field.median_pace_seconds_per_km);
+assert.ok(first.field.median_pace_seconds_per_km<=first.field.q75_pace_seconds_per_km);
+assert.ok(first.field.q75_pace_seconds_per_km<=first.field.q90_pace_seconds_per_km);
 
 const last=model.segments.at(-1);
 assert.strictEqual(last.to_key,'mora');
@@ -105,6 +116,12 @@ assert.strictEqual(firstStats.timing_sample_n,5);
 assert.strictEqual(firstStats.sufficient_sample,true);
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds));
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds_per_km));
+assert.strictEqual(firstStats.outer_quantile_min_sample,20);
+assert.strictEqual(firstStats.outer_quantiles_available,false);
+assert.ok(Number.isFinite(firstStats.q25_pace_seconds_per_km),'n=5 ska räcka för Q25');
+assert.ok(Number.isFinite(firstStats.q75_pace_seconds_per_km),'n=5 ska räcka för Q75');
+assert.strictEqual(firstStats.q10_pace_seconds_per_km,null,'Q10 kräver n≥20');
+assert.strictEqual(firstStats.q90_pace_seconds_per_km,null,'Q90 kräver n≥20');
 assert.strictEqual(firstStats.located_dnf_n,1);
 assert.strictEqual(firstStats.dnf_dropouts_n,0,'DNF efter Smågan får inte belasta start→Smågan');
 
@@ -123,32 +140,16 @@ const tooSmall=intelligence.fieldStatsForSegment(
 assert.strictEqual(tooSmall.timing_sample_n,4);
 assert.strictEqual(tooSmall.sufficient_sample,false);
 assert.strictEqual(tooSmall.median_pace_seconds_per_km,null,'n<5 får inte publicera fältmedian');
+assert.strictEqual(tooSmall.q10_pace_seconds_per_km,null);
+assert.strictEqual(tooSmall.q90_pace_seconds_per_km,null);
 
-const scored=intelligence.applyDifficultyIndex([
-  {key:'easy',terrain:{ascent_m_per_km:2},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:-5,pace_iqr_seconds_per_km:8,dnf_exit_rate_pct:0}},
-  {key:'middle',terrain:{ascent_m_per_km:8},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:5,pace_iqr_seconds_per_km:16,dnf_exit_rate_pct:2}},
-  {key:'hard',terrain:{ascent_m_per_km:20},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:20,pace_iqr_seconds_per_km:30,dnf_exit_rate_pct:8}},
-  {key:'partial',terrain:{ascent_m_per_km:null},field:{sufficient_sample:true,median_pacing_loss_seconds_per_km:12,pace_iqr_seconds_per_km:22,dnf_exit_rate_pct:4}},
-  {key:'thin',terrain:{ascent_m_per_km:50},field:{sufficient_sample:false,median_pacing_loss_seconds_per_km:null,pace_iqr_seconds_per_km:null,dnf_exit_rate_pct:10}},
-]);
-assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.score,100);
-assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.rank,1);
-assert.strictEqual(scored.find(row=>row.key==='middle').difficulty.score,50);
-assert.strictEqual(scored.find(row=>row.key==='easy').difficulty.score,0);
-assert.strictEqual(scored.find(row=>row.key==='partial').difficulty.score,null,'alla fyra Difficulty-komponenter ska krävas för jämförbar poäng');
-assert.strictEqual(scored.find(row=>row.key==='partial').difficulty.complete_evidence,false);
-assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.score,null,'svag timing-evidens får inte få Course Difficulty-poäng');
-assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.rank,null);
-assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.component_weighting,'equal-four-components');
-assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.required_components,4);
-assert.strictEqual(intelligence.percentileRank([1,2,3],2),.5);
-
-const realScores=model.segments.filter(segment=>segment.difficulty.score!==null);
-assert.ok(realScores.length>=5,'verkligt 2016-underlag ska kunna ge relativa svårighetspoäng för huvuddelen av segmenten');
-assert.deepStrictEqual(
-  [...realScores].sort((a,b)=>a.difficulty.rank-b.difficulty.rank).map(segment=>segment.difficulty.rank),
-  Array.from({length:realScores.length},(_,index)=>index+1)
-);
+assert.strictEqual(intelligence.applyDifficultyIndex,undefined,'Course Difficulty får inte skapa en syntetisk sammanvägd poäng eller ranking');
+assert.strictEqual(intelligence.percentileRank,undefined,'Course Difficulty ska inte exponera rankinghjälpare');
+assert.ok(model.segments.every(segment=>!Object.hasOwn(segment,'difficulty')),'Course Intelligence ska lämna separata empiriska dimensioner utan totalscore');
+assert.ok(model.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'verklig UV90 2016 ska behålla empiriskt terrängunderlag');
+assert.ok(model.segments.some(segment=>segment.field?.median_pacing_loss_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk pacing loss');
+assert.ok(model.segments.some(segment=>segment.field?.pace_iqr_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk fartspridning');
+assert.ok(model.segments.some(segment=>segment.field?.dnf_exit_rate_pct!=null),'verklig UV90 2016 ska behålla empirisk DNF-exit');
 
 assert.throws(
   ()=>intelligence.segmentContracts({...post2023,segments:[{from:'start',to:'not-a-checkpoint',distance_km:1}]}),
