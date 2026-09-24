@@ -292,6 +292,7 @@ main{margin-top:-54px}
 .percentile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .percentile-tile{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
 .percentile-tile>span{display:block;margin-bottom:8px;font-size:.7rem;font-weight:850;color:var(--ink)}
+.percentile-primary{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px;padding:8px 10px;border-radius:8px;background:#eef3ec;color:var(--forest)}.percentile-primary small{font-size:.58rem;font-weight:800}.percentile-primary strong{font-size:1rem;white-space:nowrap}
 .percentile-sex-values{display:grid;grid-template-columns:1fr 1fr;gap:6px}.percentile-sex-values>div{padding:9px 10px;border-radius:8px;color:#fff}.percentile-sex-values .male{background:var(--male)}.percentile-sex-values .female{background:var(--female)}
 .percentile-sex-values small,.percentile-sex-values strong{display:block}.percentile-sex-values small{font-size:.58rem;opacity:.82}.percentile-sex-values strong{font-size:.9rem;margin-top:2px;white-space:nowrap}
 
