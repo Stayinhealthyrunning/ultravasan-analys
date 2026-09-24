@@ -1738,7 +1738,7 @@
       "race_family": "uv90",
       "race_key": "ultravasan90-2024",
       "source_available": true,
-      "whole_course_comparison_group": null,
+      "whole_course_comparison_group": "ultravasan90-2024-2025",
       "year": 2024
     },
     "ultravasan90-2025": {
@@ -1775,7 +1775,7 @@
       "race_family": "uv90",
       "race_key": "ultravasan90-2025",
       "source_available": true,
-      "whole_course_comparison_group": null,
+      "whole_course_comparison_group": "ultravasan90-2024-2025",
       "year": 2025
     },
     "ultravasan90-2026": {
