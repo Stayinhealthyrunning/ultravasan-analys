@@ -46,7 +46,15 @@ class RouteBuildTests(unittest.TestCase):
             self.assertEqual("reference-only", contracts["ultravasan90-2026"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan45-2026"]["display_geometry_usage"])
             self.assertEqual(2024, contracts["ultravasan90-2026"]["display_geometry_source_year"])
-            self.assertTrue(all(item["whole_course_comparison_group"] is None for item in contracts.values()))
+            self.assertIsNone(contracts["ultravasan90-2023"]["whole_course_comparison_group"])
+            self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2024"]["whole_course_comparison_group"])
+            self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2025"]["whole_course_comparison_group"])
+            self.assertIsNone(contracts["ultravasan90-2026"]["whole_course_comparison_group"])
+            self.assertTrue(all(
+                item["whole_course_comparison_group"] is None
+                for key, item in contracts.items()
+                if key not in {"ultravasan90-2024", "ultravasan90-2025"}
+            ))
             self.assertNotIn("route_for_race", registry)
             self.assertNotIn("route_for_year", registry)
             uv45 = registry["routes"]["ultravasan45-current"]
