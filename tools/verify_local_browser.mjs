@@ -414,31 +414,56 @@ const suggestion = await evaluate(`(() => {
 })()`);
 await evaluate("document.querySelector('#mainRunnerSuggestions .main-runner-suggestion')?.click()");
 await delay(800);
-const sourceStringSecurity=await evaluate(`(() => {
+const sourceStringSecurity=await evaluate(`(async () => {
   const row=state.filtered?.[0];
-  if(!row)return {available:false,executed:null,handlerAttribute:null,statusClass:null,visibleText:null,injectedNodes:null};
-  const original={status:row.status,name:row.name_as_published,club:row.club,ageClass:row.age_class};
+  const profile=row?window.RunnerAnalysis.profileForResult(state.data,row.id):null;
+  const sourceCheckpoint=profile?.journey?.rows.find(item=>item.source!=='start');
+  if(!row||!sourceCheckpoint)return {available:false,executed:null,handlerAttributes:null,statusClass:null,visibleText:null,injectedNodes:null,checkpointText:null};
+  const original={status:row.status,name:row.name_as_published,club:row.club,city:row.city,ageClass:row.age_class};
   const payload='FINISHED" onmouseover="window.__ULTRAVASAN_AUDIT_XSS=1';
+  const namePayload='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=2">';
+  const clubPayload='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=3">';
+  const cityPayload='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=4">';
+  const classPayload='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=5">';
+  const checkpointPayload='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=6">';
   window.__ULTRAVASAN_AUDIT_XSS=0;
-  row.status=payload;
-  row.name_as_published='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=2">';
-  row.club='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=3">';
-  row.age_class='<img src=x onerror="window.__ULTRAVASAN_AUDIT_XSS=4">';
-  renderTable();
-  const status=document.querySelector('#resultsBody .status');
-  status?.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));
-  const result={
-    available:true,
-    executed:window.__ULTRAVASAN_AUDIT_XSS,
-    handlerAttribute:status?.getAttribute('onmouseover')||null,
-    statusClass:status?.className||null,
-    visibleText:status?.textContent||null,
-    injectedNodes:document.querySelectorAll('#resultsBody img').length
-  };
-  Object.assign(row,{status:original.status,name_as_published:original.name,club:original.club,age_class:original.ageClass});
-  renderTable();
-  delete window.__ULTRAVASAN_AUDIT_XSS;
-  return result;
+  try{
+    Object.assign(row,{status:payload,name_as_published:namePayload,club:clubPayload,city:cityPayload,age_class:classPayload});
+    renderTable();
+    const status=document.querySelector('#resultsBody .status');
+    status?.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));
+    const checkpointRow={...sourceCheckpoint,checkpoint_name:checkpointPayload};
+    const checkpointProfile={...profile,journey:{...profile.journey,rows:[checkpointRow],recorded_rows:1}};
+    const sandbox=document.createElement('div');
+    sandbox.innerHTML=renderRunnerJourney(checkpointProfile)+'<table><tbody>'+renderRunnerJourneyTable(checkpointProfile)+'</tbody></table>';
+    const visibleTexts=[
+      document.querySelector('#resultsBody .runner-name')?.textContent||'',
+      document.querySelector('#resultsBody .runner-meta')?.textContent||'',
+      document.querySelector('#resultsBody tr td:nth-child(4)')?.textContent||'',
+      document.querySelector('#resultsBody tr td:nth-child(5)')?.textContent||'',
+      status?.textContent||''
+    ];
+    const checkpointTexts=[...sandbox.querySelectorAll('.runner-journey-stop-head strong,tbody td:first-child')].map(node=>node.textContent||'');
+    const handlerAttributes=[...document.querySelectorAll('#resultsBody [onerror],#resultsBody [onmouseover]'),...sandbox.querySelectorAll('[onerror],[onmouseover]')].map(node=>node.getAttribute('onerror')||node.getAttribute('onmouseover'));
+    const result={
+      available:true,
+      executed:window.__ULTRAVASAN_AUDIT_XSS,
+      handlerAttributes,
+      statusClass:status?.className||null,
+      visibleTexts,
+      checkpointTexts,
+      injectedNodes:document.querySelectorAll('#resultsBody img').length+sandbox.querySelectorAll('img').length,
+      allowlistedFinishedToken:statusClassToken('FINISHED')==='finished',
+      unknownToken:statusClassToken(payload)==='unknown'&&statusClassToken('constructor')==='unknown'&&statusClassToken('__proto__')==='unknown',
+      payloads:{payload,namePayload,clubPayload,cityPayload,classPayload,checkpointPayload}
+    };
+    sandbox.remove();
+    return result;
+  }finally{
+    Object.assign(row,{status:original.status,name_as_published:original.name,club:original.club,city:original.city,age_class:original.ageClass});
+    renderTable();
+    delete window.__ULTRAVASAN_AUDIT_XSS;
+  }
 })()`);
 
 const dialog = await evaluate(`(() => {
@@ -804,7 +829,13 @@ const checks = {
   runnerDevelopment: dialog.developmentRows===8&&dialog.developmentHeaders.join('|')==='Kontroll|Tid|Hela fältet|Mitt kön|Min klass|Totalplats|Klassplats|Segment mot egen helfart'&&dialog.developmentText.includes('Checkpoint för checkpoint')&&developmentSeek.selectedDistance>0&&developmentSeek.distance!==developmentBefore.distance&&developmentSeek.playText.includes('Spela loppet')&&developmentSeek.audioPaused,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
-  sourceStringSecurity: sourceStringSecurity.available&&sourceStringSecurity.executed===0&&sourceStringSecurity.handlerAttribute===null&&sourceStringSecurity.injectedNodes===0&&sourceStringSecurity.statusClass==='status unknown'&&sourceStringSecurity.visibleText.includes('onmouseover'),
+  sourceStringSecurity: sourceStringSecurity.available&&sourceStringSecurity.executed===0&&sourceStringSecurity.handlerAttributes.length===0&&sourceStringSecurity.injectedNodes===0&&sourceStringSecurity.statusClass==='status unknown'&&sourceStringSecurity.unknownToken&&sourceStringSecurity.allowlistedFinishedToken&&
+    sourceStringSecurity.visibleTexts[0].includes(sourceStringSecurity.payloads.namePayload)&&
+    sourceStringSecurity.visibleTexts[1].includes(sourceStringSecurity.payloads.cityPayload)&&
+    sourceStringSecurity.visibleTexts[2]===sourceStringSecurity.payloads.classPayload&&
+    sourceStringSecurity.visibleTexts[3]===sourceStringSecurity.payloads.clubPayload&&
+    sourceStringSecurity.visibleTexts[4]===sourceStringSecurity.payloads.payload&&
+    sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('CHECKPOINTGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
