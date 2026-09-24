@@ -12,6 +12,10 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     assert by_key["ultravasan90-2026"]["exact_edition_route_found"]
     assert by_key["ultravasan45-2026"]["exact_edition_route_found"]
     assert by_key["ultravasan90-2023"]["route_usage"] == "reference-only"
+    assert report["display_route_contracts_complete"]
+    assert by_key["ultravasan90-2024"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
+    assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_usage"] == "reference-only"
+    assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_source_year"] == 2024
 
     assert by_key["ultravasan90-2022"]["evidence_status"] == "local-exact-source-year"
     assert by_key["ultravasan90-2025"]["evidence_status"] == "external-year-specific"
