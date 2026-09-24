@@ -107,6 +107,10 @@ assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds));
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds_per_km));
 assert.strictEqual(firstStats.located_dnf_n,1);
 assert.strictEqual(firstStats.dnf_dropouts_n,0,'DNF efter Smågan får inte belasta start→Smågan');
+assert.strictEqual(firstStats.q10_pace_seconds_per_km,null,'Q10 får inte publiceras vid n<20');
+assert.strictEqual(firstStats.q90_pace_seconds_per_km,null,'Q90 får inte publiceras vid n<20');
+assert.strictEqual(firstStats.outer_spread_min_sample,20);
+assert.strictEqual(firstStats.outer_spread_sufficient,false);
 
 const secondStats=intelligence.fieldStatsForSegment(synthetic,syntheticRace,segments[1]);
 assert.strictEqual(secondStats.timing_sample_n,5);
@@ -142,6 +146,12 @@ assert.strictEqual(scored.find(row=>row.key==='thin').difficulty.rank,null);
 assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.component_weighting,'equal-four-components');
 assert.strictEqual(scored.find(row=>row.key==='hard').difficulty.required_components,4);
 assert.strictEqual(intelligence.percentileRank([1,2,3],2),.5);
+
+const outerSpreadSegment=model.segments.find(segment=>segment.field.timing_sample_n>=20&&segment.field.q10_pace_seconds_per_km!=null&&segment.field.q90_pace_seconds_per_km!=null);
+assert.ok(outerSpreadSegment,'verkligt underlag med n≥20 ska publicera Q10–Q90');
+assert.ok(outerSpreadSegment.field.q10_pace_seconds_per_km<=outerSpreadSegment.field.q25_pace_seconds_per_km);
+assert.ok(outerSpreadSegment.field.q90_pace_seconds_per_km>=outerSpreadSegment.field.q75_pace_seconds_per_km);
+assert.strictEqual(outerSpreadSegment.field.outer_spread_sufficient,true);
 
 const realScores=model.segments.filter(segment=>segment.difficulty.score!==null);
 assert.ok(realScores.length>=5,'verkligt 2016-underlag ska kunna ge relativa svårighetspoäng för huvuddelen av segmenten');
