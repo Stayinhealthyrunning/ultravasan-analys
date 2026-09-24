@@ -57,6 +57,8 @@
   }
 
   function wholeCourseComparable(left,right,races=[],courses={}){
+    const leftRace=raceForResult(left,races),rightRace=raceForResult(right,races);
+    if(leftRace&&rightRace&&String(leftRace.id)===String(rightRace.id))return true;
     const a=wholeCourseComparisonKey(left,races,courses);
     const b=wholeCourseComparisonKey(right,races,courses);
     return !!a&&a===b;
