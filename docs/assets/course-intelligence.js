@@ -236,13 +236,18 @@
     const pacingLoss=timing.map(row=>row.pacing_loss_seconds);
     const pacingLossPerKm=timing.map(row=>row.pacing_loss_seconds_per_km);
     const paceIndex=timing.map(row=>row.pace_index);
+    const outerSpreadMinSample=20,outerSpreadEnough=pace.length>=outerSpreadMinSample;
     return Object.freeze({
       timing_sample_n:timing.length,
       min_sample:minSample,
       sufficient_sample:enough,
       median_pace_seconds_per_km:enough?round(charts.median(pace),1):null,
+      q10_pace_seconds_per_km:outerSpreadEnough?round(charts.quantile(pace,.10),1):null,
       q25_pace_seconds_per_km:enough?round(charts.quantile(pace,.25),1):null,
       q75_pace_seconds_per_km:enough?round(charts.quantile(pace,.75),1):null,
+      q90_pace_seconds_per_km:outerSpreadEnough?round(charts.quantile(pace,.90),1):null,
+      outer_spread_min_sample:outerSpreadMinSample,
+      outer_spread_sufficient:outerSpreadEnough,
       pace_iqr_seconds_per_km:enough?round(charts.quantile(pace,.75)-charts.quantile(pace,.25),1):null,
       median_pace_index:enough?round(charts.median(paceIndex),1):null,
       median_pacing_loss_seconds:enough?round(charts.median(pacingLoss),1):null,
