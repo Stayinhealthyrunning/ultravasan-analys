@@ -25,4 +25,5 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     assert report["rejected_or_pending_groups"][0]["group"] == "ultravasan90-post2023"
     assert report["rejected_or_pending_groups"][0]["status"] == "not verified"
     assert report["geometry_comparisons"][0]["result"]["symmetric_nearest_max_m"] > 0
-    assert "cannot" in report["geometry_comparisons"][0]["decision"]
+    assert "diagnostic only" in report["geometry_comparisons"][0]["decision"]
+    assert "prevents this similarity metric from establishing" in report["geometry_comparisons"][0]["decision"]
