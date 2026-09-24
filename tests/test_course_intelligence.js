@@ -59,28 +59,23 @@ assert.strictEqual(last.display_to_km,90.173,'Mora ska strukturellt mappas till 
 assert.strictEqual(last.terrain.available,true);
 
 const post2023=contracts.catalog.courses['uv90-2023-2025-v1'];
-const highPoint=intelligence.displayAnchorForCheckpoint(post2023,'high_point');
-assert.strictEqual(highPoint.source,'interpolated-between-course-anchors');
-assert.deepStrictEqual([...highPoint.between],['start','smagan']);
-assert.ok(highPoint.distance_km>0&&highPoint.distance_km<9.2);
-assert.ok(Math.abs(highPoint.distance_km-(3.3/10.84*9.2))<1e-9);
+assert.ok(!intelligence.checkpointCatalog(post2023).some(row=>row.checkpoint_key==='high_point'));
+assert.ok(!intelligence.segmentContracts(post2023).some(row=>row.from_key==='high_point'||row.to_key==='high_point'));
+assert.strictEqual(intelligence.segmentContracts(post2023)[0].key,'start→smagan');
+assert.strictEqual(intelligence.segmentContracts(post2023)[0].distance_km,10.84);
 
 const postFinish=intelligence.displayAnchorForCheckpoint(post2023,'mora');
 assert.strictEqual(postFinish.source,'terminal-finish-anchor');
 assert.strictEqual(postFinish.distance_km,92);
 
 const course2026=contracts.catalog.courses['uv90-2026-v1'];
-assert.strictEqual(course2026.checkpoint_catalog.find(row=>row.checkpoint_key==='mora_warning').distance_km,null);
-assert.strictEqual(intelligence.displayAnchorForCheckpoint(course2026,'mora_warning'),null,'okänd 2026-distans får inte interpoleras eller gissas');
+assert.ok(!intelligence.checkpointCatalog(course2026).some(row=>['high_point','mora_warning'].includes(row.checkpoint_key)));
 const segments2026=intelligence.segmentContracts(course2026);
-const highPoint2026=segments2026.find(segment=>segment.to_key==='high_point');
-const warning2026=segments2026.find(segment=>segment.to_key==='mora_warning');
-assert.strictEqual(highPoint2026.distance_km,null);
-assert.strictEqual(highPoint2026.distance_source,'unavailable');
-assert.strictEqual(highPoint2026.display_to_km,null);
-assert.strictEqual(warning2026.distance_km,null);
-assert.strictEqual(warning2026.distance_source,'unavailable');
-assert.strictEqual(warning2026.display_to_km,null);
+assert.ok(!segments2026.some(segment=>['high_point','mora_warning'].includes(segment.from_key)||['high_point','mora_warning'].includes(segment.to_key)));
+assert.strictEqual(segments2026[0].key,'start→smagan');
+assert.strictEqual(segments2026[0].distance_km,9.2);
+assert.strictEqual(segments2026.at(-1).key,'eldris→mora');
+assert.ok(Math.abs(segments2026.at(-1).distance_km-9.2)<1e-9);
 
 const syntheticRace={id:900,race_key:'ultravasan90-2016',year:2016,distance_km:90};
 const syntheticResults=[
@@ -174,12 +169,11 @@ assert.ok(fallbackPlan.rows.every(row=>row.source==='distance-fallback'));
 assert.ok(Math.abs(fallbackPlan.rows.at(-1).target_cumulative_seconds-36000)<1);
 
 const race2026=data.races.find(race=>race.race_key==='ultravasan90-2026')||{id:999,race_key:'ultravasan90-2026',year:2026};
-const incomplete2026=intelligence.buildRacePlan({races:[race2026],results:[],splits:[]},race2026,36000);
-assert.strictEqual(incomplete2026.complete,false,'okända 2026-segment får inte fyllas med gissad måltempoandel');
-assert.ok(incomplete2026.unavailable_segments>=4);
-assert.strictEqual(incomplete2026.allocated_seconds,0);
-assert.strictEqual(incomplete2026.unallocated_seconds,36000);
-assert.ok(incomplete2026.rows.some(row=>row.source==='unavailable'));
+const plan2026=intelligence.buildRacePlan({races:[race2026],results:[],splits:[]},race2026,36000);
+assert.strictEqual(plan2026.complete,true,'officiella 2026-segment med kända kontrollavstånd ska kunna distansfördelas');
+assert.strictEqual(plan2026.unavailable_segments,0);
+assert.ok(plan2026.rows.every(row=>row.source==='distance-fallback'));
+assert.ok(!plan2026.rows.some(row=>['high_point','mora_warning'].includes(row.from_key)||['high_point','mora_warning'].includes(row.to_key)));
 
 assert.throws(()=>intelligence.buildRacePlan(data,race2016,0),/Måltiden/);
 
