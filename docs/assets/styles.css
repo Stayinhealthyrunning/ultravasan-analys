@@ -536,6 +536,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .runner-journey-stop.estimated em,.journey-quality.estimated{background:#fff1d6;color:#91600f}
 .runner-journey-stop.missing em,.journey-quality.missing{background:#edf1ee;color:#68746e}
 .runner-journey-stop.start em,.journey-quality.start{background:#eef3ec;color:var(--forest)}
+.runner-development{margin:20px 0 24px;padding:18px;box-shadow:none;background:#fbfcf8}.runner-development .runner-section-head{padding-right:34px}.runner-development-lead{margin:7px 0 0;color:var(--muted);font-size:.68rem;line-height:1.55;max-width:900px}.runner-development .table-wrap{margin-top:12px}.runner-development-table{min-width:1080px}.runner-development-table th,.runner-development-table td{font-size:.68rem;padding:9px 10px}.runner-development-table thead th{font-size:.6rem}.runner-development-table tbody th{position:static;background:transparent;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--ink)}.runner-development-table tbody th small{display:block;margin-top:2px;color:var(--muted);font-size:.55rem;font-weight:600}.runner-development-row{cursor:pointer}.runner-development-row:focus-visible{outline:3px solid rgba(27,118,89,.32);outline-offset:-3px;background:#edf5ef}.runner-development-row:hover{background:#f0f6ef}
 .runner-history-note{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:12px 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:#f5f7f2;color:var(--muted)}
 .runner-history-note>strong,.runner-history-note>div>strong{color:var(--forest);font-size:.72rem}
 .runner-history-note>span,.runner-history-note>div>small{font-size:.62rem;line-height:1.4}
@@ -552,6 +553,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .runner-section-head{align-items:flex-start}
   .runner-journey-track{margin-right:-12px;padding-right:12px}
   .runner-journey-stop{flex-basis:170px}
+  .runner-development{padding:14px 10px}.runner-development .runner-section-head{padding-right:0}.runner-development-table{min-width:980px}
   .runner-history-note,.runner-history-note.verified{display:grid;grid-template-columns:1fr}
   .runner-history-years{justify-content:flex-start}
 }
