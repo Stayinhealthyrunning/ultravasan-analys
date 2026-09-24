@@ -15,6 +15,8 @@
   const numberOrNull=value=>finite(value)?Number(value):null;
   const round=(value,digits=2)=>Number.isFinite(Number(value))?Number(Number(value).toFixed(digits)):null;
   const keyOf=value=>String(value??'').trim().toLowerCase();
+  const AUXILIARY_CHECKPOINT_KEYS=new Set(['high_point','mora_warning']);
+  const isOfficialAnalysisCheckpoint=checkpoint=>!AUXILIARY_CHECKPOINT_KEYS.has(keyOf(checkpoint?.checkpoint_key));
 
   function courseVersionId(race){
     return contracts.editionForRace(race)?.course_version_id||null;
@@ -29,7 +31,7 @@
   }
 
   function checkpointCatalog(course){
-    return (course?.checkpoint_catalog||[]).slice().sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
+    return (course?.checkpoint_catalog||[]).filter(isOfficialAnalysisCheckpoint).slice().sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
   }
 
   function checkpointForKey(course,key){
@@ -93,30 +95,27 @@
   }
 
   function segmentContracts(course){
-    return (course?.segments||[]).map((segment,index)=>{
-      const from=checkpointForKey(course,segment.from);
-      const to=checkpointForKey(course,segment.to);
-      if(!from||!to)throw new Error(`Segment ${segment.from}→${segment.to} saknar explicit checkpoint i CourseVersion.`);
+    const checkpoints=checkpointCatalog(course);
+    return checkpoints.slice(1).map((to,index)=>{
+      const from=checkpoints[index];
       const fromCourse=numberOrNull(from.distance_km),toCourse=numberOrNull(to.distance_km);
-      const explicitDistance=numberOrNull(segment.distance_km);
       const checkpointDistance=fromCourse!==null&&toCourse!==null&&toCourse>fromCourse?toCourse-fromCourse:null;
-      const contractDistance=explicitDistance!==null&&explicitDistance>0?explicitDistance:checkpointDistance;
-      if(fromCourse!==null&&toCourse!==null&&!(toCourse>fromCourse))throw new Error(`Ogiltig checkpointordning för ${segment.from}→${segment.to}.`);
-      const fromDisplay=displayAnchorForCheckpoint(course,segment.from);
-      const toDisplay=displayAnchorForCheckpoint(course,segment.to);
+      if(fromCourse!==null&&toCourse!==null&&!(toCourse>fromCourse))throw new Error(`Ogiltig checkpointordning för ${from.checkpoint_key}→${to.checkpoint_key}.`);
+      const fromDisplay=displayAnchorForCheckpoint(course,from.checkpoint_key);
+      const toDisplay=displayAnchorForCheckpoint(course,to.checkpoint_key);
       return Object.freeze({
         index,
-        key:`${keyOf(segment.from)}→${keyOf(segment.to)}`,
-        from_key:keyOf(segment.from),
-        to_key:keyOf(segment.to),
-        from_name:from.name||segment.from,
-        to_name:to.name||segment.to,
+        key:`${keyOf(from.checkpoint_key)}→${keyOf(to.checkpoint_key)}`,
+        from_key:keyOf(from.checkpoint_key),
+        to_key:keyOf(to.checkpoint_key),
+        from_name:from.name||from.checkpoint_key,
+        to_name:to.name||to.checkpoint_key,
         from_sequence:Number(from.sequence_no||0),
         to_sequence:Number(to.sequence_no||0),
         course_from_km:fromCourse,
         course_to_km:toCourse,
-        distance_km:contractDistance,
-        distance_source:explicitDistance!==null&&explicitDistance>0?'course-contract':checkpointDistance!==null?'checkpoint-delta':'unavailable',
+        distance_km:checkpointDistance,
+        distance_source:checkpointDistance!==null?'checkpoint-delta':'unavailable',
         display_from_km:fromDisplay?.distance_km??null,
         display_to_km:toDisplay?.distance_km??null,
         display_from_source:fromDisplay?.source??null,
