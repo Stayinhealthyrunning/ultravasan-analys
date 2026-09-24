@@ -770,7 +770,7 @@ const INFO_HELP_EXTENDED=[
   ['.nerd-hero','Loppanalyslabbet samlar delsträckejämförelser, percentiler, flerårshistorik, fältflöde och topplistor.'],
   ['#raceStories','Automatiska berättelser som sammanfattar det valda loppårets mest framträdande resultat och mönster.'],
   ['#segmentRanking','Välj två kontroller, klass och sortering för att jämföra prestationer på just den delen av loppet. Fart följer den gemensamma fartenheten, medan placering endast jämförs där officiella passager finns. Alla övriga aktiva loppfilter respekteras.'],
-  ['#percentileLadder','Visar vilken sluttid som krävdes för att tillhöra olika nivåer bland fullföljande löpare.'],
+  ['#percentileLadder','Visar när 10, 25, 50, 75 och 90 procent av gruppens fullföljande hade gått i mål. Endast FINISHED med giltig sluttid i aktuellt filterurval ingår. Nivåerna motsvarar statistiskt Q10, Q25, Q50, Q75 och Q90 och beräknas med samma linjärt interpolerade kvantilmetod som övriga analyser. Q50 är medianen. Könsväxlaren visar motsvarande progression separat för valda kön.'],
   ['#runnerHistory','Sök en löpare och jämför personens genomförda lopp, tider och utveckling över flera år.'],
   ['#fieldFlow','Visar hur många faktiska startande som har en registrerad passage vid varje kontroll. DNF lämnar flödet efter sin sista säkra passage och DNS räknas bort. Diagrammet visar registrerad datatäckning, inte löparnas exakta position mellan kontrollerna.'],
   ['#hallOfFame','Fyra topplistor byggda på stabil löparidentitet, aldrig enbart namn. Klicka på ett namn för en karta över aktuellt loppår och löparens delsträckor. Personer utan säker gemensam identitet mellan år hålls hellre isär än slås ihop felaktigt.'],
