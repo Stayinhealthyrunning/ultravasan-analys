@@ -819,7 +819,9 @@ function setupInfoInteractions(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.info-tip.open').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')})});
 }
 function addCardInfo(card,text){
-  if(!card||card.dataset.infoInstalled==='v4')return;
+  const target=card?.matches?.('article,.panel,.course-race-plan')?card:card?.closest?.('article,.panel');
+  if(!target||target.dataset.infoInstalled==='v4')return;
+  card=target;
   card.dataset.infoInstalled='v4';
   card.classList.add('has-info-tip');
   const tip=document.createElement('button'),popupId='info-popup-'+(++infoTipCounter);

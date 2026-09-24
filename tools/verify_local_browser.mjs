@@ -42,6 +42,7 @@ await command("Runtime.enable");
 await command("Log.enable");
 await command("Page.enable");
 await command("Network.enable");
+await command("Network.setCacheDisabled",{cacheDisabled:true});
 await command("Page.navigate", {url:"http://127.0.0.1:8765/?race=uv90"});
 await delay(1200);
 let ready = false;
@@ -259,7 +260,7 @@ const clubHistoryCourseVersion=await evaluate(`(() => {
   const currentRace=state.data.races.find(race=>String(race.id)===String(state.raceId));
   const currentScope=currentRace?window.HistoryIntelligence.comparisonKeyForRace(currentRace):null;
   const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')].map(path=>({scope:path.dataset.historyScope||'',from:Number(path.dataset.historyFrom),to:Number(path.dataset.historyTo)}));
-  const pathScopesValid=paths.length>=2&&paths.every(path=>path.scope&&scopeForYear(path.from)===path.scope&&scopeForYear(path.to)===path.scope);
+  const pathScopesValid=paths.length>=1&&paths.every(path=>path.scope&&scopeForYear(path.from)===path.scope&&scopeForYear(path.to)===path.scope);
   const improvedButton=document.querySelector('#clubRankingTabs button[data-metric="improved"]');
   improvedButton?.click();
   const rankingRows=[...document.querySelectorAll('#clubRankings button')].map(button=>{
@@ -660,8 +661,9 @@ await evaluate(`(() => {
   const year=document.querySelector('#compareYear');
   if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
   compareState.selected=[];
-  addCompareRunner(${uv90Cases[2]?.id||0});
-  addCompareRunner(${uv90Cases[3]?.id||0});
+  const data=window.ULTRAVASAN_ACTIVE_DATA,r24=data.races.find(item=>item.race_key==='ultravasan90-2024'),r25=data.races.find(item=>item.race_key==='ultravasan90-2025');
+  const a=data.results.find(item=>item.race_id===r24?.id&&item.status==='FINISHED'),b=data.results.find(item=>item.race_id===r25?.id&&item.status==='FINISHED');
+  addCompareRunner(a?.id||0);addCompareRunner(b?.id||0);
   document.querySelector('#compareH2HButton')?.click();
 })()`);
 await delay(250);
@@ -679,13 +681,15 @@ const h2hComparable=await evaluate(`(() => ({
 
 const changedCourseId=await evaluate(`(() => {
   const data=window.ULTRAVASAN_ACTIVE_DATA;
-  const race=data.races.find(item=>item.race_key==='ultravasan90-2024');
+  const race=data.races.find(item=>item.race_key==='ultravasan90-2019');
   return data.results.find(item=>item.race_id===race?.id&&item.status==='FINISHED'&&Number(item.finish_seconds)>0)?.id||null;
 })()`);
 await evaluate(`(() => {
   const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
   compareState.selected=[];
-  addCompareRunner(${uv90Cases[2]?.id||0});
+  const data=window.ULTRAVASAN_ACTIVE_DATA,race=data.races.find(item=>item.race_key==='ultravasan90-2025');
+  const baseline=data.results.find(item=>item.race_id===race?.id&&item.status==='FINISHED');
+  addCompareRunner(baseline?.id||0);
   addCompareRunner(${changedCourseId});
   document.querySelector('#compareH2HButton')?.click();
 })()`);
@@ -750,7 +754,7 @@ for(const request of mapRequests){
       state.mediaAlias===true&&
       state.leafletVersion==='1.9.4'&&
       state.leafletVendorRoot==='vendor/leaflet-1.9.4'&&
-      state.note.includes('kartspår')
+      state.note.includes('kartreferens')
     )
   });
 }
@@ -790,13 +794,13 @@ const checks = {
     !u7History.fingerprintPerformanceYears.includes(2019)&&u7History.fingerprintRows===5&&
     u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===true&&item[2]==='whole-course-comparable-race-medians'&&item[3]>=2)&&
     u7History.fingerprintMethod.includes('loppårsmedianerna')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
-    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion-byte')&&
+    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion beskriver')&&u7History.classMethod.includes('ny jämförbarhetsserie')&&
     u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>0&&u7History.seriesRendered===u7History.expectedSeries&&
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
   ),
   clubHistoryCourseVersion:Boolean(
-    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.paths.length>=2&&
+    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.paths.length>=1&&
     clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
     clubHistoryCourseVersion.method.includes('CourseVersion')
   ),

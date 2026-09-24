@@ -30,7 +30,7 @@ const explicit=[
 ];
 assert.strictEqual(H.groupHistories(explicit,races).length,1,'person_key ska länka utgåvor');
 
-assert.strictEqual(H.wholeCourseComparable(explicit[0],explicit[1],races,courses),true,'samma CourseVersion är jämförbar');
+assert.strictEqual(H.wholeCourseComparable(explicit[0],explicit[1],races,courses),false,'CourseVersion är inte helbanans jämförbarhetsbevis');
 assert.strictEqual(H.wholeCourseComparable(stableVasaNerd[0],stableVasaNerd[1],races,courses),false,'olika CourseVersion får inte jämföras implicit');
 
 const groupedCourses={
@@ -39,6 +39,9 @@ const groupedCourses={
   'uv90-new':{...courses['uv90-new'],whole_course_comparison_group:'uv90-compatible'},
 };
 assert.strictEqual(H.wholeCourseComparable(stableVasaNerd[0],stableVasaNerd[1],races,groupedCourses),true,'explicit jämförelsegrupp får öppna jämförelse');
+const editionGroupRaces=races.map(race=>({...race,whole_course_comparison_group:race.year>=2024?'uv90-post2023':null}));
+assert.strictEqual(H.wholeCourseComparable({id:40,race_id:2},{id:41,race_id:3},editionGroupRaces,courses),true,'samma explicit RaceEdition-grupp får jämföra olika kursversioner');
+assert.strictEqual(H.wholeCourseComparable({id:42,race_id:1},{id:40,race_id:2},editionGroupRaces,courses),false,'CourseVersion-byte utan helbanebevis ska inte jämföras');
 
 assert.strictEqual(H.segmentComparable('uv90-old','uv90-new','a','b',courses),false,'segment jämförs inte över CourseVersion utan kontrakt');
 const segmentCourses={

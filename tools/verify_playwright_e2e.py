@@ -76,6 +76,8 @@ def run(base_url: str) -> None:
         for family, year in (("uv90", 2016), ("uv45", 2016)):
             page.goto(f"{base_url}?{urlencode({'race': family, 'year': year})}", wait_until="domcontentloaded")
             ready(page)
+            page.wait_for_function("() => state.dataPhase === 'full'", timeout=60_000)
+            page.wait_for_function("year => Number(state.data.races.find(r=>r.id===state.raceId)?.year) === year", arg=year, timeout=60_000)
             check(page.evaluate("() => state.raceFamily") == family, f"{family} deep link selected wrong race family")
             selected_year = page.evaluate("() => Number(state.data.races.find(r=>r.id===state.raceId)?.year)")
             check(selected_year == year, f"{family} deep link selected wrong year: {selected_year}")
@@ -237,8 +239,8 @@ def run(base_url: str) -> None:
         family_full(page, "uv90")
         h2h = page.evaluate("""() => {
           const data=window.ULTRAVASAN_ACTIVE_DATA;
-          const r15=data.races.find(r=>r.race_key==='ultravasan90-2015'),r17=data.races.find(r=>r.race_key==='ultravasan90-2017'),r24=data.races.find(r=>r.race_key==='ultravasan90-2024');
-          const a=data.results.find(r=>r.race_id===r15?.id&&r.status==='FINISHED'),b=data.results.find(r=>r.race_id===r17?.id&&r.status==='FINISHED'),c=data.results.find(r=>r.race_id===r24?.id&&r.status==='FINISHED');
+          const r25=data.races.find(r=>r.race_key==='ultravasan90-2025'),r24=data.races.find(r=>r.race_key==='ultravasan90-2024'),r19=data.races.find(r=>r.race_key==='ultravasan90-2019');
+          const a=data.results.find(r=>r.race_id===r25?.id&&r.status==='FINISHED'),b=data.results.find(r=>r.race_id===r24?.id&&r.status==='FINISHED'),c=data.results.find(r=>r.race_id===r19?.id&&r.status==='FINISHED');
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           compareState.raceId='all';compareState.selected=[];addCompareRunner(a?.id);addCompareRunner(b?.id);document.querySelector('#compareH2HButton')?.click();
           return {same:!!a&&!!b,course:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,changed:!!c,id:c?.id};

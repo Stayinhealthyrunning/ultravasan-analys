@@ -29,8 +29,8 @@ const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast seg
 const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansreservberäkning. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
 const HISTORY_ARCHIVE_METHOD_HELP='Löpararkivet använder endast verifierad personidentitet från U2. Namn, startnummer eller legacy athlete_id får aldrig ensamma länka en person mellan år. Alla verifierat länkade resultat visas, men sluttidsutveckling och bästa tid delas upp i separata jämförbarhetsserier enligt CourseVersion/whole-course-kontraktet. Ett banbyte visas därför som en ny serie i stället för att räknas som förbättring eller försämring. DNF och DNS kan visas i personens tidslinje men ingår inte i sluttidsserier. Om personidentiteten inte är verifierad visar arkivet endast det enskilda publicerade resultatet.';
 const HISTORY_HALL_METHOD_HELP='Hall of Fame använder History Intelligence i stället för namnmatchning. Flest lopp kräver verifierad personidentitet men kan räkna fullföljda starter över banversioner eftersom måttet bara är antal genomföranden. Mest förbättrad och Jämnast kräver verifierad personidentitet och räknas endast inom en uttryckligen jämförbar whole-course-serie; tider från andra CourseVersions blandas inte in. Starkast avslutning är ett enskilt-loppmått: endast exakta, ej estimerade placeringspassager används. Segmentet väljs strukturellt från CourseVersion (Evertsberg→mål när det finns, annars Eldris→mål) och placeringslyftet normaliseras mot antal faktiska startande för att minska fältstorleksbias. Kvinnor och män redovisas separat.';
-const HISTORY_FINGERPRINT_METHOD_HELP='Årets fingeravtryck sätter index 100 till historisk normalnivå. Mediantidsindex, fartnivå och DNF-belastning jämför endast med andra RaceEditions som har samma whole-course-jämförbarhetsnyckel som valt lopp. Varje jämförbart loppår sammanfattas först separat och normalnivån är medianen av loppårsmedianerna, så ett stort startfält får inte automatiskt större vikt än ett litet. Minst två andra jämförbara loppår krävs. Kvinnorepresentation och fältstorlek är deltagandemått och får därför använda andra CourseVersions inom samma RaceFamily; kvinnorepresentation döljs när könsfilter är aktivt. Index beskriver observerad skillnad, inte orsak.';
-const CLASS_HISTORY_METHOD_HELP='Klasshistorik och Klassutveckling visar deltagande över alla importerade år, men fart- och sluttidstrender får endast bindas samman när två år tillhör samma whole-course-jämförbarhetsserie. Vid CourseVersion-byte bryts linjen, animationen tonar ut och in i stället för att interpolera en påhittad mellanprestation och diagrammet markerar banversionsgränsen. Deltagarantal kan fortfarande jämföras över banbytet eftersom det inte är ett prestationsmått. DNS räknas inte som startande; medianfart och sluttid bygger på fullföljande med giltig sluttid.';
+const HISTORY_FINGERPRINT_METHOD_HELP='Årets fingeravtryck sätter index 100 till historisk normalnivå. Mediantidsindex, fartnivå och DNF-belastning jämför endast RaceEditions med samma uttryckligt verifierade whole-course-grupp; CourseVersion är ett kontroll-/segmentkontrakt och avgör inte ensam helbanans jämförbarhet. Varje jämförbart loppår sammanfattas separat och normalnivån är medianen av loppårsmedianerna. Minst två andra jämförbara loppår krävs. Faktiska referensår och exkluderade år visas. Kvinnorepresentation och fältstorlek får använda andra CourseVersions inom samma RaceFamily; kvinnorepresentation döljs när könsfilter är aktivt. Index beskriver observerad skillnad, inte orsak.';
+const CLASS_HISTORY_METHOD_HELP='Klasshistorik och Klassutveckling visar deltagande över alla importerade år, men fart- och sluttidstrender får endast bindas samman inom samma uttryckligt verifierade whole-course-grupp. CourseVersion beskriver checkpoint-/segmentkontrakt och skapar inte ensam en helbanebrytning. När helbanans jämförbarhet saknas visas separata punkter och ingen fartinterpolation; en verklig gruppgräns märks som ny jämförbarhetsserie. Deltagarantal kan jämföras över dessa gränser. Kalenderluckor utan lopp märks uttryckligen. DNS räknas inte som startande; medianfart och sluttid bygger på fullföljande med giltig sluttid.';
 function replaceInfoPopup(seed,text){
   const card=seed?.matches?.('article,.panel')?seed:seed?.closest?.('article,.panel');
   if(!card)return;
@@ -391,28 +391,36 @@ function ensureHallLeaflet(){
   return globalThis.UltravasanMapEngine?.ensureLeaflet?.({root:window,document})??Promise.resolve(false);
 }
 function routeSegmentPoints(route,a,b){return (route.points||[]).filter(p=>Number(p[2])>=a-.03&&Number(p[2])<=b+.03).map(p=>[Number(p[0]),Number(p[1])]);}
-function renderHallFallback(route){
+function renderHallFallback(route,race){
   const el=n$('#hallMapCanvas'),pts=route.points||[];if(!el||pts.length<2)return;
   const lat=pts.map(p=>p[0]),lon=pts.map(p=>p[1]),minLat=Math.min(...lat),maxLat=Math.max(...lat),minLon=Math.min(...lon),maxLon=Math.max(...lon),W=900,H=480,pad=35,x=v=>pad+(v-minLon)*(W-pad*2)/(maxLon-minLon||1),y=v=>H-pad-(v-minLat)*(H-pad*2)/(maxLat-minLat||1);
   const cps=route.checkpoints||[];let content='<rect width="900" height="480" fill="#e7eee6"/><path d="M0 380 Q210 300 410 360 T900 300 V480 H0Z" fill="#c8dbc8" opacity=".8"/>';
   for(let i=1;i<cps.length;i++){const seg=routeSegmentPoints(route,cps[i-1].distance_km,cps[i].distance_km),d=seg.map((q,j)=>`${j?'L':'M'}${x(q[1]).toFixed(1)} ${y(q[0]).toFixed(1)}`).join(' ');content+=`<path d="${d}" fill="none" stroke="${HALL_SEGMENT_COLORS[(i-1)%HALL_SEGMENT_COLORS.length]}" stroke-width="7" stroke-linecap="round"/>`}
   cps.forEach((c,i)=>{content+=`<circle cx="${x(c.coord[1])}" cy="${y(c.coord[0])}" r="7" fill="#fff" stroke="#0d4c3a" stroke-width="3"/><text x="${x(c.coord[1])+9}" y="${y(c.coord[0])-9}" font-size="12" font-weight="800" fill="#10241d">${nEsc(c.short||c.name)}</text>`});
-  el.innerHTML=`<svg class="hall-fallback-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bana med delsträckor">${content}</svg><div class="hall-map-fallback-note">Kartbakgrunden kunde inte laddas. Den verkliga GPS-rutten visas ändå.</div>`;
+  const sourceYear=Number(route.source_year),routeLabel=sourceYear&&sourceYear!==Number(race?.year)?`GPS-referens ${sourceYear}; exakt geometri för ${race?.year} är inte verifierad.`:`GPS-rutt ${sourceYear||''}`;
+  el.innerHTML=`<svg class="hall-fallback-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bana med delsträckor">${content}</svg><div class="hall-map-fallback-note">Kartbakgrunden kunde inte laddas. ${nEsc(routeLabel)} Den verkliga GPS-rutten visas ändå.</div>`;
 }
 async function openHallMap(resultId){
   const r=state.data.results.find(x=>x.id===resultId),race=r&&state.data.races.find(x=>x.id===r.race_id),route=race&&runnerRouteForRace(race),dialog=n$('#hallMapDialog');if(!r||!race||!route||!dialog)return;
   const splits=nSplitsForResult(r.id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),splitKey=k=>k==='finish'?'mora':k,byKey=new Map(splits.map(s=>[String(s.checkpoint_key||'').toLowerCase(),s])),cps=route.checkpoints||[];
   n$('#hallMapTitle').textContent=`${r.name_as_published} · Ultravasan ${race.year}`;
-  n$('#hallMapSubtitle').textContent=`${nTime(r.finish_seconds)} · plats ${r.overall_place??'–'} · ${r.age_class||'klass saknas'}`;
+  const routeYear=Number(route.source_year),routeLabel=routeYear&&routeYear!==Number(race.year)?`kartreferens ${routeYear}; exakt årsgeometri ej verifierad`:`GPS-rutt ${routeYear||''}`;
+  n$('#hallMapSubtitle').textContent=`${nTime(r.finish_seconds)} · plats ${r.overall_place??'–'} · ${r.age_class||'klass saknas'} · ${routeLabel}`;
   n$('#hallSegmentLegend').innerHTML=cps.slice(1).map((c,i)=>{const prev=cps[i],a=i===0?null:byKey.get(splitKey(prev.key)),b=byKey.get(splitKey(c.key)),seconds=b?.elapsed_seconds!=null?Number(b.elapsed_seconds)-Number(a?.elapsed_seconds||0):null,gain=a?.place_overall&&b?.place_overall?Number(a.place_overall)-Number(b.place_overall):null;return `<div class="hall-segment-item"><i style="background:${HALL_SEGMENT_COLORS[i%HALL_SEGMENT_COLORS.length]}"></i><span><strong>${nEsc(prev.short||prev.name)} → ${nEsc(c.short||c.name)}</strong><small>${nTime(seconds)}${gain!=null?` · ${gain>0?'+':''}${gain} platser`:''}</small></span></div>`}).join('');
   dialog.showModal();
   const canvas=n$('#hallMapCanvas');canvas.innerHTML='<div class="hall-map-loading">Läser karta och GPS-rutt…</div>';
   const ok=await ensureHallLeaflet();
-  if(!ok||!window.L){renderHallFallback(route);return}
+  if(!ok||!window.L){renderHallFallback(route,race);return}
   canvas.innerHTML='';
   if(nerd.hallMap){nerd.hallMap.remove();nerd.hallMap=null}
   nerd.hallMap=L.map(canvas,{zoomControl:true,scrollWheelZoom:true});
-  nerd.hallTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap-bidragsgivare'}).addTo(nerd.hallMap);
+  nerd.hallTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap-bidragsgivare'});
+  nerd.hallTile.once('tileerror',()=>{
+    if(!nerd.hallMap)return;
+    nerd.hallMap.remove();nerd.hallMap=null;nerd.hallTile=null;
+    renderHallFallback(route,race);
+  });
+  nerd.hallTile.addTo(nerd.hallMap);
   for(let i=1;i<cps.length;i++){
     const seg=routeSegmentPoints(route,cps[i-1].distance_km,cps[i].distance_km);if(seg.length>1)L.polyline(seg,{color:HALL_SEGMENT_COLORS[(i-1)%HALL_SEGMENT_COLORS.length],weight:7,opacity:.92,lineCap:'round'}).addTo(nerd.hallMap).bindTooltip(`${cps[i-1].short||cps[i-1].name} → ${cps[i].short||cps[i].name}`);
   }
@@ -430,9 +438,9 @@ function renderFingerprint(){
   if(!model){el.innerHTML='<div class="empty">Historik behövs för index.</div>';return}
   el.innerHTML=model.metrics.map(metric=>{
     const v=metric.index,available=metric.available&&Number.isFinite(Number(v)),width=available?Math.max(4,Math.min(100,Number(v)/1.6)):4,left=available?Math.max(4,Math.min(96,Number(v)/1.6)):50;
-    const years=metric.reference_years?.length?(metric.reference_years[0]+(metric.reference_years.length>1?'–'+metric.reference_years.at(-1):'')):'saknas';
+    const years=metric.reference_years?.length?metric.reference_years.join(', '):'inga verifierade år';
     return `<div class="finger-row ${available?'':'unavailable'}" data-history-metric="${nEsc(metric.id)}" data-history-scope="${nEsc(metric.reference_scope||'')}"><span>${nEsc(metric.label)}<small>${nEsc(years)} · ${metric.reference_n??0} referensår</small></span><div><i style="width:${width}%"></i><b style="left:${left}%"></b></div><strong>${available?Math.round(v):'–'}</strong><em>${nEsc(metric.note||'')}</em></div>`;
-  }).join('')+`<p class="microcopy">${race.year}: prestationsmått använder ${model.performance_reference_years.length} whole-course-jämförbara referensår. Index 100 = medianen av loppårsnormalerna.</p>`;
+  }).join('')+`<p class="microcopy">${race.year}: prestationsmått använder ${model.performance_reference_years.length} verifierade whole-course-referensår (${model.performance_reference_years.join(', ')||'inga'}). ${model.performance_exclusions.length?'Övriga loppår utesluts eftersom helbanans jämförbarhet inte är verifierad; CourseVersion/checkpointbyte ensamt avgör inte jämförbarheten.':''} Index 100 = medianen av loppårsnormalerna.</p>`;
 }
 
 function renderHistorySuggestions(){

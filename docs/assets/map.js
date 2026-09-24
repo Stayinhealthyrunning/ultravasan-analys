@@ -64,7 +64,7 @@ function boot(){
   app.allCoords=app.usedRoutes.flatMap(r=>r.points.map(p=>[p[0],p[1]]));
   app.maxTime=Math.max(...app.models.map(m=>m.endTime),1);app.time=clamp(Number(params.get('t'))||0,0,app.maxTime);app.prevTime=app.time;
   $('#raceTitle').textContent=mapRaceUi.selectionTitle(app.models.map(model=>model.race));
-  $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km · kartspår ${esc(r.source_year)}</span>`).join('');
+  $('#courseNote').innerHTML=app.usedRoutes.map(r=>`<span class="course-pill"><i style="background:${r.style.color}"></i>${esc(r.style.label)} · ${r.official_distance_km.toFixed(1)} km · kartreferens ${esc(r.source_year)}</span>`).join('');
   $('#timeline').max=Math.ceil(app.maxTime);$('#timeline').value=Math.round(app.time);$('#finishLabel').textContent=fmtTime(app.maxTime);
   $('#stripLeader').textContent='Start';const distances=[...new Set(app.usedRoutes.map(r=>Number(r.official_distance_km).toFixed(0)))];$('#stripFinishDistance').textContent=`${distances.join('/')} km · Mora`;
   buildCheckpointJump();buildRaceStrip();buildDuelElevation();initMap();bindControls();initAudio();update(true);$('#mapLoading').classList.add('hidden');
@@ -129,13 +129,14 @@ function initMap(){
     }
 
     app.leafletReady=true;
-    let tileErrors=0;
+    app.tileFailureHandled=false;
     app.tileLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
       maxZoom:17,
       attribution:'&copy; OpenStreetMap-bidragsgivare'
     }).on('tileerror',()=>{
-      tileErrors++;
-      if(tileErrors===4)setEvent('Kartbakgrunden kunde inte läsas, men banlager och löpare fungerar.');
+      if(app.tileFailureHandled)return;
+      app.tileFailureHandled=true;
+      switchToFallback('Kartbakgrunden kunde inte läsas. Neutral banvy används; rutt, kontroller och löparpositioner visas fortsatt.');
     }).addTo(app.map);
 
     const overlays={};

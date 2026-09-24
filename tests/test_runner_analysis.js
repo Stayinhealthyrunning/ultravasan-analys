@@ -19,8 +19,8 @@ assert.ok(andreas.journey.recorded_rows>=9);
 assert.strictEqual(andreas.journey.rows.at(-1).elapsed_seconds,26280);
 
 const races=[
-  {id:1,race_key:'ultravasan90-2024',year:2024},
-  {id:2,race_key:'ultravasan90-2025',year:2025},
+  {id:1,race_key:'ultravasan90-2024',year:2024,whole_course_comparison_group:'ultravasan90-post2023'},
+  {id:2,race_key:'ultravasan90-2025',year:2025,whole_course_comparison_group:'ultravasan90-post2023'},
   {id:3,race_key:'ultravasan90-2019',year:2019},
   {id:4,race_key:'ultravasan45-2025',year:2025},
 ];
@@ -111,5 +111,13 @@ assert.ok(changedCourse.segments.every(segment=>segment.comparable===false));
 const mixed=analysis.headToHead(dataset,[102,105]);
 assert.strictEqual(mixed.available,false);
 assert.strictEqual(mixed.reason,'mixed-race-family');
+
+const race2024=real.races.find(race=>race.race_key==='ultravasan90-2024');
+const race2025=real.races.find(race=>race.race_key==='ultravasan90-2025');
+const finisher2024=real.results.find(result=>result.race_id===race2024?.id&&result.status==='FINISHED');
+const finisher2025=real.results.find(result=>result.race_id===race2025?.id&&result.status==='FINISHED');
+const evidencedWholeCourse=analysis.headToHead(real,[finisher2024?.id,finisher2025?.id]);
+assert.strictEqual(evidencedWholeCourse.whole_course_comparable,true,'RaceEdition whole-course group must reach RunnerAnalysis H2H');
+assert.strictEqual(evidencedWholeCourse.finish_ranking.length,2,'verified RaceEdition group must enable finish-gap cards');
 
 console.log('OK: U5 RunnerAnalysis bygger Journey, verifierad profilhistorik och CourseVersion-säker head-to-head');

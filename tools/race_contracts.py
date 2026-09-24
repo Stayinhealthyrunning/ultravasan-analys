@@ -144,6 +144,7 @@ def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
         require(lock["courses"][key] == fingerprint, f"{key}: fingerprint changed; create a new CourseVersion ID")
         courses[key] = {**material, "fingerprint": fingerprint}
     editions = {}
+    comparison_groups = {}
     for race in config["races"]:
         key = race["race_key"]
         require(key and key not in editions, f"Duplicate/empty edition: {key}")
@@ -152,6 +153,12 @@ def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
         require(race["event_key"] == event_key and course["race_family"] == race["race_family"],
                 f"{key}: family/event mismatch")
         require(race["medal_profile"] in (None, "pre2023", "post2023"), f"{key}: unknown medal profile")
+        whole_group = race.get("whole_course_comparison_group")
+        require(whole_group is None or (isinstance(whole_group, str) and whole_group.strip()),
+                f"{key}: invalid whole-course comparison group")
+        if whole_group:
+            family_key = (race["event_key"], whole_group)
+            comparison_groups.setdefault(family_key, set()).add(race["race_family"])
         require(checkpoint_contract(race.get("checkpoints", [])) == checkpoint_contract(course["checkpoint_catalog"]),
                 f"{key}: configured controls differ from CourseVersion")
         competition = source_bindings.competition_contract(config, race)
@@ -159,10 +166,13 @@ def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
             **{field: race[field] for field in ("race_key", "event_key", "race_family",
                                                 "course_version_id", "medal_profile", "year",
                                                 "race_date", "data_status")},
+            "whole_course_comparison_group": whole_group,
             **competition,
             "source_available": bool(resolved_sources[key]),
             "analyzable": race["data_status"] == "available" and bool(resolved_sources[key]),
         }
+    require(all(len(values) == 1 for values in comparison_groups.values()),
+            "Whole-course comparison groups cannot cross RaceFamilies")
     observed_keys = {race["race_key"] for race in observed}
     available_keys = {key for key, edition in editions.items() if edition["data_status"] == "available"}
     require(observed_keys == available_keys,

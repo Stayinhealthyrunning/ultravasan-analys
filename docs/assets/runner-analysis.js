@@ -22,10 +22,14 @@
   }
 
   function historyRaces(dataset){
-    return (dataset?.races||[]).map(race=>({
-      ...race,
-      course_version:courseVersionId(race),
-    }));
+    return (dataset?.races||[]).map(race=>{
+      const edition=contracts.editionForRace(race);
+      return {
+        ...race,
+        course_version:edition?.course_version_id||null,
+        whole_course_comparison_group:edition?.whole_course_comparison_group||null,
+      };
+    });
   }
 
   function splitMap(dataset,resultId){
