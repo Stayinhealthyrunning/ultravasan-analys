@@ -23,6 +23,162 @@
     "ultravasan90-2026": "ultravasan90-post2023",
     "ultravasan45-2026": "ultravasan45-current"
   },
+  "edition_route_contracts": {
+    "ultravasan90-2014": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2015": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2017": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2018": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2019": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2022": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2023": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2024": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2025": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2016": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2014": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2015": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2016": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2017": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2018": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2019": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2022": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2023": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2024": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2025": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2025-2026-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2026": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2026-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2026": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2025-2026-v1",
+      "whole_course_comparison_group": null
+    }
+  },
   "routes": {
     "ultravasan90-pre2023": {
       "id": "ultravasan90-pre2023",
@@ -4480,7 +4636,7 @@
       "style": {
         "color": "#7c3aed",
         "dashArray": "10 8",
-        "label": "2014–2022"
+        "label": "Referens 2022"
       },
       "bounds": [
         [
@@ -18680,7 +18836,7 @@
       "style": {
         "color": "#176d53",
         "dashArray": null,
-        "label": "2023–"
+        "label": "Referens 2024"
       },
       "bounds": [
         [
@@ -33584,7 +33740,7 @@
       "style": {
         "color": "#d28b22",
         "dashArray": null,
-        "label": "Ultravasan 45"
+        "label": "Referens 2026"
       },
       "bounds": [
         [
