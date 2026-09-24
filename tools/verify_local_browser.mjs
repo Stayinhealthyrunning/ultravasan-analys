@@ -674,7 +674,7 @@ const h2hComparable=await evaluate(`(() => ({
   elevation:Boolean(document.querySelector('#headToHeadDetail .h2h-course-elevation svg')),
   segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
   warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
-  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
+  text:document.querySelector('#headToHeadDetail')?.innerText||'',
 }))()`);
 
 const changedCourseId=await evaluate(`(() => {
@@ -776,7 +776,7 @@ const checks = {
     u6Initial.elevationSegments>0&&u6Initial.paceSegments>0&&u6Initial.selectedRows===1&&u6Initial.planRows>0&&
     u6Initial.outerQuantiles&&u6Initial.outerQuantiles.n>=20&&u6Initial.outerQuantiles.min===20&&Number.isFinite(Number(u6Initial.outerQuantiles.q10))&&Number.isFinite(Number(u6Initial.outerQuantiles.q90))&&
     Number(u6Initial.outerQuantiles.q10)<=Number(u6Initial.outerQuantiles.q25)&&Number(u6Initial.outerQuantiles.q75)<=Number(u6Initial.outerQuantiles.q90)&&
-    u6Initial.method.includes('n≥20')&&u6Initial.method.includes('Fyra komponenter används med lika vikt')&&
+    u6Initial.method.includes('n≥20')&&u6Initial.method.includes('separata empiriska dimensioner')&&u6Initial.method.includes('inte ihop till en totalscore eller ranking')&&
     u6Initial.method.includes('inte i sig bevis för exakt historisk geometri')&&
     u6Initial.planMethod.includes('exakt samma CourseVersion')&&
     u6Synced.key&&u6Synced.rowSelected===1&&u6Synced.routeSelected===1&&u6Synced.elevationSelected===1&&

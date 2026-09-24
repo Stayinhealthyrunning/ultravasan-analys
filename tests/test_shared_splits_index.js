@@ -222,7 +222,7 @@ assert.ok(indexHtml.indexOf('assets/course-intelligence.js')<indexHtml.indexOf('
 assert.ok(indexHtml.includes('id="courseIntelligenceRows"')&&indexHtml.includes('id="courseSegmentNarrative"'),'Race Intelligence Lab ska innehålla U6 segmenttabell och berättelse');
 assert.ok(nerdSource.includes('renderCourseIntelligence()')&&nerdSource.includes('selectCourseSegment'),'NerdLab ska drivas av gemensam Course Intelligence-segmentstate');
 assert.ok(nerdSource.includes('syncLegacySegmentLab(segment)'),'U6-segmentval ska synka befintligt Delsträckelabb');
-assert.ok(courseIntelligenceSource.includes("relative_scope:'selected-race-course-version'")&&courseIntelligenceSource.includes("component_weighting:'equal-four-components'")&&courseIntelligenceSource.includes('completeEvidence=segment=>')&&courseIntelligenceSource.includes('available.length===definitions.length'),'Difficulty-kontraktet ska kräva samma kompletta fyrkomponentspopulation och vara explicit relativt');
+assert.ok(!courseIntelligenceSource.includes('applyDifficultyIndex')&&!courseIntelligenceSource.includes('completeEvidence=segment=>')&&!courseIntelligenceSource.includes('equal-four-components'),'Course Difficulty får inte återinföra syntetisk sammanvägd poäng eller ranking');
 
 assert.ok(nerdSource.includes('renderCourseRouteView(model,selected)')&&nerdSource.includes('renderCourseElevationView(model,selected)')&&nerdSource.includes('renderCoursePaceView(model,selected)'),'U6 ska rendera karta, höjd och fart från samma valda segment');
 assert.ok(nerdSource.includes("querySelectorAll?.('[data-course-segment]')")&&nerdSource.includes('selectCourseSegment(node.dataset.courseSegment)'),'alla Course Intelligence-vyer ska använda samma segment-eventkontrakt');
@@ -233,7 +233,8 @@ assert.ok(nerdSource.includes('buildRacePlan(state.data,race,target,{minSample:5
 assert.ok(nerdSource.includes('Ingen resttid fördelas genom gissning'),'ofullständig CourseVersion ska ge explicit stopp, inte dold interpolering');
 assert.ok(courseIntelligenceSource.includes("source:historicalShare!==null?'historical-course-version':fallbackShare!==null?'distance-fallback':'unavailable'"),'loppplanen ska märka historik, fallback och saknat underlag per segment');
 assert.ok(stylesSourceU5.includes('.course-plan-source.distance-fallback')&&stylesSourceU5.includes('.course-plan-source.unavailable'),'loppplanens evidenskälla ska vara visuellt synlig');
-assert.ok(nerdSource.includes('COURSE_INTELLIGENCE_METHOD_HELP')&&nerdSource.includes('Fyra komponenter används med lika vikt')&&nerdSource.includes('Display-rutten kan vara en verifierad GPX från ett referensår'),'U6:s (i)-förklaring ska beskriva metod, komponenter och display-ruttens begränsning');
+assert.ok(nerdSource.includes('COURSE_INTELLIGENCE_METHOD_HELP')&&nerdSource.includes('separata empiriska dimensioner')&&nerdSource.includes('inte ihop till en totalscore eller ranking')&&nerdSource.includes('Display-rutten kan vara en verifierad GPX från ett referensår'),'U6:s (i)-förklaring ska beskriva separata mått och display-ruttens begränsning');
+for(const dimension of ['Mest stigning/km','Störst pacing loss','Störst fartspridning','Högst DNF-exit'])assert.ok(nerdSource.includes(dimension),`Course Difficulty ska visa dimensionen separat: ${dimension}`);
 assert.ok(nerdSource.includes('COURSE_PLAN_METHOD_HELP')&&nerdSource.includes('bara historiska fullföljare från exakt samma CourseVersion')&&nerdSource.includes('ingen resttid fördelas genom gissning'),'U6:s loppplan ska ha en utförlig metodförklaring och explicit anti-gissningsregel');
 
 const historyIntelligenceSource=fs.readFileSync(path.join(root,'docs/assets/history-intelligence.js'),'utf8');

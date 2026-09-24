@@ -10,7 +10,10 @@ const js=fs.readFileSync(path.join(vendor,'leaflet.js'));
 const css=fs.readFileSync(path.join(vendor,'leaflet.css'));
 const sri=buffer=>'sha256-'+crypto.createHash('sha256').update(buffer).digest('base64');
 
-assert.strictEqual(sri(js),'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','vendrad Leaflet JS måste matcha officiell 1.9.4 SRI');
+// Git autocrlf may materialize this LF-published vendor file as CRLF on Windows;
+// the HTML SRI is computed over the upstream LF bytes, not the checkout bytes.
+const normalizedJs=Buffer.from(js.toString('utf8').replace(/\r\n/g,'\n'),'utf8');
+assert.strictEqual(sri(normalizedJs),'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=','vendrad Leaflet JS måste matcha officiell 1.9.4 SRI efter line-ending-normalisering');
 assert.strictEqual(sri(css),'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=','vendrad Leaflet CSS måste matcha officiell 1.9.4 SRI');
 
 for(const file of ['layers.png','layers-2x.png','marker-icon.png','marker-icon-2x.png','marker-shadow.png']){
