@@ -24,7 +24,13 @@ def ready(page) -> None:
 
 
 def family_full(page, family: str) -> None:
-    page.evaluate("async family => { await ensureActiveFamilyFull(family, true); }", family)
+    page.evaluate("""async family => {
+      if(state.raceFamily!==family){
+        const button=document.querySelector(family==='uv45'?'#raceSwitch45':'#raceSwitch90');
+        if(typeof button?.onclick==='function')await button.onclick();
+      }
+      await ensureActiveFamilyFull(family, true);
+    }""", family)
     page.wait_for_function("family => state.raceFamily === family && state.dataPhase === 'full'", arg=family, timeout=60_000)
 
 
