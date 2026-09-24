@@ -154,3 +154,34 @@ Det finns ett enda nytt P2-arkitekturfynd kvar: **Hall of Fame-kartan använder 
 **READY FOR FINAL RE-AUDIT AFTER R01: YES**
 
 När R01 är stängd och hela CI + Playwright är grön behövs endast en kort verifieringsrevision av denna sista punkt; ingen ny full 91-punktsaudit behövs om diffen hålls strikt avgränsad.
+
+
+## 5. R01 closure – final verification
+
+Final remediation HEAD:
+
+`71cbcd566ba0e4017cc3ed53b5136b8893dbd28c`
+
+R01 is independently verified closed.
+
+Evidence:
+
+- `docs/assets/nerdlab.js::ensureHallLeaflet()` delegates to `UltravasanMapEngine.ensureLeaflet()`.
+- Hall of Fame no longer contains an external Leaflet JS/CSS loader.
+- repository search returns no `unpkg.com/leaflet` runtime references.
+- `tests/test_vendor_leaflet.js` includes NerdLab/Hall of Fame in the no-CDN contract.
+- Playwright opens a real Hall of Fame map and verifies local vendored Leaflet 1.9.4.
+- Playwright separately blocks the local Leaflet assets and verifies the SVG fallback.
+- no external Leaflet CDN request is permitted.
+- GitHub Actions run `35983108671` is green on exact HEAD `71cbcd56...`.
+- both `test` and `browser-smoke` jobs pass, including Python, JS, release audits, custom Chromium and independent Playwright.
+
+The R01 diff does not alter canonical race/result/split data, identity data or CourseVersion contracts.
+
+### Final re-audit verdict
+
+All confirmed P1/P2 blockers from the original independent audit and the subsequent re-audit are closed.
+
+**READY FOR INTEGRATION/MERGE CHAIN: YES**
+
+This is not yet a production freeze declaration. The staged branches must still be integrated into the current `main`, the Cloudflare Analytics changes currently on `main` must be preserved, and the full CI/browser suite must pass on the actual merged `main` before Ultravasan Analys 2.0 is frozen.
