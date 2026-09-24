@@ -452,10 +452,26 @@ const dialog = await evaluate(`(() => {
     journeyMissing:root?.querySelectorAll('.runner-journey-stop.missing').length||0,
     segmentCards:root?.querySelectorAll('[data-segment-card]').length||0,
     checkpointMarkers:root?.querySelectorAll('.runner-replay-checkpoint').length||0,
+    developmentRows:root?.querySelectorAll('[data-development-distance]').length||0,
+    developmentHeaders:[...root?.querySelectorAll('.runner-development-table thead th')||[]].map(node=>(node.textContent||'').trim()),
+    developmentText:root?.querySelector('.runner-development')?.innerText||'',
     scrubberMax:Number(root?.querySelector('[data-replay-scrubber]')?.max||0),
     playDisabled:Boolean(root?.querySelector('[data-replay-action="play"]')?.disabled),
   };
 })()`);
+const developmentBefore=await evaluate(`(() => ({
+  distance:document.querySelector('#runnerDetail [data-replay-value="distance"]')?.textContent||'',
+  playText:(document.querySelector('#runnerDetail [data-replay-action="play"]')?.innerText||'').trim(),
+  audioPaused:document.querySelector('#runnerDetail [data-replay-audio]')?.paused!==false,
+}))()`);
+await evaluate("document.querySelector('#runnerDetail [data-development-distance]')?.click()");
+await delay(120);
+const developmentSeek=await evaluate(`(() => ({
+  distance:document.querySelector('#runnerDetail [data-replay-value="distance"]')?.textContent||'',
+  playText:(document.querySelector('#runnerDetail [data-replay-action="play"]')?.innerText||'').trim(),
+  audioPaused:document.querySelector('#runnerDetail [data-replay-audio]')?.paused!==false,
+  selectedDistance:Number(document.querySelector('#runnerDetail [data-development-distance]')?.dataset.developmentDistance||0),
+}))()`);
 await evaluate("document.querySelector('#runnerDetail [data-replay-action=\"play\"]')?.click()");
 await delay(700);
 const replayProgress = await evaluate(`(() => ({
@@ -778,6 +794,7 @@ const checks = {
   splits: initial.splitCount === 8 && initial.checkpointKeys.join(",") === "smagan,mangsbodarna,risberg,evertsberg,oxberg,hokberg,eldris,mora",
   search: suggestion.hidden === false && suggestion.id === "11545" && suggestion.text.includes("Hermansson, Andreas") && suggestion.text.includes("2016"),
   dialog: dialog.open && dialog.replay && dialog.journey && dialog.journeyStops === 9 && dialog.segmentCards === 8 && dialog.checkpointMarkers === 9,
+  runnerDevelopment: dialog.developmentRows===8&&dialog.developmentHeaders.join('|')==='Kontroll|Tid|Hela fältet|Mitt kön|Min klass|Totalplats|Klassplats|Segment mot egen helfart'&&dialog.developmentText.includes('Checkpoint för checkpoint')&&dialog.developmentText.includes('Hela fältet')&&dialog.developmentText.includes('Mitt kön')&&dialog.developmentText.includes('Min klass')&&developmentSeek.selectedDistance>0&&developmentSeek.distance!==developmentBefore.distance&&developmentSeek.playText.includes('Spela loppet')&&developmentSeek.audioPaused,
   detail: dialog.text.includes("Hermansson, Andreas") && dialog.text.includes("7:18:00") && dialog.text.includes("Mora"),
   replay: !dialog.playDisabled && dialog.scrubberMax >= 90 && replayProgress.distance !== "0,0 km",
   sourceStringSecurity: sourceStringSecurity.available&&sourceStringSecurity.executed===0&&sourceStringSecurity.handlerAttribute===null&&sourceStringSecurity.injectedNodes===0&&sourceStringSecurity.statusClass==='status unknown'&&sourceStringSecurity.visibleText.includes('onmouseover'),
@@ -788,7 +805,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
