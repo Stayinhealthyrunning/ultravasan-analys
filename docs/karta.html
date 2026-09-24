@@ -99,5 +99,17 @@
 <script src="assets/app-state.js?v=20260923-u4"></script>
 <script src="assets/charts.js?v=20260923-u4"></script>
   <script src="assets/map.js?v=20260923-u4b"></script>
+
+  <!-- Cloudflare Web Analytics: production hostname only -->
+  <script>
+    if (window.location.hostname === 'www.loppanalys.se') {
+      const cloudflareAnalytics = document.createElement('script');
+      cloudflareAnalytics.type = 'module';
+      cloudflareAnalytics.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      cloudflareAnalytics.dataset.cfBeacon = '{"token":"5cb546838de64a1788ce6610d6cba5e0"}';
+      document.body.appendChild(cloudflareAnalytics);
+    }
+  </script>
+  <!-- End Cloudflare Web Analytics -->
 </body>
 </html>
