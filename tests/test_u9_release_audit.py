@@ -35,6 +35,8 @@ def test_release_freeze_matches_current_protected_repository(tmp_path: Path) -> 
         "splits": 139910,
     }
     assert result["checks"]["frontend_wiring"]["no_legacy_monolith_script"] is True
+    assert result["checks"]["frontend_wiring"]["runtime_assets_cache_busted"] is True
+    assert all(result["checks"]["frontend_wiring"]["cache_versions"].values())
     assert result["checks"]["ci_gate"]["u9_release_audit"] is True
 
 
@@ -63,3 +65,15 @@ def test_release_freeze_has_three_responsive_viewport_contracts() -> None:
     assert "document.scrollingElement||document.documentElement" in browser
     assert "scrolling.scrollWidth-scrolling.clientWidth" in browser
     assert "guideColumns" in browser
+
+
+def test_versioned_asset_refs_fails_when_release_asset_is_unversioned() -> None:
+    assets = ("assets/app.js", "assets/styles.css")
+    good = '<script src="assets/app.js?v=r4"></script><link href="assets/styles.css?v=u8" rel="stylesheet">'
+    bad = '<script src="assets/app.js"></script><link href="assets/styles.css?v=u8" rel="stylesheet">'
+    good_versions = release_audit.versioned_asset_refs(good, assets)
+    bad_versions = release_audit.versioned_asset_refs(bad, assets)
+    assert good_versions == {"assets/app.js": "r4", "assets/styles.css": "u8"}
+    assert all(good_versions.values())
+    assert bad_versions["assets/app.js"] is None
+    assert not all(bad_versions.values())
