@@ -626,6 +626,69 @@ async function openMapWithRunners(selected){
   if(win){try{win.opener=null}catch{}}else location.href=url;
 }
 window.openUltravasanMap=openMapWithRunners;
+function h2hCourseContext(model){
+  if(!model?.same_course_version||!model.results?.length)return null;
+  const result=model.results[0],race=state.data.races.find(item=>String(item.id)===String(result.race_id)),route=runnerRouteForRace(race);
+  if(!race||!route)return null;
+  const raceCheckpoints=state.data.checkpoints.filter(item=>String(item.race_id)===String(race.id)).sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
+  const splits=splitsForResult(result.id).slice().sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
+  return window.RunnerReplay?.createModel({race,result,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus})||null;
+}
+function h2hPlacementChange(value){
+  if(!Number.isFinite(Number(value))||Number(value)===0)return'oförändrad';
+  const n=Number(value);return `${n>0?'+':''}${n} ${n>0?'platser':'platser'}`;
+}
+function renderH2HCheckpoints(model){
+  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Checkpointgap och placeringsresa visas inte.</strong><span>De kräver exakt samma CourseVersion. Sluttid och explicita segment kan fortfarande följa sina egna jämförbarhetskontrakt.</span></aside>';
+  const rows=(model.checkpoints||[]).filter(row=>row.comparable);
+  if(!rows.length)return '<aside class="h2h-warning"><strong>Checkpointunderlag saknas.</strong><span>Inga gemensamma säkra passager kunde byggas för de valda resultaten.</span></aside>';
+  const headers=model.results.map(result=>`<th>${esc(headToHeadRunnerLabel(result))}</th>`).join('');
+  const body=rows.map(row=>{
+    const cells=model.results.map(result=>{
+      const entry=row.entries.find(item=>String(item.result_id)===String(result.id));
+      if(!entry?.exact||entry.elapsed_seconds==null)return '<td class="h2h-missing">Säker passage saknas</td>';
+      const gap=entry.gap_seconds===0?'snabbast':entry.gap_seconds==null?'gap saknas':`+${fmtTime(entry.gap_seconds)}`;
+      const place=entry.place_overall==null?'plats saknas':`plats ${entry.place_overall}`,movement=entry.placement_change==null?'':` · ${h2hPlacementChange(entry.placement_change)}`;
+      return `<td><strong>${fmtTime(entry.elapsed_seconds)}</strong><small>${esc(gap)} · ${esc(place+movement)}</small></td>`;
+    }).join('');
+    return `<tr data-h2h-checkpoint="${esc(row.checkpoint_key)}"><th>${esc(cleanCheckpointName(row.checkpoint_name))}</th>${cells}</tr>`;
+  }).join('');
+  return `<section class="h2h-checkpoints"><div class="runner-section-head"><div><p class="eyebrow">CHECKPOINTGAP</p><h3>Passagetid och placering</h3></div><span class="pill">samma CourseVersion</span></div><div class="table-wrap"><table class="h2h-checkpoint-table"><thead><tr><th>Kontroll</th>${headers}</tr></thead><tbody>${body}</tbody></table></div></section>`;
+}
+function renderH2HPlacementJourney(model){
+  if(!model.same_course_version)return'';
+  const rows=(model.checkpoints||[]).filter(row=>row.comparable),series=model.results.map((result,index)=>({
+    result,index,points:rows.map((row,rowIndex)=>{
+      const entry=row.entries.find(item=>String(item.result_id)===String(result.id));
+      return entry?.exact&&Number.isFinite(Number(entry.place_overall))?{rowIndex,row,place:Number(entry.place_overall)}:null;
+    }).filter(Boolean)
+  })).filter(item=>item.points.length>=2);
+  if(!series.length)return'';
+  const W=920,H=250,p={l:54,r:18,t:24,b:66},maxPlace=Math.max(2,...series.flatMap(item=>item.points.map(point=>point.place))),x=i=>p.l+i*(W-p.l-p.r)/(Math.max(1,rows.length-1)),y=place=>p.t+(place-1)*(H-p.t-p.b)/(maxPlace-1),colors=['#176d53','#d97835','#2563eb','#7c3aed','#b88718'];
+  let marks='';
+  for(let tick=0;tick<=4;tick++){const place=Math.max(1,Math.round(1+(maxPlace-1)*tick/4)),yy=y(place);marks+=`<line class="gridline" x1="${p.l}" x2="${W-p.r}" y1="${yy}" y2="${yy}"/><text x="${p.l-8}" y="${yy+4}" text-anchor="end">${place}</text>`}
+  series.forEach(item=>{
+    const color=colors[item.index%colors.length],path=item.points.map((point,i)=>`${i?'L':'M'}${x(point.rowIndex).toFixed(1)} ${y(point.place).toFixed(1)}`).join(' ');
+    marks+=`<path class="h2h-placement-line" d="${path}" fill="none" stroke="${color}" stroke-width="3"/>`;
+    item.points.forEach(point=>{const title=`${headToHeadRunnerLabel(item.result)} · ${cleanCheckpointName(point.row.checkpoint_name)} · plats ${point.place}`;marks+=`<circle class="h2h-placement-point" cx="${x(point.rowIndex).toFixed(1)}" cy="${y(point.place).toFixed(1)}" r="4.5" fill="${color}"><title>${esc(title)}</title></circle>`});
+  });
+  rows.forEach((row,i)=>marks+=`<text class="h2h-placement-label" x="${x(i)}" y="${H-18}" text-anchor="${i===0?'start':i===rows.length-1?'end':'middle'}">${esc(cleanCheckpointName(row.checkpoint_name))}</text>`);
+  const legend=series.map(item=>`<span><i style="background:${colors[item.index%colors.length]}"></i>${esc(headToHeadRunnerLabel(item.result))}</span>`).join('');
+  return `<section class="h2h-placement"><div class="runner-section-head"><div><p class="eyebrow">PLACERINGSRESA</p><h3>Officiell totalplacering genom loppet</h3></div></div><div class="h2h-placement-legend">${legend}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Officiell placering vid jämförbara checkpoints">${marks}</svg></section>`;
+}
+function renderH2HCourseContext(model){
+  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Karta och höjd visas inte gemensamt.</strong><span>De valda resultaten tillhör olika CourseVersions. Öppna Kartduell för separata banversioner utan att blanda geometri.</span></aside>';
+  const context=h2hCourseContext(model);
+  if(!context?.route?.points?.length)return '<aside class="h2h-warning"><strong>Verifierad rutt saknas.</strong><span>Checkpoint- och segmentjämförelsen fungerar ändå.</span></aside>';
+  const projection=window.RunnerReplay.mapProjection(context.route),routePath=context.route.points.map((point,index)=>{const [x,y]=projection.project(point);return `${index?'L':'M'}${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ');
+  const checkpoints=context.checkpoints.map(cp=>{const point=window.RunnerReplay.pointAtDistance(context.route.points,cp.distance);if(!point)return'';const [x,y]=projection.project(point);return `<g class="h2h-course-checkpoint"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/><title>${esc(cleanCheckpointName(cp.name))}</title></g>`}).join('');
+  let elevation='<div class="h2h-elevation-unavailable">Verifierad höjdprofil saknas för denna CourseVersion.</div>';
+  if(context.elevationProfile?.length){
+    const ep=window.RunnerReplay.elevationProjection(context,920),path=context.elevationProfile.map((point,index)=>`${index?'L':'M'}${ep.x(point[0]).toFixed(1)} ${ep.y(point[1]).toFixed(1)}`).join(' '),cpMarks=context.checkpoints.map(cp=>{const value=window.RunnerReplay.elevationAtDistance(context.elevationProfile,cp.distance);if(!Number.isFinite(Number(value)))return'';return `<line class="h2h-elevation-checkpoint" x1="${ep.x(cp.distance).toFixed(1)}" x2="${ep.x(cp.distance).toFixed(1)}" y1="${ep.y(value).toFixed(1)}" y2="${ep.height-ep.pad.b}"><title>${esc(cleanCheckpointName(cp.name))} · ${Math.round(value)} m</title></line>`}).join('');
+    elevation=`<svg class="h2h-elevation-svg" viewBox="0 0 ${ep.width} ${ep.height}" role="img" aria-label="Gemensam höjdprofil för vald CourseVersion"><path d="${path}" class="h2h-elevation-line"/>${cpMarks}</svg>`;
+  }
+  return `<section class="h2h-course-context"><div class="runner-section-head"><div><p class="eyebrow">BANA OCH HÖJD</p><h3>Gemensam CourseVersion</h3></div><span class="pill">${esc(model.course_version_ids?.[0]||'')}</span></div><div class="h2h-course-grid"><div class="h2h-course-map"><svg viewBox="0 0 920 430" role="img" aria-label="Gemensam bansträckning"><path d="${routePath}" class="h2h-course-route"/>${checkpoints}</svg></div><div class="h2h-course-elevation">${elevation}</div></div></section>`;
+}
 function headToHeadRunnerLabel(result){
   const race=state.data.races.find(item=>String(item.id)===String(result?.race_id));
   return `${result?.name_as_published||'Okänd löpare'} · ${race?.year||'–'}`;
@@ -661,7 +724,7 @@ function renderHeadToHead(model){
     }).join('')}</div></section>`
     :'<aside class="h2h-warning"><strong>Inga jämförbara delsträckor.</strong><span>CourseVersion-kontrakten öppnar inte något gemensamt segment för de valda resultaten.</span></aside>';
 
-  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Jämförelsen använder endast verifierade lopp- och segmentkontrakt. Olika banversioner får inte ett artificiellt tidsövertag.</p></header>${finish}${segments}</div>`;
+  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Sluttid, checkpoints och segment följer separata jämförbarhetskontrakt. Inga gap skapas där CourseVersion-evidensen inte tillåter det.</p></header>${finish}${renderH2HCheckpoints(model)}${renderH2HPlacementJourney(model)}${segments}${renderH2HCourseContext(model)}</div>`;
 }
 async function openHeadToHead(){
   if(compareState.selected.length<2)return;
