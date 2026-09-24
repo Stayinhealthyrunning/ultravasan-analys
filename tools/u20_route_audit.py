@@ -236,7 +236,16 @@ def build_report():
             "source_year": route.get("source_year") if route else None,
             "source_path": special_90.get("source_file") if family == "uv90" and year == 2026 else (route.get("source_file") if route else source_path),
             "source_url": special_90.get("source_url") if family == "uv90" and year == 2026 else None,
-            "source_sha256": hashlib.sha256((ROOT / special_90.get("source_file", "")).read_bytes()).hexdigest() if family == "uv90" and year == 2026 and (ROOT / special_90.get("source_file", "")).exists() else (hashlib.sha256((ROOT / "data/routes/ultravasan90-2026.json").read_bytes()).hexdigest() if family == "uv90" and year == 2026 else (hashlib.sha256((ROOT / route["source_file"]).read_bytes()).hexdigest() if route and (ROOT / route["source_file"]).exists() else None)),
+            "source_sha256": (
+                hashlib.sha256((ROOT / special_90.get("source_file", "")).read_bytes()).hexdigest()
+                if family == "uv90" and year == 2026 and (ROOT / special_90.get("source_file", "")).exists()
+                else (
+                    hashlib.sha256((ROOT / route["source_file"]).read_bytes()).hexdigest()
+                    if family != "uv90" or year != 2026
+                    if route and (ROOT / route["source_file"]).exists()
+                    else None
+                )
+            ),
             "geometry_fingerprint_sha256": fingerprint(points) if points else None,
             "official_distance_km": route.get("official_distance_km") if route else edition.get("distance_km"),
             "gps_distance_km": route.get("gps_distance_km") if route else None,
@@ -299,6 +308,7 @@ def build_report():
             "External references are curated evidence metadata; the audit does not silently download or promote third-party geometry into the repository.",
             "A year-specific route or race-day GPS trace proves evidence for that year, not equivalence to another year.",
             "The sampled nearest-track distance is a diagnostic and cannot establish course identity or equal performance difficulty on its own.",
+            "A missing original source file is never substituted by hashing a derived repository artifact; source_sha256 remains null in that case.",
             "CourseVersion/checkpoint equality is not sufficient evidence for whole-course comparison groups.",
         ],
     }
