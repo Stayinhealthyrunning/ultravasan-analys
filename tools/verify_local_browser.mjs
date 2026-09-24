@@ -811,17 +811,17 @@ const checks = {
   ),
   historyIntelligence:Boolean(
     u7Switch?.key==='ultravasan90-2025'&&u7History.api&&
-    u7History.fingerprintPerformanceYears.length===0&&u7History.fingerprintRows===5&&
-    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===false&&item[2]==='whole-course-comparable-race-medians'&&item[3]===0)&&
+    u7History.fingerprintPerformanceYears.join(',')==='2024'&&u7History.fingerprintRows===5&&
+    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===false&&item[2]==='whole-course-comparable-race-medians'&&item[3]===1)&&
     u7History.fingerprintMethod.includes('uttryckligt verifierade whole-course-grupp')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
     u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
-    u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries===0&&u7History.seriesRendered===0&&
-    u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Ingen flerårig helbaneserie är verifierad')&&
+    u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>=1&&u7History.seriesRendered===u7History.expectedSeries&&
+    u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('checkpoint-/segmentkontrakt')
   ),
   clubHistoryCourseVersion:Boolean(
-    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope===null&&
-    clubHistoryCourseVersion.paths.length===0&&clubHistoryCourseVersion.rankingRows.length===0&&
+    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope==='group:ultravasan90-2024-2025'&&
+    clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
     clubHistoryCourseVersion.method.includes('verifierade helbanenyckel')
   ),
   finishProgression:Boolean(
