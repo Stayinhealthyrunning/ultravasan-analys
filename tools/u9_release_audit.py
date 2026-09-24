@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,19 @@ def sha256(path: Path) -> str:
 
 def rel(path: str) -> Path:
     return ROOT / path
+
+
+
+def versioned_asset_refs(index: str, assets: tuple[str, ...]) -> dict[str, str | null]:
+    """Return explicit cache generations for release-critical frontend assets."""
+    versions: dict[str, str | None] = {}
+    for asset in assets:
+        match = re.search(
+            rf'(?:src|href)="{re.escape(asset)}\?v=([^"&]+)"',
+            index,
+        )
+        versions[asset] = match.group(1) if match else None
+    return versions
 
 
 def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[str, Any]:
@@ -98,6 +112,14 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
     }
 
     index = rel("docs/index.html").read_text(encoding="utf-8")
+    cache_assets = (
+        "assets/styles.css",
+        "assets/app.js",
+        "assets/audience-analytics.js",
+        "assets/nerdlab.js",
+        "assets/course-intelligence.js",
+    )
+    cache_versions = versioned_asset_refs(index, cache_assets)
     index_checks = {
         "catalog_before_loader": index.find("ultravasan-data-catalog.js") < index.find("assets/data-loader.js"),
         "no_legacy_monolith_script": 'src="data/ultravasan-data.js' not in index,
@@ -106,11 +128,11 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
         "runner_analysis_loaded": "assets/runner-analysis.js" in index,
         "course_intelligence_loaded": "assets/course-intelligence.js" in index,
         "history_intelligence_loaded": "assets/history-intelligence.js" in index,
-        "u8_cache_generation": "assets/styles.css?v=20260923-u8" in index and "assets/app.js?v=20260923-u8" in index,
+        "runtime_assets_cache_busted": all(cache_versions.values()),
     }
     if not all(index_checks.values()):
         issues.append("Frontend release wiring failed one or more U9 checks")
-    checks["frontend_wiring"] = {**index_checks, "ok": all(index_checks.values())}
+    checks["frontend_wiring"] = {**index_checks, "cache_versions": cache_versions, "ok": all(index_checks.values())}
 
     workflow = rel(".github/workflows/test.yml").read_text(encoding="utf-8")
     workflow_checks = {
