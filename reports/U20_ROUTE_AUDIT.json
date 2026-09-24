@@ -557,8 +557,15 @@
       "provenance_and_limitations": "Verifierad GPX-geometri för loppåret 2024. När denna geometri visas för 2023, 2025 eller 2026 är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
       "whole_course_comparison_group_current": null,
       "whole_course_comparison_group_recommended": null,
-      "whole_course_comparison_decision": "not assigned: year-specific route evidence exists for parts of this period, but no verified pairwise whole-course equivalence contract establishes that these editions are performance-comparable",
+      "whole_course_comparison_decision": "not assigned: organizer documents additional route changes for 2024 relative to 2023, including after the first hill and between Evertsberg and Oxberg",
       "external_route_evidence": [
+        {
+          "provider": "Vasaloppet/Mynewsdesk",
+          "url": "https://vasaloppet.mynewsdesk.com/pressreleases/ny-banstraeckning-2023-cyklister-och-loepare-tar-sig-an-vasaloppets-foersta-backe-3254898",
+          "evidence_type": "official-course-change-notice",
+          "strength": "strong",
+          "note": "Organizer documents the new 2023 start routing via the first Vasalopp hill, extending the running course to 92 km."
+        },
         {
           "provider": "plotaroute.com",
           "url": "https://www.plotaroute.com/route/2311089",
@@ -567,7 +574,7 @@
           "note": "A 2023-labelled downloadable route exists; the page itself does not establish organizer provenance."
         }
       ],
-      "evidence_status": "external-candidate",
+      "evidence_status": "external-year-specific",
       "display_route_contract": {
         "display_route_id": "ultravasan90-post2023",
         "display_geometry_usage": "reference-only",
@@ -635,10 +642,17 @@
       "source_point_count": 3906,
       "geometry_point_count": 1174,
       "provenance_and_limitations": "Verifierad GPX-geometri för loppåret 2024. När denna geometri visas för 2023, 2025 eller 2026 är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
-      "whole_course_comparison_group_current": null,
-      "whole_course_comparison_group_recommended": null,
-      "whole_course_comparison_decision": "not assigned: year-specific evidence explicitly records a temporary rerouting around km 57-59; same CourseVersion/checkpoint schema cannot override that whole-course difference",
+      "whole_course_comparison_group_current": "ultravasan90-2024-2025",
+      "whole_course_comparison_group_recommended": "ultravasan90-2024-2025",
+      "whole_course_comparison_decision": "verified: organizer documents the 2024 course changes from 2023, explicitly reports no course changes for 2025, and states that 2026 ends the multi-year temporary Evertsberg-Oxberg rerouting",
       "external_route_evidence": [
+        {
+          "provider": "Vasaloppet/Mynewsdesk",
+          "url": "https://vasaloppet.mynewsdesk.com/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188",
+          "evidence_type": "official-course-change-notice",
+          "strength": "strong",
+          "note": "Organizer states that 2024 differs from 2023 after the first hill and between Evertsberg and Oxberg, including the temporary Björnarvet rerouting caused by roadworks."
+        },
         {
           "provider": "ITRA/Trace de Trail",
           "url": "https://tracedetrail.fr/en/trace/267129",
@@ -660,7 +674,7 @@
         "display_geometry_usage": "exact-source-year",
         "display_geometry_source_year": 2024,
         "course_version_id": "uv90-2023-2025-v1",
-        "whole_course_comparison_group": null
+        "whole_course_comparison_group": "ultravasan90-2024-2025"
       },
       "source_url": null
     },
@@ -714,10 +728,17 @@
       "source_point_count": 3906,
       "geometry_point_count": 1174,
       "provenance_and_limitations": "Verifierad GPX-geometri för loppåret 2024. När denna geometri visas för 2023, 2025 eller 2026 är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
-      "whole_course_comparison_group_current": null,
-      "whole_course_comparison_group_recommended": null,
-      "whole_course_comparison_decision": "not assigned: year-specific route evidence exists for parts of this period, but no verified pairwise whole-course equivalence contract establishes that these editions are performance-comparable",
+      "whole_course_comparison_group_current": "ultravasan90-2024-2025",
+      "whole_course_comparison_group_recommended": "ultravasan90-2024-2025",
+      "whole_course_comparison_decision": "verified: organizer documents the 2024 course changes from 2023, explicitly reports no course changes for 2025, and states that 2026 ends the multi-year temporary Evertsberg-Oxberg rerouting",
       "external_route_evidence": [
+        {
+          "provider": "Vasaloppet",
+          "url": "https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025",
+          "evidence_type": "official-no-course-change-notice",
+          "strength": "strong",
+          "note": "Organizer explicitly states that there are no changes to the 2025 Ultravasan 90 course, establishing continuity from the 2024 edition."
+        },
         {
           "provider": "Vasahistorier",
           "url": "https://vasahistorier.se/ask/banan/ultravasan",
@@ -732,7 +753,7 @@
         "display_geometry_usage": "reference-only",
         "display_geometry_source_year": 2024,
         "course_version_id": "uv90-2023-2025-v1",
-        "whole_course_comparison_group": null
+        "whole_course_comparison_group": "ultravasan90-2024-2025"
       },
       "source_url": null
     },
@@ -788,8 +809,15 @@
       "provenance_and_limitations": "Vasaloppets officiella Ultravasan 90-sida länkar denna KMZ som GPS-fil för 2026 års bansträckning, uppdaterad 2026-06-10.",
       "whole_course_comparison_group_current": null,
       "whole_course_comparison_group_recommended": null,
-      "whole_course_comparison_decision": "not assigned: year-specific route evidence exists for parts of this period, but no verified pairwise whole-course equivalence contract establishes that these editions are performance-comparable",
+      "whole_course_comparison_decision": "not assigned: organizer explicitly states that 2026 returns to the ordinary Evertsberg-Oxberg route after several years of temporary rerouting",
       "external_route_evidence": [
+        {
+          "provider": "Vasaloppet",
+          "url": "https://vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2026-rekordmanga-lopare-anmalda/",
+          "evidence_type": "official-course-change-notice",
+          "strength": "strong",
+          "note": "Organizer states that 2026 returns to the ordinary Vasaloppsleden route between Evertsberg and Oxberg after several years of a temporary roadworks rerouting."
+        },
         {
           "provider": "Vasaloppet",
           "url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz",
@@ -853,11 +881,21 @@
       "decision": "diagnostic only; geometric similarity or difference is evidence input, not by itself a whole-course performance-equivalence contract"
     }
   ],
-  "whole_course_groups": [],
+  "whole_course_groups": [
+    {
+      "group": "ultravasan90-2024-2025",
+      "editions": [
+        "ultravasan90-2024",
+        "ultravasan90-2025"
+      ],
+      "status": "verified",
+      "reason": "Organizer evidence establishes 2024 changes from 2023, no course changes for 2025, and a 2026 return from the multi-year temporary Evertsberg-Oxberg routing."
+    }
+  ],
   "method_limitations": [
     "Repository reference geometry is not treated as exact annual route evidence unless its source year matches the RaceEdition.",
     "External references are curated evidence metadata; the audit does not silently download or promote third-party geometry into the repository.",
-    "A year-specific route or race-day GPS trace proves evidence for that year, not equivalence to another year.",
+    "A year-specific route or race-day GPS trace proves evidence for that year; cross-year equivalence additionally requires explicit continuity evidence such as an organizer no-change statement.",
     "The sampled nearest-track distance is a diagnostic and cannot establish course identity or equal performance difficulty on its own.",
     "A missing original source file is never substituted by hashing a derived repository artifact; source_sha256 remains null in that case.",
     "Display geometry, exact annual geometry evidence and whole-course performance comparability are separate contracts.",
@@ -879,6 +917,7 @@
   "strong_external_year_specific_evidence_editions": [
     "ultravasan90-2017",
     "ultravasan90-2022",
+    "ultravasan90-2023",
     "ultravasan45-2024",
     "ultravasan90-2024",
     "ultravasan90-2025",
@@ -893,8 +932,8 @@
         "ultravasan90-2025",
         "ultravasan90-2026"
       ],
-      "status": "not verified",
-      "reason": "2024 has documented rerouting around km 57-59 and the available annual tracks have not been pairwise verified as whole-course performance-equivalent."
+      "status": "rejected",
+      "reason": "Official organizer notices establish route changes between 2023 and 2024 and again between 2025 and 2026; only the 2024-2025 subset is verified as unchanged."
     }
   ],
   "display_route_contracts_complete": true
