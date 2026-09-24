@@ -388,12 +388,7 @@ function renderHall(){
 
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];
 function ensureHallLeaflet(){
-  if(window.L)return Promise.resolve(true);
-  return new Promise(resolve=>{
-    if(!document.querySelector('link[data-hall-leaflet]')){const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';css.dataset.hallLeaflet='1';document.head.appendChild(css)}
-    const existing=document.querySelector('script[data-hall-leaflet]');if(existing){const timer=setInterval(()=>{if(window.L){clearInterval(timer);resolve(true)}},80);setTimeout(()=>{clearInterval(timer);resolve(Boolean(window.L))},3500);return}
-    const js=document.createElement('script');js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';js.dataset.hallLeaflet='1';js.onload=()=>resolve(true);js.onerror=()=>resolve(false);document.head.appendChild(js);setTimeout(()=>resolve(Boolean(window.L)),4500);
-  });
+  return globalThis.UltravasanMapEngine?.ensureLeaflet?.({root:window,document})??Promise.resolve(false);
 }
 function routeSegmentPoints(route,a,b){return (route.points||[]).filter(p=>Number(p[2])>=a-.03&&Number(p[2])<=b+.03).map(p=>[Number(p[0]),Number(p[1])]);}
 function renderHallFallback(route){

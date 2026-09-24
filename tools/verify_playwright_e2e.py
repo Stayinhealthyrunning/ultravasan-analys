@@ -64,8 +64,11 @@ def run(base_url: str) -> None:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context(viewport={"width": 1536, "height": 1024})
         page = context.new_page()
+        leaflet_cdn_requests: list[str] = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
+        page.on("request", lambda request: leaflet_cdn_requests.append(request.url) if
+                "leaflet" in request.url.lower() and "127.0.0.1" not in request.url and "localhost" not in request.url else None)
         page.on("response", lambda response: failed_responses.append(f"{response.status} {response.url}")
                 if response.status >= 400 and response.url.startswith(local_origin) else None)
 
@@ -83,6 +86,44 @@ def run(base_url: str) -> None:
         page.goto(f"{base_url}?race=bogus&year=9999&sex=ZZ&status=<bad>", wait_until="domcontentloaded")
         ready(page)
         check(page.evaluate("() => ['uv90','uv45'].includes(state.raceFamily)"), "invalid URL params did not fail safe")
+
+        # Open a real Hall of Fame map and verify the shared local Leaflet bootstrap is used.
+        family_full(page, "uv90")
+        page.evaluate("() => { nerd.hall='veterans'; renderHall(); }")
+        page.locator("#hallOfFame .hall-row").first.click()
+        page.wait_for_function("() => document.querySelector('#hallMapDialog')?.open && (window.L?.version === '1.9.4' || document.querySelector('#hallMapCanvas .hall-fallback-svg'))", timeout=15_000)
+        hall_map = page.evaluate("""() => ({
+          dialog:!!document.querySelector('#hallMapDialog')?.open,
+          leaflet:window.L?.version||null,
+          script:document.querySelector('script[data-ultravasan-leaflet]')?.getAttribute('src')||null,
+          css:document.querySelector('link[data-ultravasan-leaflet]')?.getAttribute('href')||null,
+          fallback:!!document.querySelector('#hallMapCanvas .hall-fallback-svg'),
+          route:!!document.querySelector('#hallMapCanvas .leaflet-overlay-pane path')
+        })""")
+        check(hall_map["dialog"] and (hall_map["leaflet"] == "1.9.4" or hall_map["fallback"]),
+              f"Hall of Fame map did not load local Leaflet or SVG fallback: {hall_map}")
+        if hall_map["leaflet"]:
+            check("vendor/leaflet-1.9.4/leaflet.js" in (hall_map["script"] or "") and
+                  "vendor/leaflet-1.9.4/leaflet.css" in (hall_map["css"] or ""),
+                  f"Hall of Fame did not use vendored local Leaflet: {hall_map}")
+        check(not leaflet_cdn_requests, f"external Leaflet CDN request made: {leaflet_cdn_requests}")
+        page.locator("#hallMapDialog .dialog-close").click()
+
+        # Block the local vendor files and prove the real GPS route still renders through SVG fallback.
+        fallback_page = context.new_page()
+        fallback_page.on("pageerror", lambda error: errors.append(f"fallback:{error}"))
+        fallback_page.on("console", lambda message: errors.append(f"fallback:{message.text}") if message.type == "error" else None)
+        fallback_page.route("**/vendor/leaflet-1.9.4/leaflet.*", lambda route: route.abort())
+        fallback_page.goto(base_url, wait_until="domcontentloaded")
+        ready(fallback_page)
+        family_full(fallback_page, "uv90")
+        fallback_page.evaluate("() => { nerd.hall='veterans'; renderHall(); }")
+        fallback_page.locator("#hallOfFame .hall-row").first.click()
+        fallback_page.wait_for_selector("#hallMapCanvas .hall-fallback-svg", timeout=15_000)
+        fallback = fallback_page.evaluate("() => ({svg:!!document.querySelector('#hallMapCanvas .hall-fallback-svg'),note:document.querySelector('#hallMapCanvas .hall-map-fallback-note')?.textContent||'',dialog:!!document.querySelector('#hallMapDialog')?.open})")
+        check(fallback["svg"] and fallback["dialog"] and "GPS-rutten" in fallback["note"],
+              f"Hall map SVG fallback failed when local Leaflet was unavailable: {fallback}")
+        fallback_page.close()
 
         # Browser history: mutate a real filter and race/year, then prove back/forward sync URL and state.
         family_full(page, "uv90")
@@ -213,7 +254,7 @@ def run(base_url: str) -> None:
 
         check(not errors, f"unexpected browser console/page errors: {errors}")
         check(not failed_responses, f"unexpected local HTTP errors: {failed_responses}")
-        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "history Back/Forward", "XSS DOM negative", "CourseVersion club history", "finish progression", "Runner Development seek", "H2H CourseVersion", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
+        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "Hall of Fame local Leaflet and CDN absence", "Hall of Fame SVG fallback", "history Back/Forward", "XSS DOM negative", "CourseVersion club history", "finish progression", "Runner Development seek", "H2H CourseVersion", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
         context.close()
         browser.close()
 
