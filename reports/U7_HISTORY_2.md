@@ -196,7 +196,7 @@ U7 ersätter de generiska hjälptexterna för de berörda ytorna med utförliga
 förklaringar som anger:
 
 - vilken identitet som krävs,
-- när CourseVersion måste vara jämförbar,
+- när en explicit whole-course-jämförbarhetsnyckel krävs för prestationsmått,
 - vilka resultat som exkluderas,
 - hur normalnivån byggs,
 - hur banbyten visas,
@@ -209,13 +209,13 @@ förklaringar som anger:
 
 `tests/test_history_intelligence.js` verifierar bland annat att:
 
-- olika CourseVersions får olika jämförbarhetsnyckel,
-- fingeravtryckets prestationsreferens utesluter äldre inkompatibel CourseVersion,
+- RaceEditions utan gemensam verifierad whole-course-grupp får olika eller saknad jämförbarhetsnyckel,
+- fingeravtryckets prestationsreferens inkluderar endast loppår i samma verifierade whole-course-grupp,
 - loppår är observationsenheten i normalnivån,
 - könsfiltrering stänger kvinnorepresentationsindexet,
 - verifierad person delas i separata jämförbarhetsserier,
 - samma namn utan verifierad identitet inte skapar flerårshistorik,
-- Hall of Fame-förbättring inte korsar CourseVersion,
+- Hall of Fame-förbättring inte korsar en whole-course-jämförbarhetsgräns,
 - estimerad placeringspassage inte används i stark avslutning,
 - placeringslyft normaliseras mot startfältets storlek.
 
@@ -224,7 +224,7 @@ förklaringar som anger:
 - fartdelta sätts till saknat vid banbyte,
 - deltagardelta kan finnas kvar,
 - animationen inte interpolerar fart över gränsen,
-- CourseVersion-gränsen exponeras i modellen och UI-koden,
+- whole-course-jämförbarhetsgränsen exponeras i modellen och UI-koden,
 - både Klasshistorik och Klassutveckling använder samma jämförbarhetsnyckel.
 
 ### Chromium
@@ -232,8 +232,8 @@ förklaringar som anger:
 Den utökade browsergrinden verifierar med verklig data att:
 
 - History Intelligence är laddad,
-- UV90 2025 använder 2023 och 2024 som jämförbara prestationsreferenser men
-  inte den äldre pre-2023-banan,
+- UV90 2025 använder endast 2024 som verifierat whole-course-referensår; ett referensår visas men räcker inte för att publicera prestationsindex,
+- UV90 2023 och 2026 hålls utanför 2024–2025-serien trots att CourseVersion/checkpointkontrakt delvis kan överlappa,
 - fingeravtryckets metodik och referensscope syns,
 - Hall of Fame renderas från U7-modellen,
 - Klassutvecklingen visar minst en banversionsgräns,
