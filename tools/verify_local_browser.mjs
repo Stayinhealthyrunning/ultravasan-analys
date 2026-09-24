@@ -522,6 +522,40 @@ const h2hChangedCourse=await evaluate(`(() => ({
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
 
+const securityMutation=await evaluate(`(() => {
+  const target=state.filtered.find(item=>item&&item.status)||state.data.results.find(item=>item&&item.status);
+  if(!target)return {verified:false,reason:'no-result'};
+  const originalStatus=target.status;
+  const originalFiltered=state.filtered;
+  const originalPage=state.page;
+  window.__ULTRAVASAN_AUDIT_XSS=0;
+  target.status='FINISHED" onmouseover="window.__ULTRAVASAN_AUDIT_XSS=1';
+  state.filtered=[target];
+  state.page=1;
+  renderTable();
+  const badge=document.querySelector('#resultsBody .status');
+  badge?.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));
+  const result={
+    executed:window.__ULTRAVASAN_AUDIT_XSS===1,
+    hasHandler:Boolean(badge?.getAttribute('onmouseover')),
+    className:badge?.className||'',
+    text:badge?.textContent||'',
+    verified:Boolean(
+      badge&&
+      window.__ULTRAVASAN_AUDIT_XSS===0&&
+      !badge.getAttribute('onmouseover')&&
+      !badge.querySelector('img,script')&&
+      badge.textContent.includes('onmouseover')
+    ),
+  };
+  target.status=originalStatus;
+  state.filtered=originalFiltered;
+  state.page=originalPage;
+  renderTable();
+  delete window.__ULTRAVASAN_AUDIT_XSS;
+  return result;
+})()`);
+
 // Open the standalone map through shared URLs, without a session-data shortcut.
 // These navigations verify that result_id -> edition routing loads only the
 // requested RaceEdition payloads. The third case verifies a two-year UV90 duel.
@@ -625,10 +659,11 @@ const checks = {
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
+  securityMutation:securityMutation.verified,
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,securityMutation,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
