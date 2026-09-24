@@ -205,6 +205,25 @@ const u7History=await evaluate(`(() => {
 })()`);
 await delay(100);
 
+const u7ClubHistory=await evaluate(`(() => {
+  const nav=document.querySelector('.analysis-nav-button[data-target="klubbar"]');nav?.click();
+  const search=document.querySelector('#clubCompareSearch');
+  if(!search)return {verified:false,reason:'missing-search'};
+  search.value='STOCKHOLM';
+  search.dispatchEvent(new Event('input',{bubbles:true}));
+  const option=[...document.querySelectorAll('#clubCompareSuggestions .club-search-option')].find(item=>(item.textContent||'').toUpperCase().includes('STOCKHOLM'));
+  option?.click();
+  const paths=document.querySelectorAll('#clubHistoryChart .club-history-line');
+  return {
+    optionFound:Boolean(option),
+    pathCount:paths.length,
+    moveCommands:[...paths].map(path=>(path.getAttribute('d')?.match(/M/g)||[]).length),
+    historyText:(document.querySelector('#clubHistoryChart')?.textContent||'').slice(0,600),
+    verified:Boolean(option&&paths.length>=2&&[...paths].every(path=>(path.getAttribute('d')||'').startsWith('M'))),
+  };
+})()`);
+await delay(100);
+
 const u8Ux=await evaluate(`(() => {
   const guide=document.querySelector('#analysisGuideDetails');if(guide)guide.open=true;
   const classNav=document.querySelector('.analysis-nav-button[data-target="klasser"]');classNav?.click();
@@ -637,6 +656,7 @@ const checks = {
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
   ),
+  clubHistoryCourseVersion:u7ClubHistory.verified,
   uxMethodology:Boolean(
     u8Ux.skipHref==='#mainContent'&&u8Ux.h1Count===1&&u8Ux.mainFocusable==='-1'&&
     u8Ux.race90Pressed==='true'&&u8Ux.race45Pressed==='false'&&u8Ux.falseTabs===0&&
@@ -663,7 +683,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,securityMutation,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u7ClubHistory,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,securityMutation,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
