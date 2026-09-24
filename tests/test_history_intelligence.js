@@ -5,8 +5,8 @@ const H=require('../docs/assets/history-intelligence.js');
 const races=[
   {id:1,race_key:'ultravasan90-2019',year:2019,distance_km:90},
   {id:2,race_key:'ultravasan90-2023',year:2023,distance_km:92},
-  {id:3,race_key:'ultravasan90-2024',year:2024,distance_km:92},
-  {id:4,race_key:'ultravasan90-2025',year:2025,distance_km:92},
+  {id:3,race_key:'ultravasan90-2024',year:2024,distance_km:92,whole_course_comparison_group:'ultravasan90-2024-2025'},
+  {id:4,race_key:'ultravasan90-2025',year:2025,distance_km:92,whole_course_comparison_group:'ultravasan90-2024-2025'},
   {id:5,race_key:'ultravasan90-2026',year:2026,distance_km:92},
 ];
 const results=[];
@@ -33,11 +33,11 @@ assert.strictEqual(H.sameWholeCourse(races[1],races[2]),false);
 assert.strictEqual(H.sameWholeCourse(races[0],races[1]),false);
 
 const fp=H.fingerprint(dataset,races[3],{currentResults:results.filter(r=>r.race_id===4),referenceResults:results});
-assert.deepStrictEqual([...fp.performance_reference_years],[],'prestandareferens ska saknas när ingen whole-course-grupp är verifierad');
+assert.deepStrictEqual([...fp.performance_reference_years],[2024],'2025 ska använda 2024 som enda verifierade helbanereferens');
 const finishMetric=fp.metrics.find(metric=>metric.id==='finish_difficulty');
-assert.strictEqual(finishMetric.reference_n,0);
-assert.strictEqual(finishMetric.available,false);
-assert.ok(finishMetric.note.includes('Inga historiska helbanereferenser är verifierade'));
+assert.strictEqual(finishMetric.reference_n,1);
+assert.strictEqual(finishMetric.available,false,'ett referensår räcker inte för publicerat prestationsindex');
+assert.ok(finishMetric.note.includes('Inga andra loppår med verifierad whole-course-grupp har tillräckligt underlag'));
 assert.strictEqual(fp.metrics.find(metric=>metric.id==='female_share').reference_scope,'family-race-medians');
 assert.deepStrictEqual([...fp.structural_reference_years],[2019,2023,2024],'deltagandemått får fortfarande använda tidigare loppår');
 const fp2026=H.fingerprint(dataset,races[4],{currentResults:results.filter(r=>r.race_id===5),referenceResults:results});
@@ -62,9 +62,10 @@ const personRows=[
 const personDataset={...dataset,results:[...results,...personRows]};
 const ph=H.personHistory(personDataset,9004);
 assert.strictEqual(ph.verified_person,true);
-assert.strictEqual(ph.comparable_series.length,0,'utan verifierad whole-course-grupp ska ingen sluttidsutveckling konstrueras');
-assert.strictEqual(ph.focus_series,null);
-assert.strictEqual(ph.incomparable_to_focus_count,4,'alla fullföljanden ska synas men inget ska blandas till en tidsserie');
+assert.strictEqual(ph.comparable_series.length,1,'2024–2025 ska bilda exakt en verifierad sluttidsserie');
+assert.deepStrictEqual([...ph.focus_series.years],[2024,2025]);
+assert.strictEqual(ph.focus_series.count,2);
+assert.strictEqual(ph.incomparable_to_focus_count,2,'2019 och 2023 ska visas separat från den verifierade 2024–2025-serien');
 
 const unverified=[
   {id:9101,race_id:2,status:'FINISHED',finish_seconds:39000,sex:'M',name_as_published:'Samma Namn'},
@@ -78,7 +79,9 @@ assert.strictEqual(uh.comparable_series.length,0);
 
 const hallDataset={...dataset,results:[...results,...personRows]};
 const improved=H.hallOfFame(hallDataset,'uv90','improved').rows.find(row=>row.identity_key==='person:p1');
-assert.strictEqual(improved,undefined,'förbättring får inte rankas när ingen verifierad whole-course-serie finns');
+assert.ok(improved,'förbättring inom verifierad 2024–2025-serie ska kunna rankas');
+assert.strictEqual(improved.score,1000);
+assert.strictEqual(improved.scope,'group:ultravasan90-2024-2025');
 
 const chargeRace={id:20,race_key:'ultravasan90-2025',year:2025,distance_km:92};
 const chargeResults=[
