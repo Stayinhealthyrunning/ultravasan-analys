@@ -117,7 +117,7 @@ const race2025=real.races.find(race=>race.race_key==='ultravasan90-2025');
 const finisher2024=real.results.find(result=>result.race_id===race2024?.id&&result.status==='FINISHED');
 const finisher2025=real.results.find(result=>result.race_id===race2025?.id&&result.status==='FINISHED');
 const evidencedWholeCourse=analysis.headToHead(real,[finisher2024?.id,finisher2025?.id]);
-assert.strictEqual(evidencedWholeCourse.whole_course_comparable,true,'RaceEdition whole-course group must reach RunnerAnalysis H2H');
-assert.strictEqual(evidencedWholeCourse.finish_ranking.length,2,'verified RaceEdition group must enable finish-gap cards');
+assert.strictEqual(evidencedWholeCourse.whole_course_comparable,false,'olika RaceEditions utan verifierad whole-course-grupp får inte få sluttidsgap');
+assert.strictEqual(evidencedWholeCourse.finish_ranking.length,0,'saknad verifierad helbaneserie ska blockera finish-gap mellan år');
 
 console.log('OK: U5 RunnerAnalysis bygger Journey, verifierad profilhistorik och CourseVersion-säker head-to-head');
