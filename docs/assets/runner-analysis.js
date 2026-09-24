@@ -133,6 +133,10 @@
     });
   }
 
+  function journeyStartDescription(profile){
+    return profile?.journey?.status?.dns===true?'Ingen start registrerad':'Loppet börjar här';
+  }
+
   function pairwiseEvery(items,predicate){
     for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++)if(!predicate(items[i],items[j]))return false;
     return true;
@@ -260,6 +264,7 @@
     journeyForResult,
     historyForResult,
     profileForResult,
+    journeyStartDescription,
     headToHead,
   });
 });

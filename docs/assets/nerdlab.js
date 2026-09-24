@@ -325,22 +325,35 @@ function renderPercentiles(){
   el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i aktuellt urval</span></div><p>Varje nivå visar tidpunkten då motsvarande andel av de fullföljande hade gått i mål. Huvudvärdet följer hela det aktiva filterurvalet.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile" data-finish-share="${Math.round(q*100)}"><span>${label}</span><div class="percentile-primary"><small>Aktuellt urval</small><strong>${nTime(nQuantile(all,q))}</strong></div><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
 }
 
+function fieldFlowProgression(rows,checkpoints,getSplits=nSplitsForResult,isStarter=nIsStarter){
+  const starters=(rows||[]).filter(isStarter),ordered=(checkpoints||[]).filter(checkpoint=>Number(checkpoint.sequence_no)>0&&checkpoint.distance_km!=null&&Number.isFinite(Number(checkpoint.distance_km))).slice().sort((a,b)=>Number(a.sequence_no)-Number(b.sequence_no));
+  const passedByResult=new Map();
+  for(const result of starters){
+    const splits=getSplits(result.id)||[],byKey=new Map(splits.map(split=>[String(split.checkpoint_key||'').toLowerCase(),split]));
+    let passed=0,previousElapsed=0;
+    for(const checkpoint of ordered){
+      const split=byKey.get(String(checkpoint.checkpoint_key||'').toLowerCase()),elapsed=Number(split?.elapsed_seconds),estimated=split&&(split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true');
+      if(!split||estimated||!Number.isFinite(elapsed)||elapsed<=previousElapsed||(Number.isFinite(Number(result.finish_seconds))&&elapsed>Number(result.finish_seconds)))break;
+      passed++;previousElapsed=elapsed;
+    }
+    passedByResult.set(result.id,passed);
+  }
+  return {starters,passedByResult,stages:[{name:'Start',sequence_no:0,count:starters.length},...ordered.map((checkpoint,index)=>({name:String(checkpoint.name||'').replace('Mora mål','Mora'),sequence_no:Number(checkpoint.sequence_no),count:starters.filter(result=>(passedByResult.get(result.id)||0)>index).length}))]};
+}
+
 function renderFieldFlow(){
   const el=n$('#fieldFlow');if(!el)return;
   const rows=state.filtered,dns=rows.filter(nIsDns),starters=rows.filter(nIsStarter);
   if(!starters.length){el.innerHTML='<div class="empty">Inga registrerade startande i urvalet.</div>';return}
-  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),lastSeq=cps.at(-1)?.sequence_no??0;
-  const maxSeq=new Map();
-  starters.forEach(r=>nSplitsForResult(r.id).filter(s=>Number.isFinite(Number(s.sequence_no))).forEach(s=>maxSeq.set(r.id,Math.max(maxSeq.get(r.id)??-1,Number(s.sequence_no)))));
-  starters.filter(nIsFinished).forEach(r=>maxSeq.set(r.id,lastSeq));
+  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),flow=fieldFlowProgression(rows,cps),passedByResult=flow.passedByResult;
   const dnf=starters.filter(nIsDnf);
-  const locatedDnf=dnf.filter(r=>maxSeq.has(r.id)).length;
+  const locatedDnf=dnf.filter(r=>(passedByResult.get(r.id)||0)>0).length;
   if(dnf.length&&locatedDnf/dnf.length<.25){
     el.innerHTML=`<div class="flow-data-note"><strong>Avhoppen kan inte placeras längs banan för detta år</strong><span>${dnf.length.toLocaleString('sv-SE')} DNF är registrerade, men kontrollpassager saknas för de flesta. ${dns.length.toLocaleString('sv-SE')} DNS räknas inte som startande.</span></div>`;return;
   }
-  const stages=[{name:'Start',n:starters.length,seq:0},...cps.filter(c=>c.sequence_no>0).map(c=>({name:c.name.replace('Mora mål','Mora'),seq:c.sequence_no,n:starters.filter(r=>(maxSeq.get(r.id)??-1)>=c.sequence_no).length}))];
+  const stages=flow.stages.map(stage=>({name:stage.name,n:stage.count,seq:stage.sequence_no}));
   const max=starters.length||1;
-  el.innerHTML=`<div class="flow-summary"><strong>${starters.length.toLocaleString('sv-SE')} faktiska startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS är borttagna ur flödet. En senare passage innebär att löparen även räknas som passerad vid tidigare kontroller.</span></div><div class="flow-track">${stages.map((stage,i)=>{
+  el.innerHTML=`<div class="flow-summary"><strong>${starters.length.toLocaleString('sv-SE')} faktiska startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS är borttagna ur flödet. En löpare räknas bara genom en sammanhängande följd av exakta, ej estimerade passager från första kontrollen; senare observationer fyller inte saknade kontroller.</span></div><div class="flow-track">${stages.map((stage,i)=>{
     const next=stages[i+1],loss=next?Math.max(0,stage.n-next.n):0;
     return `<div class="flow-stage"><div class="flow-node" style="--size:${Math.max(14,Math.sqrt(stage.n/max)*100)}%"><strong>${stage.n}</strong><span>${nEsc(stage.name)}</span></div>${next?`<div class="flow-link"><i></i>${loss?`<em><span>${loss}</span><small>bröt före ${nEsc(next.name)}</small></em>`:'<em class="flow-zero"><span>0</span><small>avhopp</small></em>'}</div>`:''}</div>`;
   }).join('')}</div>`;
@@ -453,7 +466,7 @@ function renderRunnerHistory(resultId){
 }
 
 
-if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses};
+if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses,fieldFlowProgression};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const nerdTimer=setInterval(()=>{try{if(window.ULTRAVASAN_SPLITS_READY)initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
 }

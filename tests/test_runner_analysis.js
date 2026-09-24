@@ -77,6 +77,14 @@ const contradictory=analysis.journeyForResult(dataset,107);
 assert.strictEqual(contradictory.status.dnf,true);
 assert.strictEqual(contradictory.rows.at(-1).source,'missing','motsägelsefull DNF-sluttid får inte skapas som exakt målpassage');
 
+const realDns=real.results.find(row=>String(row.status||'').toUpperCase()==='DNS');
+assert.ok(realDns,'dataset ska innehålla ett verkligt DNS-resultat för copy-regressionen');
+const realDnsProfile=analysis.profileForResult(real,realDns.id);
+assert.strictEqual(realDnsProfile.journey.rows[0].source,'start','banreferensen kan finnas även om DNS saknar start');
+assert.strictEqual(realDnsProfile.journey.status.dns,true);
+assert.strictEqual(analysis.journeyStartDescription(realDnsProfile),'Ingen start registrerad');
+assert.strictEqual(analysis.journeyStartDescription(analysis.profileForResult(dataset,101)),'Loppet börjar här');
+
 const sameCourse=analysis.headToHead(dataset,[102,103]);
 assert.strictEqual(sameCourse.available,true);
 assert.strictEqual(sameCourse.same_course_version,true);
