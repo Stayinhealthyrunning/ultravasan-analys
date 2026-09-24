@@ -25,7 +25,7 @@ const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
 
-const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för median och Q25–Q75. Q10 och Q90 publiceras först vid n≥20 och visar den centrala 80-procentiga spridningen; Q25–Q75 visar den centrala 50-procentiga spridningen. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Difficulty är ett relativt segmentindex inom valt lopp/CourseVersion, inte ett absolut banbetyg. Fyra komponenter används med lika vikt: stigning per km, pacing loss per km, fartspridning och DNF-exit. Varje komponent omvandlas till percentil bland segmenten; alla fyra komponenterna och n≥5 krävs för en sammanvägd poäng.';
+const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för median och Q25–Q75. Q10 och Q90 publiceras först vid n≥20 och visar den centrala 80-procentiga spridningen; Q25–Q75 visar den centrala 50-procentiga spridningen. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Banans svårighetsprofil redovisar stigning per km, pacing loss, fartspridning och DNF-exit som separata empiriska dimensioner. De slås inte ihop till en totalscore eller ranking eftersom måtten kan samvariera och deras relativa vikt saknar verifierad extern grund. Dimensionerna beskriver observerade mönster inom valt lopp/CourseVersion och är inte i sig bevis för teknisk svårighet eller orsak.';
 const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansreservberäkning. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
 const HISTORY_ARCHIVE_METHOD_HELP='Löpararkivet använder endast verifierad personidentitet från U2. Namn, startnummer eller legacy athlete_id får aldrig ensamma länka en person mellan år. Alla verifierat länkade resultat visas, men sluttidsutveckling och bästa tid delas upp i separata jämförbarhetsserier enligt CourseVersion/whole-course-kontraktet. Ett banbyte visas därför som en ny serie i stället för att räknas som förbättring eller försämring. DNF och DNS kan visas i personens tidslinje men ingår inte i sluttidsserier. Om personidentiteten inte är verifierad visar arkivet endast det enskilda publicerade resultatet.';
 const HISTORY_HALL_METHOD_HELP='Hall of Fame använder History Intelligence i stället för namnmatchning. Flest lopp kräver verifierad personidentitet men kan räkna fullföljda starter över banversioner eftersom måttet bara är antal genomföranden. Mest förbättrad och Jämnast kräver verifierad personidentitet och räknas endast inom en uttryckligen jämförbar whole-course-serie; tider från andra CourseVersions blandas inte in. Starkast avslutning är ett enskilt-loppmått: endast exakta, ej estimerade placeringspassager används. Segmentet väljs strukturellt från CourseVersion (Evertsberg→mål när det finns, annars Eldris→mål) och placeringslyftet normaliseras mot antal faktiska startande för att minska fältstorleksbias. Kvinnor och män redovisas separat.';
@@ -120,7 +120,7 @@ function courseSegmentSelection(model){
     nerd.courseRaceId=String(model.race.id);nerd.courseSegmentKey=null;
   }
   let selected=model.segments.find(segment=>segment.key===nerd.courseSegmentKey);
-  if(!selected)selected=model.segments.find(segment=>segment.difficulty?.rank===1)||model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
+  if(!selected)selected=model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
   nerd.courseSegmentKey=selected?.key||null;
   return selected;
 }
@@ -140,15 +140,14 @@ function selectCourseSegment(key,{sync=true}={}){
 }
 function courseNarrative(segment){
   if(!segment)return'<div class="empty">Välj ett segment.</div>';
-  const terrain=segment.terrain||{},field=segment.field||{},difficulty=segment.difficulty||{};
-  const clauses=[];
-  if(Number.isFinite(Number(difficulty.score)))clauses.push(`relativ Difficulty ${Number(difficulty.score).toLocaleString('sv-SE',{maximumFractionDigits:1})}/100, rank ${difficulty.rank} av ${difficulty.segment_count_ranked}`);
-  else clauses.push('ingen Difficulty-poäng eftersom timingunderlaget inte når evidensgränsen');
+  const terrain=segment.terrain||{},field=segment.field||{},clauses=[];
+  if(Number.isFinite(Number(terrain.ascent_m_per_km)))clauses.push(`${Number(terrain.ascent_m_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} höjdmeter upp per km`);
   if(Number.isFinite(Number(terrain.ascent_m)))clauses.push(`${Math.round(terrain.ascent_m)} höjdmeter upp och ${Math.round(terrain.descent_m||0)} ned`);
   if(Number.isFinite(Number(field.median_pacing_loss_seconds_per_km)))clauses.push(`${nSigned(field.median_pacing_loss_seconds_per_km,' sek/km')} mot löparnas egen hel-loppsfart`);
+  if(Number.isFinite(Number(field.pace_iqr_seconds_per_km)))clauses.push(`IQR ${Number(field.pace_iqr_seconds_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} sek/km`);
   if(Number.isFinite(Number(field.median_placement_movement)))clauses.push(`median ${nSigned(field.median_placement_movement,' platser')}`);
   if(Number.isFinite(Number(field.dnf_exit_rate_pct)))clauses.push(`${Number(field.dnf_exit_rate_pct).toLocaleString('sv-SE',{maximumFractionDigits:1})} % DNF-exit bland registrerade segmententréer`);
-  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Svårighetsindex är relativt inom valt lopp/CourseVersion och är inte ett absolut banbetyg.</small></div>`;
+  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Indikatorerna redovisas separat och vägs inte ihop till ett banbetyg.</small></div>`;
 }
 function courseSvgProjector(points,width=620,height=250,padding=18){
   const valid=(points||[]).filter(point=>Number.isFinite(Number(point?.[0]))&&Number.isFinite(Number(point?.[1])));
@@ -264,22 +263,22 @@ function renderCourseIntelligence(existingModel=null){
   if(!model){rowsEl.innerHTML='<tr><td colspan="10">Course Intelligence saknar underlag.</td></tr>';summary.innerHTML='';narrative.innerHTML='';return}
   version.textContent=model.course_version_id;
   const selected=courseSegmentSelection(model);
-  const hardest=model.segments.find(segment=>segment.difficulty?.rank===1)||null;
-  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m);
+  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m_per_km);
   const pacing=courseMax(model.segments,segment=>segment.field?.median_pacing_loss_seconds_per_km);
+  const dispersion=courseMax(model.segments,segment=>segment.field?.pace_iqr_seconds_per_km);
   const attrition=courseMax(model.segments,segment=>segment.field?.dnf_exit_rate_pct);
   const summaryItems=[
-    ['Tuffast relativt',hardest?`${hardest.from_name} → ${hardest.to_name}`:'Underlag saknas',hardest?.difficulty?.score!=null?`${hardest.difficulty.score}/100`:'–'],
-    ['Mest stigning',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m!=null?`+${Math.round(climb.terrain.ascent_m)} m`:'–'],
-    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' sek/km'):'–'],
+    ['Mest stigning/km',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m_per_km!=null?`${Number(climb.terrain.ascent_m_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} m/km`:'–'],
+    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' s/km'):'–'],
+    ['Störst fartspridning',dispersion?`${dispersion.from_name} → ${dispersion.to_name}`:'Underlag saknas',dispersion?.field?.pace_iqr_seconds_per_km!=null?`${Number(dispersion.field.pace_iqr_seconds_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} s/km IQR`:'–'],
     ['Högst DNF-exit',attrition?`${attrition.from_name} → ${attrition.to_name}`:'Underlag saknas',attrition?.field?.dnf_exit_rate_pct!=null?`${attrition.field.dnf_exit_rate_pct} %`:'–'],
   ];
   summary.innerHTML=summaryItems.map(([label,title,value])=>`<article><span>${nEsc(label)}</span><strong>${nEsc(title)}</strong><em>${nEsc(value)}</em></article>`).join('');
   rowsEl.innerHTML=model.segments.map(segment=>{
-    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{},difficulty=segment.difficulty||{};
+    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{};
     const centralRange=field.sufficient_sample&&field.q25_pace_seconds_per_km!=null&&field.q75_pace_seconds_per_km!=null?`${nPace(field.q25_pace_seconds_per_km)}–${nPace(field.q75_pace_seconds_per_km)}`:'–',outerRange=field.outer_quantiles_available&&field.q10_pace_seconds_per_km!=null&&field.q90_pace_seconds_per_km!=null?`${nPace(field.q10_pace_seconds_per_km)}–${nPace(field.q90_pace_seconds_per_km)}`:'–';
     const distance=segment.distance_km==null?'underlag saknas':`${Number(segment.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:2})} km`;
-    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(centralRange)}</td><td>${nEsc(outerRange)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td><td>${difficulty.score==null?'–':`<strong>${difficulty.score}</strong><small>#${difficulty.rank}/${difficulty.segment_count_ranked}</small>`}</td></tr>`;
+    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${terrain.descent_m==null?'–':`−${Math.round(terrain.descent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(centralRange)}</td><td>${nEsc(outerRange)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td></tr>`;
   }).join('');
   narrative.innerHTML=courseNarrative(selected);
   renderCourseRouteView(model,selected);
