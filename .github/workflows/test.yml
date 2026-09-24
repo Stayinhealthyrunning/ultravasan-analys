@@ -181,3 +181,4 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:9223/json/version >/dev/null
           node tools/verify_local_browser.mjs
+          python tools/verify_playwright_e2e.py --base-url http://127.0.0.1:8765/

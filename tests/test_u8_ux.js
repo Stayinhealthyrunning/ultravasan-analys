@@ -8,6 +8,7 @@ const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const app=fs.readFileSync(path.join(root,'docs/assets/app.js'),'utf8');
 const audience=fs.readFileSync(path.join(root,'docs/assets/audience-analytics.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
+const nerd=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
 
 assert.ok(html.includes('<a class="skip-link" href="#mainContent">Hoppa till analysinnehållet</a>'),'sidan ska ha en synlig skip-länk vid tangentbordsfokus');
 assert.strictEqual((html.match(/<h1\b/g)||[]).length,1,'huvudsidan ska ha exakt en H1');
@@ -41,14 +42,21 @@ assert.ok(css.includes('@media(prefers-reduced-motion:reduce)')&&css.includes('.
 
 assert.ok(css.includes('.analysis-guide-grid{display:grid;grid-template-columns:repeat(4,1fr)')&&css.includes('@media(max-width:620px)')&&css.includes('.analysis-guide-grid{grid-template-columns:1fr}'),'metodguiden ska vara responsiv');
 
-assert.ok(html.includes('id="genderHistoryChart"')&&html.includes('Deltagande och fullföljande över åren'),'U8 ska behålla finish progression som årsvy');
-assert.ok(audience.includes('function renderGenderHistory()')&&audience.includes('stapel = startande · streckad linje = fullföljandegrad'),'finish progression ska visa både startande och fullföljandegrad');
+assert.ok(html.includes('id="genderHistoryChart"')&&html.includes('Deltagande och fullföljande över åren'),'U8 ska behålla könsuppdelad deltagande- och fullföljandehistorik som separat årsvy');
+assert.ok(audience.includes('function renderGenderHistory()')&&audience.includes('stapel = startande · streckad linje = fullföljandegrad'),'årsvyn ska visa både startande och fullföljandegrad');
+assert.ok(html.includes('När hade fältet gått i mål?')&&html.includes('id="percentileLadder"'),'primär finish progression ska ha egen tydlig vy');
+for(const label of ['10 % i mål','25 % i mål','50 % i mål · median','75 % i mål','90 % i mål']){
+  assert.ok(nerd.includes(label)&&audience.includes(label),'finish progression saknar beslutad nivå: '+label);
+}
+assert.ok(nerd.includes("all=rows.map(r=>Number(r.finish_seconds))")&&audience.includes("all=rows.map(r=>Number(r.finish_seconds))"),'finish progression ska beräkna huvudvärdet på aktiv FINISHED-kohort, inte endast separata könskohorter');
+assert.ok(app.includes('Nivåerna motsvarar Q10, Q25, Q50, Q75 och Q90'),'metodhjälpen ska förklara finish progression matematiskt');
 assert.ok(html.includes('id="genderRetentionChart"')&&html.includes('100 = snittfarten i loppet'),'U8 ska behålla fartretention med index 100 som referens');
 assert.ok(audience.includes("renderSexPaceChart(document.querySelector('#genderRetentionChart'),rows,false,true,'genderRetention')")&&audience.includes('Fart kvar i avslutningen'),'fartretention ska drivas av relativ fart och avslutningsinsikt');
 assert.ok(html.includes('Q25–Q75')&&app.includes('p25:quantile(g.vals,.25)')&&app.includes('p75:quantile(g.vals,.75)'),'U8 ska exponera och beräkna Q25–Q75 för delsträckors spridning');
 assert.ok(html.includes('id="classCompareChart"')&&html.includes('id="clubCompareChart"'),'U8 ska behålla gruppvyer för både klass och klubb/ort');
 assert.ok(audience.includes('function renderClassCompare(stats)')&&audience.includes('function renderClubCompare(stats)'),'klass- och klubbgruppvyerna ska ha egna jämförelserenderare');
 assert.ok(app.includes("['#genderRetentionChart'")&&app.includes("['#classCompareChart'")&&app.includes("['#clubCompareChart'"),'U8:s grupp- och retentionvyer ska ha metodhjälp');
-assert.ok(html.includes('assets/styles.css?v=20260923-u8')&&html.includes('assets/app.js?v=20260923-u8')&&html.includes('assets/audience-analytics.js?v=20260923-u8'),'alla ändrade U8-assets ska cache-bustas tillsammans');
+for(const asset of ['styles.css','course-intelligence.js','app.js','audience-analytics.js'])assert.ok(html.includes('assets/'+asset+'?v=20260924-r3'),'oförändrade remediation-assets ska behålla cacheversion: '+asset);
+assert.ok(html.includes('assets/nerdlab.js?v=20260924-r4'),'Hall of Fame-leafletfixen ska cache-busta NerdLab separat');
 
-console.log('OK: U8 UX/metodik låser finish progression, fartretention, Q25–Q75, gruppvyer, metodhjälp och tillgänglighet');
+console.log('OK: U8 UX/metodik låser finish progression 10/25/50/75/90, fartretention, spridning, gruppvyer, metodhjälp och tillgänglighet');

@@ -35,6 +35,7 @@ def test_release_freeze_matches_current_protected_repository(tmp_path: Path) -> 
         "splits": 139910,
     }
     assert result["checks"]["frontend_wiring"]["no_legacy_monolith_script"] is True
+    assert result["checks"]["frontend_wiring"]["remediation_cache_generation"] is True
     assert result["checks"]["ci_gate"]["u9_release_audit"] is True
 
 

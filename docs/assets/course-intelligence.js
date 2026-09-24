@@ -232,6 +232,8 @@
         }).length;
     const placements=timing.map(row=>row.placement_movement).filter(finite).map(Number);
     const enough=timing.length>=minSample;
+    const outerQuantileMinSample=Math.max(Number(minSample)||0,20);
+    const outerEnough=timing.length>=outerQuantileMinSample;
     const pace=timing.map(row=>row.pace_seconds_per_km);
     const pacingLoss=timing.map(row=>row.pacing_loss_seconds);
     const pacingLossPerKm=timing.map(row=>row.pacing_loss_seconds_per_km);
@@ -240,9 +242,13 @@
       timing_sample_n:timing.length,
       min_sample:minSample,
       sufficient_sample:enough,
+      outer_quantile_min_sample:outerQuantileMinSample,
+      outer_quantiles_available:outerEnough,
       median_pace_seconds_per_km:enough?round(charts.median(pace),1):null,
+      q10_pace_seconds_per_km:outerEnough?round(charts.quantile(pace,.10),1):null,
       q25_pace_seconds_per_km:enough?round(charts.quantile(pace,.25),1):null,
       q75_pace_seconds_per_km:enough?round(charts.quantile(pace,.75),1):null,
+      q90_pace_seconds_per_km:outerEnough?round(charts.quantile(pace,.90),1):null,
       pace_iqr_seconds_per_km:enough?round(charts.quantile(pace,.75)-charts.quantile(pace,.25),1):null,
       median_pace_index:enough?round(charts.median(paceIndex),1):null,
       median_pacing_loss_seconds:enough?round(charts.median(pacingLoss),1):null,
@@ -255,72 +261,6 @@
       segment_entrants_n:entrantCount,
       dnf_exit_rate_pct:entrantCount?round(dropouts/entrantCount*100,1):null,
     });
-  }
-
-  function percentileRank(values,value){
-    const rows=(values||[]).filter(finite).map(Number).sort((a,b)=>a-b);
-    if(!rows.length||!finite(value))return null;
-    if(rows.length===1)return .5;
-    const target=Number(value);
-    let below=0,equal=0;
-    for(const item of rows){
-      if(item<target)below++;
-      else if(item===target)equal++;
-    }
-    return (below+(equal-1)/2)/(rows.length-1);
-  }
-
-  function applyDifficultyIndex(segments){
-    const definitions=[
-      ['climb_load','terrain','ascent_m_per_km'],
-      ['pacing_loss','field','median_pacing_loss_seconds_per_km'],
-      ['pace_dispersion','field','pace_iqr_seconds_per_km'],
-      ['dnf_exit_rate','field','dnf_exit_rate_pct'],
-    ];
-    const completeEvidence=segment=>segment?.field?.sufficient_sample===true&&definitions.every(([,scope,key])=>finite(segment?.[scope]?.[key]));
-    const eligibleSegments=(segments||[]).filter(completeEvidence);
-    const distributions=Object.fromEntries(definitions.map(([name,scope,key])=>[
-      name,
-      eligibleSegments.map(segment=>Number(segment[scope][key]))
-    ]));
-
-    const scored=segments.map(segment=>{
-      const components={};
-      for(const [name,scope,key] of definitions){
-        const raw=segment?.[scope]?.[key];
-        const percentile=percentileRank(distributions[name],raw);
-        components[name]=Object.freeze({
-          value:finite(raw)?Number(raw):null,
-          percentile:percentile===null?null:round(percentile*100,1),
-        });
-      }
-      const available=Object.values(components).filter(component=>component.percentile!==null);
-      const eligible=completeEvidence(segment)&&available.length===definitions.length;
-      const score=eligible?round(available.reduce((sum,item)=>sum+item.percentile,0)/definitions.length,1):null;
-      return {
-        ...segment,
-        difficulty:Object.freeze({
-          score,
-          relative_scope:'selected-race-course-version',
-          component_weighting:'equal-four-components',
-          required_components:definitions.length,
-          evidence_components:available.length,
-          complete_evidence:eligible,
-          components:Object.freeze(components),
-        }),
-      };
-    });
-
-    const ranked=scored.filter(segment=>finite(segment.difficulty.score)).sort((a,b)=>b.difficulty.score-a.difficulty.score);
-    const rankByKey=new Map(ranked.map((segment,index)=>[segment.key,index+1]));
-    return scored.map(segment=>Object.freeze({
-      ...segment,
-      difficulty:Object.freeze({
-        ...segment.difficulty,
-        rank:rankByKey.get(segment.key)||null,
-        segment_count_ranked:ranked.length,
-      }),
-    }));
   }
 
   function comparableCourseRaces(dataset,race){
@@ -421,7 +361,7 @@
       terrain:terrainForSegment(route,segment),
       field:fieldStatsForSegment(dataset,race,segment,{results,minSample}),
     }));
-    const segments=applyDifficultyIndex(rawSegments);
+    const segments=rawSegments;
     return Object.freeze({
       race,
       race_family:edition.race_family,
@@ -448,8 +388,6 @@
     segmentTimingSample,
     locatedDnfExit,
     fieldStatsForSegment,
-    percentileRank,
-    applyDifficultyIndex,
     comparableCourseRaces,
     segmentElapsedSeconds,
     buildRacePlan,

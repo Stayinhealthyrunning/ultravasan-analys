@@ -106,7 +106,13 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
         "runner_analysis_loaded": "assets/runner-analysis.js" in index,
         "course_intelligence_loaded": "assets/course-intelligence.js" in index,
         "history_intelligence_loaded": "assets/history-intelligence.js" in index,
-        "u8_cache_generation": "assets/styles.css?v=20260923-u8" in index and "assets/app.js?v=20260923-u8" in index,
+        "remediation_cache_generation": all(asset in index for asset in (
+            "assets/styles.css?v=20260924-r3",
+            "assets/course-intelligence.js?v=20260924-r3",
+            "assets/app.js?v=20260924-r3",
+            "assets/nerdlab.js?v=20260924-r4",
+            "assets/audience-analytics.js?v=20260924-r3",
+        )),
     }
     if not all(index_checks.values()):
         issues.append("Frontend release wiring failed one or more U9 checks")

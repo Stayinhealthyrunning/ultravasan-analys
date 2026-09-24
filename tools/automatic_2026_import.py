@@ -213,17 +213,21 @@ def collect_list_entries(race: dict[str, Any], raw: Path, delay: float, force: b
     try:
         partitions = ["M", "W"] if race.get("partition_by_sex") else [None]
         for sex in partitions:
-            empty = 0
+            partition_complete = False
             for page in range(1, min(max_pages, int(race.get("max_pages") or max_pages)) + 1):
                 best: list[dict[str, Any]] = []
                 used_url = None
+                advertised_last_page = None
                 for variant, url in enumerate(mika_import.list_url_candidates(race, page, sex), 1):
                     require_official_url(url)
                     cache = raw / race["race_key"] / "lists" / (sex or "ALL") / f"page-{page:03d}-v{variant}.html"
                     html, status, cached, mode = fetcher.get(url, cache)
                     candidate = mika_import.extract_entries(html, url)
+                    candidate_last_page = mika_import.advertised_last_page(html)
                     if sum(item["idp"] not in entries for item in candidate) > sum(item["idp"] not in entries for item in best):
-                        best, used_url = candidate, url
+                        best, used_url, advertised_last_page = candidate, url, candidate_last_page
+                    elif candidate_last_page is not None and advertised_last_page is None:
+                        advertised_last_page = candidate_last_page
                     if any(item["idp"] not in entries for item in candidate):
                         break
                 new = 0
@@ -231,13 +235,40 @@ def collect_list_entries(race: dict[str, Any], raw: Path, delay: float, force: b
                     if item["idp"] not in entries:
                         entries[item["idp"]] = item
                         new += 1
-                pages.append({"partition": sex or "ALL", "page": page, "entries": len(best), "new": new, "total": len(entries), "url": used_url})
-                empty = empty + 1 if new == 0 else 0
-                if empty >= int(race.get("empty_pages_to_stop") or 2):
+                confirmed = advertised_last_page is not None and page >= advertised_last_page
+                pages.append({"partition": sex or "ALL", "page": page, "entries": len(best), "new": new, "total": len(entries), "url": used_url,
+                              "advertised_last_page": advertised_last_page, "end_confirmed": confirmed})
+                if advertised_last_page is None:
+                    # A blank/repeated page is not proof of the official list boundary.
                     break
+                if confirmed:
+                    partition_complete = True
+                    break
+            if not partition_complete:
+                pages.append({"partition": sex or "ALL", "page": None, "end_confirmed": False,
+                              "error": "official pagination boundary was not reached"})
     finally:
         fetcher.close()
     return list(entries.values()), pages
+
+
+def list_pagination_complete(pages: list[dict[str, Any]]) -> bool:
+    """Require contiguous pages through the official boundary for every partition."""
+    partitions: dict[str, list[dict[str, Any]]] = {}
+    for page in pages:
+        partitions.setdefault(str(page.get("partition") or "ALL"), []).append(page)
+    if not partitions:
+        return False
+    for items in partitions.values():
+        valid = [item for item in items if item.get("page") is not None]
+        boundaries = {item.get("advertised_last_page") for item in valid if item.get("advertised_last_page") is not None}
+        if len(boundaries) != 1:
+            return False
+        last_page = int(next(iter(boundaries)))
+        reached = [int(item["page"]) for item in valid if item.get("end_confirmed")]
+        if reached != [last_page] or sorted(int(item["page"]) for item in valid) != list(range(1, last_page + 1)):
+            return False
+    return True
 
 
 def representative_sample(items: list[dict[str, Any]], size: int = 10) -> list[dict[str, Any]]:
@@ -386,8 +417,11 @@ def race_quality(conn: sqlite3.Connection, race_key: str, import_report: dict[st
         "mora_finish_mismatch": mora_mismatch, "wrong_sources": wrong_sources,
         "identity_collisions": len(collisions), "parser_warnings": parser_warnings,
         "strict_parser_errors": strict_errors,
+        "pagination_complete": bool(import_report.get("pagination_complete")),
         "checkpoint_coverage": dict(Counter(row["checkpoint_key"] for row in split_rows)),
     }
+    if not checks["pagination_complete"]:
+        blockers.append("official result pagination was not proven complete")
     if count < int(lower): blockers.append("participant count below minimum gate")
     if official_records != count: blockers.append("database participant count differs from official list")
     if not finishers: blockers.append("no finishers")
@@ -420,11 +454,11 @@ def import_one(race_key: str, db: Path, config: Path, raw: Path, report: Path, d
     return json.loads(report.read_text(encoding="utf-8"))
 
 
-def export_to(db: Path, directory: Path) -> dict[str, Any]:
+def export_to(db: Path, directory: Path, config: Path = uvtool.DEFAULT_CONFIG) -> dict[str, Any]:
     directory.mkdir(parents=True, exist_ok=True)
     json_path = directory / "ultravasan.json"
     js_path = directory / "ultravasan-data.js"
-    uvtool.export_web(SimpleNamespace(db=db, output=json_path, js_output=js_path))
+    uvtool.export_web(SimpleNamespace(db=db, output=json_path, js_output=js_path, modular_dir=None, config=config))
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     if len(payload["results"]) != manifest["results"] or len(payload["splits"]) != manifest["splits"]:
@@ -478,10 +512,14 @@ def command_availability(args: argparse.Namespace) -> dict[str, Any]:
     for family, meta in targets.items():
         race = target_race(generated, meta["race_key"])
         entries, pages = collect_list_entries(race, args.raw, args.delay, args.force)
-        probe = probe_details(race, entries, args.raw, args.delay, args.force) if entries else {"details": [], "blocking_issues": 0, "finished": 0, "with_splits": 0}
+        pagination_complete = list_pagination_complete(pages)
+        probe = probe_details(race, entries, args.raw, args.delay, args.force) if entries and pagination_complete else {"details": [], "blocking_issues": 0, "finished": 0, "with_splits": 0}
         blockers = availability_blockers(family, len(entries), probe, year=year)
+        if not pagination_complete:
+            blockers.append("official list pagination boundary was not reached or could not be proven")
         all_blockers.extend(f"{family}: {blocker}" for blocker in blockers)
-        races[family] = {"race_key": meta["race_key"], "event_code": race["event_code"], "participants": len(entries), "pages": pages, "probe": probe, "blockers": blockers}
+        races[family] = {"race_key": meta["race_key"], "event_code": race["event_code"], "participants": len(entries), "pages": pages,
+                         "pagination_complete": pagination_complete, "probe": probe, "blockers": blockers}
     report = {"generated_at": utc_now(), "mode": "availability", "target_year": year, "ready": not all_blockers, "source_host": OFFICIAL_HOST, "discovered": discovered, "races": races, "blockers": all_blockers}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -496,6 +534,10 @@ def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
     availability = json.loads(args.availability_report.read_text(encoding="utf-8"))
     if not availability.get("ready"):
         raise RuntimeError("Availability report is not ready")
+    availability_races = availability.get("races") or {}
+    incomplete = [family for family in targets if not (availability_races.get(family) or {}).get("pagination_complete")]
+    if incomplete:
+        raise RuntimeError("Availability did not prove complete official pagination: " + ", ".join(incomplete))
     if args.work_db.resolve() == args.production_db.resolve():
         raise ValueError("Work database must be separate from production")
     args.work_db.parent.mkdir(parents=True, exist_ok=True)
@@ -531,7 +573,7 @@ def command_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         blockers.append("semantic idempotency failed")
     if not (history_before == history_after_first == history_after_second):
         blockers.append(f"protected pre-{year} data changed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.generated_config)
     changed = first_digest != before_digest
     report = {
         "generated_at": utc_now(), "mode": "full-dry-run", "target_year": year, "decision": "READY" if not blockers else "BLOCKED",
@@ -571,7 +613,7 @@ def command_apply(args: argparse.Namespace) -> dict[str, Any]:
     atomic_copy(args.work_db, args.production_db)
     atomic_copy(args.generated_config, args.config)
     staging = args.export_dir / "apply-staging"
-    export = export_to(args.production_db, staging)
+    export = export_to(args.production_db, staging, args.config)
     for name in ("ultravasan.json", "ultravasan-data.js", "manifest.json"):
         atomic_copy(staging / name, args.web_dir / name)
     with uvtool.connect(args.production_db) as conn:
@@ -596,6 +638,10 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
     availability = json.loads(args.availability_report.read_text(encoding="utf-8"))
     if not availability.get("ready") or not args.work_db.exists():
         raise RuntimeError("A ready availability report and existing work database are required")
+    availability_races = availability.get("races") or {}
+    incomplete = [family for family in targets if not (availability_races.get(family) or {}).get("pagination_complete")]
+    if incomplete:
+        raise RuntimeError("Availability did not prove complete official pagination: " + ", ".join(incomplete))
     race_keys = [meta["race_key"] for meta in targets.values()]
     first_reports = {}
     for family, meta in targets.items():
@@ -626,7 +672,7 @@ def command_resume_full_dry_run(args: argparse.Namespace) -> dict[str, Any]:
         blockers.append("semantic idempotency failed")
     if history_before != history_after:
         blockers.append(f"protected pre-{year} data changed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.generated_config)
     report = {"generated_at": utc_now(), "mode": "resume-full-dry-run", "target_year": year,
               "decision": "READY" if not blockers else "BLOCKED", "changed": first_digest != before_digest,
               "production_target_digest_before": before_digest, "target_digest_after": first_digest,
@@ -677,7 +723,7 @@ def command_simulate_2025(args: argparse.Namespace) -> dict[str, Any]:
     blockers.extend(f"second-{family}: {item}" for family, quality in quality2.items() for item in quality["blockers"])
     if digest1 != digest2 or counts1 != counts2:
         blockers.append("2025 semantic idempotency failed")
-    export = export_to(args.work_db, args.export_dir)
+    export = export_to(args.work_db, args.export_dir, args.config)
     report = {"generated_at": utc_now(), "mode": "simulate-2025", "decision": "PASS" if not blockers else "BLOCKED", "qualities": quality1, "second_pass_qualities": quality2, "idempotent": digest1 == digest2 and counts1 == counts2, "export": export, "blockers": blockers}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

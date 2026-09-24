@@ -25,7 +25,7 @@ const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
 
-const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för publicerade medianmått. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Difficulty är ett relativt segmentindex inom valt lopp/CourseVersion, inte ett absolut banbetyg. Fyra komponenter används med lika vikt: stigning per km, pacing loss per km, fartspridning och DNF-exit. Varje komponent omvandlas till percentil bland segmenten; alla fyra komponenterna och n≥5 krävs för en sammanvägd poäng.';
+const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast segment som finns explicit i vald CourseVersion. Tävlingsdistans och checkpointordning kommer från CourseVersion-kontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för median och Q25–Q75. Q10 och Q90 publiceras först vid n≥20 och visar den centrala 80-procentiga spridningen; Q25–Q75 visar den centrala 50-procentiga spridningen. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Banans svårighetsprofil redovisar stigning per km, pacing loss, fartspridning och DNF-exit som separata empiriska dimensioner. De slås inte ihop till en totalscore eller ranking eftersom måtten kan samvariera och deras relativa vikt saknar verifierad extern grund. Dimensionerna beskriver observerade mönster inom valt lopp/CourseVersion och är inte i sig bevis för teknisk svårighet eller orsak.';
 const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma CourseVersion som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit CourseVersion-distans användas som tydligt märkt distansreservberäkning. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
 const HISTORY_ARCHIVE_METHOD_HELP='Löpararkivet använder endast verifierad personidentitet från U2. Namn, startnummer eller legacy athlete_id får aldrig ensamma länka en person mellan år. Alla verifierat länkade resultat visas, men sluttidsutveckling och bästa tid delas upp i separata jämförbarhetsserier enligt CourseVersion/whole-course-kontraktet. Ett banbyte visas därför som en ny serie i stället för att räknas som förbättring eller försämring. DNF och DNS kan visas i personens tidslinje men ingår inte i sluttidsserier. Om personidentiteten inte är verifierad visar arkivet endast det enskilda publicerade resultatet.';
 const HISTORY_HALL_METHOD_HELP='Hall of Fame använder History Intelligence i stället för namnmatchning. Flest lopp kräver verifierad personidentitet men kan räkna fullföljda starter över banversioner eftersom måttet bara är antal genomföranden. Mest förbättrad och Jämnast kräver verifierad personidentitet och räknas endast inom en uttryckligen jämförbar whole-course-serie; tider från andra CourseVersions blandas inte in. Starkast avslutning är ett enskilt-loppmått: endast exakta, ej estimerade placeringspassager används. Segmentet väljs strukturellt från CourseVersion (Evertsberg→mål när det finns, annars Eldris→mål) och placeringslyftet normaliseras mot antal faktiska startande för att minska fältstorleksbias. Kvinnor och män redovisas separat.';
@@ -120,7 +120,7 @@ function courseSegmentSelection(model){
     nerd.courseRaceId=String(model.race.id);nerd.courseSegmentKey=null;
   }
   let selected=model.segments.find(segment=>segment.key===nerd.courseSegmentKey);
-  if(!selected)selected=model.segments.find(segment=>segment.difficulty?.rank===1)||model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
+  if(!selected)selected=model.segments.find(segment=>segment.distance_km!=null)||model.segments[0];
   nerd.courseSegmentKey=selected?.key||null;
   return selected;
 }
@@ -140,15 +140,14 @@ function selectCourseSegment(key,{sync=true}={}){
 }
 function courseNarrative(segment){
   if(!segment)return'<div class="empty">Välj ett segment.</div>';
-  const terrain=segment.terrain||{},field=segment.field||{},difficulty=segment.difficulty||{};
-  const clauses=[];
-  if(Number.isFinite(Number(difficulty.score)))clauses.push(`relativ Difficulty ${Number(difficulty.score).toLocaleString('sv-SE',{maximumFractionDigits:1})}/100, rank ${difficulty.rank} av ${difficulty.segment_count_ranked}`);
-  else clauses.push('ingen Difficulty-poäng eftersom timingunderlaget inte når evidensgränsen');
+  const terrain=segment.terrain||{},field=segment.field||{},clauses=[];
+  if(Number.isFinite(Number(terrain.ascent_m_per_km)))clauses.push(`${Number(terrain.ascent_m_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} höjdmeter upp per km`);
   if(Number.isFinite(Number(terrain.ascent_m)))clauses.push(`${Math.round(terrain.ascent_m)} höjdmeter upp och ${Math.round(terrain.descent_m||0)} ned`);
   if(Number.isFinite(Number(field.median_pacing_loss_seconds_per_km)))clauses.push(`${nSigned(field.median_pacing_loss_seconds_per_km,' sek/km')} mot löparnas egen hel-loppsfart`);
+  if(Number.isFinite(Number(field.pace_iqr_seconds_per_km)))clauses.push(`IQR ${Number(field.pace_iqr_seconds_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} sek/km`);
   if(Number.isFinite(Number(field.median_placement_movement)))clauses.push(`median ${nSigned(field.median_placement_movement,' platser')}`);
   if(Number.isFinite(Number(field.dnf_exit_rate_pct)))clauses.push(`${Number(field.dnf_exit_rate_pct).toLocaleString('sv-SE',{maximumFractionDigits:1})} % DNF-exit bland registrerade segmententréer`);
-  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Svårighetsindex är relativt inom valt lopp/CourseVersion och är inte ett absolut banbetyg.</small></div>`;
+  return `<div><p class="eyebrow">VALT SEGMENT</p><h4>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</h4><p>${nEsc(clauses.join(' · '))}.</p><small>Indikatorerna redovisas separat och vägs inte ihop till ett banbetyg.</small></div>`;
 }
 function courseSvgProjector(points,width=620,height=250,padding=18){
   const valid=(points||[]).filter(point=>Number.isFinite(Number(point?.[0]))&&Number.isFinite(Number(point?.[1])));
@@ -261,25 +260,25 @@ function renderCourseIntelligence(existingModel=null){
   const rowsEl=n$('#courseIntelligenceRows'),summary=n$('#courseIntelligenceSummary'),version=n$('#courseIntelligenceVersion'),narrative=n$('#courseSegmentNarrative');
   if(!rowsEl||!summary||!version||!narrative)return;
   const model=existingModel||currentCourseModel();
-  if(!model){rowsEl.innerHTML='<tr><td colspan="9">Course Intelligence saknar underlag.</td></tr>';summary.innerHTML='';narrative.innerHTML='';return}
+  if(!model){rowsEl.innerHTML='<tr><td colspan="10">Course Intelligence saknar underlag.</td></tr>';summary.innerHTML='';narrative.innerHTML='';return}
   version.textContent=model.course_version_id;
   const selected=courseSegmentSelection(model);
-  const hardest=model.segments.find(segment=>segment.difficulty?.rank===1)||null;
-  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m);
+  const climb=courseMax(model.segments,segment=>segment.terrain?.ascent_m_per_km);
   const pacing=courseMax(model.segments,segment=>segment.field?.median_pacing_loss_seconds_per_km);
+  const dispersion=courseMax(model.segments,segment=>segment.field?.pace_iqr_seconds_per_km);
   const attrition=courseMax(model.segments,segment=>segment.field?.dnf_exit_rate_pct);
   const summaryItems=[
-    ['Tuffast relativt',hardest?`${hardest.from_name} → ${hardest.to_name}`:'Underlag saknas',hardest?.difficulty?.score!=null?`${hardest.difficulty.score}/100`:'–'],
-    ['Mest stigning',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m!=null?`+${Math.round(climb.terrain.ascent_m)} m`:'–'],
-    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' sek/km'):'–'],
+    ['Mest stigning/km',climb?`${climb.from_name} → ${climb.to_name}`:'Underlag saknas',climb?.terrain?.ascent_m_per_km!=null?`${Number(climb.terrain.ascent_m_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} m/km`:'–'],
+    ['Störst pacing loss',pacing?`${pacing.from_name} → ${pacing.to_name}`:'Underlag saknas',pacing?.field?.median_pacing_loss_seconds_per_km!=null?nSigned(pacing.field.median_pacing_loss_seconds_per_km,' s/km'):'–'],
+    ['Störst fartspridning',dispersion?`${dispersion.from_name} → ${dispersion.to_name}`:'Underlag saknas',dispersion?.field?.pace_iqr_seconds_per_km!=null?`${Number(dispersion.field.pace_iqr_seconds_per_km).toLocaleString('sv-SE',{maximumFractionDigits:1})} s/km IQR`:'–'],
     ['Högst DNF-exit',attrition?`${attrition.from_name} → ${attrition.to_name}`:'Underlag saknas',attrition?.field?.dnf_exit_rate_pct!=null?`${attrition.field.dnf_exit_rate_pct} %`:'–'],
   ];
   summary.innerHTML=summaryItems.map(([label,title,value])=>`<article><span>${nEsc(label)}</span><strong>${nEsc(title)}</strong><em>${nEsc(value)}</em></article>`).join('');
   rowsEl.innerHTML=model.segments.map(segment=>{
-    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{},difficulty=segment.difficulty||{};
-    const range=field.sufficient_sample&&field.q25_pace_seconds_per_km!=null&&field.q75_pace_seconds_per_km!=null?`${nPace(field.q25_pace_seconds_per_km)}–${nPace(field.q75_pace_seconds_per_km)}`:'–';
+    const active=segment.key===selected?.key,field=segment.field||{},terrain=segment.terrain||{};
+    const centralRange=field.sufficient_sample&&field.q25_pace_seconds_per_km!=null&&field.q75_pace_seconds_per_km!=null?`${nPace(field.q25_pace_seconds_per_km)}–${nPace(field.q75_pace_seconds_per_km)}`:'–',outerRange=field.outer_quantiles_available&&field.q10_pace_seconds_per_km!=null&&field.q90_pace_seconds_per_km!=null?`${nPace(field.q10_pace_seconds_per_km)}–${nPace(field.q90_pace_seconds_per_km)}`:'–';
     const distance=segment.distance_km==null?'underlag saknas':`${Number(segment.distance_km).toLocaleString('sv-SE',{minimumFractionDigits:1,maximumFractionDigits:2})} km`;
-    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(range)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td><td>${difficulty.score==null?'–':`<strong>${difficulty.score}</strong><small>#${difficulty.rank}/${difficulty.segment_count_ranked}</small>`}</td></tr>`;
+    return `<tr class="${active?'selected':''} ${segment.distance_km==null?'course-segment-unavailable':''}" data-course-segment="${nEsc(segment.key)}" tabindex="0" aria-selected="${active?'true':'false'}"><td><strong>${nEsc(segment.from_name)} → ${nEsc(segment.to_name)}</strong><small>n=${field.timing_sample_n||0}</small></td><td>${nEsc(distance)}</td><td>${terrain.ascent_m==null?'–':`+${Math.round(terrain.ascent_m)} m`}</td><td>${terrain.descent_m==null?'–':`−${Math.round(terrain.descent_m)} m`}</td><td>${field.median_pace_seconds_per_km==null?'–':nPace(field.median_pace_seconds_per_km)}</td><td>${nEsc(centralRange)}</td><td>${nEsc(outerRange)}</td><td>${field.median_pacing_loss_seconds_per_km==null?'–':nSigned(field.median_pacing_loss_seconds_per_km,' s/km')}</td><td>${field.median_placement_movement==null?'–':nSigned(field.median_placement_movement)}</td><td>${field.dnf_exit_rate_pct==null?'–':field.dnf_exit_rate_pct+' %'}</td></tr>`;
   }).join('');
   narrative.innerHTML=courseNarrative(selected);
   renderCourseRouteView(model,selected);
@@ -320,28 +319,41 @@ function renderSegmentLab(){
   n$$('.segment-row').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
 }
 function renderPercentiles(){
-  const el=n$('#percentileLadder');if(!el)return;const rows=state.filtered.filter(nIsFinished),men=rows.filter(r=>nSex(r)==='M').map(r=>Number(r.finish_seconds)),women=rows.filter(r=>nSex(r)==='F').map(r=>Number(r.finish_seconds));
-  if(men.length<2&&women.length<2){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
-  const levels=[[.01,'Topp 1 %'],[.05,'Topp 5 %'],[.10,'Topp 10 %'],[.25,'Topp 25 %'],[.50,'Median'],[.75,'75-percentilen']];
-  el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i urvalet</span></div><p>Tiden visar gränsen för respektive nivå. Lägre tid är bättre.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile"><span>${label}</span><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
+  const el=n$('#percentileLadder');if(!el)return;const rows=state.filtered.filter(nIsFinished),all=rows.map(r=>Number(r.finish_seconds)).filter(Number.isFinite),men=rows.filter(r=>nSex(r)==='M').map(r=>Number(r.finish_seconds)).filter(Number.isFinite),women=rows.filter(r=>nSex(r)==='F').map(r=>Number(r.finish_seconds)).filter(Number.isFinite);
+  if(all.length<2){el.innerHTML='<div class="empty">Fler sluttider krävs</div>';return}
+  const levels=[[.10,'10 % i mål'],[.25,'25 % i mål'],[.50,'50 % i mål · median'],[.75,'75 % i mål'],[.90,'90 % i mål']];
+  el.innerHTML=`<div class="percentile-overview"><div><strong>${rows.length.toLocaleString('sv-SE')}</strong><span>fullföljande i aktuellt urval</span></div><p>Varje nivå visar tidpunkten då motsvarande andel av de fullföljande hade gått i mål. Huvudvärdet följer hela det aktiva filterurvalet.</p></div><div class="percentile-grid">${levels.map(([q,label])=>`<article class="percentile-tile" data-finish-share="${Math.round(q*100)}"><span>${label}</span><div class="percentile-primary"><small>Aktuellt urval</small><strong>${nTime(nQuantile(all,q))}</strong></div><div class="percentile-sex-values"><div class="male"><small>Män</small><strong>${nTime(nQuantile(men,q))}</strong></div><div class="female"><small>Kvinnor</small><strong>${nTime(nQuantile(women,q))}</strong></div></div></article>`).join('')}</div>`;
+}
+
+function fieldFlowProgression(rows,checkpoints,getSplits=nSplitsForResult,isStarter=nIsStarter){
+  const starters=(rows||[]).filter(isStarter),ordered=(checkpoints||[]).filter(checkpoint=>Number(checkpoint.sequence_no)>0&&checkpoint.distance_km!=null&&Number.isFinite(Number(checkpoint.distance_km))).slice().sort((a,b)=>Number(a.sequence_no)-Number(b.sequence_no));
+  const passedByResult=new Map();
+  for(const result of starters){
+    const splits=getSplits(result.id)||[],byKey=new Map(splits.map(split=>[String(split.checkpoint_key||'').toLowerCase(),split]));
+    let passed=0,previousElapsed=0;
+    for(const checkpoint of ordered){
+      const split=byKey.get(String(checkpoint.checkpoint_key||'').toLowerCase()),elapsed=Number(split?.elapsed_seconds),estimated=split&&(split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true');
+      if(!split||estimated||!Number.isFinite(elapsed)||elapsed<=previousElapsed||(Number.isFinite(Number(result.finish_seconds))&&elapsed>Number(result.finish_seconds)))break;
+      passed++;previousElapsed=elapsed;
+    }
+    passedByResult.set(result.id,passed);
+  }
+  return {starters,passedByResult,stages:[{name:'Start',sequence_no:0,count:starters.length},...ordered.map((checkpoint,index)=>({name:String(checkpoint.name||'').replace('Mora mål','Mora'),sequence_no:Number(checkpoint.sequence_no),count:starters.filter(result=>(passedByResult.get(result.id)||0)>index).length}))]};
 }
 
 function renderFieldFlow(){
   const el=n$('#fieldFlow');if(!el)return;
   const rows=state.filtered,dns=rows.filter(nIsDns),starters=rows.filter(nIsStarter);
   if(!starters.length){el.innerHTML='<div class="empty">Inga registrerade startande i urvalet.</div>';return}
-  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),lastSeq=cps.at(-1)?.sequence_no??0;
-  const maxSeq=new Map();
-  starters.forEach(r=>nSplitsForResult(r.id).filter(s=>Number.isFinite(Number(s.sequence_no))).forEach(s=>maxSeq.set(r.id,Math.max(maxSeq.get(r.id)??-1,Number(s.sequence_no)))));
-  starters.filter(nIsFinished).forEach(r=>maxSeq.set(r.id,lastSeq));
+  const cps=state.data.checkpoints.filter(c=>c.race_id===state.raceId).sort((a,b)=>a.sequence_no-b.sequence_no),flow=fieldFlowProgression(rows,cps),passedByResult=flow.passedByResult;
   const dnf=starters.filter(nIsDnf);
-  const locatedDnf=dnf.filter(r=>maxSeq.has(r.id)).length;
+  const locatedDnf=dnf.filter(r=>(passedByResult.get(r.id)||0)>0).length;
   if(dnf.length&&locatedDnf/dnf.length<.25){
     el.innerHTML=`<div class="flow-data-note"><strong>Avhoppen kan inte placeras längs banan för detta år</strong><span>${dnf.length.toLocaleString('sv-SE')} DNF är registrerade, men kontrollpassager saknas för de flesta. ${dns.length.toLocaleString('sv-SE')} DNS räknas inte som startande.</span></div>`;return;
   }
-  const stages=[{name:'Start',n:starters.length,seq:0},...cps.filter(c=>c.sequence_no>0).map(c=>({name:c.name.replace('Mora mål','Mora'),seq:c.sequence_no,n:starters.filter(r=>(maxSeq.get(r.id)??-1)>=c.sequence_no).length}))];
+  const stages=flow.stages.map(stage=>({name:stage.name,n:stage.count,seq:stage.sequence_no}));
   const max=starters.length||1;
-  el.innerHTML=`<div class="flow-summary"><strong>${starters.length.toLocaleString('sv-SE')} faktiska startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS är borttagna ur flödet. En senare passage innebär att löparen även räknas som passerad vid tidigare kontroller.</span></div><div class="flow-track">${stages.map((stage,i)=>{
+  el.innerHTML=`<div class="flow-summary"><strong>${starters.length.toLocaleString('sv-SE')} faktiska startande</strong><span>${dns.length.toLocaleString('sv-SE')} DNS är borttagna ur flödet. En löpare räknas bara genom en sammanhängande följd av exakta, ej estimerade passager från första kontrollen; senare observationer fyller inte saknade kontroller.</span></div><div class="flow-track">${stages.map((stage,i)=>{
     const next=stages[i+1],loss=next?Math.max(0,stage.n-next.n):0;
     return `<div class="flow-stage"><div class="flow-node" style="--size:${Math.max(14,Math.sqrt(stage.n/max)*100)}%"><strong>${stage.n}</strong><span>${nEsc(stage.name)}</span></div>${next?`<div class="flow-link"><i></i>${loss?`<em><span>${loss}</span><small>bröt före ${nEsc(next.name)}</small></em>`:'<em class="flow-zero"><span>0</span><small>avhopp</small></em>'}</div>`:''}</div>`;
   }).join('')}</div>`;
@@ -376,12 +388,7 @@ function renderHall(){
 
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];
 function ensureHallLeaflet(){
-  if(window.L)return Promise.resolve(true);
-  return new Promise(resolve=>{
-    if(!document.querySelector('link[data-hall-leaflet]')){const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';css.dataset.hallLeaflet='1';document.head.appendChild(css)}
-    const existing=document.querySelector('script[data-hall-leaflet]');if(existing){const timer=setInterval(()=>{if(window.L){clearInterval(timer);resolve(true)}},80);setTimeout(()=>{clearInterval(timer);resolve(Boolean(window.L))},3500);return}
-    const js=document.createElement('script');js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';js.dataset.hallLeaflet='1';js.onload=()=>resolve(true);js.onerror=()=>resolve(false);document.head.appendChild(js);setTimeout(()=>resolve(Boolean(window.L)),4500);
-  });
+  return globalThis.UltravasanMapEngine?.ensureLeaflet?.({root:window,document})??Promise.resolve(false);
 }
 function routeSegmentPoints(route,a,b){return (route.points||[]).filter(p=>Number(p[2])>=a-.03&&Number(p[2])<=b+.03).map(p=>[Number(p[0]),Number(p[1])]);}
 function renderHallFallback(route){
@@ -454,7 +461,7 @@ function renderRunnerHistory(resultId){
 }
 
 
-if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses};
+if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses,fieldFlowProgression};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const nerdTimer=setInterval(()=>{try{if(window.ULTRAVASAN_SPLITS_READY)initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
 }
