@@ -679,6 +679,27 @@ const h2hComparable=await evaluate(`(() => ({
   text:document.querySelector('#headToHeadDetail')?.innerText||'',
 }))()`);
 
+await evaluate(`(() => {
+  const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
+  compareState.selected=[];
+  const data=window.ULTRAVASAN_ACTIVE_DATA,race=data.races.find(item=>item.race_key==='ultravasan90-2025');
+  const finishers=data.results.filter(item=>item.race_id===race?.id&&item.status==='FINISHED').slice(0,2);
+  finishers.forEach(item=>addCompareRunner(item.id));
+  document.querySelector('#compareH2HButton')?.click();
+})()`);
+await delay(250);
+const h2hSameEdition=await evaluate(`(() => ({
+  open:document.querySelector('#headToHeadDialog')?.open||false,
+  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
+  elevation:Boolean(document.querySelector('#headToHeadDetail .h2h-course-elevation svg')),
+  segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
+  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  text:document.querySelector('#headToHeadDetail')?.innerText||'',
+}))()`);
+
 const changedCourseId=await evaluate(`(() => {
   const data=window.ULTRAVASAN_ACTIVE_DATA;
   const race=data.races.find(item=>item.race_key==='ultravasan90-2019');
@@ -790,19 +811,18 @@ const checks = {
   ),
   historyIntelligence:Boolean(
     u7Switch?.key==='ultravasan90-2025'&&u7History.api&&
-    u7History.fingerprintPerformanceYears.includes(2023)&&u7History.fingerprintPerformanceYears.includes(2024)&&
-    !u7History.fingerprintPerformanceYears.includes(2019)&&u7History.fingerprintRows===5&&
-    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===true&&item[2]==='whole-course-comparable-race-medians'&&item[3]>=2)&&
-    u7History.fingerprintMethod.includes('loppårsmedianerna')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
-    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion beskriver')&&u7History.classMethod.includes('ny jämförbarhetsserie')&&
-    u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>0&&u7History.seriesRendered===u7History.expectedSeries&&
-    u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
-    u7History.archiveMethod.includes('Namnet')===false&&u7History.archiveMethod.includes('Namn, startnummer')
+    u7History.fingerprintPerformanceYears.length===0&&u7History.fingerprintRows===5&&
+    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===false&&item[2]==='whole-course-comparable-race-medians'&&item[3]===0)&&
+    u7History.fingerprintMethod.includes('uttryckligt verifierade whole-course-grupp')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
+    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
+    u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries===0&&u7History.seriesRendered===0&&
+    u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Ingen flerårig helbaneserie är verifierad')&&
+    u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('checkpoint-/segmentkontrakt')
   ),
   clubHistoryCourseVersion:Boolean(
-    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.paths.length>=1&&
-    clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
-    clubHistoryCourseVersion.method.includes('CourseVersion')
+    clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope===null&&
+    clubHistoryCourseVersion.paths.length===0&&clubHistoryCourseVersion.rankingRows.length===0&&
+    clubHistoryCourseVersion.method.includes('verifierade helbanenyckel')
   ),
   finishProgression:Boolean(
     finishProgression.shares.join(',')==='10,25,50,75,90'&&
@@ -842,12 +862,13 @@ const checks = {
     sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('CHECKPOINTGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===0 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.warnings>=1 && h2hComparable.text.includes('Sluttider jämförs inte direkt') && h2hComparable.text.includes('CHECKPOINTGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
+  h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings>=2 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt') && h2hChangedCourse.text.includes('Checkpointgap och placeringsresa visas inte'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
