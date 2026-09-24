@@ -194,6 +194,8 @@ assert.ok(/(?:assets\/styles\.css\?v=20260923-(?:u6[a-z]*|u7[a-z]*|u8[a-z]*)|ass
 
 assert.ok(indexHtml.includes('id="compareH2HButton"')&&indexHtml.includes('id="headToHeadDialog"'),'U5 ska exponera Head-to-head från befintligt löparurval');
 assert.ok(appSource.includes('window.RunnerAnalysis?.headToHead(state.data,ids)'),'Head-to-head UI ska använda RunnerAnalysis-modellen');
+assert.strictEqual((appSource.match(/function renderHeadToHead\(/g)||[]).length,1,'endast en aktiv renderHeadToHead-implementation får finnas');
+assert.strictEqual((appSource.match(/async function openHeadToHead\(/g)||[]).length,1,'endast en aktiv openHeadToHead-implementation får finnas');
 assert.ok(appSource.includes('function renderHeadToHead(model)')&&appSource.includes('whole_course_comparable'),'UI ska respektera CourseVersion-jämförbarhet');
 assert.ok(appSource.includes("$$('.runner-chip').forEach"),'alla valda löparchips ska ha fungerande borttagning');
 assert.ok(stylesSourceU5.includes('U5 Runner Analysis 2.0: Head-to-head'),'Head-to-head ska ha responsiv U5-layout');
