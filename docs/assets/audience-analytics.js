@@ -168,6 +168,39 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     const map={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};Object.entries(map).forEach(([k,id])=>{const v=p.get(k),el=document.querySelector('#'+id);if(v&&el&&([...el.options||[]].length===0||[...el.options||[]].some(o=>o.value===v)||el.tagName==='INPUT'))el.value=v});const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');if(clubInput&&club?.value)clubInput.value=advanced.clubDisplay.get(club.value)||'';
   }
 
+  async function restoreHistoryState(){
+    const params=new URLSearchParams(location.search);
+    const requestedFamily=['uv90','uv45'].includes(params.get('race'))?params.get('race'):state.raceFamily;
+    advanced.restoringHistory=true;
+    try{
+      if(state.raceFamily!==requestedFamily)await switchRaceFamily(requestedFamily,true);
+      let race=selectAudienceRace(state.data.races,requestedFamily,params.get('year'));
+      if(race&&state.dataPhase==='active'&&!state.data.results.some(result=>String(result.race_id)===String(race.id))){
+        await ensureActiveFamilyCore(requestedFamily,false);
+        race=selectAudienceRace(state.data.races,requestedFamily,params.get('year'));
+      }
+      if(race){
+        const year=document.querySelector('#yearFilter');
+        if(year)year.value=String(race.id);
+        state.raceId=race.id;
+        refreshFilters();
+      }
+      const controls={sex:'sexFilter',class:'classFilter',club:'clubFilter',status:'statusFilter'};
+      Object.values(controls).forEach(id=>{const el=document.querySelector('#'+id);if(el)el.value=''});
+      Object.entries(controls).forEach(([key,id])=>{
+        const value=params.get(key),el=document.querySelector('#'+id);
+        if(value&&el&&([...el.options||[]].length===0||[...el.options||[]].some(option=>option.value===value)||el.tagName==='INPUT'))el.value=value;
+      });
+      const club=document.querySelector('#clubFilter'),clubInput=document.querySelector('#clubFilterSearch');
+      if(clubInput)clubInput.value=club?.value?(advanced.clubDisplay.get(club.value)||''):'';
+      state.page=1;
+      applyFilters({skipHistory:true});
+    }finally{
+      advanced.restoringHistory=false;
+    }
+  }
+
+
   function patchOverviewCharts(){
     renderHistogram=function(){
       const vis=sexVisibility('histogram'),rows=filterRowsForSexControl(state.filtered.filter(isFinished),'histogram'),el=document.querySelector('#histogram');
@@ -553,7 +586,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function installWorldInfo(){window.refreshInfoTips?.()}
 
   function install(){
-    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
+    if(advanced.ready||typeof state==='undefined'||!state.data)return;advanced.ready=true;buildCaches();patchFilters();patchOverviewCharts();patchNerdCharts();setupSexDiagramControls();setupClassHeatUnitControls();setupNavigation();setupClubSearches();window.addEventListener('ultravasan:data-activated',()=>{if(advanced.ready&&state.data)buildCaches()});window.addEventListener('ultravasan:speed-unit-change',event=>{advanced.classHeatUnit=event.detail?.unit==='speed'?'speed':'pace';setupClassHeatUnitControls();renderAudienceWorlds()});window.addEventListener('beforeunload',()=>advanced.classEvolutionController?.destroy(),{once:true});window.addEventListener('popstate',()=>{restoreHistoryState().catch(error=>console.error('Historiknavigering kunde inte återställas',error))});refreshFilters();restoreUrl();installWorldInfo();applyFilters();
   }
   const timer=setInterval(()=>{try{if(typeof state!=='undefined'&&state.data&&window.ULTRAVASAN_SPLITS_READY){clearInterval(timer);install()}}catch(e){console.error('Audience analytics',e);clearInterval(timer)}},80);
 })();
