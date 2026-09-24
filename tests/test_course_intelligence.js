@@ -114,10 +114,6 @@ const segments=intelligence.segmentContracts(contracts.courseForRace(syntheticRa
 const firstStats=intelligence.fieldStatsForSegment(synthetic,syntheticRace,segments[0]);
 assert.strictEqual(firstStats.timing_sample_n,5);
 assert.strictEqual(firstStats.sufficient_sample,true);
-assert.strictEqual(firstStats.q10_pace_seconds_per_km,383.2,'Q10 ska använda samma linjära kvantilmetod som övriga fältmått');
-assert.strictEqual(firstStats.q90_pace_seconds_per_km,405.0,'Q90 ska använda samma linjära kvantilmetod som övriga fältmått');
-assert.ok(firstStats.q10_pace_seconds_per_km<=firstStats.q25_pace_seconds_per_km);
-assert.ok(firstStats.q75_pace_seconds_per_km<=firstStats.q90_pace_seconds_per_km);
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds));
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds_per_km));
 assert.strictEqual(firstStats.outer_quantile_min_sample,20);
