@@ -12,6 +12,9 @@
     const number=Number(value);
     return Number.isFinite(number)?number:value;
   };
+  const AUXILIARY_CHECKPOINT_KEYS=new Set(['high_point','mora_warning']);
+  const checkpointKey=value=>String(value??'').trim().toLowerCase();
+  const isOfficialAnalysisCheckpoint=checkpoint=>!AUXILIARY_CHECKPOINT_KEYS.has(checkpointKey(checkpoint?.checkpoint_key));
   const defineOnce=(target,key,value)=>{
     if(!target||Object.prototype.hasOwnProperty.call(target,key))return target?.[key];
     Object.defineProperty(target,key,{value,enumerable:false,writable:false,configurable:false});
@@ -50,14 +53,32 @@
       checkpoint.distance_km=numberOr(checkpoint.distance_km);
     });
 
+    // Speaker-/servicepunkter kan finnas i källdatan men ska aldrig bli analytiska
+    // checkpoints. Frontendens gemensamma datalager exponerar bara officiella
+    // delsträckegränser; rådata och källspårning lämnas orörda i export/databas.
+    data.checkpoints=data.checkpoints.filter(isOfficialAnalysisCheckpoint);
+    const checkpointsByRace=new Map();
+    data.checkpoints
+      .slice()
+      .sort((a,b)=>Number(a.race_id)-Number(b.race_id)||Number(a.sequence_no||0)-Number(b.sequence_no||0))
+      .forEach(checkpoint=>{
+        const key=String(checkpoint.race_id);
+        if(!checkpointsByRace.has(key))checkpointsByRace.set(key,[]);
+        checkpointsByRace.get(key).push(checkpoint);
+      });
+    for(const checkpoints of checkpointsByRace.values()){
+      checkpoints.forEach((checkpoint,index)=>{checkpoint.sequence_no=index});
+    }
+
     const raceByResult=new Map(data.results.map(result=>[result.id,result.race_id]));
     const checkpointByRaceAndKey=new Map(
       data.checkpoints.map(checkpoint=>[
-        `${checkpoint.race_id}|${checkpoint.checkpoint_key}`,
+        `${checkpoint.race_id}|${checkpointKey(checkpoint.checkpoint_key)}`,
         checkpoint
       ])
     );
 
+    data.splits=data.splits.filter(split=>!AUXILIARY_CHECKPOINT_KEYS.has(checkpointKey(split.checkpoint_key)));
     data.splits.forEach(split=>{
       split.result_id=numberOr(split.result_id);
       for(const key of [
@@ -65,7 +86,7 @@
         'place_overall','place_gender','place_class','sequence_no','distance_km'
       ]) split[key]=numberOr(split[key]);
       const checkpoint=checkpointByRaceAndKey.get(
-        `${raceByResult.get(split.result_id)}|${split.checkpoint_key}`
+        `${raceByResult.get(split.result_id)}|${checkpointKey(split.checkpoint_key)}`
       );
       if(checkpoint){
         split.checkpoint_name=checkpoint.name;
@@ -75,6 +96,39 @@
       if(split.is_estimated==null)split.is_estimated=0;
       else split.is_estimated=numberOr(split.is_estimated);
     });
+
+    // Segmenttid och segmentfart måste räknas om efter att mellanliggande
+    // icke-analytiska punkter tagits bort. Vi räknar bara när båda officiella
+    // segmentändarna faktiskt är observerade.
+    const splitByResultAndKey=new Map(data.splits.map(split=>[
+      `${split.result_id}|${checkpointKey(split.checkpoint_key)}`,
+      split
+    ]));
+    for(const result of data.results){
+      const checkpoints=checkpointsByRace.get(String(result.race_id))||[];
+      for(let index=1;index<checkpoints.length;index++){
+        const current=checkpoints[index],previous=checkpoints[index-1];
+        const split=splitByResultAndKey.get(`${result.id}|${checkpointKey(current.checkpoint_key)}`);
+        if(!split)continue;
+        const previousElapsed=index===1
+          ?0
+          :splitByResultAndKey.get(`${result.id}|${checkpointKey(previous.checkpoint_key)}`)?.elapsed_seconds;
+        const currentElapsed=Number(split.elapsed_seconds);
+        const previousSeconds=Number(previousElapsed);
+        const currentDistance=Number(current.distance_km);
+        const previousDistance=Number(previous.distance_km);
+        if(Number.isFinite(currentElapsed)&&Number.isFinite(previousSeconds)&&currentElapsed>previousSeconds){
+          split.segment_seconds=currentElapsed-previousSeconds;
+          const distanceDelta=currentDistance-previousDistance;
+          split.pace_seconds_per_km=Number.isFinite(distanceDelta)&&distanceDelta>0
+            ?split.segment_seconds/distanceDelta
+            :null;
+        }else{
+          split.segment_seconds=null;
+          split.pace_seconds_per_km=null;
+        }
+      }
+    }
 
     dataIndex?.ensureSplitsByResult?.(data);
     defineOnce(data,'__ultravasanHydrated',true);
