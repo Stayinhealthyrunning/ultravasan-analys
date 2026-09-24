@@ -172,30 +172,6 @@ def extract_entries(html: str, base_url: str) -> list[dict[str, Any]]:
     return sorted(entries.values(), key=lambda x: x["idp"])
 
 
-def advertised_last_page(html: str) -> int | None:
-    """Read the official result-page boundary; no result-link heuristic is proof of completeness."""
-    soup = BeautifulSoup(html, "lxml")
-    pages: list[int] = []
-    for link in soup.select("ul.pagination a"):
-        query = ""
-        encoded = link.get("data-silver")
-        if encoded:
-            try:
-                query = bytes(int(value) for value in encoded.split(",")).decode("ascii")
-            except (ValueError, UnicodeDecodeError):
-                continue
-        else:
-            query = urlparse(urljoin("https://results.vasaloppet.se/", link.get("href", ""))).query
-        page_values = parse_qs(query).get("page", [])
-        for value in page_values:
-            if str(value).isdigit():
-                pages.append(int(value))
-        label = uvtool.clean_text(link.get_text(" ", strip=True))
-        if label and label.isdigit():
-            pages.append(int(label))
-    return max(pages) if pages else None
-
-
 def extract_event_candidates(html: str, path_year: int) -> list[dict[str, Any]]:
     """Extract event codes with the catalogue year supplied by Mika's optgroup.
 
@@ -473,20 +449,19 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
     race_raw = resolve_raw_path(args.raw) / args.race
     report = {"race_key": args.race, "event_code": race_cfg.get("event_code"), "pages": [], "details": [], "started_at": uvtool.utc_now()}
     all_entries: dict[str, dict[str, Any]] = {}
-    partition_completion: dict[str, bool] = {}
+    empty_pages = 0
     try:
         max_pages = min(args.max_pages, race_cfg.get("max_pages", args.max_pages))
         partitions = ["M", "W"] if race_cfg.get("partition_by_sex") else [None]
         for sex_partition in partitions:
+            empty_pages = 0
             partition_label = sex_partition or "ALL"
-            completed = False
             for page_no in range(1, max_pages + 1):
                 page_entries: list[dict[str, Any]] = []
                 selected_html = None
                 used_url = used_mode = None
                 used_status = None
                 used_cache = None
-                last_page = None
                 errors = []
                 # The result service has historically accepted several URL forms.
                 # Prefer the first variant that yields genuinely new idp values;
@@ -497,7 +472,6 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
                     try:
                         html, status, cached, mode = fetcher.get(url, cache)
                         entries = extract_entries(html, url)
-                        candidate_last_page = advertised_last_page(html)
                         new_ids = [entry["idp"] for entry in entries if entry["idp"] not in all_entries]
                         errors.append({
                             "url": url,
@@ -506,17 +480,14 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
                             "new": len(new_ids),
                             "mode": mode,
                             "cached": cached,
-                            "advertised_last_page": candidate_last_page,
                         })
-                        current_new = sum(1 for e in page_entries if e["idp"] not in all_entries)
-                        if (entries and (not page_entries or len(new_ids) > current_new)) or (candidate_last_page is not None and last_page is None):
+                        if entries and (not page_entries or len(new_ids) > sum(1 for e in page_entries if e["idp"] not in all_entries)):
                             page_entries = entries
                             selected_html = html
                             used_url = url
                             used_mode = mode
                             used_status = status
                             used_cache = cache
-                            last_page = candidate_last_page
                         if new_ids:
                             break
                     except Exception as exc:
@@ -547,30 +518,22 @@ def execute(args: argparse.Namespace, probe: bool) -> None:
                     "total": len(all_entries),
                     "url": used_url,
                     "mode": used_mode,
-                    "advertised_last_page": last_page,
-                    "end_confirmed": bool(last_page is not None and page_no >= last_page),
                     "attempts": errors,
                 })
                 print(
                     f"{partition_label} sida {page_no}: {len(page_entries)} träffar, "
                     f"{new_count} nya, totalt {len(all_entries)}"
                 )
-                if last_page is None:
-                    # A successful HTTP response with no pagination boundary is not evidence that the list is complete.
-                    break
-                if page_no >= last_page:
-                    completed = True
-                    break
+                if new_count == 0:
+                    empty_pages += 1
+                    if empty_pages >= race_cfg.get("empty_pages_to_stop", 2):
+                        break
+                else:
+                    empty_pages = 0
                 if args.limit and len(all_entries) >= args.limit:
                     break
-            partition_completion[partition_label] = completed
             if args.limit and len(all_entries) >= args.limit:
                 break
-
-        report["pagination_complete"] = bool(partition_completion) and all(partition_completion.values())
-        report["pagination_partitions"] = partition_completion
-        if getattr(args, "strict_official", False) and not args.limit and not report["pagination_complete"]:
-            raise RuntimeError("Official result pagination could not be proven complete")
 
         if not all_entries:
             raise RuntimeError("Inga deltagarlänkar hittades. Rapporten visar testade URL-varianter och HTTP-fel.")

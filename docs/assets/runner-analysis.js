@@ -133,10 +133,6 @@
     });
   }
 
-  function journeyStartDescription(profile){
-    return profile?.journey?.status?.dns===true?'Ingen start registrerad':'Loppet börjar här';
-  }
-
   function pairwiseEvery(items,predicate){
     for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++)if(!predicate(items[i],items[j]))return false;
     return true;
@@ -186,36 +182,6 @@
     const commonKeys=selected[0].journey.rows
       .map(row=>row.checkpoint_key)
       .filter(key=>journeyMaps.every(map=>map.has(key)));
-    const checkpointRows=commonKeys.filter(key=>key!=='start').map(key=>{
-      const entries=selected.map((item,itemIndex)=>{
-        const row=journeyMaps[itemIndex].get(key);
-        return Object.freeze({
-          result_id:item.result.id,
-          elapsed_seconds:row?.elapsed_seconds??null,
-          distance_km:row?.distance_km??null,
-          place_overall:row?.place_overall??null,
-          place_class:row?.place_class??null,
-          exact:Boolean(row?.exact),
-        });
-      });
-      const exactTimes=sameCourseVersion?entries.filter(entry=>entry.exact&&finite(entry.elapsed_seconds)).map(entry=>Number(entry.elapsed_seconds)):[];
-      const best=exactTimes.length?Math.min(...exactTimes):null;
-      return Object.freeze({
-        checkpoint_key:key,
-        checkpoint_name:selected[0].journey.rows.find(row=>row.checkpoint_key===key)?.checkpoint_name||key,
-        comparable:sameCourseVersion,
-        entries:Object.freeze(entries.map((entry,itemIndex)=>{
-          const previousKey=commonKeys[Math.max(0,commonKeys.indexOf(key)-1)],previous=journeyMaps[itemIndex].get(previousKey);
-          const placement_change=entry.exact&&finite(entry.place_overall)&&previous?.exact&&finite(previous.place_overall)?Number(previous.place_overall)-Number(entry.place_overall):null;
-          return Object.freeze({
-            ...entry,
-            gap_seconds:best===null||!entry.exact||!finite(entry.elapsed_seconds)?null:Number(entry.elapsed_seconds)-best,
-            placement_change,
-          });
-        })),
-      });
-    });
-
     const segmentRows=[];
     for(let index=1;index<commonKeys.length;index++){
       const from=commonKeys[index-1],to=commonKeys[index];
@@ -252,7 +218,6 @@
       course_version_ids:Object.freeze(versionIds),
       results:Object.freeze(results),
       finish_ranking:Object.freeze(finishRanking),
-      checkpoints:Object.freeze(checkpointRows),
       segments:Object.freeze(segmentRows),
     });
   }
@@ -264,7 +229,6 @@
     journeyForResult,
     historyForResult,
     profileForResult,
-    journeyStartDescription,
     headToHead,
   });
 });

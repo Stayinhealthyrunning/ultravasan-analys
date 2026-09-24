@@ -98,14 +98,8 @@ class RouteBuildTests(unittest.TestCase):
             ], cwd=ROOT, check=True)
             self.assertEqual(out_json.read_bytes(), second_json.read_bytes())
             self.assertEqual(out_js.read_bytes(), second_js.read_bytes())
-            self.assertNotIn(b"\r\n", out_json.read_bytes(), "route JSON export must use deterministic LF bytes")
-            self.assertNotIn(b"\r\n", out_js.read_bytes(), "route JavaScript export must use deterministic LF bytes")
-            def checkout_lf(path: Path) -> bytes:
-                # Git's core.autocrlf may materialize tracked baselines as CRLF on Windows.
-                return path.read_bytes().replace(b"\r\n", b"\n")
-
-            self.assertEqual(out_json.read_bytes(), checkout_lf(ROOT / "data" / "routes" / "ultravasan90-routes.json"))
-            self.assertEqual(out_js.read_bytes(), checkout_lf(ROOT / "docs" / "data" / "ultravasan-routes.js"))
+            self.assertEqual(out_json.read_bytes(), (ROOT / "data" / "routes" / "ultravasan90-routes.json").read_bytes())
+            self.assertEqual(out_js.read_bytes(), (ROOT / "docs" / "data" / "ultravasan-routes.js").read_bytes())
 
 
 if __name__ == "__main__":

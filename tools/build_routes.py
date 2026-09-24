@@ -724,13 +724,12 @@ def main():
 
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_js.parent.mkdir(parents=True, exist_ok=True)
-    args.out_json.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
+    args.out_json.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
     args.out_js.write_text(
         "window.ULTRAVASAN_ROUTES = "
         + json.dumps(registry, ensure_ascii=False, separators=(",", ":"))
         + ";\n",
         encoding="utf-8",
-        newline="\n",
     )
     print(f"Skrev {args.out_json} och {args.out_js}: {', '.join(routes)}")
 

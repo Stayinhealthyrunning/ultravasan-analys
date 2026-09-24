@@ -81,40 +81,6 @@ splits, flerårshistorik kräver U2-verifierad identitet och Head-to-head respek
 CourseVersion-kontrakten. Favoriter sparas endast lokalt som referenser till
 specifika publicerade resultat och skapar ingen egen personmatchning.
 
-U6:s Course Intelligence beskrivs i
-[`reports/U6_COURSE_INTELLIGENCE.md`](reports/U6_COURSE_INTELLIGENCE.md).
-Course Intelligence skiljer tävlings-/timingdistans från display-ruttens
-terrängaxel, kräver samma fyra evidenskomponenter för relativ Difficulty och
-synkroniserar segmentval mellan banöversikt, höjdprofil, fartvy och
-Delsträckelabbet. Måltempo/loppplan använder endast samma CourseVersion, märker
-distansfallback explicit och lämnar okända segment oallokerade i stället för att
-gissa.
-
-U7:s Historik 2.0 beskrivs i
-[`reports/U7_HISTORY_2.md`](reports/U7_HISTORY_2.md).
-History Intelligence återanvänder U2:s verifierade personidentitet och
-whole-course-jämförbarhet för Löpararkiv, Hall of Fame och Årets fingeravtryck.
-Klasshistorik och Klassutveckling bryter prestationslinjer och animation vid
-CourseVersion-gränser i stället för att skapa en skenbar trend över olika banor.
-Fingeravtryckets prestationsnormal byggs av lika viktade, jämförbara loppår.
-
-
-U8:s UX-, metodik- och tillgänglighetskontrakt beskrivs i
-[`reports/U8_UX_METHODOLOGY.md`](reports/U8_UX_METHODOLOGY.md).
-Huvudsidan har en gemensam metod- och datakvalitetsguide med aktuell lopp-, data-
-och filterstatus, semantisk H1/skip-länk, tangentbordsöppning av resultatrader,
-korrekt knappsemantik i loppväxlaren, tydliga fokusmarkeringar och reduced-motion-
-stöd. Primära användartexter är konsekvent svenska utan att tekniska kontrakts-
-identifierare ändras.
-
-U9:s slutgranskning och release-freeze beskrivs i
-[`reports/U9_RELEASE_FREEZE.md`](reports/U9_RELEASE_FREEZE.md).
-`tools/u9_release_audit.py` fryser U2:s skyddade data, kräver U1–U8:s
-obligatoriska artefakter, bevakar U3:s storleksbudgetar och ingår i CI. Den
-verkliga Chromium-grinden verifierar dessutom 390×844, 900×900 och 1536×1024
-utan dokumentöverflöde. U9 är en releasegrind och ska inte introducera nya
-analysfunktioner.
-
 ```bash
 python tools/race_contracts.py
 python tools/race_contracts.py --check --base-ref origin/main
