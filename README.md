@@ -42,8 +42,9 @@ Den slutförda käll- och utgåvemodellen finns i
 U2:s identitets- och historikkontrakt finns i
 [`reports/U2_IDENTITY_HISTORY_SPEC.md`](reports/U2_IDENTITY_HISTORY_SPEC.md).
 Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på namn
-eller ett äldre `athlete_id`. Tidsutveckling mellan utgåvor kräver dessutom
-explicit jämförbara CourseVersion-kontrakt.
+eller ett äldre `athlete_id`. Tidsutveckling i sluttid mellan RaceEditions kräver
+dessutom en explicit verifierad whole-course-jämförbarhetsgrupp; CourseVersion
+styr i första hand checkpoint- och segmentkontrakt.
 
 Den verifierade legacy-auditen och den reversibla migrationsplanen finns i
 [`reports/U2_LEGACY_IDENTITY_MIGRATION.md`](reports/U2_LEGACY_IDENTITY_MIGRATION.md).
