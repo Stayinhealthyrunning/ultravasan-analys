@@ -30,7 +30,7 @@ def rel(path: str) -> Path:
 
 
 
-def versioned_asset_refs(index: str, assets: tuple[str, ...]) -> dict[str, str | null]:
+def versioned_asset_refs(index: str, assets: tuple[str, ...]) -> dict[str, str | None]:
     """Return explicit cache generations for release-critical frontend assets."""
     versions: dict[str, str | None] = {}
     for asset in assets:
