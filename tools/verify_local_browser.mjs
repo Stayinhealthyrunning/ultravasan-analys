@@ -338,6 +338,42 @@ for(const spec of viewportSpecs){
 await command("Emulation.setDeviceMetricsOverride",{width:originalViewport.width,height:originalViewport.height,deviceScaleFactor:1,mobile:false});
 await delay(100);
 
+const browserHistoryBaseline=await evaluate(`(() => {
+  const race=state.data.races.find(item=>String(item.id)===String(state.raceId));
+  return {family:state.raceFamily,year:Number(race?.year||0),sex:document.querySelector('#sexFilter')?.value||'',urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)};
+})()`);
+await evaluate(`(() => {const el=document.querySelector('#sexFilter');el.value='M';el.dispatchEvent(new Event('change',{bubbles:true}))})()`);
+await delay(180);
+const browserHistoryFilterForward=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',urlSex:new URL(location.href).searchParams.get('sex')||''}))()`);
+await evaluate('history.back()');
+await delay(220);
+const browserHistoryFilterBack=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',urlSex:new URL(location.href).searchParams.get('sex')||''}))()`);
+await evaluate('history.forward()');
+await delay(220);
+const browserHistoryFilterForwardAgain=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',urlSex:new URL(location.href).searchParams.get('sex')||''}))()`);
+await evaluate('history.back()');
+await delay(220);
+
+const historyUv45Switch=await evaluate(`(async()=>{
+  const button=document.querySelector('#raceSwitch45');
+  if(typeof button?.onclick!=='function')return false;
+  await button.onclick();
+  return state.raceFamily==='uv45';
+})()`);
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv45'"))break;await delay(100)}
+const browserHistoryUv45=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
+await evaluate('history.back()');
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv90'&&new URL(location.href).searchParams.get('race')==='uv90'"))break;await delay(100)}
+const browserHistoryRaceBack=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),sex:document.querySelector('#sexFilter')?.value||'',urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
+await evaluate('history.forward()');
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv45'&&new URL(location.href).searchParams.get('race')==='uv45'"))break;await delay(100)}
+const browserHistoryRaceForward=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
+await evaluate('history.back()');
+for(let attempt=0;attempt<300;attempt++){if(await evaluate("state.raceFamily==='uv90'&&new URL(location.href).searchParams.get('race')==='uv90'"))break;await delay(100)}
+await evaluate("ensureActiveFamilyFull('uv90',true)");
+await waitForActiveFamily('uv90');
+const browserHistoryState=await evaluate(`(() => {const race=state.data.races.find(item=>String(item.id)===String(state.raceId));return {family:state.raceFamily,year:Number(race?.year||0),sex:document.querySelector('#sexFilter')?.value||'',urlRace:new URL(location.href).searchParams.get('race'),urlYear:Number(new URL(location.href).searchParams.get('year')||0)}})()`);
+
 const contractChecks = await evaluate(`(() => {
   const contracts=window.RaceContracts,data=window.ULTRAVASAN_ACTIVE_DATA;
   const loadedKeys=new Set(data.races.map(race=>race.race_key));
@@ -672,6 +708,16 @@ for(const request of mapRequests){
 }
 
 const checks = {
+  browserHistory:Boolean(
+    browserHistoryBaseline.family==='uv90'&&browserHistoryBaseline.urlRace==='uv90'&&
+    browserHistoryFilterForward.sex==='M'&&browserHistoryFilterForward.urlSex==='M'&&
+    browserHistoryFilterBack.sex===''&&browserHistoryFilterBack.urlSex===''&&
+    browserHistoryFilterForwardAgain.sex==='M'&&browserHistoryFilterForwardAgain.urlSex==='M'&&
+    historyUv45Switch&&browserHistoryUv45.family==='uv45'&&browserHistoryUv45.urlRace==='uv45'&&
+    browserHistoryRaceBack.family===browserHistoryBaseline.family&&browserHistoryRaceBack.year===browserHistoryBaseline.year&&browserHistoryRaceBack.urlRace==='uv90'&&
+    browserHistoryRaceForward.family==='uv45'&&browserHistoryRaceForward.urlRace==='uv45'&&
+    browserHistoryState.family===browserHistoryBaseline.family&&browserHistoryState.year===browserHistoryBaseline.year&&browserHistoryState.sex===''&&browserHistoryState.urlRace==='uv90'
+  ),
   contracts:Object.values(contractChecks).every(Boolean),
   progressive:progressiveLoad.verified,
   uv45Progressive:uv45Progressive.verified,
@@ -742,7 +788,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
