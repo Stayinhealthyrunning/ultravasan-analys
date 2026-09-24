@@ -1,3 +1,5 @@
+import json
+
 from tools import u20_route_audit
 
 
@@ -41,3 +43,9 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     assert pair_24_26["result"]["symmetric_nearest_median_m"] < 100
     assert all("diagnostic only" in item["decision"] for item in report["geometry_comparisons"])
     assert all("not by itself" in item["decision"] for item in report["geometry_comparisons"])
+
+
+def test_checked_in_route_audit_json_matches_current_builder():
+    report = u20_route_audit.build_report()
+    checked_in = json.loads((u20_route_audit.ROOT / "reports/U20_ROUTE_AUDIT.json").read_text(encoding="utf-8"))
+    assert checked_in == report
