@@ -59,13 +59,14 @@ Keep separate:
 Do not let a new CourseVersion alone create a false performance break.
 
 ## 5. Årets fingeravtryck
-The route audit did not verify any multi-year whole-course comparison group for UV90. In particular, 2024 has documented year-specific rerouting, so CourseVersion/checkpoint similarity must not manufacture a historical performance reference.
+The route audit verifies exactly one multi-year whole-course comparison group for UV90: 2024–2025. Organizer evidence documents route changes from 2023 to 2024, explicitly states no course changes for 2025, and documents a return from the temporary Evertsberg–Oxberg routing in 2026. CourseVersion/checkpoint similarity alone must still never manufacture a historical performance reference.
 
 Implemented outcome:
 - use all and only explicitly verified whole-course-comparable editions,
 - structural metrics may span CourseVersions,
 - show actual reference years/count and explain exclusions,
-- 2026 therefore has 0 whole-course performance reference years until equivalence is positively verified; the UI explains that this is an evidence limitation, not merely a checkpoint-version break.
+- 2025 has one verified whole-course performance reference year (2024), which is shown but remains insufficient for a published index because the model requires at least two reference years,
+- 2026 has 0 whole-course performance reference years because its documented route change places it outside the 2024–2025 group; the UI explains that this is an evidence limitation, not merely a checkpoint-version break.
 
 ## 6. Club/location history
 Observed:

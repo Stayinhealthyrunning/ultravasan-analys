@@ -182,8 +182,8 @@ def run(base_url: str) -> None:
               "<img" in security["checkpoint"] and "onerror" in security["checkpoint"],
               f"XSS source text/token contract failed: {security}")
 
-        # Club participation can span versions; without a verified whole-course group,
-        # performance paths must fail closed while participation bars remain.
+        # Club participation can span versions. The verified 2024-2025 whole-course
+        # group may render a performance path, while participation bars remain broader.
         page.locator("#clubCompareSearch").fill("STOCKHOLM")
         page.wait_for_timeout(120)
         if page.locator("#clubCompareSuggestions .club-search-option").count():
@@ -194,8 +194,8 @@ def run(base_url: str) -> None:
           const bars=[...document.querySelectorAll('#clubHistoryChart .club-history-bar')];
           return {paths:paths.length,bars:bars.length};
         }""")
-        check(club["paths"] == 0 and club["bars"] > 0,
-              f"Club history must retain participation while failing closed on unverified performance paths: {club}")
+        check(club["paths"] >= 1 and club["bars"] > 0,
+              f"Club history must render the verified 2024-2025 performance path while retaining participation bars: {club}")
 
         # Finish progression method levels and visible output.
         levels = page.locator("#percentileLadder [data-finish-share]").evaluate_all("nodes => nodes.map(n=>Number(n.dataset.finishShare))")
@@ -237,8 +237,8 @@ def run(base_url: str) -> None:
 
         # H2H verifies three distinct contracts:
         # same RaceEdition => finish + checkpoint dimensions;
-        # same CourseVersion but different unverified RaceEditions => checkpoint dimensions only;
-        # different CourseVersion => checkpoint/course dimensions blocked too.
+        # verified 2024-2025 whole-course group => finish + checkpoint dimensions across editions;
+        # different unverified CourseVersion => checkpoint/course dimensions blocked too.
         family_full(page, "uv90")
         h2h = page.evaluate("""() => {
           const data=window.ULTRAVASAN_ACTIVE_DATA;
@@ -248,8 +248,8 @@ def run(base_url: str) -> None:
           compareState.raceId='all';compareState.selected=[];addCompareRunner(a?.id);addCompareRunner(b?.id);document.querySelector('#compareH2HButton')?.click();
           return {same:!!a&&!!b,course:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,changed:!!c,id:c?.id};
         }""")
-        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 0 and h2h["warnings"] > 0,
-              f"same-CourseVersion cross-edition H2H must retain checkpoints but block unverified finish gaps: {h2h}")
+        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 2,
+              f"verified 2024-2025 cross-edition H2H must expose finish and checkpoint comparison: {h2h}")
 
         same_edition = page.evaluate("""() => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
@@ -278,7 +278,7 @@ def run(base_url: str) -> None:
 
         check(not errors, f"unexpected browser console/page errors: {errors}")
         check(not failed_responses, f"unexpected local HTTP errors: {failed_responses}")
-        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "Hall of Fame local Leaflet and CDN absence", "Hall of Fame SVG fallback", "history Back/Forward", "XSS DOM negative", "fail-closed club history", "finish progression", "Runner Development seek", "H2H comparison contracts", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
+        print(json.dumps({"status": "PASS", "scenarios": ["UV90/UV45 deep-link+reload", "invalid URL fail-safe", "Hall of Fame local Leaflet and CDN absence", "Hall of Fame SVG fallback", "history Back/Forward", "XSS DOM negative", "contract-aware club history", "finish progression", "Runner Development seek", "H2H comparison contracts", "FINISHED/DNF/DNS", "390/900/1536 viewports"], "representative_results": representative, "errors": errors, "http_errors": failed_responses}, ensure_ascii=False, indent=2))
         context.close()
         browser.close()
 

@@ -56,7 +56,8 @@
     const comparisonBreaks=[];
     for(let i=1;i<years.length;i++){
       const fromYear=years[i-1],toYear=years[i],fromKey=raceComparisonByYear.get(fromYear)||null,toKey=raceComparisonByYear.get(toYear)||null,fromVersion=raceCourseVersionByYear.get(fromYear)||null,toVersion=raceCourseVersionByYear.get(toYear)||null;
-      if(fromVersion&&toVersion&&fromVersion!==toVersion&&!(fromKey&&toKey&&fromKey===toKey))comparisonBreaks.push({fromYear,toYear,fromKey,toKey,fromVersion,toVersion,label:fromKey&&toKey?'Ny jämförbarhetsserie':'Helbanans jämförbarhet ej verifierad'});
+      const comparable=Boolean(fromKey&&toKey&&fromKey===toKey),scopeChanged=fromKey!==toKey,courseChanged=Boolean(fromVersion&&toVersion&&fromVersion!==toVersion);
+      if(!comparable&&(scopeChanged||courseChanged))comparisonBreaks.push({fromYear,toYear,fromKey,toKey,fromVersion,toVersion,label:fromKey&&toKey?'Ny jämförbarhetsserie':'Helbanans jämförbarhet ej verifierad'});
     }
     const calendarGaps=[];
     for(let i=1;i<years.length;i++)if(years[i]-years[i-1]>1){const missing=Array.from({length:years[i]-years[i-1]-1},(_,offset)=>years[i-1]+offset+1);calendarGaps.push({fromYear:years[i-1],toYear:years[i],years:missing,label:`${missing[0]}–${missing.at(-1)}: inga importerade lopp`})}

@@ -23,12 +23,168 @@
     "ultravasan90-2026": "ultravasan90-post2023",
     "ultravasan45-2026": "ultravasan45-current"
   },
+  "edition_route_contracts": {
+    "ultravasan90-2014": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2015": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2017": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2018": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2019": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2022": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2023": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2024": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": "ultravasan90-2024-2025"
+    },
+    "ultravasan90-2025": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2023-2025-v1",
+      "whole_course_comparison_group": "ultravasan90-2024-2025"
+    },
+    "ultravasan90-2016": {
+      "display_route_id": "ultravasan90-pre2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2022,
+      "course_version_id": "uv90-pre2023-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2014": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2015": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2016": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2017": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2018": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2019": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2022": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2023": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2024": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2014-2024-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2025": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2025-2026-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan90-2026": {
+      "display_route_id": "ultravasan90-post2023",
+      "display_geometry_usage": "reference-only",
+      "display_geometry_source_year": 2024,
+      "course_version_id": "uv90-2026-v1",
+      "whole_course_comparison_group": null
+    },
+    "ultravasan45-2026": {
+      "display_route_id": "ultravasan45-current",
+      "display_geometry_usage": "exact-source-year",
+      "display_geometry_source_year": 2026,
+      "course_version_id": "uv45-2025-2026-v1",
+      "whole_course_comparison_group": null
+    }
+  },
   "routes": {
     "ultravasan90-pre2023": {
       "id": "ultravasan90-pre2023",
       "route_version": "ultravasan90-pre2023",
       "race_family": "uv90",
-      "name": "Ultravasan 90 – äldre sträckning",
+      "name": "Ultravasan 90 – referensgeometri 2022",
       "years": {
         "from": 2014,
         "to": 2022
@@ -51,7 +207,7 @@
         "cumulative_descent_m"
       ],
       "geometry_quality": "verified-gpx",
-      "geometry_note": "Verifierad GPX-geometri. Distansaxeln är normaliserad till loppets officiella distans.",
+      "geometry_note": "Verifierad GPX-geometri för loppåret 2022. När denna geometri visas för andra loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
       "elevation_available": true,
       "elevation_note": "Höjdprofil från verifierad GPX; korta luckor interpoleras och en fempunkts median används mot enstaka spikar.",
       "elevation_profile_schema": [
@@ -4480,7 +4636,7 @@
       "style": {
         "color": "#7c3aed",
         "dashArray": "10 8",
-        "label": "2014–2022"
+        "label": "Referens 2022"
       },
       "bounds": [
         [
@@ -14685,13 +14841,14 @@
         ]
       ],
       "source_reference": "https://www.plotaroute.com/route/1942022",
-      "source_note": "Verifierad Ultravasan 90-rutt för 2022."
+      "source_note": "Verifierad Ultravasan 90-rutt för 2022.",
+      "historical_note": "Källåret är 2022. Bindningar till 2014–2019 används endast som visningsreferens tills årsvis geometri har verifierats."
     },
     "ultravasan90-post2023": {
       "id": "ultravasan90-post2023",
       "route_version": "ultravasan90-post2023",
       "race_family": "uv90",
-      "name": "Ultravasan 90 – sträckning från 2023",
+      "name": "Ultravasan 90 – referensgeometri 2024",
       "years": {
         "from": 2023,
         "to": 2099
@@ -14714,7 +14871,7 @@
         "cumulative_descent_m"
       ],
       "geometry_quality": "verified-gpx",
-      "geometry_note": "Verifierad GPX-geometri. Distansaxeln är normaliserad till loppets officiella distans.",
+      "geometry_note": "Verifierad GPX-geometri för loppåret 2024. När denna geometri visas för 2023, 2025 eller 2026 är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
       "elevation_available": true,
       "elevation_note": "Höjdprofil från verifierad GPX; korta luckor interpoleras och en fempunkts median används mot enstaka spikar.",
       "elevation_profile_schema": [
@@ -18679,7 +18836,7 @@
       "style": {
         "color": "#176d53",
         "dashArray": null,
-        "label": "2023–"
+        "label": "Referens 2024"
       },
       "bounds": [
         [
@@ -29351,13 +29508,13 @@
           1188.0
         ]
       ],
-      "historical_note": "Från 2023 används den längre inledande sträckningen; geometri och höjd kommer från verifierad GPX 2024."
+      "historical_note": "Källåret är 2024. Extern evidens dokumenterar dessutom en tillfällig omläggning 2024; bindningar till andra år är därför uttryckligen reference-only tills årsvis geometri har verifierats."
     },
     "ultravasan45-current": {
       "id": "ultravasan45-current",
       "route_version": "ultravasan45-current",
       "race_family": "uv45",
-      "name": "Ultravasan 45 – Oxberg till Mora",
+      "name": "Ultravasan 45 – referensgeometri 2026",
       "years": {
         "from": 2014,
         "to": 2099
@@ -29380,7 +29537,7 @@
         "cumulative_descent_m"
       ],
       "geometry_quality": "verified-gpx",
-      "geometry_note": "Verifierad UV45-GPX 2026 används för geometri och höjd för samtliga år; kontrollmodellen kommer från respektive loppår.",
+      "geometry_note": "Verifierad GPX-geometri för loppåret 2026. När denna geometri visas för tidigare loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet.",
       "elevation_available": true,
       "elevation_note": "Höjdprofil från verifierad GPX; korta luckor interpoleras och en fempunkts median används mot enstaka spikar.",
       "elevation_profile_schema": [
@@ -33583,7 +33740,7 @@
       "style": {
         "color": "#d28b22",
         "dashArray": null,
-        "label": "Ultravasan 45"
+        "label": "Referens 2026"
       },
       "bounds": [
         [
@@ -38618,7 +38775,8 @@
           537.0,
           572.0
         ]
-      ]
+      ],
+      "historical_note": "Källåret är 2026. Bindningar till tidigare Ultravasan 45-år används endast som visningsreferens tills årsvis geometri har verifierats."
     }
   }
 }

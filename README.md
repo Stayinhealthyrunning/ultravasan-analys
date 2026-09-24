@@ -42,8 +42,9 @@ Den slutförda käll- och utgåvemodellen finns i
 U2:s identitets- och historikkontrakt finns i
 [`reports/U2_IDENTITY_HISTORY_SPEC.md`](reports/U2_IDENTITY_HISTORY_SPEC.md).
 Flerårshistorik bygger från och med U2 på verifierad person-evidens, inte på namn
-eller ett äldre `athlete_id`. Tidsutveckling mellan utgåvor kräver dessutom
-explicit jämförbara CourseVersion-kontrakt.
+eller ett äldre `athlete_id`. Tidsutveckling i sluttid mellan RaceEditions kräver
+dessutom en explicit verifierad whole-course-jämförbarhetsgrupp; CourseVersion
+styr i första hand checkpoint- och segmentkontrakt.
 
 Den verifierade legacy-auditen och den reversibla migrationsplanen finns i
 [`reports/U2_LEGACY_IDENTITY_MIGRATION.md`](reports/U2_LEGACY_IDENTITY_MIGRATION.md).
@@ -77,8 +78,9 @@ förenklade banvy finns kvar som fallback.
 U5:s individuella Löparanalys 2.0 beskrivs i
 [`reports/U5_RUNNER_ANALYSIS.md`](reports/U5_RUNNER_ANALYSIS.md).
 RunnerAnalysis bygger en verifierbar Journey ovanpå officiella checkpoints och
-splits, flerårshistorik kräver U2-verifierad identitet och Head-to-head respekterar
-CourseVersion-kontrakten. Favoriter sparas endast lokalt som referenser till
+splits, flerårshistorik kräver U2-verifierad identitet och Head-to-head skiljer
+mellan whole-course-jämförbarhet och CourseVersion-bundna checkpoint/segment-
+jämförelser. Favoriter sparas endast lokalt som referenser till
 specifika publicerade resultat och skapar ingen egen personmatchning.
 
 U6:s Course Intelligence beskrivs i
@@ -94,9 +96,10 @@ U7:s Historik 2.0 beskrivs i
 [`reports/U7_HISTORY_2.md`](reports/U7_HISTORY_2.md).
 History Intelligence återanvänder U2:s verifierade personidentitet och
 whole-course-jämförbarhet för Löpararkiv, Hall of Fame och Årets fingeravtryck.
-Klasshistorik och Klassutveckling bryter prestationslinjer och animation vid
-CourseVersion-gränser i stället för att skapa en skenbar trend över olika banor.
-Fingeravtryckets prestationsnormal byggs av lika viktade, jämförbara loppår.
+Klasshistorik och Klassutveckling bryter prestationslinjer när verifierad
+whole-course-jämförbarhet saknas, även om CourseVersion skulle vara densamma.
+Fingeravtryckets prestationsnormal byggs av lika viktade, uttryckligen
+jämförbara loppår.
 
 
 U8:s UX-, metodik- och tillgänglighetskontrakt beskrivs i
@@ -244,24 +247,37 @@ gissar inget från år eller distans. En planerad utgåva saknar källbindning o
 inte i databasen. Lägg därefter till en granskad `SourceBinding` och ändra
 `data_status` till `available` i en separat ändring innan import aktiveras.
 
-## Banversioner
+## Banversioner och rutt-evidens
 
-`docs/data/ultravasan-routes.js` innehåller två lager:
+`docs/data/ultravasan-routes.js` är i första hand ett **display-register**.
+Det innehåller verifierade källårsgeometrier som kan användas som
+kartografiska referenser för andra loppår:
 
-- `ultravasan90-post2023` – 92 km, från den uppladdade GPS-filen
-  `source/UV-90_20260610.kmz`,
-- `ultravasan90-pre2023` – 90,173 km, ett lokalt referenslager för 2014–2022.
+- `ultravasan90-pre2023` – verifierad GPX för **2022** från
+  `data/routes/Ultravasan 90 2022.gpx`,
+- `ultravasan90-post2023` – verifierad GPX för **2024** från
+  `data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx`,
+- `ultravasan45-current` – verifierad GPX för **2026** från
+  `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`.
 
-Verifierad historisk GPX finns nu både som
-`source/Ultravasan90-2014-2022.gpx` och som den reproducerbara primärkällan
-`data/routes/Ultravasan 90 2022.gpx`. Den äldre
-`source/Ultravasan90-2014-2022-reference.gpx` bevaras endast som dokumenterad
-reserv. Alla aktuella ruttkällor och deras SHA-256-hashar ingår i
-`reports/U0_BASELINE.json`.
+Registret har ett explicit `edition_route_contracts`-kontrakt per RaceEdition.
+`display_geometry_usage=exact-source-year` betyder att displayspårets källår
+är samma som loppåret; `reference-only` betyder att kartan visar ett spår från
+ett annat verifierat källår. Kartduellen visar denna skillnad direkt i UI.
 
-Kartvyn väljer automatiskt rätt rutt per år. Om löpare från båda perioderna jämförs
-visas båda lagren, separata linjestilar och årsmärke på varje löpare. Ställningen
-jämförs då som procent av respektive banversion.
+För Ultravasan 90 2026 finns dessutom en separat årsgeometri i
+`data/routes/ultravasan90-2026.json`, härledd från Vasaloppets officiella
+`UV-90_20260610.kmz`. Den används som årsvis rutt-evidens i auditen även om
+browserns nuvarande displayrutt fortfarande är 2024-spåret.
+
+**Display-geometri, årsvis verifierad geometri och whole-course-
+prestationsjämförbarhet är tre separata kontrakt.** Samma CourseVersion eller
+samma displayrutt får därför inte användas som automatiskt bevis för att två
+loppår kan jämföras i sluttid.
+
+Den äldre `source/Ultravasan90-2014-2022-reference.gpx` bevaras endast som
+dokumenterad reserv. Årsvis ruttproveniens, extern evidens och geometri-
+diagnostik dokumenteras i `reports/U20_ROUTE_AUDIT.md`.
 
 ## Hur kartpositionerna beräknas
 

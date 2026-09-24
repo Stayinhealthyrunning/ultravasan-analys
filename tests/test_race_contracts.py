@@ -38,11 +38,12 @@ def test_all_observed_editions_resolve_without_changing_raw_data(inputs):
     assert legacy["checkpoint_catalog"][1]["distance_km"] == 15.5
 
 
-def test_whole_course_group_fails_closed_until_edition_equivalence_is_verified(inputs):
+def test_whole_course_group_is_explicit_and_limited_to_verified_editions(inputs):
     catalog = contracts.build_catalog(**inputs)
-    for year in (2023, 2024, 2025, 2026):
-        edition = catalog["editions"][f"ultravasan90-{year}"]
-        assert edition["whole_course_comparison_group"] is None
+    assert catalog["editions"]["ultravasan90-2023"]["whole_course_comparison_group"] is None
+    assert catalog["editions"]["ultravasan90-2024"]["whole_course_comparison_group"] == "ultravasan90-2024-2025"
+    assert catalog["editions"]["ultravasan90-2025"]["whole_course_comparison_group"] == "ultravasan90-2024-2025"
+    assert catalog["editions"]["ultravasan90-2026"]["whole_course_comparison_group"] is None
     assert catalog["editions"]["ultravasan90-2022"]["whole_course_comparison_group"] is None
     assert catalog["editions"]["ultravasan45-2026"]["whole_course_comparison_group"] is None
     assert all(course["whole_course_comparison_group"] is None for course in catalog["courses"].values()), (

@@ -38,6 +38,23 @@ class RouteBuildTests(unittest.TestCase):
                 for race in race_config["races"]
             }
             self.assertEqual(expected_routes, registry["route_for_edition"])
+            contracts = registry["edition_route_contracts"]
+            self.assertEqual(set(expected_routes), set(contracts))
+            self.assertEqual("exact-source-year", contracts["ultravasan90-2022"]["display_geometry_usage"])
+            self.assertEqual("exact-source-year", contracts["ultravasan90-2024"]["display_geometry_usage"])
+            self.assertEqual("reference-only", contracts["ultravasan90-2023"]["display_geometry_usage"])
+            self.assertEqual("reference-only", contracts["ultravasan90-2026"]["display_geometry_usage"])
+            self.assertEqual("exact-source-year", contracts["ultravasan45-2026"]["display_geometry_usage"])
+            self.assertEqual(2024, contracts["ultravasan90-2026"]["display_geometry_source_year"])
+            self.assertIsNone(contracts["ultravasan90-2023"]["whole_course_comparison_group"])
+            self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2024"]["whole_course_comparison_group"])
+            self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2025"]["whole_course_comparison_group"])
+            self.assertIsNone(contracts["ultravasan90-2026"]["whole_course_comparison_group"])
+            self.assertTrue(all(
+                item["whole_course_comparison_group"] is None
+                for key, item in contracts.items()
+                if key not in {"ultravasan90-2024", "ultravasan90-2025"}
+            ))
             self.assertNotIn("route_for_race", registry)
             self.assertNotIn("route_for_year", registry)
             uv45 = registry["routes"]["ultravasan45-current"]

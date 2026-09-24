@@ -55,6 +55,21 @@ const m35_2018=model.points.find(point=>point.className==='M35'&&point.year===20
 assert.strictEqual(m35_2018.comparisonBreak,false,'samma explicit whole-course-grupp ska hålla serien över ändrad CourseVersion');
 assert.ok(!evolution.pointTooltip(m35_2018,'Ultravasan 90','startande').includes('banversion'));
 
+const sameVersionRaces=[
+  {id:11,year:2023,distance_km:92,course_version:'same-v1',comparison_key:null},
+  {id:12,year:2024,distance_km:92,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
+  {id:13,year:2025,distance_km:92,course_version:'same-v1',comparison_key:'uv90-2024-2025'},
+];
+const sameVersionResults=[
+  {id:21,race_id:11,age_class:'M40',sex:'M',status:'FINISHED',finish_seconds:36000},
+  {id:22,race_id:12,age_class:'M40',sex:'M',status:'FINISHED',finish_seconds:35000},
+  {id:23,race_id:13,age_class:'M40',sex:'M',status:'FINISHED',finish_seconds:34000},
+];
+const sameVersionModel=evolution.aggregateClassHistory({races:sameVersionRaces,results:sameVersionResults,isStarter,isFinished,comparisonKeyForRace:race=>race.comparison_key,courseVersionForRace:race=>race.course_version});
+assert.deepStrictEqual(sameVersionModel.comparisonBreaks.map(x=>[x.fromYear,x.toYear,x.label]),[[2023,2024,'Helbanans jämförbarhet ej verifierad']],'whole-course-gräns ska markeras även när CourseVersion är oförändrad');
+assert.strictEqual(sameVersionModel.points.find(point=>point.year===2024).comparisonBreak,true);
+assert.strictEqual(sameVersionModel.points.find(point=>point.year===2025).comparisonBreak,false);
+
 const small=evolution.bubbleRadius(25,100),large=evolution.bubbleRadius(100,100);
 assert.ok(Math.abs((small*small)/(large*large)-.25)<1e-9,'bubbelarean ska vara proportionell mot deltagarantalet');
 assert.ok(large<=34&&small>=6,'bubbelradien ska hållas inom läsbart intervall');
