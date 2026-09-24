@@ -95,6 +95,13 @@
   }
 
   function segmentContracts(course){
+    const rawCheckpoints=(course?.checkpoint_catalog||[]).slice();
+    const rawKeys=new Set(rawCheckpoints.map(checkpoint=>keyOf(checkpoint.checkpoint_key)));
+    for(const segment of course?.segments||[]){
+      if(!rawKeys.has(keyOf(segment.from))||!rawKeys.has(keyOf(segment.to))){
+        throw new Error(`Segment ${segment.from}→${segment.to} saknar explicit checkpoint i CourseVersion.`);
+      }
+    }
     const checkpoints=checkpointCatalog(course);
     return checkpoints.slice(1).map((to,index)=>{
       const from=checkpoints[index];
