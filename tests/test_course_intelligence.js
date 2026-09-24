@@ -40,6 +40,17 @@ assert.ok(first.field.timing_sample_n>=5);
 assert.strictEqual(first.field.sufficient_sample,true);
 assert.ok(Number.isFinite(first.field.median_pace_seconds_per_km));
 assert.ok(Number.isFinite(first.field.median_pace_index));
+assert.ok(first.field.timing_sample_n>=20,'verkligt 2016-segment ska ha underlag för yttre kvantiler');
+assert.strictEqual(first.field.outer_quantile_min_sample,20);
+assert.strictEqual(first.field.outer_quantiles_available,true);
+assert.ok(Number.isFinite(first.field.q10_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q25_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q75_pace_seconds_per_km));
+assert.ok(Number.isFinite(first.field.q90_pace_seconds_per_km));
+assert.ok(first.field.q10_pace_seconds_per_km<=first.field.q25_pace_seconds_per_km);
+assert.ok(first.field.q25_pace_seconds_per_km<=first.field.median_pace_seconds_per_km);
+assert.ok(first.field.median_pace_seconds_per_km<=first.field.q75_pace_seconds_per_km);
+assert.ok(first.field.q75_pace_seconds_per_km<=first.field.q90_pace_seconds_per_km);
 
 const last=model.segments.at(-1);
 assert.strictEqual(last.to_key,'mora');
@@ -109,6 +120,12 @@ assert.ok(firstStats.q10_pace_seconds_per_km<=firstStats.q25_pace_seconds_per_km
 assert.ok(firstStats.q75_pace_seconds_per_km<=firstStats.q90_pace_seconds_per_km);
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds));
 assert.ok(Number.isFinite(firstStats.median_pacing_loss_seconds_per_km));
+assert.strictEqual(firstStats.outer_quantile_min_sample,20);
+assert.strictEqual(firstStats.outer_quantiles_available,false);
+assert.ok(Number.isFinite(firstStats.q25_pace_seconds_per_km),'n=5 ska räcka för Q25');
+assert.ok(Number.isFinite(firstStats.q75_pace_seconds_per_km),'n=5 ska räcka för Q75');
+assert.strictEqual(firstStats.q10_pace_seconds_per_km,null,'Q10 kräver n≥20');
+assert.strictEqual(firstStats.q90_pace_seconds_per_km,null,'Q90 kräver n≥20');
 assert.strictEqual(firstStats.located_dnf_n,1);
 assert.strictEqual(firstStats.dnf_dropouts_n,0,'DNF efter Smågan får inte belasta start→Smågan');
 
