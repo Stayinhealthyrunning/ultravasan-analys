@@ -241,8 +241,9 @@ def build_report():
                 if family == "uv90" and year == 2026 and (ROOT / special_90.get("source_file", "")).exists()
                 else (
                     hashlib.sha256((ROOT / route["source_file"]).read_bytes()).hexdigest()
-                    if family != "uv90" or year != 2026
-                    if route and (ROOT / route["source_file"]).exists()
+                    if (family != "uv90" or year != 2026)
+                    and route
+                    and (ROOT / route["source_file"]).exists()
                     else None
                 )
             ),
