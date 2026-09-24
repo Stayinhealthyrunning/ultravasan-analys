@@ -174,7 +174,7 @@ assert.ok(mapSource.includes("require('./race-media.js')")&&mapSource.includes('
 assert.ok(!appSource.includes('window.RACE_MEDIA_CONFIG'),'huvudappen får inte återgå till legacy-aliaset');
 assert.ok(raceMediaSourceU4.includes('root.RaceMedia=api;root.RACE_MEDIA_CONFIG=api'),'legacy media-alias ska endast exponeras från RaceMedia för bakåtkompatibilitet');
 assert.ok(indexHtml.includes('assets/race-media.js?v=20260923-u4b')&&/(?:assets\/app\.js\?v=20260923-(?:u4b|u5[a-z]*|u8[a-z]*)|assets\/app\.js\?v=20260924-r3)/.test(indexHtml),'huvudytan ska behålla RaceMedia-cachekey och cache-busta aktuell app-version');
-assert.ok(mapHtml.includes('assets/map-engine.js?v=20260923-u4b')&&mapHtml.includes('assets/race-media.js?v=20260923-u4b')&&mapHtml.includes('assets/map.js?v=20260923-u4b'),'kartytan ska cache-busta ändrade U4.8/U4.9-assets');
+assert.ok(mapHtml.includes('assets/map-engine.js?v=20260923-u4b')&&mapHtml.includes('assets/race-media.js?v=20260923-u4b')&&mapHtml.includes('assets/map.js?v=20260924-route-evidence1'),'kartytan ska cache-busta ändrade kart- och rutt-evidens-assets');
 
 
 const runnerAnalysisSource=fs.readFileSync(path.join(root,'docs/assets/runner-analysis.js'),'utf8');
