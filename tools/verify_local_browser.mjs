@@ -541,6 +541,92 @@ const h2hChangedCourse=await evaluate(`(() => ({
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
 
+const historyNavigationBaseline=await evaluate(`(() => {
+  const sex=document.querySelector('#sexFilter');
+  const options=[...sex.options].map(option=>option.value).filter(Boolean);
+  return {
+    family:state.raceFamily,
+    raceId:state.raceId,
+    sex:sex?.value||'',
+    targetSex:options.find(value=>value!==(sex?.value||''))||options[0]||'',
+    url:location.href,
+  };
+})()`);
+await evaluate(`(() => {
+  const sex=document.querySelector('#sexFilter');
+  if(!sex||!${JSON.stringify(historyNavigationBaseline.targetSex)})return false;
+  sex.value=${JSON.stringify(historyNavigationBaseline.targetSex)};
+  sex.dispatchEvent(new Event('change',{bubbles:true}));
+  return true;
+})()`);
+await delay(120);
+const historyFilterPushed=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',url:location.href}))()`);
+await evaluate("history.back()");
+let historyFilterBackReady=false;
+for(let attempt=0;attempt<80;attempt++){
+  if(await evaluate(`document.querySelector('#sexFilter')?.value===${JSON.stringify(historyNavigationBaseline.sex)}`)){historyFilterBackReady=true;break}
+  await delay(50);
+}
+const historyFilterBack=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',url:location.href,family:state.raceFamily,raceId:state.raceId}))()`);
+await evaluate("history.forward()");
+let historyFilterForwardReady=false;
+for(let attempt=0;attempt<80;attempt++){
+  if(await evaluate(`document.querySelector('#sexFilter')?.value===${JSON.stringify(historyNavigationBaseline.targetSex)}`)){historyFilterForwardReady=true;break}
+  await delay(50);
+}
+const historyFilterForward=await evaluate(`(() => ({sex:document.querySelector('#sexFilter')?.value||'',url:location.href}))()`);
+await evaluate("history.back()");
+for(let attempt=0;attempt<80;attempt++){
+  if(await evaluate(`document.querySelector('#sexFilter')?.value===${JSON.stringify(historyNavigationBaseline.sex)}`))break;
+  await delay(50);
+}
+
+const historyRaceSwitch=await evaluate(`(async()=> {
+  const target=${JSON.stringify(historyNavigationBaseline.family==='uv90'?'uv45':'uv90')};
+  const button=document.querySelector('.race-switch-button[data-race-family="'+target+'"]');
+  if(typeof button?.onclick!=='function')return {ok:false,target};
+  await button.onclick();
+  return {ok:state.raceFamily===target,target,url:location.href,raceId:state.raceId};
+})()`);
+const historyRaceTargetReady=historyRaceSwitch.ok&&await waitForActiveFamily(historyRaceSwitch.target);
+await evaluate("history.back()");
+let historyRaceBackReady=false;
+for(let attempt=0;attempt<120;attempt++){
+  if(await evaluate(`state.raceFamily===${JSON.stringify(historyNavigationBaseline.family)}`)){historyRaceBackReady=true;break}
+  await delay(50);
+}
+const historyRaceBack=await evaluate(`(() => ({family:state.raceFamily,raceId:state.raceId,url:location.href}))()`);
+await evaluate("history.forward()");
+let historyRaceForwardReady=false;
+for(let attempt=0;attempt<120;attempt++){
+  if(await evaluate(`state.raceFamily===${JSON.stringify(historyRaceSwitch.target)}`)){historyRaceForwardReady=true;break}
+  await delay(50);
+}
+const historyRaceForward=await evaluate(`(() => ({family:state.raceFamily,raceId:state.raceId,url:location.href}))()`);
+await evaluate("history.back()");
+for(let attempt=0;attempt<120;attempt++){
+  if(await evaluate(`state.raceFamily===${JSON.stringify(historyNavigationBaseline.family)}`))break;
+  await delay(50);
+}
+const historyNavigation={
+  baseline:historyNavigationBaseline,
+  filterPushed:historyFilterPushed,
+  filterBack:historyFilterBack,
+  filterForward:historyFilterForward,
+  raceSwitch:historyRaceSwitch,
+  raceBack:historyRaceBack,
+  raceForward:historyRaceForward,
+  verified:Boolean(
+    historyNavigationBaseline.targetSex&&
+    historyFilterPushed.sex===historyNavigationBaseline.targetSex&&
+    historyFilterBackReady&&historyFilterBack.sex===historyNavigationBaseline.sex&&
+    historyFilterForwardReady&&historyFilterForward.sex===historyNavigationBaseline.targetSex&&
+    historyRaceTargetReady&&historyRaceBackReady&&historyRaceForwardReady&&
+    historyRaceBack.family===historyNavigationBaseline.family&&
+    historyRaceForward.family===historyRaceSwitch.target
+  ),
+};
+
 const securityMutation=await evaluate(`(() => {
   const target=state.filtered.find(item=>item&&item.status)||state.data.results.find(item=>item&&item.status);
   if(!target)return {verified:false,reason:'no-result'};
@@ -679,11 +765,12 @@ const checks = {
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.warnings>0 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt'),
+  historyNavigation:historyNavigation.verified,
   securityMutation:securityMutation.verified,
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u7ClubHistory,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,securityMutation,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u7ClubHistory,u8Ux,u8Keyboard,u9Viewports,contractChecks,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hChangedCourse,changedCourseId,historyNavigation,securityMutation,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
