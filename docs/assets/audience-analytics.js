@@ -31,7 +31,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports={audienceRaceFamil
 if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   const COLORS={male:'#2563eb',female:'#db2777',unknown:'#8b9a94',green:'#167253',lime:'#d8e35d',orange:'#e86f3b',purple:'#7c3aed',gold:'#d99a24'};
   const CLASS_COLORS=['#167253','#d99a24','#7c3aed','#0f8b8d','#e86f3b','#4f46e5','#9a6b1f','#0e7490'];
-  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:null,splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',classHeatStatistic:'median',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:''};
+  const advanced={ready:false,clubMetric:'largest',classSelection:[],classSelectionInitialized:false,clubSelection:[],clubKeyByResult:new Map(),clubDisplay:new Map(),resultById:new Map(),splitsByResult:null,splitEvidence:new Set(),smIndex:new Map(),classIndexMode:'dominance',classHeatUnit:'pace',classHeatStatistic:'median',yearTimer:null,currentClubStats:[],clubSearchReady:false,classEvolutionController:null,classEvolutionCache:new Map(),classEvolutionModel:null,classEvolutionKey:'',restoringHistory:false};
   const sexKey=r=>{const s=String(r?.sex||'').toUpperCase();return s==='F'||s==='W'||s==='K'||s==='D'?'F':s==='M'||s==='H'?'M':'U'};
   const sexLabel=s=>s==='M'?'Män':s==='F'?'Kvinnor':'Okänt';
   const resultStatus=r=>window.ResultStatus.classify(r,{hasSplit:advanced.splitEvidence.has(r?.id)});
@@ -133,8 +133,8 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function setupClubSearches(){
     if(advanced.clubSearchReady)return;advanced.clubSearchReady=true;
     const filterInput=document.querySelector('#clubFilterSearch'),filterHidden=document.querySelector('#clubFilter');
-    wireClubSearch(filterInput,document.querySelector('#clubFilterSuggestions'),currentClubOptions,item=>{filterHidden.value=item.key;state.page=1;applyFilters()},{clearAction:()=>{if(filterHidden.value){filterHidden.value='';state.page=1;applyFilters()}}});
-    filterInput?.addEventListener('input',()=>{if(!filterHidden.value)return;const selectedName=advanced.clubDisplay.get(filterHidden.value)||'';if(filterInput.value.trim()!==selectedName){const typed=filterInput.value;filterHidden.value='';state.page=1;applyFilters();filterInput.value=typed}});
+    wireClubSearch(filterInput,document.querySelector('#clubFilterSuggestions'),currentClubOptions,item=>{filterHidden.value=item.key;state.page=1;applyFilters({historyMode:'push'})},{clearAction:()=>{if(filterHidden.value){filterHidden.value='';state.page=1;applyFilters({historyMode:'push'})}}});
+    filterInput?.addEventListener('input',()=>{if(!filterHidden.value)return;const selectedName=advanced.clubDisplay.get(filterHidden.value)||'';if(filterInput.value.trim()!==selectedName){const typed=filterInput.value;filterHidden.value='';state.page=1;applyFilters({historyMode:'push'});filterInput.value=typed}});
     wireClubSearch(document.querySelector('#clubCompareSearch'),document.querySelector('#clubCompareSuggestions'),()=>advanced.currentClubStats.filter(x=>!advanced.clubSelection.includes(x.key)).map(x=>({key:x.key,name:x.name,count:x.starters})),item=>{if(!advanced.clubSelection.includes(item.key)&&advanced.clubSelection.length<4)advanced.clubSelection.push(item.key);const active=document.querySelector('#clubProfileSelect');if(active)active.value=item.key;document.querySelector('#clubCompareSearch').value='';renderClubWorld()},{clearAction:()=>{}});
     document.addEventListener('click',e=>{if(!e.target.closest('.club-search-label'))document.querySelectorAll('.club-search-suggestions').forEach(x=>x.hidden=true)});
   }
@@ -148,17 +148,20 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function patchFilters(){
     const legacyRefresh=refreshFilters;
     refreshFilters=function(){const oldClass=document.querySelector('#classFilter')?.value||'',oldStatus=document.querySelector('#statusFilter')?.value||'';legacyRefresh();if(oldClass&&[...document.querySelector('#classFilter').options].some(o=>o.value===oldClass))document.querySelector('#classFilter').value=oldClass;if(oldStatus&&[...document.querySelector('#statusFilter').options].some(o=>o.value===oldStatus))document.querySelector('#statusFilter').value=oldStatus;populateClubFilter()};
-    applyFilters=function(){
+    applyFilters=function(options={}){
       const f=filterValues();state.filtered=raceResults().filter(r=>(!f.sex||sexKey(r)===f.sex)&&(!f.cls||r.age_class===f.cls)&&(!f.club||advanced.clubKeyByResult.get(r.id)===f.club)&&(!f.status||r.status===f.status));
       state.sortKey='overall_place';state.sortDir=1;state.filtered.sort((a,b)=>(Number(a.overall_place)||Infinity)-(Number(b.overall_place)||Infinity)||String(a.name_as_published||'').localeCompare(String(b.name_as_published||''),'sv'));
-      syncUrl();renderAll();if(state.dataPhase!=='core')renderAudienceWorlds();
+      if(!options.skipHistory&&!advanced.restoringHistory)syncUrl(options.historyMode==='push'?'push':'replace');renderAll();if(state.dataPhase!=='core')renderAudienceWorlds();
     };
-    const club=document.querySelector('#clubFilter');club?.addEventListener('change',()=>{state.page=1;applyFilters()});
-    const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';const ci=document.querySelector('#clubFilterSearch');if(ci)ci.value='';applyFilters()};
+    const club=document.querySelector('#clubFilter');club?.addEventListener('change',()=>{state.page=1;applyFilters({historyMode:'push'})});
+    const oldReset=document.querySelector('#resetFilters').onclick;document.querySelector('#resetFilters').onclick=e=>{oldReset?.call(e.currentTarget,e);if(club)club.value='';const ci=document.querySelector('#clubFilterSearch');if(ci)ci.value='';applyFilters({historyMode:'replace'})};
   }
 
-  function syncUrl(){
-    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['race',state.raceFamily],['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));history.replaceState(null,'',u);
+  function syncUrl(mode='replace'){
+    const f=filterValues(),race=state.data.races.find(r=>r.id===state.raceId),u=new URL(location.href);[['race',state.raceFamily],['year',race?.year],['sex',f.sex],['class',f.cls],['club',f.club],['status',f.status]].forEach(([k,v])=>v?u.searchParams.set(k,v):u.searchParams.delete(k));
+    const method=mode==='push'?'pushState':'replaceState';
+    if(method==='pushState'&&u.href===location.href)return;
+    history[method](null,'',u);
   }
   function restoreUrl(){
     const p=new URLSearchParams(location.search),requestedFamily=['uv90','uv45'].includes(p.get('race'))?p.get('race'):state.raceFamily,race=selectAudienceRace(state.data.races,requestedFamily,p.get('year'));if(race){if(state.raceFamily!==requestedFamily)switchRaceFamily(requestedFamily,true);document.querySelector('#yearFilter').value=String(race.id);state.raceId=race.id;refreshFilters()}
