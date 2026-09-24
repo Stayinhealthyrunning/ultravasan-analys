@@ -777,7 +777,7 @@
       "exact_edition_route_found": true,
       "route_usage": "exact-source-year",
       "source_provider": "Vasaloppet",
-      "source_year": null,
+      "source_year": 2026,
       "source_path": "UV-90_20260610.kmz",
       "source_sha256": null,
       "geometry_fingerprint_sha256": "deafae9e8ee4ef3ab42f061bfd3751d5a127788be44642607cb07d379aff11a0",
