@@ -196,6 +196,7 @@ def build_report():
     versions = read(ROOT / "config/course_versions.json")["courses"]
     route_index = read(ROOT / "data/routes/ultravasan90-routes.json")
     routes = route_index["routes"]
+    display_contracts = route_index.get("edition_route_contracts", {})
     special_90 = read(ROOT / "data/routes/ultravasan90-2026.json")
     editions = []
     for edition in sorted(catalog["races"], key=lambda row: (row["year"], row["race_family"])):
@@ -231,6 +232,7 @@ def build_report():
             "route_id": route_id,
             "exact_edition_route_found": exact_source_year,
             "route_usage": "exact-source-year" if exact_source_year else ("reference-only" if route else "unknown"),
+            "display_route_contract": display_contracts.get(key),
             "evidence_status": evidence_status(exact_source_year, external),
             "source_provider": provider,
             "source_year": route.get("source_year") if route else None,
@@ -295,6 +297,7 @@ def build_report():
             if not item["exact_edition_route_found"] and not item["external_route_evidence"]
         ],
         "course_version_equals_whole_course_comparison": False,
+        "display_route_contracts_complete": len(display_contracts) == len(editions),
         "routes": editions,
         "geometry_comparisons": geometry_comparisons,
         "whole_course_groups": [],
@@ -310,6 +313,7 @@ def build_report():
             "A year-specific route or race-day GPS trace proves evidence for that year, not equivalence to another year.",
             "The sampled nearest-track distance is a diagnostic and cannot establish course identity or equal performance difficulty on its own.",
             "A missing original source file is never substituted by hashing a derived repository artifact; source_sha256 remains null in that case.",
+            "Display geometry, exact annual geometry evidence and whole-course performance comparability are separate contracts.",
             "CourseVersion/checkpoint equality is not sufficient evidence for whole-course comparison groups.",
         ],
     }
@@ -328,8 +332,8 @@ def main():
         "",
         "CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.",
         "",
-        "| RaceEdition | Local exact route | Evidence status | Local route source/year | External annual evidence | Whole-course decision |",
-        "|---|---:|---|---|---|---|",
+        "| RaceEdition | Local exact route | Display geometry | Evidence status | Local route source/year | External annual evidence | Whole-course decision |",
+        "|---|---:|---|---|---|---|---|",
     ]
     for row in report["routes"]:
         external = "; ".join(
@@ -337,9 +341,13 @@ def main():
             for item in row["external_route_evidence"]
         ) or "none"
         local = f"{row['source_path'] or 'unknown'} · {row['source_year'] or 'unknown'}"
+        display = row.get("display_route_contract") or {}
+        display_text = (
+            f"{display.get('display_geometry_usage', 'unknown')} · source {display.get('display_geometry_source_year', 'unknown')}"
+        )
         lines.append(
             f"| {row['race_key']} | {'Yes' if row['exact_edition_route_found'] else 'No'} | "
-            f"{row['evidence_status']} | {local} | {external} | "
+            f"{display_text} | {row['evidence_status']} | {local} | {external} | "
             f"{row['whole_course_comparison_group_recommended'] or 'Not assigned'} |"
         )
     lines += [
@@ -350,7 +358,7 @@ def main():
         "",
         "## Geometry review",
         "",
-        "The local 2024 GPS reference and 2026-derived route receive a coarse symmetric nearest-sample comparison (0.5 km spacing). This remains useful as a geometry diagnostic, but it cannot override the documented 2024 rerouting or establish equal whole-course difficulty.",
+        "The exact-source-year 2022, 2024 and 2026 UV90 geometries receive pairwise coarse symmetric nearest-sample comparisons (0.5 km spacing). These remain geometry diagnostics only: they can show material route differences or strong geometric similarity, but cannot by themselves establish equal whole-course performance difficulty.",
         "",
         "~~~json",
         json.dumps(report["geometry_comparisons"], ensure_ascii=False, indent=2),
