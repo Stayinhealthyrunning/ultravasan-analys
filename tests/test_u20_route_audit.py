@@ -65,4 +65,24 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
 def test_checked_in_route_audit_json_matches_current_builder():
     report = u20_route_audit.build_report()
     checked_in = json.loads((u20_route_audit.ROOT / "reports/U20_ROUTE_AUDIT.json").read_text(encoding="utf-8"))
-    assert checked_in == report
+    if checked_in != report:
+        actual_routes = {row["race_key"]: row for row in checked_in.get("routes", [])}
+        expected_routes = {row["race_key"]: row for row in report.get("routes", [])}
+        route_diffs = []
+        for race_key in sorted(set(actual_routes) | set(expected_routes)):
+            actual = actual_routes.get(race_key, {})
+            expected = expected_routes.get(race_key, {})
+            for field in sorted(set(actual) | set(expected)):
+                if actual.get(field) != expected.get(field):
+                    route_diffs.append({
+                        "race_key": race_key,
+                        "field": field,
+                        "checked_in": actual.get(field),
+                        "builder": expected.get(field),
+                    })
+        top_diffs = {
+            key: {"checked_in": checked_in.get(key), "builder": report.get(key)}
+            for key in sorted(set(checked_in) | set(report))
+            if key != "routes" and checked_in.get(key) != report.get(key)
+        }
+        raise AssertionError(json.dumps({"top": top_diffs, "routes": route_diffs}, ensure_ascii=False, indent=2))
