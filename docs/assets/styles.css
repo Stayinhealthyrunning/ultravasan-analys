@@ -825,3 +825,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .finger-row>span small{font-size:.65rem;font-weight:650;line-height:1.35}.finger-row>em{margin-top:-3px;font-size:.68rem;line-height:1.45}
 @media(max-width:980px){.club-chart-card{min-height:450px}.club-chart{height:370px!important;min-height:370px!important}.club-chart svg{height:330px!important}}
 @media(max-width:620px){.hall-segment-legend{grid-template-columns:repeat(2,minmax(0,1fr))}.hall-map-fallback-note{left:12px;right:12px;bottom:8px;width:auto;transform:none;white-space:normal;text-align:center;line-height:1.35}}
+
+/* Klasshistorik: median visas som linjeserie utan separata synliga datapunkter. */
+.class-history-line{pointer-events:none}
+.class-history-hit{cursor:help;outline:none}
+.class-history-hit:focus{stroke:var(--ink);stroke-width:1.5;stroke-opacity:.22}
