@@ -37,7 +37,7 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     pairs = {(item["left"], item["right"]): item for item in report["geometry_comparisons"]}
     pair_22_24 = pairs[("Ultravasan 90 2022 exact-year geometry", "Ultravasan 90 2024 exact-year geometry")]
     pair_24_26 = pairs[("Ultravasan 90 2024 exact-year geometry", "Ultravasan 90 2026 exact-year geometry")]
-    assert pair_22_24["result"]["symmetric_nearest_median_m"] > 100
+    assert pair_22_24["result"]["symmetric_nearest_p95_m"] > 500
     assert pair_24_26["result"]["symmetric_nearest_median_m"] < 100
     assert all("diagnostic only" in item["decision"] for item in report["geometry_comparisons"])
     assert all("not by itself" in item["decision"] for item in report["geometry_comparisons"])
