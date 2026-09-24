@@ -60,4 +60,30 @@ const minimal=adapter.normalizeBase({
 assert.deepStrictEqual(minimal.sources,[]);
 assert.deepStrictEqual(minimal.stats,{});
 
-console.log('OK: U4 DataAdapter normaliserar och berikar delad app-/kartdata deterministiskt');
+const auxiliary=adapter.normalizeBase({
+  races:[{id:22,race_key:'ultravasan90-2025',year:2025,distance_km:92}],
+  results:[{id:202,race_id:22,status:'FINISHED',finish_seconds:36000}],
+  checkpoints:[
+    {race_id:22,checkpoint_key:'start',name:'Start Sälen',sequence_no:0,distance_km:0},
+    {race_id:22,checkpoint_key:'high_point',name:'Högsta punkten',sequence_no:1,distance_km:3.3},
+    {race_id:22,checkpoint_key:'smagan',name:'Smågan',sequence_no:2,distance_km:10.84},
+    {race_id:22,checkpoint_key:'mora_warning',name:'Mora Förvarning',sequence_no:3,distance_km:91.3},
+    {race_id:22,checkpoint_key:'mora',name:'Mora mål',sequence_no:4,distance_km:92},
+  ],
+  splits:[
+    {result_id:202,checkpoint_key:'high_point',elapsed_seconds:1200,segment_seconds:1200,pace_seconds_per_km:363.6},
+    {result_id:202,checkpoint_key:'smagan',elapsed_seconds:4000,segment_seconds:2800,pace_seconds_per_km:371.4},
+    {result_id:202,checkpoint_key:'mora_warning',elapsed_seconds:35600,segment_seconds:31600,pace_seconds_per_km:392},
+    {result_id:202,checkpoint_key:'mora',elapsed_seconds:36000,segment_seconds:400,pace_seconds_per_km:571.4},
+  ],
+  stats:{},sources:[]
+});
+assert.deepStrictEqual(auxiliary.checkpoints.map(row=>row.checkpoint_key),['start','smagan','mora']);
+assert.deepStrictEqual(auxiliary.checkpoints.map(row=>row.sequence_no),[0,1,2]);
+assert.deepStrictEqual(auxiliary.splits.map(row=>row.checkpoint_key),['smagan','mora']);
+assert.strictEqual(auxiliary.splits[0].segment_seconds,4000,'Sälen→Smågan ska räknas från start, inte från Högsta punkten');
+assert.strictEqual(auxiliary.splits[1].segment_seconds,32000,'Smågan→Mora ska bortse från Mora Förvarning');
+assert.ok(!auxiliary.checkpoints.some(row=>['high_point','mora_warning'].includes(row.checkpoint_key)));
+assert.ok(!auxiliary.splits.some(row=>['high_point','mora_warning'].includes(row.checkpoint_key)));
+
+console.log('OK: U4 DataAdapter normaliserar, berikar och exkluderar icke-analytiska timingpunkter deterministiskt');
