@@ -395,6 +395,11 @@ def upsert_catalogue(conn: sqlite3.Connection, config: dict[str, Any]) -> None:
             existing_keys = {row["checkpoint_key"] for row in existing_checkpoints}
             next_sequence = max(occupied, default=-1) + 1
             for cp in configured:
+                if has_results and cp["checkpoint_key"] == "mora_warning" and cp["checkpoint_key"] not in existing_keys:
+                    # Source-only service timing point. Do not silently append it
+                    # to an already imported analytical checkpoint model; the
+                    # dedicated enrichment path inserts/reorders it atomically.
+                    continue
                 if cp["checkpoint_key"] in existing_keys:
                     # Checkpoint identity, order and distance belong to imported
                     # data as soon as results exist. Do not rewrite them.
