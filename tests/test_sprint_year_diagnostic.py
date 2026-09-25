@@ -1,48 +1,33 @@
-import json, sqlite3
+import json
 from pathlib import Path
+import requests
+from bs4 import BeautifulSoup
+import sys
 
-DB=Path(__file__).resolve().parents[1]/"data"/"ultravasan.sqlite"
+ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/"tools"))
+import mika_import
+import uvtool
 
-def test_sprint_warning_by_year_diagnostic():
-    con=sqlite3.connect(DB)
-    con.row_factory=sqlite3.Row
-    rows=con.execute("""
-      SELECT ra.race_key,ra.year,ra.distance_km,
-             cp.checkpoint_key,cp.name checkpoint_name,cp.distance_km warning_distance,
-             COUNT(s.id) total,
-             SUM(CASE WHEN COALESCE(s.is_estimated,0)=0 AND s.elapsed_seconds IS NOT NULL THEN 1 ELSE 0 END) exact_count,
-             SUM(CASE WHEN COALESCE(s.is_estimated,0)=0 AND s.elapsed_seconds IS NOT NULL
-                       AND re.status='FINISHED' AND re.finish_seconds>s.elapsed_seconds THEN 1 ELSE 0 END) eligible,
-             SUM(CASE WHEN COALESCE(s.is_estimated,0)=0 AND s.elapsed_seconds IS NOT NULL
-                       AND re.status='FINISHED' AND re.finish_seconds>s.elapsed_seconds
-                       AND upper(COALESCE(re.sex,'')) IN ('F','W','K','D') THEN 1 ELSE 0 END) female,
-             SUM(CASE WHEN COALESCE(s.is_estimated,0)=0 AND s.elapsed_seconds IS NOT NULL
-                       AND re.status='FINISHED' AND re.finish_seconds>s.elapsed_seconds
-                       AND upper(COALESCE(re.sex,'')) IN ('M','H') THEN 1 ELSE 0 END) male
-      FROM races ra
-      JOIN checkpoints cp ON cp.race_id=ra.id
-      LEFT JOIN splits s ON s.checkpoint_id=cp.id
-      LEFT JOIN results re ON re.id=s.result_id
-      WHERE cp.checkpoint_key='mora_warning'
-         OR lower(cp.name) LIKE '%förvar%'
-         OR lower(cp.name) LIKE '%forvar%'
-      GROUP BY ra.id,cp.id
-      ORDER BY ra.year,ra.race_key
-    """).fetchall()
-    classes=con.execute("""
-      SELECT ra.race_key,re.sex,re.age_class,COUNT(*) n
-      FROM races ra
-      JOIN results re ON re.race_id=ra.id
-      JOIN splits s ON s.result_id=re.id
-      JOIN checkpoints cp ON cp.id=s.checkpoint_id
-      WHERE cp.checkpoint_key='mora_warning'
-        AND COALESCE(s.is_estimated,0)=0
-        AND s.elapsed_seconds IS NOT NULL
-        AND re.status='FINISHED'
-        AND re.finish_seconds>s.elapsed_seconds
-      GROUP BY ra.race_key,re.sex,re.age_class
-      ORDER BY ra.year,ra.race_key,re.sex,re.age_class
-    """).fetchall()
-    con.close()
-    out={"warnings":[dict(r) for r in rows],"classes":[dict(r) for r in classes]}
-    raise AssertionError("SPRINT_YEAR_DIAGNOSTIC="+json.dumps(out,ensure_ascii=False,sort_keys=True))
+def test_uv90_2025_official_detail_checkpoint_diagnostic():
+    list_url="https://results.vasaloppet.se/2026/?page=1&event=UL90_HCH8NDMR2501&num_results=10&pid=search"
+    session=uvtool.create_session()
+    response=session.get(list_url,timeout=75)
+    response.raise_for_status()
+    entries=mika_import.extract_entries(response.text,list_url)
+    assert entries, f"no entries from {list_url} status={response.status_code}"
+    probes=[]
+    for entry in entries[:5]:
+        idp=entry["idp"]
+        detail_url=f"https://results.vasaloppet.se/2026/?content=detail&fpid=search&pid=search&idp={idp}&lang=SE&event=UL90_HCH8NDMR2501"
+        detail=session.get(detail_url,timeout=75)
+        detail.raise_for_status()
+        soup=BeautifulSoup(detail.text,"lxml")
+        labels=[]
+        rows=[]
+        for row in soup.select("tr.split"):
+            desc=uvtool._class_text(row,["desc","name","split-name"])
+            labels.append(desc)
+            rows.append(uvtool.clean_text(row.get_text(" ",strip=True)))
+        probes.append({"idp":idp,"name":entry.get("name"),"labels":labels,"rows":rows,"url":detail_url})
+    raise AssertionError("UV90_2025_OFFICIAL_DETAIL_DIAGNOSTIC="+json.dumps(probes,ensure_ascii=False))
