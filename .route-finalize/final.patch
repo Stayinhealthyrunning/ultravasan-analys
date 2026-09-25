@@ -997,7 +997,7 @@
          route = routes.get(route_id)
          points = route.get("points", []) if route else []
 -        exact_source_year = bool(route and int(route.get("source_year", -1)) == year)
-+        display_contract = display_contracts.get(key) or {}+        route_usage = display_contract.get("display_geometry_usage") or (
++        display_contract = display_contracts.get(key) or {}\n+        route_usage = display_contract.get("display_geometry_usage") or (
 +            "exact-source-year" if route and int(route.get("source_year", -1)) == year else "reference-only"
 +        )
 +        exact_source_year = route_usage == "exact-source-year"
