@@ -377,79 +377,73 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     pairs.forEach((pair,i)=>{const px=x(i),py=H-22,full=pair.label,short=compactSegmentLabel(pair);out+=`<text x="${px}" y="${py}" text-anchor="${i===0?'start':i===pairs.length-1?'end':'middle'}" transform="rotate(-20 ${px} ${py})" class="class-duel-axis-label" tabindex="0" role="img" aria-label="${esc(full)}" data-chart-tip="${esc(full)}" data-chart-x="${Math.max(12,Math.min(88,px/W*100)).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(full)}</title>${esc(short)}</text>`});
     el.innerHTML=`<div class="class-chart-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.key)}</span>`).join('')}<span>${esc(window.SpeedUnits.unitLabel())}</span></div><div class="interactive-chart-tooltip" role="status" hidden></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Klassduell med interaktiva medianpunkter">${out}</svg>`;wireChartTooltips(el);
   }
-  function renderClassIndex(){
-    const el=document.querySelector('#classIndexTable'),tabs=document.querySelector('#classIndexTabs');
+  function buildClassIndexRows(finished){
+    const groups=new Map();
+    finished.forEach(r=>{const key=`${r.race_id}|${sexKey(r)}|${normClass(r.age_class)}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
+    const rows=[];
+    groups.forEach(group=>{
+      group.sort((a,b)=>a.finish_seconds-b.finish_seconds);
+      const n=group.length,medianSec=safeMed(group.map(r=>r.finish_seconds)),best=group[0],second=group[1]||null;
+      const dominance=medianSec&&best?.finish_seconds?((medianSec-best.finish_seconds)/medianSec*100):null;
+      const margin=second?.finish_seconds!=null?second.finish_seconds-best.finish_seconds:null;
+      const bestIndex=advanced.smIndex.get(best.id),race=state.data.races.find(x=>x.id===best.race_id),yr=race?.year||'';
+      if(best&&Number.isFinite(dominance))rows.push({
+        type:'winner',modeEligible:n>=5,smallSample:n<5,r:best,n,medianSec,dominance,margin,index:bestIndex,year:yr,
+        leadText:margin!=null?`${fmtTime(margin)} före tvåan`:'Ingen tvåa i klassen',
+        meta:`${esc(normClass(best.age_class))} · ${fmtTime(best.finish_seconds)} · klass 1/${n}`
+      });
+      if(advanced.classIndexMode==='index')group.forEach((r,i)=>{
+        const idx=advanced.smIndex.get(r.id);
+        if(Number.isFinite(idx)&&n>=5)rows.push({
+          type:'all',modeEligible:true,smallSample:false,r,n,medianSec,
+          dominance:medianSec?((medianSec-r.finish_seconds)/medianSec*100):null,
+          margin:i===0&&second?.finish_seconds!=null?second.finish_seconds-r.finish_seconds:null,
+          index:idx,year:yr,
+          leadText:i===0&&second?.finish_seconds!=null?`${fmtTime(second.finish_seconds-r.finish_seconds)} före tvåan`:`klassplats ${i+1}/${n}`,
+          meta:`${esc(normClass(r.age_class))} · ${fmtTime(r.finish_seconds)} · klassplats ${i+1}/${n}`
+        });
+      });
+    });
+    return rows;
+  }
+  function renderClassIndexList(el,rows,{selectedClasses=null}={}){
     if(!el)return;
+    if(selectedClasses&&!selectedClasses.size){el.innerHTML='<div class="index-empty">Välj minst en klass i Klassduellen ovan.</div>';return}
+    const pool=selectedClasses?rows.filter(x=>selectedClasses.has(normClass(x.r.age_class))):rows;
+    let view=[];
+    if(advanced.classIndexMode==='margin')view=pool.filter(x=>x.type==='winner'&&x.modeEligible&&Number.isFinite(x.margin)).sort((a,b)=>b.margin-a.margin||b.dominance-a.dominance).slice(0,10);
+    else if(advanced.classIndexMode==='index')view=pool.filter(x=>x.type==='all'&&x.modeEligible).sort((a,b)=>b.index-a.index||b.dominance-a.dominance||a.r.finish_seconds-b.r.finish_seconds).slice(0,10);
+    else view=pool.filter(x=>x.type==='winner'&&x.modeEligible).sort((a,b)=>b.dominance-a.dominance||b.margin-a.margin).slice(0,10);
+    const reserve=pool.filter(x=>x.type==='winner'&&!x.modeEligible).sort((a,b)=>b.dominance-a.dominance).slice(0,3);
+    if(!view.length&&reserve.length){
+      const reserveMax=Math.max(...reserve.map(classIndexMetric).filter(Number.isFinite),0);
+      el.innerHTML='<p class="index-explain">Huvudlistan kräver minst fem fullföljande i varje jämförelsegrupp. Nedan visas därför klassvinnare från mindre underlag. Stapellängden visar prestationen relativt den högsta prestationen i listan.</p>'+reserve.map((x,i)=>classIndexMarkup(x,i+1,true,reserveMax)).join('');
+      el.querySelectorAll('button').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));return;
+    }
+    if(!view.length){el.innerHTML='<div class="index-empty">För få fullföljande i de aktuella klasserna för att bygga jämförelsen.</div>';return}
+    const explain=advanced.classIndexMode==='margin'
+      ?'Rangordnar klassvinnare efter tidsmarginalen ned till tvåan i samma loppår, kön och åldersklass. Minst fem fullföljande krävs.'
+      :advanced.classIndexMode==='index'
+        ?'Visar de starkaste klassplaceringarna utifrån Sälen–Mora-index. 100 betyder bäst i klassen, 90 bättre än 90 procent av jämförelsegruppen. Endast grupper med minst fem fullföljande tas med.'
+        :'Rangordnar klassvinnare efter dominans: hur många procent snabbare vinnaren var än medianen bland fullföljande i samma loppår, kön och åldersklass. Minst fem fullföljande krävs.';
+    const maxBarValue=Math.max(...view.map(classIndexMetric).filter(Number.isFinite),0);
+    el.innerHTML=`<p class="index-explain">${explain} Stapellängden visar prestationen relativt den högsta prestationen i den aktuella topplistan.</p>${view.map((x,i)=>classIndexMarkup(x,i+1,false,maxBarValue)).join('')}`;
+    el.querySelectorAll('button').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
+  }
+  function renderClassIndex(){
+    const el=document.querySelector('#classIndexTable'),raceEl=document.querySelector('#raceIndexTable'),tabs=document.querySelector('#classIndexTabs');
+    if(!el&&!raceEl)return;
     const modes=[['dominance','Mest dominant'],['margin','Störst segermarginal'],['index','Högst klasspercentil']];
     if(tabs){
       if(!modes.some(([k])=>k===advanced.classIndexMode))advanced.classIndexMode='dominance';
       tabs.innerHTML=modes.map(([k,label])=>`<button class="${advanced.classIndexMode===k?'active':''}" data-mode="${k}">${label}</button>`).join('');
       tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{advanced.classIndexMode=b.dataset.mode;renderClassIndex()});
     }
-    const finished=state.filtered.filter(isFinished);
-    if(!finished.length){
-      el.innerHTML='<div class="index-empty">Inga fullföljande löpare finns i urvalet.</div>';
-      return;
-    }
-    const groups=new Map();
-    finished.forEach(r=>{const key=`${r.race_id}|${sexKey(r)}|${normClass(r.age_class)}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)});
-    const rows=[];
-    groups.forEach(group=>{
-      group.sort((a,b)=>a.finish_seconds-b.finish_seconds);
-      const n=group.length;
-      const medianSec=safeMed(group.map(r=>r.finish_seconds));
-      const best=group[0],second=group[1]||null;
-      const dominance=medianSec&&best?.finish_seconds?((medianSec-best.finish_seconds)/medianSec*100):null;
-      const margin=second?.finish_seconds!=null?second.finish_seconds-best.finish_seconds:null;
-      const bestIndex=advanced.smIndex.get(best.id);
-      const race=state.data.races.find(x=>x.id===best.race_id);
-      const yr=race?.year||'';
-      if(best&&Number.isFinite(dominance)){
-        rows.push({
-          type:'winner',modeEligible:n>=5,smallSample:n<5,r:best,n,medianSec,dominance,margin,index:bestIndex,year:yr,
-          leadText:margin!=null?`${fmtTime(margin)} före tvåan`:'Ingen tvåa i klassen',
-          meta:`${esc(normClass(best.age_class))} · ${fmtTime(best.finish_seconds)} · klass 1/${n}`
-        });
-      }
-      if(advanced.classIndexMode==='index'){
-        group.forEach((r,i)=>{
-          const idx=advanced.smIndex.get(r.id);
-          if(Number.isFinite(idx)&&n>=5){
-            rows.push({
-              type:'all',modeEligible:true,smallSample:false,r,n,medianSec,
-              dominance:medianSec?((medianSec-r.finish_seconds)/medianSec*100):null,
-              margin:i===0&&second?.finish_seconds!=null?second.finish_seconds-r.finish_seconds:null,
-              index:idx,year:yr,
-              leadText:i===0&&second?.finish_seconds!=null?`${fmtTime(second.finish_seconds-r.finish_seconds)} före tvåan`:`klassplats ${i+1}/${n}`,
-              meta:`${esc(normClass(r.age_class))} · ${fmtTime(r.finish_seconds)} · klassplats ${i+1}/${n}`
-            });
-          }
-        });
-      }
-    });
-    let view=[];
-    if(advanced.classIndexMode==='margin')view=rows.filter(x=>x.type==='winner'&&x.modeEligible&&Number.isFinite(x.margin)).sort((a,b)=>b.margin-a.margin||b.dominance-a.dominance).slice(0,10);
-    else if(advanced.classIndexMode==='index')view=rows.filter(x=>x.type==='all'&&x.modeEligible).sort((a,b)=>b.index-a.index||b.dominance-a.dominance||a.r.finish_seconds-b.r.finish_seconds).slice(0,10);
-    else view=rows.filter(x=>x.type==='winner'&&x.modeEligible).sort((a,b)=>b.dominance-a.dominance||b.margin-a.margin).slice(0,10);
-    const reserve=rows.filter(x=>x.type==='winner'&&!x.modeEligible).sort((a,b)=>b.dominance-a.dominance).slice(0,3);
-    if(!view.length&&reserve.length){
-      const reserveMax=Math.max(...reserve.map(classIndexMetric).filter(Number.isFinite),0);
-      el.innerHTML='<p class="index-explain">Huvudlistan kräver minst fem fullföljande i varje jämförelsegrupp. Nedan visas därför klassvinnare från mindre underlag. Stapellängden visar prestationen relativt den högsta prestationen i listan.</p>'+reserve.map((x,i)=>classIndexMarkup(x,i+1,true,reserveMax)).join('');
-      el.querySelectorAll('button').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
-      return;
-    }
-    if(!view.length){
-      el.innerHTML='<div class="index-empty">För få fullföljande i varje klass för att bygga jämförelsen.</div>';
-      return;
-    }
-    const explain=advanced.classIndexMode==='margin'
-      ? 'Rangordnar klassvinnare efter tidsmarginalen ned till tvåan i samma loppår, kön och åldersklass. Minst fem fullföljande krävs.'
-      : advanced.classIndexMode==='index'
-        ? 'Visar de starkaste klassplaceringarna utifrån Sälen–Mora-index. 100 betyder bäst i klassen, 90 bättre än 90 procent av jämförelsegruppen. Endast grupper med minst fem fullföljande tas med.'
-        : 'Rangordnar klassvinnare efter dominans: hur många procent snabbare vinnaren var än medianen bland fullföljande i samma loppår, kön och åldersklass. Minst fem fullföljande krävs.';
-    const maxBarValue=Math.max(...view.map(classIndexMetric).filter(Number.isFinite),0);
-    el.innerHTML=`<p class="index-explain">${explain} Stapellängden visar prestationen relativt den högsta prestationen i den aktuella topplistan.</p>${view.map((x,i)=>classIndexMarkup(x,i+1,false,maxBarValue)).join('')}`;
-    el.querySelectorAll('button').forEach(b=>b.onclick=()=>openRunner(Number(b.dataset.id)));
+    const finished=filteredCurrent({ignoreClass:true}).filter(isFinished);
+    if(!finished.length){if(el)el.innerHTML='<div class="index-empty">Inga fullföljande löpare finns i urvalet.</div>';if(raceEl)raceEl.innerHTML='<div class="index-empty">Inga fullföljande löpare finns i urvalet.</div>';return}
+    const rows=buildClassIndexRows(finished),selectedClasses=new Set(advanced.classSelection.map(normClass));
+    renderClassIndexList(el,rows,{selectedClasses});
+    renderClassIndexList(raceEl,rows);
   }
   function classIndexMetric(x){return advanced.classIndexMode==='margin'?x.margin:advanced.classIndexMode==='index'?x.index:x.dominance}
   function classIndexMarkup(x,rank,smallSample,maxBarValue){
@@ -474,13 +468,13 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     return `<button data-id="${x.r.id}"><b>${rank}</b><span class="index-main"><strong>${esc(x.r.name_as_published)}</strong><small>${x.meta}${yearText}</small><em>${reason}</em><div class="index-bar"><i style="width:${pctWidth}%"></i></div><span class="index-note">Jämförelsen görs inom samma loppår, kön och åldersklass.${smallSample?' Litet underlag.':''}</span></span><span class="index-score"><strong>${scoreMain}</strong><span>${scoreSub}</span>${smallSample?'<em class="sample-pill">Litet underlag</em>':(x.n<8?'<em class="sample-pill">Smalt fält</em>':'')}</span></button>`;
   }
   const historyComparisonKey=race=>window.HistoryIntelligence?.comparisonKeyForRace?.(race)||null;
-  function comparableHistoryRuns(points,years){
-    const runs=[];let current=[],previousKey=null,previousIndex=null;
+  function descriptiveHistoryRuns(points,years){
+    const runs=[];let current=[],previousYear=null;
     for(const point of points){
-      const key=historyComparisonKey(years[point.i]);
-      if(!key||previousKey!==key||previousIndex===null||point.i!==previousIndex+1){if(current.length)runs.push(current);current=[point]}
-      else current.push(point);
-      previousKey=key;previousIndex=point.i;
+      const year=Number(years[point.i]?.year??point.year);
+      if(previousYear===null||year===previousYear+1)current.push(point);
+      else{if(current.length)runs.push(current);current=[point]}
+      previousYear=year;
     }
     if(current.length)runs.push(current);
     return runs;
@@ -493,7 +487,7 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
     for(let i=0;i<=4;i++){const v=hi-(hi-lo)*i/4,yy=yT(v);out+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:p.l-10,y:yy+4,'text-anchor':'end'},fmtTime(v).slice(0,-3))}
     for(let v=0;v<=maxN+.001;v+=countStep){const yy=p.t+plotHeight-v/maxN*plotHeight;out+=svg('line',{x1:W-p.r,y1:yy,x2:W-p.r+5,y2:yy,class:'axis'})+svg('text',{x:W-p.r+10,y:yy+4,class:'class-history-count-label'},String(Math.round(v)))}
     out+=svg('text',{x:16,y:(p.t+H-p.b)/2,'text-anchor':'middle',transform:`rotate(-90 16 ${(p.t+H-p.b)/2})`,class:'class-history-axis-title'},'Median sluttid')+svg('text',{x:W-13,y:(p.t+H-p.b)/2,'text-anchor':'middle',transform:`rotate(90 ${W-13} ${(p.t+H-p.b)/2})`,class:'class-history-axis-title'},'Antal personer')+svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});
-    data.forEach((s,si)=>{s.pts.forEach((d,i)=>{const pairStart=x(i)-classes.length*barWidth+si*barWidth*2,startX=pairStart,dnfX=pairStart+barWidth,startHeight=visibleCountBarHeight(d.starters,maxN,plotHeight),dnfHeight=visibleCountBarHeight(d.dnf,maxN,plotHeight),startTip=`${s.k} ${d.year} · ${d.starters} startande`,dnfTip=`${s.k} ${d.year} · ${d.dnf} DNF`;if(startHeight)bars+=`<rect class="class-history-bar starters" x="${startX}" y="${H-p.b-startHeight}" width="${Math.max(1,barWidth-.9)}" height="${startHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(startTip)}" data-chart-tip="${esc(startTip)}" data-chart-x="${((startX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-startHeight)/H*100).toFixed(2)}"><title>${esc(startTip)}</title></rect>`;if(dnfHeight)bars+=`<rect class="class-history-bar dnf" x="${dnfX}" y="${H-p.b-dnfHeight}" width="${Math.max(1,barWidth-.9)}" height="${dnfHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(dnfTip)}" data-chart-tip="${esc(dnfTip)}" data-chart-x="${((dnfX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-dnfHeight)/H*100).toFixed(2)}"><title>${esc(dnfTip)}</title></rect>`});const valid=s.pts.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d.med));comparableHistoryRuns(valid,years).filter(run=>run.length>1).forEach(run=>{lines+=`<path class="class-history-line" d="${run.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${yT(d.med)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;run.forEach(d=>{const tip=`${s.k} ${d.year} · median ${fmtTime(d.med)}`,px=x(d.i),py=yT(d.med);lines+=`<circle class="class-history-hit" cx="${px}" cy="${py}" r="8" fill="transparent" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${(px/W*100).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(tip)}</title></circle>`})})});
+    data.forEach((s,si)=>{s.pts.forEach((d,i)=>{const pairStart=x(i)-classes.length*barWidth+si*barWidth*2,startX=pairStart,dnfX=pairStart+barWidth,startHeight=visibleCountBarHeight(d.starters,maxN,plotHeight),dnfHeight=visibleCountBarHeight(d.dnf,maxN,plotHeight),startTip=`${s.k} ${d.year} · ${d.starters} startande`,dnfTip=`${s.k} ${d.year} · ${d.dnf} DNF`;if(startHeight)bars+=`<rect class="class-history-bar starters" x="${startX}" y="${H-p.b-startHeight}" width="${Math.max(1,barWidth-.9)}" height="${startHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(startTip)}" data-chart-tip="${esc(startTip)}" data-chart-x="${((startX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-startHeight)/H*100).toFixed(2)}"><title>${esc(startTip)}</title></rect>`;if(dnfHeight)bars+=`<rect class="class-history-bar dnf" x="${dnfX}" y="${H-p.b-dnfHeight}" width="${Math.max(1,barWidth-.9)}" height="${dnfHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(dnfTip)}" data-chart-tip="${esc(dnfTip)}" data-chart-x="${((dnfX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-dnfHeight)/H*100).toFixed(2)}"><title>${esc(dnfTip)}</title></rect>`});const valid=s.pts.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d.med));descriptiveHistoryRuns(valid,years).filter(run=>run.length>1).forEach(run=>{lines+=`<path class="class-history-line" d="${run.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${yT(d.med)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;run.forEach(d=>{const tip=`${s.k} ${d.year} · median ${fmtTime(d.med)}`,px=x(d.i),py=yT(d.med);lines+=`<circle class="class-history-hit" cx="${px}" cy="${py}" r="8" fill="transparent" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${(px/W*100).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(tip)}</title></circle>`})})});
     years.forEach((r,i)=>out+=svg('text',{x:x(i),y:H-15,'text-anchor':'middle'},String(r.year)));
     el.innerHTML=`<div class="class-chart-legend">${data.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.k)}</span>`).join('')}</div><div class="class-history-key"><span><i class="median"></i>Median · vänster axel</span><span><i class="starters"></i>Startande · höger axel</span><span><i class="dnf"></i>DNF · höger axel</span></div><div class="interactive-chart-tooltip" role="status" hidden></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Klasshistorik: median sluttid på vänster axel samt startande och DNF på höger axel">${out}${bars}${lines}</svg>`;wireChartTooltips(el);
   }
@@ -558,7 +552,22 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   }
   function renderClubRankingTabs(){const el=document.querySelector('#clubRankingTabs'),tabs=[['largest','Flest startande'],['finishers','Flest i mål'],['median','Snabbast median'],['breadth','Bäst bredd'],['rate','Fullföljandegrad'],['closing','Starkast avslutning'],['improved','Mest förbättrad'],['widest','Bredaste klubben']];if(!tabs.some(([k])=>k===advanced.clubMetric))advanced.clubMetric='largest';el.innerHTML=tabs.map(([k,l])=>`<button class="${advanced.clubMetric===k?'active':''}" data-metric="${k}">${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{advanced.clubMetric=b.dataset.metric;renderClubWorld()})}
   function renderClubRankings(stats){const el=document.querySelector('#clubRankings'),metric=advanced.clubMetric,rows=stats.map(c=>{const improvement=clubHistoryImprovement(c.key);return{...c,improved:improvement?.value??null,improvement,widest:c.classes+c.balance/100}});const valid=rows.filter(c=>metric==='largest'||metric==='finishers'||metric==='widest'||(c[metric]!=null&&(metric!=='rate'&&metric!=='breadth'&&metric!=='median'||c.starters>=5)));valid.sort((a,b)=>metric==='median'?a.median-b.median:b[metric]-a[metric]);const format=c=>metric==='largest'?`${c.starters} startande`:metric==='finishers'?`${c.finishers} i mål`:metric==='median'?fmtTime(c.median):metric==='breadth'?`index ${c.medianIndex?.toFixed(0)}`:metric==='rate'?`${c.rate} %`:metric==='closing'?`${c.closing>0?'+':''}${c.closing?.toFixed(0)} platser`:metric==='improved'?`${c.improved>0?'+':''}${c.improved?.toFixed(0)} index · ${c.improvement?.fromYear||'–'}–${c.improvement?.toYear||'–'}`:`${c.classes} klasser · balans ${c.balance.toFixed(0)}`;el.innerHTML=valid.slice(0,12).map((c,i)=>`<button data-club="${esc(c.key)}"><b>${i+1}</b><span><strong>${esc(c.name)}</strong><small>${c.starters<5?'Litet underlag · ':''}${c.finishers} fullföljande</small></span><em>${format(c)}</em></button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{const key=b.dataset.club;if(!advanced.clubSelection.includes(key)&&advanced.clubSelection.length<4)advanced.clubSelection.push(key);const active=document.querySelector('#clubProfileSelect');if(active)active.value=key;renderClubWorld();document.querySelector('#clubProfile').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'})})}
-  function renderClubDna(c,all){const maxStarts=Math.max(...all.map(x=>x.starters),1),maxClosing=Math.max(...all.map(x=>Math.max(0,x.closing||0)),1),metrics=[['Fart','Medianprestation relativt övriga fältet.',c.medianIndex||0],['Bredd','Antal fullföljande som bygger klubbens bredd.',Math.min(100,c.finishers/20*100)],['Uthållighet','Andel faktiska startande som fullföljde.',c.rate],['Avslutning','Placeringslyft i loppets avslutande del.',Math.max(0,c.closing||0)/maxClosing*100],['Deltagande','Antal startande relativt största klubben.',c.starters/maxStarts*100]];document.querySelector('#clubDna').innerHTML=metrics.map(([n,description,v])=>`<div><span class="club-dna-copy"><b>${n}</b><small>${description}</small></span><i><b style="width:${Math.max(2,Math.min(100,v))}%"></b></i><strong>${Math.round(v)}</strong></div>`).join('')}
+  function renderClubDna(c,all){
+    const maxStarts=Math.max(...all.map(x=>x.starters),1),maxClosing=Math.max(...all.map(x=>Math.max(0,x.closing||0)),1);
+    const fieldMedian=safeMed(clubBase().filter(isFinished).map(r=>Number(r.finish_seconds)).filter(Number.isFinite));
+    const speedIndexValue=fieldMedian&&c.median?fieldMedian/Number(c.median)*100:null;
+    const metrics=[
+      {name:'Fart',description:'100 = medianfarten i hela fältet. Över 100 betyder snabbare medianprestation.',value:speedIndexValue,speed:true},
+      {name:'Bredd',description:'Antal fullföljande som bygger klubbens bredd.',value:Math.min(100,c.finishers/20*100)},
+      {name:'Uthållighet',description:'Andel faktiska startande som fullföljde.',value:c.rate},
+      {name:'Avslutning',description:'Placeringslyft i loppets avslutande del.',value:Math.max(0,c.closing||0)/maxClosing*100},
+      {name:'Deltagande',description:'Antal startande relativt största klubben.',value:c.starters/maxStarts*100}
+    ];
+    document.querySelector('#clubDna').innerHTML=metrics.map(metric=>{
+      const value=Number(metric.value),valid=Number.isFinite(value),width=metric.speed?Math.max(2,Math.min(100,(valid?value:0)/120*100)):Math.max(2,Math.min(100,valid?value:0));
+      return `<div class="${metric.speed?'speed-index':''}"><span class="club-dna-copy"><b>${metric.name}</b><small>${metric.description}</small></span><i><b style="width:${width}%"></b>${metric.speed?'<em class="club-dna-reference" aria-hidden="true"></em>':''}</i><strong>${valid?Math.round(value):'–'}</strong></div>`;
+    }).join('');
+  }
   function renderClubCompare(stats){
     const el=document.querySelector('#clubCompareChart'),selected=stats.filter(x=>advanced.clubSelection.includes(x.key)),cps=cpList().filter(c=>c.sequence_no>0),pairs=segmentPairs(cps);if(!selected.length){el.innerHTML='<div class="empty">Sök och välj klubbar eller orter ovan.</div>';return}
     const W=920,H=390,p={l:82,r:82,t:42,b:128},paceMode=currentSpeedUnit()==='pace',series=selected.map((c,i)=>({name:c.name,color:CLASS_COLORS[i%CLASS_COLORS.length],pts:cps.map(cp=>{const samples=segmentSpeeds(c.rows,cp.sequence_no),speed=safeMed(samples);return{speed,n:samples.length,value:Number.isFinite(speed)?speedDisplayValue(speed):null}})})),all=series.flatMap(s=>s.pts.map(point=>point.value).filter(Number.isFinite));if(!all.length){el.innerHTML='<div class="empty">Mellantider saknas för valda klubbar.</div>';return}
@@ -570,11 +579,11 @@ if(typeof window!=='undefined'&&typeof document!=='undefined')(() => {
   function renderClubHistory(stats){
     const el=document.querySelector('#clubHistoryChart'),selected=stats.filter(x=>advanced.clubSelection.includes(x.key)),years=familyRaces().slice().sort((a,b)=>a.year-b.year);if(!selected.length){el.innerHTML='<div class="empty">Välj minst en klubb eller ort ovan.</div>';return}
     const family=familyResults(),series=selected.map((club,ci)=>{const rows=family.filter(r=>advanced.clubKeyByResult.get(r.id)===club.key);return{name:club.name,color:CLASS_COLORS[ci%CLASS_COLORS.length],pts:years.map(r=>{const rr=rows.filter(x=>x.race_id===r.id),starters=rr.filter(isStarter),finishers=rr.filter(isFinished);return{year:r.year,starters:starters.length,finishers:finishers.length,med:safeMed(finishers.map(x=>x.finish_seconds))}})}}),meds=series.flatMap(s=>s.pts.map(d=>d.med).filter(Number.isFinite));
-    const W=940,H=390,p={l:70,r:82,t:52,b:46},plotHeight=H-p.t-p.b,rawMax=Math.max(1,...series.flatMap(s=>s.pts.map(d=>d.starters))),roughStep=rawMax/5,power=10**Math.floor(Math.log10(roughStep)),unit=roughStep/power,countStep=(unit<=1?1:unit<=2?2:unit<=5?5:10)*power,maxN=Math.ceil(rawMax/countStep)*countStep,timeLo=meds.length?Math.floor(Math.min(...meds)/1800)*1800:0,timeHiRaw=meds.length?Math.ceil(Math.max(...meds)/1800)*1800:3600,timeHi=timeHiRaw>timeLo?timeHiRaw:timeLo+1800,x=i=>p.l+i*(W-p.l-p.r)/(years.length-1||1),yCount=v=>H-p.b-v/maxN*plotHeight,yTime=v=>p.t+(timeHi-v)*plotHeight/(timeHi-timeLo),yearStep=(W-p.l-p.r)/(years.length-1||1),groupWidth=Math.min(70,yearStep*.76),barWidth=Math.max(3,Math.min(12,groupWidth/(series.length*2+1)));let axes='',bars='',lines='';
+    const W=1080,H=450,p={l:78,r:92,t:58,b:52},plotHeight=H-p.t-p.b,rawMax=Math.max(1,...series.flatMap(s=>s.pts.map(d=>d.starters))),roughStep=rawMax/5,power=10**Math.floor(Math.log10(roughStep)),unit=roughStep/power,countStep=(unit<=1?1:unit<=2?2:unit<=5?5:10)*power,maxN=Math.ceil(rawMax/countStep)*countStep,timeLo=meds.length?Math.floor(Math.min(...meds)/1800)*1800:0,timeHiRaw=meds.length?Math.ceil(Math.max(...meds)/1800)*1800:3600,timeHi=timeHiRaw>timeLo?timeHiRaw:timeLo+1800,x=i=>p.l+i*(W-p.l-p.r)/(years.length-1||1),yCount=v=>H-p.b-v/maxN*plotHeight,yTime=v=>p.t+(timeHi-v)*plotHeight/(timeHi-timeLo),yearStep=(W-p.l-p.r)/(years.length-1||1),groupWidth=Math.min(70,yearStep*.76),barWidth=Math.max(3,Math.min(12,groupWidth/(series.length*2+1)));let axes='',bars='',lines='';
     for(let v=0;v<=maxN+.001;v+=countStep){const yy=yCount(v);axes+=svg('line',{x1:p.l,y1:yy,x2:W-p.r,y2:yy,class:'gridline'})+svg('text',{x:p.l-10,y:yy+4,'text-anchor':'end'},String(Math.round(v)))}
     for(let i=0;i<=4;i++){const v=timeHi-(timeHi-timeLo)*i/4,yy=yTime(v);axes+=svg('line',{x1:W-p.r,y1:yy,x2:W-p.r+5,y2:yy,class:'axis'})+svg('text',{x:W-p.r+10,y:yy+4,class:'club-history-time-label'},fmtHour(v))}
     axes+=svg('text',{x:15,y:(p.t+H-p.b)/2,'text-anchor':'middle',transform:`rotate(-90 15 ${(p.t+H-p.b)/2})`,class:'club-history-axis-title'},'Antal personer')+svg('text',{x:W-14,y:(p.t+H-p.b)/2,'text-anchor':'middle',transform:`rotate(90 ${W-14} ${(p.t+H-p.b)/2})`,class:'club-history-axis-title'},'Median sluttid')+svg('line',{x1:p.l,y1:H-p.b,x2:W-p.r,y2:H-p.b,class:'axis'});
-    series.forEach((s,si)=>{s.pts.forEach((d,i)=>{const pairStart=x(i)-series.length*barWidth+si*barWidth*2,startX=pairStart,finishX=pairStart+barWidth,startHeight=Math.max(0,H-p.b-yCount(d.starters)),finishHeight=Math.max(0,H-p.b-yCount(d.finishers)),loss=Math.max(0,d.starters-d.finishers),rate=d.starters?pct(d.finishers,d.starters):0,tip=`${s.name} · ${d.year} · ${d.starters} startande · ${d.finishers} i mål · ${loss} bortfall · ${String(rate).replace('.',',')} % målgång · median ${fmtTime(d.med)}`;if(startHeight)bars+=`<rect class="club-history-bar starters club-chart-mark" x="${startX}" y="${H-p.b-startHeight}" width="${Math.max(1,barWidth-.8)}" height="${startHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${((startX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-startHeight)/H*100).toFixed(2)}"><title>${esc(tip)}</title></rect>`;if(finishHeight)bars+=`<rect class="club-history-bar finishers club-chart-mark" x="${finishX}" y="${H-p.b-finishHeight}" width="${Math.max(1,barWidth-.8)}" height="${finishHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${((finishX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-finishHeight)/H*100).toFixed(2)}"><title>${esc(tip)}</title></rect>`});const valid=s.pts.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d.med));if(valid.length){comparableHistoryRuns(valid,years).filter(run=>run.length>1).forEach(run=>{const scope=historyComparisonKey(years[run[0].i]);lines+=`<path class="club-history-line" data-history-scope="${esc(scope||'')}" data-history-from="${run[0].year}" data-history-to="${run.at(-1).year}" d="${run.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${yTime(d.med)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3"/>`});valid.forEach(d=>{const loss=Math.max(0,d.starters-d.finishers),rate=d.starters?pct(d.finishers,d.starters):0,px=x(d.i),py=yTime(d.med),tip=`${s.name} · ${d.year} · ${d.starters} startande · ${d.finishers} i mål · ${loss} bortfall · ${String(rate).replace('.',',')} % målgång · median ${fmtTime(d.med)}`;lines+=`<circle class="interactive-chart-point club-chart-point club-history-point" cx="${px}" cy="${py}" r="5" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${(px/W*100).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(tip)}</title></circle>`})}});
+    series.forEach((s,si)=>{s.pts.forEach((d,i)=>{const pairStart=x(i)-series.length*barWidth+si*barWidth*2,startX=pairStart,finishX=pairStart+barWidth,startHeight=Math.max(0,H-p.b-yCount(d.starters)),finishHeight=Math.max(0,H-p.b-yCount(d.finishers)),loss=Math.max(0,d.starters-d.finishers),rate=d.starters?pct(d.finishers,d.starters):0,tip=`${s.name} · ${d.year} · ${d.starters} startande · ${d.finishers} i mål · ${loss} bortfall · ${String(rate).replace('.',',')} % målgång · median ${fmtTime(d.med)}`;if(startHeight)bars+=`<rect class="club-history-bar starters club-chart-mark" x="${startX}" y="${H-p.b-startHeight}" width="${Math.max(1,barWidth-.8)}" height="${startHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${((startX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-startHeight)/H*100).toFixed(2)}"><title>${esc(tip)}</title></rect>`;if(finishHeight)bars+=`<rect class="club-history-bar finishers club-chart-mark" x="${finishX}" y="${H-p.b-finishHeight}" width="${Math.max(1,barWidth-.8)}" height="${finishHeight}" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${((finishX+barWidth/2)/W*100).toFixed(2)}" data-chart-y="${((H-p.b-finishHeight)/H*100).toFixed(2)}"><title>${esc(tip)}</title></rect>`});const valid=s.pts.map((d,i)=>({...d,i})).filter(d=>Number.isFinite(d.med));if(valid.length){descriptiveHistoryRuns(valid,years).filter(run=>run.length>1).forEach(run=>{lines+=`<path class="club-history-line" data-history-scope="descriptive" data-history-from="${run[0].year}" data-history-to="${run.at(-1).year}" d="${run.map((d,j)=>`${j?'L':'M'}${x(d.i)} ${yTime(d.med)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="3"/>`});valid.forEach(d=>{const loss=Math.max(0,d.starters-d.finishers),rate=d.starters?pct(d.finishers,d.starters):0,px=x(d.i),py=yTime(d.med),tip=`${s.name} · ${d.year} · ${d.starters} startande · ${d.finishers} i mål · ${loss} bortfall · ${String(rate).replace('.',',')} % målgång · median ${fmtTime(d.med)}`;lines+=`<circle class="interactive-chart-point club-chart-point club-history-point" cx="${px}" cy="${py}" r="5" fill="${s.color}" tabindex="0" role="img" aria-label="${esc(tip)}" data-chart-tip="${esc(tip)}" data-chart-x="${(px/W*100).toFixed(2)}" data-chart-y="${(py/H*100).toFixed(2)}"><title>${esc(tip)}</title></circle>`})}});
     years.forEach((r,i)=>axes+=svg('text',{x:x(i),y:H-16,'text-anchor':'middle'},String(r.year)));
     el.innerHTML=`<div class="class-chart-legend club-series-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div><div class="club-history-legend"><span><i class="starts"></i>Startande · vänster axel</span><span><i class="finish"></i>I mål · vänster axel</span><span><i class="median"></i>Median · höger axel</span></div><div class="interactive-chart-tooltip" role="status" hidden></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Starter, målgångar och median för valda klubbar och orter">${axes}${bars}${lines}</svg>`;wireChartTooltips(el)
   }
