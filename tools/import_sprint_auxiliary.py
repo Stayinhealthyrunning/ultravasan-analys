@@ -216,8 +216,9 @@ def run(args):
             report["list_entries"]=len(entries)
             methods=defaultdict(int); inserted=0; no_warning=0; unmatched=0; errors=0
             thread_state=threading.local()
+            failed_fetches=[]
 
-            def fetch_detail(item, worker=None):
+            def fetch_detail(item,worker=None):
                 idx,entry=item
                 idp=entry["idp"]
                 url=mika_import.detail_url(race_cfg,idp,entry.get("url",""))
@@ -239,7 +240,7 @@ def run(args):
                 except Exception as exc:
                     return idx,entry,idp,None,None,str(exc)
 
-            def store_detail(idx,entry,idp,parsed,warning):
+            def apply_detail(idx,entry,idp,parsed,warning):
                 nonlocal inserted,no_warning,unmatched,errors
                 if not warning or not warning.get("elapsed_seconds"):
                     no_warning+=1
@@ -252,6 +253,8 @@ def run(args):
                 elapsed=int(warning["elapsed_seconds"])
                 if target["finish_seconds"] is not None and elapsed>=int(target["finish_seconds"]):
                     errors+=1
+                    if len(report["details"])<50:
+                        report["details"].append({"idp":idp,"error":"auxiliary elapsed time is not before finish"})
                     return
                 raw=json.dumps({"auxiliary_only":True,"source":"vasaloppet_mika","source_result_id":f"{race_cfg['event_code']}:{idp}","source_label":warning.get("source_label")},ensure_ascii=False)
                 conn.execute("""
@@ -268,27 +271,37 @@ def run(args):
                     conn.commit()
 
             items=list(enumerate(entries.values(),1))
-            retry_items=[]
             with ThreadPoolExecutor(max_workers=max(1,args.workers)) as pool:
-                for idx,entry,idp,parsed,warning,fetch_error in pool.map(fetch_detail,items):
+                for result in pool.map(fetch_detail,items):
+                    idx,entry,idp,parsed,warning,fetch_error=result
                     if fetch_error is not None:
-                        retry_items.append((idx,entry))
+                        failed_fetches.append((idx,entry,idp,fetch_error))
                         continue
-                    store_detail(idx,entry,idp,parsed,warning)
+                    apply_detail(idx,entry,idp,parsed,warning)
 
-            # Vasaloppet may throttle concurrent requests with HTTP 403. Retry only
-            # those transient failures serially with the original session before
-            # declaring an import error. This preserves the verified complete
-            # result while keeping the bulk fetch fast.
-            for item in retry_items:
-                idx,entry,idp,parsed,warning,fetch_error=fetch_detail(item,fetcher)
-                if fetch_error is not None:
-                    errors+=1
-                    if len(report["details"])<50:
-                        report["details"].append({"idp":idp,"error":fetch_error})
-                    continue
-                store_detail(idx,entry,idp,parsed,warning)
-            report["parallel_retry_count"]=len(retry_items)
+            # Mika can temporarily return HTTP 403 when several detail pages are
+            # fetched concurrently.  Do not accept an incomplete enrichment.
+            # Cool down, then retry only those failed pages serially with the
+            # already warmed list-page session.  Final errors are counted only
+            # after this recovery pass.
+            report["parallel_fetch_failures"]=len(failed_fetches)
+            report["serial_retry_recovered"]=0
+            if failed_fetches:
+                time.sleep(args.retry_cooldown)
+                for idx,entry,idp,first_error in failed_fetches:
+                    result=fetch_detail((idx,entry),worker=fetcher)
+                    _,_,_,parsed,warning,retry_error=result
+                    if retry_error is not None:
+                        errors+=1
+                        if len(report["details"])<50:
+                            report["details"].append({
+                                "idp":idp,
+                                "error":retry_error,
+                                "initial_error":first_error,
+                            })
+                        continue
+                    report["serial_retry_recovered"]+=1
+                    apply_detail(idx,entry,idp,parsed,warning)
             conn.commit()
         finally:
             fetcher.close()
@@ -337,6 +350,7 @@ def main():
     p.add_argument("--report",type=Path,required=True)
     p.add_argument("--delay",type=float,default=0.5)
     p.add_argument("--workers",type=int,default=1,help="Parallel detail-page HTTP workers; database writes remain serial")
+    p.add_argument("--retry-cooldown",type=float,default=45.0,help="Seconds to cool down before serial retry of transient detail fetch failures")
     p.add_argument("--min-exact",type=int,default=1000)
     p.add_argument("--force",action="store_true")
     p.add_argument("--browser-fallback",action="store_true")
