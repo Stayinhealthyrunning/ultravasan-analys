@@ -79,8 +79,12 @@ assert.ok(audience.includes('class-history-line')&&audience.includes('class-hist
 assert.ok(!audience.includes('interactive-chart-point class-history-point'),'klasshistoriken ska inte rita separata synliga medianpunkter');
 assert.ok(audience.includes('median ${fmtTime(d.med)}')&&!audience.includes('median ${fmtTime(d.med)} · DNF'),'linjens tooltip ska inte innehålla DNF');
 assert.ok(audience.includes('relativeToplistWidth(classIndexMetric(x),maxBarValue)'),'topplistans staplar ska normaliseras mot listans maxvärde');
+assert.ok(html.includes('id="raceIndexTable"')&&html.includes('Loppets starkaste prestationer'),'separat topplista för hela loppet ska finnas');
+assert.ok(audience.includes('selectedClasses.has(normClass(x.r.age_class))')&&audience.includes('renderClassIndexList(raceEl,rows)'),'klassens topplista ska följa Klassduellens val medan loppets topplista använder alla klasser');
+assert.ok(audience.includes('descriptiveHistoryRuns(valid,years)'),'klasshistorikens medianlinjer ska vara beskrivande över efterföljande loppår');
 assert.ok(audience.includes('Median sluttid')&&audience.includes('Antal personer'),'klasshistoriken ska ha separata y-axlar');
 assert.ok(audience.includes('visibleCountBarHeight(d.dnf,maxN,plotHeight)'),'DNF-staplar ska behålla synlig minimihöjd');
+assert.ok(audience.includes('axisValues=relative')&&!audience.includes("'Snitt 100'"),'pacingindex ska visa 100 på y-axeln utan separat Snitt 100-etikett');
 assert.ok(app.includes('fixedFinishTimeBins')&&audience.includes('fixedFinishBins(times)'),'båda histogramrenderarna ska använda fasta kvartstidsintervall');
 assert.ok(app.includes('15-minutersintervall från')&&audience.includes('15-minutersintervall från'),'båda histogramrenderarna ska beskriva 15-minutersintervallen');
 assert.ok(audience.includes('renderClubProfiles(selected,stats)')&&audience.includes('mergedClubFinishers(clubs,20)'),'alla valda profiler och en gemensam snabbast-lista ska renderas');
@@ -101,14 +105,15 @@ assert.ok(audience.includes('club-history-bar starters')&&audience.includes('clu
 assert.ok(audience.includes('data-chart-tip')&&audience.includes('registrerade löpare'),'klubbjämförelsens tooltip ska redovisa underlaget');
 assert.ok(audience.includes("'Antal personer'")&&audience.includes("'Median sluttid'"),'klubbhistoriken ska ha två namngivna y-axlar');
 assert.ok(audience.includes('renderClubHistory(stats)'),'historiken ska följa samtliga valda klubbar och orter');
-assert.ok(css.includes('.club-chart{position:relative;height:390px!important'),'klubbdiagrammen ska använda kortens yta');
+assert.ok(css.includes('.club-history-card .club-chart{')&&css.includes('height:500px!important')&&css.includes('width:900px!important'),'klubbhistoriken ska ha större läsbar yta och mobil horisontell scroll');
 assert.ok(html.includes('<h3>Övrig statistik</h3>')&&audience.includes('Kvinnornas mediantid är längre'),'automatiska insikter ska ha naturliga svenska rubriker');
-assert.ok(audience.includes('Medianprestation relativt övriga fältet.')&&audience.includes('Andel faktiska startande som fullföljde.'),'Klubb/ort-DNA ska förklara varje mått synligt');
+assert.ok(audience.includes('100 = medianfarten i hela fältet')&&audience.includes('Andel faktiska startande som fullföljde.')&&css.includes('.club-dna-reference'),'Klubb/ort-DNA ska förklara fartindexet mot 100 och visa referensmarkör');
 assert.ok(css.includes('.club-dna-copy>small')&&css.includes('.club-dna i{height:17px}'),'DNA-förklaringar och bredare staplar saknar layoutstöd');
 assert.ok(nerd.includes('<small>bröt före ${nEsc(next.name)}</small>')&&css.includes('.flow-link>em small'),'Fältflödets avhoppskort ska använda en kompakt tvåradslayout');
 assert.ok(css.includes('.segment-card .sex-segment-cell small{color:#4c645a'),'Segmentkortens underlagstext ska ha tillräcklig kontrast');
 assert.ok(css.includes('.insight-grid>.dnf-card{align-self:stretch')&&css.includes('.dnf-bar-track{height:19px'),'DNF-kortet ska fylla sin rad och använda tydligare staplar');
 
 for(const selector of ['#classCompareChart','#classHistoryChart','#segmentRanking','#fieldFlow','#hallOfFame','#raceFingerprint'])assert.ok(app.includes(`['${selector}'`),`förklarande infotext saknas för ${selector}`);
+assert.ok(nerd.includes("sexRows.slice(0,10)")&&nerd.includes("nextLower=sexRows.find")&&css.includes('.hall-sex-scroll{'),'Hall of Fame ska visa minst tio per kön och lägga till nästa lägre Flest lopp-nivå när topp tio är lika');
 
 console.log('OK: global fartenhet, analyslayout, interaktiv klassduell, klasshistorik och infotexter');
