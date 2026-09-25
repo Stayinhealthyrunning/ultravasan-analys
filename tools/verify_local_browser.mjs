@@ -82,6 +82,25 @@ if(!fullReady){
   }))()`);
   throw new Error("Progressive active/core/split data did not finish loading: "+JSON.stringify(diagnostics));
 }
+const sprintInitial=await evaluate(`(() => {
+  const race=state.data.races.find(item=>String(item.id)===String(state.raceId));
+  const women=document.querySelectorAll('#sprintWomen .sprint-row').length;
+  const men=document.querySelectorAll('#sprintMen .sprint-row').length;
+  const womenClass=document.querySelector('#sprintWomenClass')?.value??null;
+  const menClass=document.querySelector('#sprintMenClass')?.value??null;
+  return {
+    year:Number(race?.year||0),
+    family:state.raceFamily,
+    women,men,womenClass,menClass,
+    auxiliaryResults:state.data.auxiliarySplitsByResult?.size||0,
+    auxiliaryWarningRows:[...(state.data.auxiliarySplitsByResult?.values?.()||[])].flat().filter(split=>String(split.checkpoint_key)==='mora_warning').length,
+    coverage:(document.querySelector('#sprintCoverage')?.textContent||'').trim()
+  };
+})()`);
+if(sprintInitial.year===2026&&(!sprintInitial.women||!sprintInitial.men||sprintInitial.womenClass!==''||sprintInitial.menClass!=='')){
+  throw new Error("Spurtvinnaren did not render 2026 all-class start view: "+JSON.stringify(sprintInitial));
+}
+
 const progressiveLoad=await evaluate(`(() => {
   const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||[];
   const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv90||{};
