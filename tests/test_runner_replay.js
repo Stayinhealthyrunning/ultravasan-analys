@@ -64,10 +64,10 @@ assert.strictEqual(uv90Old.route.id,'ultravasan90-pre2023','Äldre UV90 måste v
 assert.strictEqual(uv90New.route.id,'ultravasan90-post2023','Ny UV90 måste välja ny ruttversion');
 assert.strictEqual(uv45Current.route.id,'ultravasan45-current','UV45 måste välja UV45-rutten');
 assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2022',year:2022}).source_year,2022);
-assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2023',year:2023}).source_year,2024);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2023',year:2023}).source_year,2023);
 assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2025',year:2025}).source_year,2024);
 assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2014}).source_year,2026);
-assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2024',year:2024}).source_year,2026);
+assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2024',year:2024}).source_year,2024);
 assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2025',year:2025}).source_year,2026);
 assert.strictEqual(uv90Old.segments.length,8,'Äldre UV90 ska byggas från årets faktiska kontrollmodell');
 assert.strictEqual(uv90New.segments.length,9,'UV90 2025 ska inkludera Högsta punkten');
@@ -91,7 +91,7 @@ for(const year of [2014,2024]){
   const historical=config.races.find(item=>item.race_key===`ultravasan45-${year}`);
   assert.ok(historical,`Konfiguration för UV45 ${year} saknas`);
   assert.strictEqual(historical.checkpoints.map(cp=>cp.checkpoint_key).join(','),'start,oxberg,hokberg,eldris,mora',`UV45 ${year} ska använda kontrolluppsättning A`);
-  assert.strictEqual(replay.routeForRace(registry,historical).source_year,2026,`UV45 ${year} ska använda verifierad UV45-GPX`);
+  assert.strictEqual(replay.routeForRace(registry,historical).source_year,year===2024?2024:2026,`UV45 ${year} ska använda rätt årsspecifik GPX`);
 }
 
 // Färgskalan är relativ till löparens egna segment och saknad passage är neutral.

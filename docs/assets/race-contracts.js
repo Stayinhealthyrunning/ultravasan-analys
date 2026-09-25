@@ -19,7 +19,11 @@
   const familyForRace=race=>editionForRace(race)?.race_family??null;
   const family=key=>own(snapshot.families,key);
   const courseForRace=race=>own(snapshot.courses,editionForRace(race)?.course_version_id);
-  const routeForRace=(registry,race)=>own(registry?.routes||{},courseForRace(race)?.display_route_id);
+  const routeForRace=(registry,race)=>{
+    const edition=editionForRace(race),course=courseForRace(race);
+    const routeId=own(registry?.route_for_edition||{},edition?.race_key)||course?.display_route_id;
+    return own(registry?.routes||{},routeId);
+  };
   const medalProfileForRace=race=>editionForRace(race)?.medal_profile??null;
   const capabilitiesForRace=race=>editionForRace(race)?.capabilities??null;
   const supports=(race,capability)=>capabilitiesForRace(race)?.[capability]===true;

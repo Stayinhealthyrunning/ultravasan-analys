@@ -125,9 +125,12 @@ def observed_editions(root=ROOT):
             for race in conn.execute("SELECT id,race_key FROM races ORDER BY race_key")]
 
 
-def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
+def build_catalog(config, definitions, lock, registry, observed, edition_routes=None, root=ROOT):
     resolved_sources = source_bindings.validate_config(config)
     require(definitions["schema_version"] == 1 and lock["schema_version"] == 1, "Unsupported schema")
+    edition_routes = edition_routes or read_json(root / "config/edition_routes.json")
+    require(edition_routes.get("schema_version") == 1, "Unsupported RaceEdition route assignment schema")
+    annual_routes = edition_routes.get("editions", {})
     event = config["event"]
     event_key = event["event_key"]
     require(bool(event_key), "Empty event key")
@@ -177,10 +180,22 @@ def build_catalog(config, definitions, lock, registry, observed, root=ROOT):
     available_keys = {key for key, edition in editions.items() if edition["data_status"] == "available"}
     require(observed_keys == available_keys,
             "Available/observed RaceEditions differ; planned editions must not enter the database")
-    expected_routes = {
-        key: courses[edition["course_version_id"]]["display_route_id"]
-        for key, edition in editions.items()
-    }
+    require(set(annual_routes) <= set(editions), "Annual route assignment names an unknown RaceEdition")
+    expected_routes = {}
+    for key, edition in editions.items():
+        override = annual_routes.get(key, {})
+        route_id = override.get("display_route_id", courses[edition["course_version_id"]]["display_route_id"])
+        route = registry.get("routes", {}).get(route_id)
+        require(route is not None, f"{key}: assigned display route is missing")
+        require(route.get("race_family") == edition["race_family"], f"{key}: display route family mismatch")
+        if override:
+            require(int(override.get("source_year", -1)) == int(edition["year"]),
+                    f"{key}: explicit annual route source year mismatch")
+            require(int(route.get("source_year", -1)) == int(edition["year"]),
+                    f"{key}: assigned route is not exact-year geometry")
+            if override.get("source_file"):
+                require(route.get("source_file") == override["source_file"], f"{key}: annual source file mismatch")
+        expected_routes[key] = route_id
     require(registry.get("route_for_edition") == expected_routes,
             "Route registry does not match explicit RaceEdition/CourseVersion assignments")
     require("route_for_race" not in registry and "route_for_year" not in registry,

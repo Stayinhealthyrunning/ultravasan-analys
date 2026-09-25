@@ -130,3 +130,12 @@ def test_browser_must_receive_the_fingerprinted_geometry(inputs):
     inputs["registry"]["routes"]["ultravasan90-pre2023"]["points"][1][0] += .001
     with pytest.raises(ValueError, match="Browser routes differ"):
         contracts.verify_route_export(inputs["registry"])
+
+
+def test_edition_specific_display_route_does_not_change_course_version(inputs):
+    catalog = contracts.build_catalog(**inputs)
+    routes = inputs["registry"]["route_for_edition"]
+    assert routes["ultravasan90-2018"] == "ultravasan90-2018-itra-51602"
+    assert routes["ultravasan90-2023"] == "ultravasan90-2023-itra-229687"
+    assert routes["ultravasan45-2024"] == "ultravasan45-2024-itra-267130"
+    assert catalog["editions"]["ultravasan90-2024"]["whole_course_comparison_group"] == "ultravasan90-2024-2025"

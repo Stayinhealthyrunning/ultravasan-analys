@@ -43,6 +43,7 @@ CURRENT_PRIMARY_GPX = ROOT / "data/routes/vasaloppet-ultravasan-2024-ultravasan-
 UV45_PRIMARY_GPX = ROOT / "data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx"
 RACE_CONFIG = ROOT / "config/races.json"
 COURSE_CONFIG = ROOT / "config/course_versions.json"
+EDITION_ROUTE_CONFIG = ROOT / "config/edition_routes.json"
 OLD_TOTAL = 90.173
 OLD_SOURCE = "https://www.plotaroute.com/route/1942022"
 POINT_SCHEMA = [
@@ -541,6 +542,85 @@ def build_uv45_route(course_config):
     }
 
 
+def build_edition_routes(config, course_config, routes):
+    """Build explicitly sourced annual display routes without changing CourseVersions."""
+    route_config = json.loads(EDITION_ROUTE_CONFIG.read_text(encoding="utf-8"))
+    if route_config.get("schema_version") != 1:
+        raise ValueError("Unsupported config/edition_routes.json schema")
+    races = {race["race_key"]: race for race in config.get("races", [])}
+    courses = course_config.get("courses", {})
+    overrides = route_config.get("editions", {})
+    unknown = set(overrides) - set(races)
+    if unknown:
+        raise ValueError(f"Unknown RaceEdition route overrides: {sorted(unknown)}")
+    for race_key, spec in overrides.items():
+        race = races[race_key]
+        year, family = int(race["year"]), race["race_family"]
+        route_id = spec.get("display_route_id")
+        if not route_id or int(spec.get("source_year", -1)) != year:
+            raise ValueError(f"{race_key}: an annual route override must declare its exact source year")
+        if "prebuilt_route_file" in spec:
+            route_path = ROOT / spec["prebuilt_route_file"]
+            route = json.loads(route_path.read_text(encoding="utf-8"))
+            if route.get("source_year") != year or not route.get("points") or len(route["points"]) < 2:
+                raise ValueError(f"{race_key}: prebuilt route year/geometry does not match the RaceEdition")
+            route = dict(route)
+            route["id"] = route_id
+            route["route_version"] = route_id
+            route["race_family"] = family
+            route["years"] = {"from": year, "to": year}
+            route["source_file"] = spec["source_file"]
+            route["source_type"] = "official-organizer-gps"
+            route["source_provider"] = spec.get("source_provider")
+            route["source_url"] = spec.get("source_url")
+            route["geometry_quality"] = "official-organizer-gps"
+            route["source_point_count"] = int(route.get("point_count", len(route["points"])))
+            route["point_schema"] = ["lat", "lon", "distance_km"]
+            route["elevation_available"] = False
+            route["elevation_note"] = "The source KMZ-derived route contains no per-point elevation values; no profile is inferred."
+            route["style"] = {"color": "#176d53", "dashArray": None, "label": f"Officiell GPS {year}"}
+            route.setdefault("geometry_note", f"Officiell årsspecifik GPS-geometri från {spec.get('source_provider', 'källan')}.")
+        else:
+            source_path = ROOT / spec["source_file"]
+            if not source_path.is_file():
+                raise ValueError(f"{race_key}: annual route source is missing: {spec['source_file']}")
+            reference_id = courses[race["course_version_id"]]["display_route_id"]
+            reference = routes.get(reference_id)
+            if not reference or reference.get("race_family") != family:
+                raise ValueError(f"{race_key}: no same-family reference geometry for endpoint checks")
+            color = "#8056a8" if family == "uv90" else "#d28b22"
+            route = verified_route(
+                route_id=route_id,
+                name=f"{race['name']} – verifierad geometri {year}",
+                years={"from": year, "to": year},
+                official_distance=float(race["distance_km"]),
+                source_path=source_path,
+                source_year=year,
+                race_family=family,
+                style={"color": color, "dashArray": None, "label": f"GPS {year}"},
+                checkpoints=race.get("checkpoints", []),
+                expected_start=reference["points"][0],
+                expected_finish=reference["points"][-1],
+            )
+            route["source_provider"] = spec.get("source_provider")
+            route["source_url"] = spec.get("source_url")
+            route["external_id"] = spec.get("external_id")
+            for field in ("source_http_status", "source_content_type", "source_fetched_at_utc",
+                          "source_page_sha256", "candidate_gpx_sha256"):
+                if spec.get(field) is not None:
+                    route[field] = spec[field]
+            route["geometry_note"] = (
+                f"Årsspecifik {spec.get('source_provider', 'GPX')}-geometri för {year}. "
+                "Visningsrutt endast; den fastställer inte whole-course-jämförbarhet. "
+                f"Källa: {spec.get('source_url', 'lokal GPX')}"
+            )
+            route["historical_note"] = "Exakt geometri för angivet RaceEdition-år; andra år använder sina egna tilldelningar eller referensgeometri."
+        if route.get("id") != route_id or route.get("race_family") != family or route.get("source_year") != year:
+            raise ValueError(f"{race_key}: generated route does not preserve its declared identity")
+        routes[route_id] = route
+    return overrides
+
+
 def orient_like_current(coords, current_points):
     """Reverse historical GPX when its endpoint is closer to Sälen than its start."""
     current_start = current_points[0]
@@ -710,6 +790,7 @@ def main():
     routes = {old["id"]: old, post["id"]: post}
     if uv45:
         routes[uv45["id"]] = uv45
+    annual_overrides = build_edition_routes(config, course_config, routes)
     courses = course_config.get("courses", {})
     route_for_edition = {}
     edition_route_contracts = {}
@@ -719,11 +800,14 @@ def main():
         course = courses.get(course_id)
         if not race_key or not course:
             raise ValueError(f"RaceEdition {race_key!r} has unknown CourseVersion {course_id!r}")
-        route_id = course.get("display_route_id")
+        route_override = annual_overrides.get(race_key, {})
+        route_id = route_override.get("display_route_id", course.get("display_route_id"))
         if route_id not in routes:
-            raise ValueError(f"CourseVersion {course_id!r} has unknown display route {route_id!r}")
-        route_for_edition[race_key] = route_id
+            raise ValueError(f"RaceEdition {race_key!r} has unknown display route {route_id!r}")
         display_route = routes[route_id]
+        if display_route.get("race_family") != race.get("race_family"):
+            raise ValueError(f"RaceEdition {race_key!r} route family mismatch for {route_id!r}")
+        route_for_edition[race_key] = route_id
         source_year = display_route.get("source_year")
         exact_display_geometry = source_year is not None and int(source_year) == int(race.get("year"))
         edition_route_contracts[race_key] = {

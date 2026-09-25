@@ -372,7 +372,7 @@
       race,
       race_family:edition.race_family,
       course_version_id:edition.course_version_id,
-      display_route_id:course.display_route_id,
+      display_route_id:route?.id||course.display_route_id,
       route_available:Boolean(route),
       route_geometry_quality:route?.geometry_quality||null,
       course_distance_km:wholeCourseDistance(course),

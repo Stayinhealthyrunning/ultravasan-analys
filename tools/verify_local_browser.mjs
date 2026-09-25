@@ -387,7 +387,7 @@ const contractChecks = await evaluate(`(() => {
   );
   return {
     editions:activeFamily!==null&&loadedKeys.size===expectedKeys.size&&[...loadedKeys].every(key=>expectedKeys.has(key)),
-    routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===contracts.courseForRace(race)?.display_route_id),
+    routes:data.races.every(race=>window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,race)?.id===window.ULTRAVASAN_ROUTES.route_for_edition[race.race_key]),
     families:data.races.every(race=>raceFamilyOf(race)===contracts.familyForRace(race)),
     unknown:window.RunnerReplay.routeForRace(window.ULTRAVASAN_ROUTES,{race_key:'ultravasan90-2099',year:2025})===null,
     immutable:Object.isFrozen(contracts.catalog.editions),
@@ -749,7 +749,7 @@ for(const request of mapRequests){
     raceKeys:app.models.map(model=>model.race?.race_key),
     families:[...new Set(app.models.map(model=>window.RaceContracts.familyForRace(model.race)))],
     routes:app.models.map(model=>model.route?.id),
-    expectedRoutes:app.models.map(model=>window.RaceContracts.courseForRace(model.race)?.display_route_id),
+    expectedRoutes:app.models.map(model=>window.RaceContracts.routeForRace(window.ULTRAVASAN_ROUTES,model.race)?.id),
     audio:document.querySelector('#raceSoundtrack')?.getAttribute('src'),
     expectedAudio:window.RaceMedia.musicForRace(app.models[0]?.race),
     mediaAlias:window.RaceMedia===window.RACE_MEDIA_CONFIG,

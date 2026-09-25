@@ -18,7 +18,7 @@ for(const [key,edition] of Object.entries(contracts.catalog.editions)){
   assert.strictEqual(contracts.supports(misleading,'replay'),edition.capabilities.replay);
   assert.strictEqual(contracts.supports(misleading,'map_duel'),edition.capabilities.map_duel);
   assert.strictEqual(contracts.supports(misleading,'not-a-capability'),false);
-  assert.strictEqual(replay.routeForRace(registry,misleading),registry.routes[contracts.courseForRace(key).display_route_id]);
+  assert.strictEqual(replay.routeForRace(registry,misleading),registry.routes[registry.route_for_edition[key]||contracts.courseForRace(key).display_route_id]);
   assert.strictEqual(replay.medalTimeForRace(misleading,'M'),edition.medal_profile==='pre2023'?34199:edition.medal_profile==='post2023'?35999:null);
 }
 for(const key of ['ultravasan90-2099','ultravasan45-2099','uv90','constructor','__proto__','']){
@@ -50,4 +50,6 @@ for(const file of ['../docs/data/race-catalog.js','../docs/assets/race-contracts
 assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-current');
 assert.strictEqual(browser.window.RACE_MEDIA_CONFIG.familyForRace({race_key:'ultravasan90-2022',name:'45'}),'uv90');
 assert.strictEqual(browser.window.RaceContracts.courseForRace('ultravasan90-2026').checkpoint_catalog.find(cp=>cp.checkpoint_key==='high_point').distance_km,null);
+assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2018').id,'ultravasan90-2018-itra-51602');
+assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2026').id,'ultravasan90-2026');
 console.log('OK: explicit contracts across all 22 editions, unknown keys, immutable snapshots and another event');
