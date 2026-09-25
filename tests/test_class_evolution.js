@@ -78,11 +78,33 @@ assert.strictEqual(interpolated.year,2014.5);
 assert.strictEqual(interpolated.medianSpeedKmh,(9.5+10.625)/2);
 assert.strictEqual(interpolated.participantCount,2.5,'position och storlek ska interpoleras samtidigt');
 const broken=evolution.transitionBubble(m50_2014,m50_2017,.25,{fromYear:2014,toYear:2017,maxParticipantCount:model.maxParticipantCount});
-assert.strictEqual(broken.comparisonBreak,true);
-assert.strictEqual(broken.year,2014,'animation får inte skapa ett mellanår med interpolerad fart över banbyte');
-assert.strictEqual(broken.medianSpeedKmh,m50_2014.medianSpeedKmh,'animation får inte interpolera medianfart över banbyte');
+assert.strictEqual(broken.comparisonBreak,false,'jämförbarhetsgränser får inte stoppa den visuella interpoleringen');
+assert.ok(broken.year>2014&&broken.year<2017,'bubblans x-position ska interpoleras även över gruppgränser');
+assert.ok(broken.medianSpeedKmh>m50_2014.medianSpeedKmh&&broken.medianSpeedKmh<model.points.find(point=>point.className==='M50'&&point.year===2017).medianSpeedKmh,'bubblans y-position ska interpoleras även över gruppgränser');
 assert.strictEqual(evolution.transitionBubble(m35_2014,null,.5,{fromYear:2014,toYear:2015}).opacity,.5,'försvinnande klass ska tonas ut');
 assert.strictEqual(evolution.transitionBubble(null,m35_2015,.5,{fromYear:2014,toYear:2015}).opacity,.5,'tillkommande klass ska tonas in');
+
+const allBubbleModel={years:[2014,2015],classes:['M35','M50','W35','M60'],maxParticipantCount:100,pointsByClass:{
+  M35:[{year:2014,comparisonKey:'a',medianSpeedKmh:8,participantCount:10},{year:2015,comparisonKey:'b',medianSpeedKmh:10,participantCount:40}],
+  M50:[{year:2014,comparisonKey:'a',medianSpeedKmh:7,participantCount:20}],
+  W35:[{year:2015,comparisonKey:'b',medianSpeedKmh:9,participantCount:30}],
+  M60:[{year:2014,comparisonKey:'old',medianSpeedKmh:6,participantCount:15},{year:2015,comparisonKey:'new',medianSpeedKmh:8,participantCount:35}]
+}};
+const allStates=evolution.transitionStates(allBubbleModel,0,1,.5);
+assert.deepStrictEqual([...allStates.keys()],allBubbleModel.classes,'mellanlägen ska beräknas för hela den synliga klassmängden');
+for(const className of ['M35','M60']){
+  const state=allStates.get(className);
+  assert.strictEqual(state.year,2014.5,`${className}: x-position ska interpoleras trots olika jämförbarhetsnyckel`);
+  assert.strictEqual(state.medianSpeedKmh,allBubbleModel.pointsByClass[className][0].medianSpeedKmh+1,`${className}: y-position ska interpoleras trots olika jämförbarhetsnyckel`);
+  assert.strictEqual(state.participantCount,25,`${className}: bubbelyta ska interpoleras för varje gemensam klass`);
+  assert.strictEqual(state.opacity,1,`${className}: gemensam klass ska inte tona ut/in i stället för att röra sig`);
+}
+assert.strictEqual(allStates.get('M50').opacity,.5,'klass som bara finns i år A ska tona ut');
+assert.strictEqual(allStates.get('W35').opacity,.5,'klass som bara finns i år B ska tona in');
+const sliderController=Object.create(evolution.ClassEvolutionController.prototype);
+sliderController.model=allBubbleModel;sliderController.pause=()=>{};sliderController._renderStatic=index=>{sliderController.staticIndex=index};sliderController._renderTransition=(from,to,progress)=>{sliderController.lastSliderTransition={from,to,progress}};sliderController._setStatus=()=>{};sliderController._setButtons=()=>{};
+sliderController.setSliderPosition(.5);
+assert.deepStrictEqual(sliderController.lastSliderTransition,{from:0,to:1,progress:.5},'manuell slider ska använda samma interpolerade keyframes som autoplay');
 
 const timing=evolution.animationTiming(10);
 assert.ok(timing.transitionMs>=1400&&timing.transitionMs<=1800);
@@ -111,8 +133,11 @@ for(const id of ['classEvolutionPlay','classEvolutionPause','classEvolutionResta
 assert.ok(audience.includes('selectedClasses:advanced.classSelection')&&audience.includes('setSelected(advanced.classSelection)'),'Klasslabbets befintliga val ska styra markering och spår');
 assert.ok(source.includes('requestAnimationFrame(tick)')&&source.includes('cancelAnimationFrame(this.frame)'),'animationen ska använda och städa requestAnimationFrame');
 assert.ok(source.includes("matchMedia('(prefers-reduced-motion: reduce)')")&&source.includes('Reducerad rörelse'),'reducerad rörelse ska respekteras');
-assert.ok(source.includes('historyMax=moving?fromIndex:fromIndex-1'),'framtida spår får inte visas');
-assert.ok(source.includes('point.comparisonKey===previousPoint.comparisonKey')&&source.includes('from.comparisonKey!==to.comparisonKey'),'historiska och levande fartspår ska brytas vid banjämförbarhetsgräns');
+assert.ok(source.includes('historyMax=fromIndex'),'historiska spår ska omfatta hela den visade årskedjan, inklusive aktuellt loppår');
+assert.ok(source.includes('classTrailSegments(historical,this.model.years)')&&source.includes('Number(to.year)-Number(from.year)!==1'),'beskrivande spår ska bindas per kalenderår och brytas vid verklig kalenderlucka');
+const trailYears=[2014,2015,2016,2017,2018,2019,2022,2023,2024,2025,2026],trailPoints=trailYears.map(year=>({year,medianSpeedKmh:10,participantCount:1}));
+const trailSegments=evolution.classTrailSegments(trailPoints,trailYears);
+assert.deepStrictEqual(trailSegments.map(segment=>segment.map(point=>point.year)),[[2014,2015,2016,2017,2018,2019],[2022,2023,2024,2025,2026]],'valda klassers historiska spår ska vara sammanhängande inom varje årsserie och endast brytas över 2020–2021');
 assert.ok(!source.includes("class:'class-evolution-course-break'")&&!source.includes("class:'class-evolution-course-break-label'"),'tekniska jämförbarhetsgränser ska inte ritas som vertikala linjer eller överlappande etiketter i diagrammet');
 assert.ok(source.includes('calendarGaps')&&source.includes('class-evolution-calendar-gap-label'),'luckor utan tävling ska märkas separat');
 assert.ok(audience.includes('comparisonKeyForRace:historyComparisonKey')&&audience.includes('descriptiveHistoryRuns(valid,years)'),'Klassutveckling ska behålla jämförbarhetsregler för fartinterpolation medan Klasshistorik ritar en beskrivande årsserie');
