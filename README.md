@@ -8,7 +8,7 @@ Python-installation behövs för normal användning.
 
 Startsidan har en mjuk växlare mellan **Ultravasan 90** (standard) och **Ultravasan 45**. Varje lopp har egen rubrikbild, egna loppår, egna resultatfilter, egna analyser, egen GPS-rutt och egen musik i kartduellen. Familj och kartreferens slås upp explicit per loppnyckel i `docs/data/race-catalog.json`; namn, prefix, årtal och distans avgör inte valet.
 
-Ultravasan 45 visas med GPX-spåret `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`. Äldre utgåvor behåller sin historiska kontrollmodell; kartspåret är en gemensam visningsreferens. Alla importadaptrar kräver en explicit `SourceBinding`; de härleder inte längre lopp från namn, nyckelprefix, distans eller årtal.
+Kart- och replaygeometri väljs explicit per RaceEdition via `config/edition_routes.json`. Exakt årsgeometri används när reproducerbar källa finns, verifierat delad bana används endast när arrangörsevidens styrker identisk sträckning, och övriga år visas med tydligt märkt referensgeometri. Alla importadaptrar kräver en explicit `SourceBinding`; de härleder inte längre lopp från namn, nyckelprefix, distans eller årtal.
 
 ## Öppna verktyget
 
@@ -26,7 +26,7 @@ fungerar från en vanlig `file://`-adress.
 - statistikstudio med tidsfördelning, tid–placering, måltidssimulator, DNF-tratt,
   delsträckornas fartsignatur, avancemang och år-mot-år,
 - animerad kartjämförelse för 1–5 löpare,
-- jämförelse mellan olika loppår och två banversioner,
+- jämförelse mellan olika loppår och deras explicita ban-/displaygeometrier,
 - SQLite-databas med källspårning,
 - GitHub Actions för import, validering, export och kostnadsfri publicering.
 
@@ -249,35 +249,27 @@ inte i databasen. Lägg därefter till en granskad `SourceBinding` och ändra
 
 ## Banversioner och rutt-evidens
 
-`docs/data/ultravasan-routes.js` är i första hand ett **display-register**.
-Det innehåller verifierade källårsgeometrier som kan användas som
-kartografiska referenser för andra loppår:
+`config/edition_routes.json` är det explicita RaceEdition-kontraktet för kart- och replaygeometri. Den publicerade browserexporten finns i `docs/data/ultravasan-routes.js`.
 
-- `ultravasan90-pre2023` – verifierad GPX för **2022** från
-  `data/routes/Ultravasan 90 2022.gpx`,
-- `ultravasan90-post2023` – verifierad GPX för **2024** från
-  `data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx`,
-- `ultravasan45-current` – verifierad GPX för **2026** från
-  `data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx`.
+Nuvarande täckning för de 22 importerade utgåvorna är:
 
-Registret har ett explicit `edition_route_contracts`-kontrakt per RaceEdition.
-`display_geometry_usage=exact-source-year` betyder att displayspårets källår
-är samma som loppåret; `reference-only` betyder att kartan visar ett spår från
-ett annat verifierat källår. Kartduellen visar denna skillnad direkt i UI.
+- **9 exact-source-year** – exakt geometri från samma loppår:
+  - UV90: 2018, 2022, 2023, 2024, 2026
+  - UV45: 2018, 2019, 2024, 2026
+- **4 verified-shared-course** – geometri från annat år används först efter explicit arrangörsevidens om oförändrad bana:
+  - UV90: 2017 → 2018 och 2025 → 2024
+  - UV45: 2017 → 2018 och 2025 → 2024
+- **9 reference-only** – bästa verifierade kartreferens, men inte facit för terräng/höjd:
+  - UV90: 2014, 2015, 2016, 2019
+  - UV45: 2014, 2015, 2016, 2022, 2023
 
-För Ultravasan 90 2026 finns dessutom en separat årsgeometri i
-`data/routes/ultravasan90-2026.json`, härledd från Vasaloppets officiella
-`UV-90_20260610.kmz`. Den används som årsvis rutt-evidens i auditen även om
-browserns nuvarande displayrutt fortfarande är 2024-spåret.
+För **2026** är Vasaloppets officiella KMZ auktoritativ geometri för både UV90 och UV45. KMZ-filernas höjdkolumn används inte som terrängsanning. Höjd överförs från samma års Trace de Trail-spår endast där geometrin matchar inom 50 meter och med progressionskontroll; kvarvarande omlagda punkter använder incheckad Copernicus GLO-90 DEM-cache. UV90 använder 52 DEM-punkter och UV45 55.
 
-**Display-geometri, årsvis verifierad geometri och whole-course-
-prestationsjämförbarhet är tre separata kontrakt.** Samma CourseVersion eller
-samma displayrutt får därför inte användas som automatiskt bevis för att två
-loppår kan jämföras i sluttid.
+För UV45 2018/2019 behålls den exakta årsgeometrin. Saknade höjder kompletteras endast genom validerad närmatchning mot 2024-spåret; befintliga originalhöjder skrivs aldrig över.
 
-Den äldre `source/Ultravasan90-2014-2022-reference.gpx` bevaras endast som
-dokumenterad reserv. Årsvis ruttproveniens, extern evidens och geometri-
-diagnostik dokumenteras i `reports/U20_ROUTE_AUDIT.md`.
+**Display-geometri, årsvis verifierad geometri, CourseVersion och whole-course-prestationsjämförbarhet är separata kontrakt.** En referensrutt får visas på kartan utan att Course Intelligence använder dess höjd/terräng som facit. Samma CourseVersion eller geometrisk likhet får inte i sig användas som bevis för jämförbar sluttid mellan år.
+
+Den enda verifierade flerårsgruppen för whole-course-prestationsjämförelse är för närvarande **`ultravasan90-2024-2025`**. Full källproveniens, externa evidensbeslut och geometridiagnostik finns i `reports/U20_ROUTE_AUDIT.md`.
 
 ## Hur kartpositionerna beräknas
 
