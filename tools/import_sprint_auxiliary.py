@@ -217,65 +217,78 @@ def run(args):
             methods=defaultdict(int); inserted=0; no_warning=0; unmatched=0; errors=0
             thread_state=threading.local()
 
-            def fetch_detail(item):
+            def fetch_detail(item, worker=None):
                 idx,entry=item
                 idp=entry["idp"]
                 url=mika_import.detail_url(race_cfg,idp,entry.get("url",""))
                 cache=raw_root/"details"/f"{re.sub(r'[^A-Za-z0-9_.-]','_',idp)}.html"
-                worker=getattr(thread_state,"fetcher",None)
                 if worker is None:
-                    # One HTTP session per worker thread; no database access happens here.
-                    worker=mika_import.Fetcher(args.delay,False,args.force)
-                    thread_state.fetcher=worker
-                last_error=None
-                for attempt in range(4):
-                    try:
-                        html,_,_,mode=worker.get(url,cache)
-                        parsed=mika_import.apply_fallback(
-                            uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
-                            entry
-                        )
-                        warning=extract_last_pre_finish_control(html)
-                        return idx,entry,idp,parsed,warning,None
-                    except Exception as exc:
-                        last_error=exc
-                        message=str(exc)
-                        transient=("403" in message or "429" in message or "502" in message or "503" in message or "504" in message)
-                        if not transient or attempt==3:
-                            break
-                        time.sleep((attempt+1)*2.0)
-                return idx,entry,idp,None,None,str(last_error)
+                    worker=getattr(thread_state,"fetcher",None)
+                    if worker is None:
+                        # One HTTP session per worker thread; no database access happens here.
+                        worker=mika_import.Fetcher(args.delay,False,args.force)
+                        thread_state.fetcher=worker
+                try:
+                    html,_,_,mode=worker.get(url,cache)
+                    parsed=mika_import.apply_fallback(
+                        uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
+                        entry
+                    )
+                    warning=extract_last_pre_finish_control(html)
+                    return idx,entry,idp,parsed,warning,None
+                except Exception as exc:
+                    return idx,entry,idp,None,None,str(exc)
+
+            def store_detail(idx,entry,idp,parsed,warning):
+                nonlocal inserted,no_warning,unmatched,errors
+                if not warning or not warning.get("elapsed_seconds"):
+                    no_warning+=1
+                    return
+                target,method=choose_target(parsed,race_cfg["event_code"],idp,indexes)
+                methods[method]+=1
+                if not target:
+                    unmatched+=1
+                    return
+                elapsed=int(warning["elapsed_seconds"])
+                if target["finish_seconds"] is not None and elapsed>=int(target["finish_seconds"]):
+                    errors+=1
+                    return
+                raw=json.dumps({"auxiliary_only":True,"source":"vasaloppet_mika","source_result_id":f"{race_cfg['event_code']}:{idp}","source_label":warning.get("source_label")},ensure_ascii=False)
+                conn.execute("""
+                  INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,segment_seconds,place_overall,place_gender,place_class,
+                    pace_seconds_per_km,reported_pace_seconds_per_km,speed_kmh,time_of_day,diff_seconds,status,is_estimated,raw_json)
+                  VALUES(?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,NULL,NULL,0,?)
+                  ON CONFLICT(result_id,checkpoint_id) DO UPDATE SET
+                    elapsed_seconds=excluded.elapsed_seconds,segment_seconds=NULL,place_overall=NULL,place_gender=NULL,place_class=NULL,
+                    pace_seconds_per_km=NULL,reported_pace_seconds_per_km=NULL,speed_kmh=NULL,time_of_day=excluded.time_of_day,
+                    diff_seconds=NULL,status=NULL,is_estimated=0,raw_json=excluded.raw_json
+                """,(target["id"],warning_id,elapsed,warning.get("time_of_day"),raw))
+                inserted+=1
+                if idx%100==0:
+                    conn.commit()
 
             items=list(enumerate(entries.values(),1))
+            retry_items=[]
             with ThreadPoolExecutor(max_workers=max(1,args.workers)) as pool:
                 for idx,entry,idp,parsed,warning,fetch_error in pool.map(fetch_detail,items):
                     if fetch_error is not None:
-                        errors+=1
-                        if len(report["details"])<50:
-                            report["details"].append({"idp":idp,"error":fetch_error})
+                        retry_items.append((idx,entry))
                         continue
-                    if not warning or not warning.get("elapsed_seconds"):
-                        no_warning+=1; continue
-                    target,method=choose_target(parsed,race_cfg["event_code"],idp,indexes)
-                    methods[method]+=1
-                    if not target:
-                        unmatched+=1; continue
-                    elapsed=int(warning["elapsed_seconds"])
-                    if target["finish_seconds"] is not None and elapsed>=int(target["finish_seconds"]):
-                        errors+=1; continue
-                    raw=json.dumps({"auxiliary_only":True,"source":"vasaloppet_mika","source_result_id":f"{race_cfg['event_code']}:{idp}","source_label":warning.get("source_label")},ensure_ascii=False)
-                    conn.execute("""
-                      INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,segment_seconds,place_overall,place_gender,place_class,
-                        pace_seconds_per_km,reported_pace_seconds_per_km,speed_kmh,time_of_day,diff_seconds,status,is_estimated,raw_json)
-                      VALUES(?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,NULL,NULL,0,?)
-                      ON CONFLICT(result_id,checkpoint_id) DO UPDATE SET
-                        elapsed_seconds=excluded.elapsed_seconds,segment_seconds=NULL,place_overall=NULL,place_gender=NULL,place_class=NULL,
-                        pace_seconds_per_km=NULL,reported_pace_seconds_per_km=NULL,speed_kmh=NULL,time_of_day=excluded.time_of_day,
-                        diff_seconds=NULL,status=NULL,is_estimated=0,raw_json=excluded.raw_json
-                    """,(target["id"],warning_id,elapsed,warning.get("time_of_day"),raw))
-                    inserted+=1
-                    if idx%100==0:
-                        conn.commit()
+                    store_detail(idx,entry,idp,parsed,warning)
+
+            # Vasaloppet may throttle concurrent requests with HTTP 403. Retry only
+            # those transient failures serially with the original session before
+            # declaring an import error. This preserves the verified complete
+            # result while keeping the bulk fetch fast.
+            for item in retry_items:
+                idx,entry,idp,parsed,warning,fetch_error=fetch_detail(item,fetcher)
+                if fetch_error is not None:
+                    errors+=1
+                    if len(report["details"])<50:
+                        report["details"].append({"idp":idp,"error":fetch_error})
+                    continue
+                store_detail(idx,entry,idp,parsed,warning)
+            report["parallel_retry_count"]=len(retry_items)
             conn.commit()
         finally:
             fetcher.close()
