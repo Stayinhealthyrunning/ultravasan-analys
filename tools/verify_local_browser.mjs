@@ -101,6 +101,39 @@ if(sprintInitial.year===2026&&(!sprintInitial.women||!sprintInitial.men||sprintI
   throw new Error("Spurtvinnaren did not render 2026 all-class start view: "+JSON.stringify(sprintInitial));
 }
 
+const sprint2025=await (async()=>{
+  await evaluate(`(() => {
+    const select=document.querySelector('#yearFilter');
+    const option=[...select.options].find(item=>(item.textContent||'').trim()==='2025');
+    if(!option)throw new Error('2025 option missing');
+    select.value=option.value;
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+  })()`);
+  await delay(250);
+  return evaluate(`(() => {
+    const race=state.data.races.find(item=>String(item.id)===String(state.raceId));
+    return {
+      year:Number(race?.year||0),
+      women:document.querySelectorAll('#sprintWomen .sprint-row').length,
+      men:document.querySelectorAll('#sprintMen .sprint-row').length,
+      womenClass:document.querySelector('#sprintWomenClass')?.value??null,
+      menClass:document.querySelector('#sprintMenClass')?.value??null,
+      coverage:(document.querySelector('#sprintCoverage')?.textContent||'').trim()
+    };
+  })()`);
+})();
+if(sprint2025.year!==2025||!sprint2025.women||!sprint2025.men||sprint2025.womenClass!==''||sprint2025.menClass!==''||!sprint2025.coverage.includes('2025')){
+  throw new Error("Spurtvinnaren did not survive 2026 -> 2025 year switch: "+JSON.stringify(sprint2025));
+}
+await evaluate(`(() => {
+  const select=document.querySelector('#yearFilter');
+  const option=[...select.options].find(item=>(item.textContent||'').trim()==='2026');
+  if(!option)throw new Error('2026 option missing');
+  select.value=option.value;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+})()`);
+await delay(250);
+
 const progressiveLoad=await evaluate(`(() => {
   const events=window.ULTRAVASAN_DATA_PHASE_EVENTS||[];
   const familySpec=window.ULTRAVASAN_DATA_CATALOG?.families?.uv90||{};
@@ -894,7 +927,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

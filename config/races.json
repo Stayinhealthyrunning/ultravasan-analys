@@ -48,7 +48,7 @@
       "name": "Ultravasan 90",
       "year": 2014,
       "race_date": "2014-08-23",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -57,7 +57,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -105,7 +105,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -127,7 +127,7 @@
       "name": "Ultravasan 90",
       "year": 2015,
       "race_date": "2015-08-22",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -136,7 +136,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -184,7 +184,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -206,7 +206,7 @@
       "name": "Ultravasan 90",
       "year": 2017,
       "race_date": "2017-08-19",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -215,7 +215,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -263,7 +263,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -285,7 +285,7 @@
       "name": "Ultravasan 90",
       "year": 2018,
       "race_date": "2018-08-18",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -294,7 +294,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -342,7 +342,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -364,7 +364,7 @@
       "name": "Ultravasan 90",
       "year": 2019,
       "race_date": "2019-08-17",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -373,7 +373,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -421,7 +421,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -443,7 +443,7 @@
       "name": "Ultravasan 90",
       "year": 2022,
       "race_date": "2022-08-20",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "pre2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -452,7 +452,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -500,7 +500,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "data_status": "available",
@@ -522,7 +522,7 @@
       "name": "Ultravasan 90",
       "year": 2023,
       "race_date": "2023-08-19",
-      "distance_km": 92.0,
+      "distance_km": 92,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "post2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -531,7 +531,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "high_point",
@@ -585,7 +585,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 9,
-          "distance_km": 92.0
+          "distance_km": 92
         }
       ],
       "data_status": "available",
@@ -608,7 +608,7 @@
       "name": "Ultravasan 90",
       "year": 2024,
       "race_date": "2024-08-17",
-      "distance_km": 92.0,
+      "distance_km": 92,
       "official_url": "https://results.vasaloppet.se/",
       "course_version": "post2023",
       "notes": "Historik importerad från VasaNerds publika resultatfiler med källspårning.",
@@ -617,7 +617,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "high_point",
@@ -671,7 +671,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 9,
-          "distance_km": 92.0
+          "distance_km": 92
         }
       ],
       "data_status": "available",
@@ -694,7 +694,7 @@
       "name": "Ultravasan 90",
       "year": 2025,
       "race_date": "2025-08-16",
-      "distance_km": 92.0,
+      "distance_km": 92,
       "event_code": "UL90_HCH8NDMR2501",
       "result_year_path": 2026,
       "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL90_HCH8NDMR2501",
@@ -707,7 +707,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "high_point",
@@ -758,10 +758,16 @@
           "distance_km": 82.81
         },
         {
+          "checkpoint_key": "mora_warning",
+          "name": "Mora Förvarning",
+          "sequence_no": 9,
+          "distance_km": null
+        },
+        {
           "checkpoint_key": "mora",
           "name": "Mora mål",
-          "sequence_no": 9,
-          "distance_km": 92.0
+          "sequence_no": 10,
+          "distance_km": 92
         }
       ],
       "course_version": "post2023",
@@ -794,7 +800,7 @@
       "name": "Ultravasan 90",
       "year": 2016,
       "race_date": "2016-08-20",
-      "distance_km": 90.0,
+      "distance_km": 90,
       "event_code": "UL90_9999991678885A00000004CC",
       "result_year_path": 2017,
       "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL90_9999991678885A00000004CC",
@@ -807,7 +813,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "smagan",
@@ -855,7 +861,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 8,
-          "distance_km": 90.0
+          "distance_km": 90
         }
       ],
       "course_version": "pre2023",
@@ -888,7 +894,7 @@
       "name": "Ultravasan 45",
       "year": 2014,
       "race_date": "2014-08-23",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_000017167888590000000399",
       "result_year_path": 2015,
       "official_url": "https://results.vasaloppet.se/2015/?pid=search&event=UL45_000017167888590000000399",
@@ -901,7 +907,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -925,7 +931,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -953,7 +959,7 @@
       "name": "Ultravasan 45",
       "year": 2015,
       "race_date": "2015-08-22",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_9999991678885A000000043D",
       "result_year_path": 2016,
       "official_url": "https://results.vasaloppet.se/2016/?pid=search&event=UL45_9999991678885A000000043D",
@@ -966,7 +972,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -990,7 +996,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1018,7 +1024,7 @@
       "name": "Ultravasan 45",
       "year": 2016,
       "race_date": "2016-08-20",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_9999991678885A00000004CB",
       "result_year_path": 2017,
       "official_url": "https://results.vasaloppet.se/2017/?pid=search&event=UL45_9999991678885A00000004CB",
@@ -1031,7 +1037,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1055,7 +1061,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1083,7 +1089,7 @@
       "name": "Ultravasan 45",
       "year": 2017,
       "race_date": "2017-08-19",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_9999991678885A0000000620",
       "result_year_path": 2018,
       "official_url": "https://results.vasaloppet.se/2018/?pid=search&event=UL45_9999991678885A0000000620",
@@ -1096,7 +1102,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1120,7 +1126,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1148,7 +1154,7 @@
       "name": "Ultravasan 45",
       "year": 2018,
       "race_date": "2018-08-18",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_9999991678885B00000006D3",
       "result_year_path": 2019,
       "official_url": "https://results.vasaloppet.se/2019/?pid=search&event=UL45_9999991678885B00000006D3",
@@ -1161,7 +1167,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1185,7 +1191,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1213,7 +1219,7 @@
       "name": "Ultravasan 45",
       "year": 2019,
       "race_date": "2019-08-17",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_9999991678885C0000000709",
       "result_year_path": 2020,
       "official_url": "https://results.vasaloppet.se/2020/?pid=search&event=UL45_9999991678885C0000000709",
@@ -1226,7 +1232,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1250,7 +1256,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1278,7 +1284,7 @@
       "name": "Ultravasan 45",
       "year": 2022,
       "race_date": "2022-08-20",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_HCH8NDMR2201",
       "result_year_path": 2023,
       "official_url": "https://results.vasaloppet.se/2023/?pid=search&event=UL45_HCH8NDMR2201",
@@ -1291,7 +1297,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1315,7 +1321,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1343,7 +1349,7 @@
       "name": "Ultravasan 45",
       "year": 2023,
       "race_date": "2023-08-19",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_HCH8NDMR2301",
       "result_year_path": 2024,
       "official_url": "https://results.vasaloppet.se/2024/?pid=search&event=UL45_HCH8NDMR2301",
@@ -1356,7 +1362,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1380,7 +1386,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1408,7 +1414,7 @@
       "name": "Ultravasan 45",
       "year": 2024,
       "race_date": "2024-08-17",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_HCH8NDMR2401",
       "result_year_path": 2025,
       "official_url": "https://results.vasaloppet.se/2025/?pid=search&event=UL45_HCH8NDMR2401",
@@ -1421,7 +1427,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "oxberg",
@@ -1445,7 +1451,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 4,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-legacy-2014-2024",
@@ -1473,7 +1479,7 @@
       "name": "Ultravasan 45",
       "year": 2025,
       "race_date": "2025-08-16",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_HCH8NDMR2501",
       "result_year_path": 2026,
       "official_url": "https://results.vasaloppet.se/2026/?pid=search&event=UL45_HCH8NDMR2501",
@@ -1486,7 +1492,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "lillsjon",
@@ -1522,7 +1528,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 6,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-current",
@@ -1551,7 +1557,7 @@
       "name": "Ultravasan 90",
       "year": 2026,
       "race_date": "2026-08-15",
-      "distance_km": 92.0,
+      "distance_km": 92,
       "event_code": "UL90_HCH8NDMR2601",
       "result_year_path": 2027,
       "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL90_HCH8NDMR2601",
@@ -1564,7 +1570,7 @@
           "checkpoint_key": "start",
           "name": "Start Sälen",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "high_point",
@@ -1588,7 +1594,7 @@
           "checkpoint_key": "risberg",
           "name": "Risberg",
           "sequence_no": 4,
-          "distance_km": 35.0
+          "distance_km": 35
         },
         {
           "checkpoint_key": "evertsberg",
@@ -1624,7 +1630,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 10,
-          "distance_km": 92.0
+          "distance_km": 92
         }
       ],
       "course_version": "post2023",
@@ -1653,7 +1659,7 @@
       "name": "Ultravasan 45",
       "year": 2026,
       "race_date": "2026-08-15",
-      "distance_km": 45.0,
+      "distance_km": 45,
       "event_code": "UL45_HCH8NDMR2601",
       "result_year_path": 2027,
       "official_url": "https://results.vasaloppet.se/2027/?pid=search&event=UL45_HCH8NDMR2601",
@@ -1666,7 +1672,7 @@
           "checkpoint_key": "start",
           "name": "Start Oxberg",
           "sequence_no": 0,
-          "distance_km": 0.0
+          "distance_km": 0
         },
         {
           "checkpoint_key": "lillsjon",
@@ -1702,7 +1708,7 @@
           "checkpoint_key": "mora",
           "name": "Mora mål",
           "sequence_no": 6,
-          "distance_km": 45.0
+          "distance_km": 45
         }
       ],
       "course_version": "uv45-current",
