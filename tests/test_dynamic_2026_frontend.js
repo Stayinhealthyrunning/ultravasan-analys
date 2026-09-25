@@ -29,8 +29,8 @@ for(const family of ['uv90','uv45']){
   const model=evolution.aggregateClassHistory({races:familyRaces,results:results.filter(result=>ids.has(result.race_id)),isStarter,isFinished});
   assert.deepStrictEqual(model.years,[2025,2026],`${family}: Gapminder ska inkludera exporterade 2026`);
 }
-assert.strictEqual(replay.routeForRace(routes,races[1]).id,'ultravasan90-2026');
-assert.strictEqual(replay.routeForRace(routes,races[3]).id,'ultravasan45-current');
+assert.strictEqual(replay.routeForRace(routes,races[1]).id,'ultravasan90-2026-official');
+assert.strictEqual(replay.routeForRace(routes,races[3]).id,'ultravasan45-2026-official');
 const replayCheckpoints=[
   {checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
   {checkpoint_key:'high_point',name:'Högsta punkten',sequence_no:1,distance_km:null},

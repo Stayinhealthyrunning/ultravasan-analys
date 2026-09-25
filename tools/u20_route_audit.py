@@ -248,14 +248,16 @@ def track_delta(left, right):
     }
 
 
-def evidence_status(local_exact, external):
+def evidence_status(route_usage, external):
     strengths = {item.get("strength") for item in external}
-    if local_exact:
+    if route_usage == "exact-source-year":
         return "local-exact-source-year"
+    if route_usage == "verified-shared-course":
+        return "verified-shared-course"
     if "strong" in strengths or "strong-secondary" in strengths:
-        return "external-year-specific"
+        return "external-year-specific-reference-only"
     if external:
-        return "external-candidate"
+        return "external-candidate-reference-only"
     return "reference-only-or-unknown"
 
 
@@ -294,10 +296,16 @@ def build_report():
         route_id = route_index["route_for_edition"].get(key)
         route = routes.get(route_id)
         points = route.get("points", []) if route else []
-        exact_source_year = bool(route and int(route.get("source_year", -1)) == year)
+        display_contract = display_contracts.get(key) or {}
+        route_usage = display_contract.get("display_geometry_usage") or (
+            "exact-source-year" if route and int(route.get("source_year", -1)) == year else "reference-only"
+        )
+        exact_source_year = route_usage == "exact-source-year"
         provenance = ""
         provider = route.get("source_provider", "not recorded") if route else "not recorded"
-        if route:
+        if display_contract.get("geometry_evidence_note"):
+            provenance = display_contract["geometry_evidence_note"]
+        elif route:
             provenance = route.get("geometry_note") or route.get("historical_note") or route.get("elevation_note") or "Route file is tagged to its source year; other edition bindings are reference-only."
         edition_version = versions.get(edition.get("course_version_id"), {})
         geometry_source = edition_version.get("geometry_source", {})
@@ -311,9 +319,9 @@ def build_report():
             "course_version_id": edition.get("course_version_id"),
             "route_id": route_id,
             "exact_edition_route_found": exact_source_year,
-            "route_usage": "exact-source-year" if exact_source_year else ("reference-only" if route else "unknown"),
-            "display_route_contract": display_contracts.get(key),
-            "evidence_status": evidence_status(exact_source_year, external),
+            "route_usage": route_usage if route else "unknown",
+            "display_route_contract": display_contract,
+            "evidence_status": evidence_status(route_usage, external),
             "source_provider": provider,
             "source_year": route.get("source_year") if route else None,
             "source_path": route.get("source_file") if route else source_path,
@@ -364,12 +372,13 @@ def build_report():
         "title": "Ultravasan RaceEdition route/GPX audit",
         "evidence_checked_on": EVIDENCE_CHECKED_ON,
         "edition_count": len(editions),
-        "exact_edition_routes_found": sum(item["exact_edition_route_found"] for item in editions),
+        "exact_edition_routes_found": sum(item["route_usage"] == "exact-source-year" for item in editions),
+        "verified_shared_course_editions": [item["race_key"] for item in editions if item["route_usage"] == "verified-shared-course"],
+        "reference_only_editions": [item["race_key"] for item in editions if item["route_usage"] == "reference-only"],
         "external_year_specific_evidence_editions": external_keys,
         "strong_external_year_specific_evidence_editions": strong_external_keys,
         "reference_or_unknown_editions": [
-            item["race_key"] for item in editions
-            if not item["exact_edition_route_found"] and not item["external_route_evidence"]
+            item["race_key"] for item in editions if item["route_usage"] in {"reference-only", "unknown"}
         ],
         "course_version_equals_whole_course_comparison": False,
         "display_route_contracts_complete": len(display_contracts) == len(editions),
@@ -425,7 +434,7 @@ def main():
     lines = [
         "# Ultravasan route and GPX audit",
         "",
-        f"Inventoried {report['edition_count']} imported editions; exact local source-year route files found: {report['exact_edition_routes_found']}.",
+        f"Inventoried {report['edition_count']} imported editions; exact source-year routes: {report['exact_edition_routes_found']}; verified shared-course editions: {len(report['verified_shared_course_editions'])}; reference-only editions: {len(report['reference_only_editions'])}.",
         f"Curated external year-specific route evidence exists for {len(report['external_year_specific_evidence_editions'])} editions, of which {len(report['strong_external_year_specific_evidence_editions'])} have strong/strong-secondary evidence.",
         "",
         "CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.",
@@ -477,7 +486,7 @@ def main():
         )
     lines += [
         "",
-        "UV45 2018/2019 were not promoted because the available map geometries contain elevation for only 55.909%/62.156% of points, below the existing route validation threshold; no broad interpolation was used. UV90 2024 and ITRA 2026 tracks were not promoted because the corresponding organizer-sourced local route is primary. The verified UV90 2026 geometry is from the official Vasaloppet KMZ.",
+        "UV45 2018/2019 keep their exact-year Trace de Trail geometry. Missing native height is filled only through validated <=50 m donor matching against the complete 2024 track. For 2026, Vasaloppet's official KMZ is authoritative geometry; same-year Trace de Trail supplies height only where it matches within 50 m, while unmatched changed sections use the checked-in Copernicus GLO-90 DEM cache. UV90 2024 remains organizer/local primary rather than promoting the secondary ITRA candidate.",
         "",
         "## Plotaroute candidates",
         "",
@@ -492,7 +501,7 @@ def main():
         )
     lines += [
         "",
-        "Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed on the page. It therefore remains a candidate only; 2025 continues to use its existing display route, and the 2024–2025 whole-course group is unchanged.",
+        "Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed. The geometry is therefore not imported. Vasaloppet's explicit no-change notice instead verifies that the exact 2024 geometry is the shared 2025 course for both UV90 and UV45.",
         "",
         "## External evidence",
         "",

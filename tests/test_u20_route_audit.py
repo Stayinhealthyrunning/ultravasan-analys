@@ -30,9 +30,13 @@ def test_route_audit_covers_all_editions_and_separates_evidence_from_comparabili
     assert by_key["ultravasan90-2024"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
     assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
     assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_source_year"] == 2026
+    assert set(report["verified_shared_course_editions"]) == {"ultravasan90-2017", "ultravasan90-2025", "ultravasan45-2017", "ultravasan45-2025"}
+    assert len(report["reference_only_editions"]) == 9
+    assert by_key["ultravasan90-2017"]["route_usage"] == "verified-shared-course"
+    assert by_key["ultravasan90-2014"]["route_usage"] == "reference-only"
 
     assert by_key["ultravasan90-2022"]["evidence_status"] == "local-exact-source-year"
-    assert by_key["ultravasan90-2025"]["evidence_status"] == "external-year-specific"
+    assert by_key["ultravasan90-2025"]["evidence_status"] == "verified-shared-course"
     assert any(item["evidence_type"] == "official-route-change-notice"
                for item in by_key["ultravasan90-2017"]["external_route_evidence"])
     assert any("rerouting" in item["note"]

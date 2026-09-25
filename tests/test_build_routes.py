@@ -52,6 +52,11 @@ class RouteBuildTests(unittest.TestCase):
             self.assertEqual("exact-source-year", contracts["ultravasan45-2019"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan45-2024"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan45-2026"]["display_geometry_usage"])
+            for key in ("ultravasan90-2017", "ultravasan90-2025", "ultravasan45-2017", "ultravasan45-2025"):
+                self.assertEqual("verified-shared-course", contracts[key]["display_geometry_usage"])
+            for key in ("ultravasan90-2014", "ultravasan90-2015", "ultravasan90-2016", "ultravasan90-2019",
+                        "ultravasan45-2014", "ultravasan45-2015", "ultravasan45-2016", "ultravasan45-2022", "ultravasan45-2023"):
+                self.assertEqual("reference-only", contracts[key]["display_geometry_usage"])
             self.assertEqual(2026, contracts["ultravasan90-2026"]["display_geometry_source_year"])
             self.assertIsNone(contracts["ultravasan90-2023"]["whole_course_comparison_group"])
             self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2024"]["whole_course_comparison_group"])
@@ -107,8 +112,18 @@ class RouteBuildTests(unittest.TestCase):
                 self.assertGreater(provenance["transferred_missing_pct"], 99)
                 self.assertLessEqual(provenance["unmatched_after_transfer"], 4)
             exact_2026 = registry["routes"][expected_routes["ultravasan90-2026"]]
-            self.assertEqual("official-organizer-gps", exact_2026["source_type"])
+            self.assertEqual("official-organizer-kmz", exact_2026["source_type"])
             self.assertEqual("source/UV-90_20260610.kmz", exact_2026["source_file"])
+            self.assertTrue(exact_2026["elevation_available"])
+            self.assertEqual("same-year-spatial-donor-with-dem-fallback", exact_2026["elevation_provenance"]["method"])
+            self.assertEqual(50.0, exact_2026["elevation_provenance"]["max_match_distance_m"])
+            self.assertEqual(52, exact_2026["elevation_provenance"]["dem_fallback_points"])
+            self.assertGreater(exact_2026["elevation_provenance"]["donor_match_pct"], 98)
+            exact_45_2026 = registry["routes"][expected_routes["ultravasan45-2026"]]
+            self.assertEqual("official-organizer-kmz", exact_45_2026["source_type"])
+            self.assertEqual("source/UV45_20260610.kmz", exact_45_2026["source_file"])
+            self.assertEqual(55, exact_45_2026["elevation_provenance"]["dem_fallback_points"])
+            self.assertGreater(exact_45_2026["elevation_provenance"]["donor_match_pct"], 98)
             self.assertEqual("uv90-2026-v1", contracts["ultravasan90-2026"]["course_version_id"])
             self.assertEqual(
                 "ultravasan90-post2023",

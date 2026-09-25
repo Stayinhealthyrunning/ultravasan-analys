@@ -172,13 +172,8 @@ def _cumulative_metres(coords):
     return distances
 
 
-def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0):
-    """Fill missing elevations from a nearby donor route, never replacing observed values.
-
-    A spatial match must be within the configured distance and near the same
-    normalized along-route progress. The donor is accepted only when it
-    reproduces the target's already observed elevations with strong accuracy.
-    """
+def _spatial_elevation_matches(target_coords, donor_coords, max_distance_m=50.0):
+    """Match target points to donor segments using space plus normalized route progress."""
     if max_distance_m <= 0:
         raise ValueError("Elevation donor match distance must be positive")
     donor_present = [point[2] for point in donor_coords if len(point) > 2 and point[2] is not None]
@@ -217,9 +212,8 @@ def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0
                 grid.setdefault((cell_x, cell_y), []).append(index)
 
     progress_guard_m = max(500.0, min(1500.0, donor_total * 0.03))
-
-    def match(index):
-        qx, qy = target_xy[index]
+    matches = []
+    for index, (qx, qy) in enumerate(target_xy):
         expected_progress = target_progress[index] / target_total * donor_total
         candidates = grid.get((math.floor(qx / cell_m), math.floor(qy / cell_m)), ())
         best = None
@@ -247,9 +241,19 @@ def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0
                     "elevation_m": elevation,
                     "donor_progress_m": matched_progress,
                 }
-        return best
+        matches.append(best)
+    return matches, progress_guard_m
 
-    matches = [match(index) for index in range(len(target_coords))]
+
+def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0):
+    """Fill missing elevations from a nearby donor route, never replacing observed values.
+
+    The donor must reproduce the target's already observed elevations accurately;
+    this is the strict path used for annual GPX sources with partial native height.
+    """
+    matches, progress_guard_m = _spatial_elevation_matches(
+        target_coords, donor_coords, max_distance_m=max_distance_m
+    )
     observed_indices = [index for index, point in enumerate(target_coords) if point[2] is not None]
     observed_matches = [(index, matches[index]) for index in observed_indices if matches[index] is not None]
     if len(observed_indices) < 20:
@@ -296,6 +300,63 @@ def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0
     }
 
 
+def _read_dem_cache(path, target_coords):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != 1 or not isinstance(payload.get("points"), list):
+        raise ValueError(f"{path.name} has unsupported DEM cache format")
+    values = {}
+    for row in payload["points"]:
+        index = int(row["index"])
+        if not 0 <= index < len(target_coords):
+            raise ValueError(f"{path.name} DEM index is outside target geometry: {index}")
+        if hav(target_coords[index], [float(row["lat"]), float(row["lon"])]) * 1000 > 5:
+            raise ValueError(f"{path.name} DEM coordinate does not match target point {index}")
+        elevation = float(row["elevation_m"])
+        if not -50 <= elevation <= 1000:
+            raise ValueError(f"{path.name} DEM elevation is implausible at point {index}")
+        values[index] = elevation
+    return values, payload
+
+
+def _transfer_same_year_donor_with_dem(target_coords, donor_coords, dem_cache_path, max_distance_m=50.0):
+    """Build height for official geometry from same-year donor plus DEM on changed sections."""
+    target = [[float(point[0]), float(point[1]), None] for point in target_coords]
+    matches, progress_guard_m = _spatial_elevation_matches(target, donor_coords, max_distance_m=max_distance_m)
+    matched_indices = [index for index, match in enumerate(matches) if match is not None]
+    match_pct = 100 * len(matched_indices) / len(target)
+    if match_pct < 95:
+        raise ValueError(f"Same-year donor geometry matches only {match_pct:.1f}% of official route")
+
+    dem_values, dem_payload = _read_dem_cache(dem_cache_path, target)
+    augmented = [list(point) for point in target]
+    distances = []
+    for index, match in enumerate(matches):
+        if match is None:
+            if index not in dem_values:
+                raise ValueError(f"DEM cache misses official route point {index}")
+            augmented[index][2] = dem_values[index]
+        else:
+            augmented[index][2] = match["elevation_m"]
+            distances.append(match["distance_m"])
+    extra_dem = set(dem_values) - {index for index, match in enumerate(matches) if match is None}
+    if extra_dem:
+        raise ValueError(f"DEM cache contains {len(extra_dem)} points that have a valid same-year donor match")
+
+    return augmented, {
+        "method": "same-year-spatial-donor-with-dem-fallback",
+        "max_match_distance_m": float(max_distance_m),
+        "progress_guard_m": round(progress_guard_m, 1),
+        "official_geometry_points": len(target),
+        "donor_matched_points": len(matched_indices),
+        "donor_match_pct": round(match_pct, 3),
+        "dem_fallback_points": len(dem_values),
+        "median_transfer_distance_m": round(_percentile(distances, 0.5) or 0.0, 3),
+        "p95_transfer_distance_m": round(_percentile(distances, 0.95) or 0.0, 3),
+        "dem_provider": dem_payload.get("provider"),
+        "dem_dataset": dem_payload.get("dataset"),
+    }
+
+
 def _perpendicular_m(point, start, end, reference_lat):
     scale_x = 111_320.0 * math.cos(math.radians(reference_lat))
     scale_y = 110_540.0
@@ -336,9 +397,18 @@ def simplify_indices(points, tolerance_m=GEOMETRY_TOLERANCE_M):
 def build_gpx_route_data(
     path, official_distance, expected_start, expected_finish,
     elevation_donor_path=None, elevation_max_match_distance_m=50.0,
+    source_format="gpx", elevation_dem_path=None, donor_validation_mode="observed",
 ):
-    """Validate and transform one verified GPX into the compact browser schema."""
-    coords = read_gpx(path)
+    """Validate and transform verified GPX/KMZ geometry into the compact browser schema."""
+    if source_format == "gpx":
+        coords = read_gpx(path)
+    elif source_format == "kmz":
+        # Vasaloppet's 2026 KMZ altitude column is not a trustworthy terrain
+        # profile (mostly zero with isolated impossible values). Keep its
+        # authoritative geometry and build elevation separately.
+        coords = [[point[0], point[1], None] for point in read_kmz(path)]
+    else:
+        raise ValueError(f"Unsupported route source format: {source_format}")
     if any(not (-90 <= point[0] <= 90 and -180 <= point[1] <= 180) for point in coords):
         raise ValueError(f"{path.name} innehåller ogiltiga koordinater")
     raw_distances = [0.0]
@@ -363,9 +433,19 @@ def build_gpx_route_data(
     elevation_transfer = None
     if elevation_donor_path is not None:
         donor_coords = read_gpx(elevation_donor_path)
-        coords, elevation_transfer = _transfer_missing_elevation(
-            coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
-        )
+        if donor_validation_mode == "same-year-geometry":
+            if elevation_dem_path is None:
+                raise ValueError(f"{path.name} same-year donor mode requires a DEM cache")
+            coords, elevation_transfer = _transfer_same_year_donor_with_dem(
+                coords, donor_coords, elevation_dem_path,
+                max_distance_m=elevation_max_match_distance_m,
+            )
+        elif donor_validation_mode == "observed":
+            coords, elevation_transfer = _transfer_missing_elevation(
+                coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
+            )
+        else:
+            raise ValueError(f"Unsupported elevation donor validation mode: {donor_validation_mode}")
 
     elevations = _fill_small_elevation_gaps(coords)
     smoothed = _median_smooth(elevations)
@@ -556,12 +636,16 @@ def verified_route(
     *, route_id, name, years, official_distance, source_path, source_year,
     race_family, style, checkpoints, expected_start, expected_finish,
     elevation_donor_path=None, elevation_donor_year=None, elevation_donor_provider=None,
-    elevation_max_match_distance_m=50.0,
+    elevation_max_match_distance_m=50.0, source_format="gpx", elevation_dem_path=None,
+    donor_validation_mode="observed",
 ):
     data = build_gpx_route_data(
         source_path, official_distance, expected_start, expected_finish,
         elevation_donor_path=elevation_donor_path,
         elevation_max_match_distance_m=elevation_max_match_distance_m,
+        source_format=source_format,
+        elevation_dem_path=elevation_dem_path,
+        donor_validation_mode=donor_validation_mode,
     )
     high_point = data["high_point"]
     route = {
@@ -574,12 +658,12 @@ def verified_route(
         "total_distance_km": round(data["raw_total_km"], 3),
         "gps_distance_km": round(data["raw_total_km"], 3),
         "source_file": source_path.relative_to(ROOT).as_posix(),
-        "source_type": "verified-gpx",
+        "source_type": "official-organizer-kmz" if source_format == "kmz" else "verified-gpx",
         "source_year": int(source_year),
         "source_point_count": data["source_point_count"],
         "point_count": data["point_count"],
         "point_schema": POINT_SCHEMA,
-        "geometry_quality": "verified-gpx",
+        "geometry_quality": "official-organizer-gps" if source_format == "kmz" else "verified-gpx",
         "geometry_note": "Verifierad GPX-geometri. Distansaxeln är normaliserad till loppets officiella distans.",
         "elevation_available": True,
         "elevation_note": (
@@ -631,6 +715,7 @@ def verified_route(
                 "donor_file": elevation_donor_path.relative_to(ROOT).as_posix(),
                 "donor_year": int(elevation_donor_year) if elevation_donor_year is not None else None,
                 "donor_provider": elevation_donor_provider,
+                "dem_file": elevation_dem_path.relative_to(ROOT).as_posix() if elevation_dem_path else None,
             }
             if data.get("elevation_transfer") else None
         ),
@@ -643,6 +728,13 @@ def verified_route(
 
 
 def build_uv45_route(course_config):
+    """Build the locked legacy UV45 CourseVersion display reference.
+
+    No RaceEdition relies on this layer once ``edition_routes.json`` supplies
+    explicit exact/shared/reference bindings.  Keeping the historical
+    CourseVersion source here preserves its immutable fingerprint while the
+    edition registry carries the corrected annual geometry.
+    """
     route_id = "ultravasan45-current"
     model_id = course_config.get("route_build_models", {}).get(route_id)
     model = course_config.get("courses", {}).get(model_id)
@@ -653,84 +745,43 @@ def build_uv45_route(course_config):
     checkpoints = model.get("checkpoint_catalog") or []
     if not checkpoints:
         raise ValueError(f"Route build model {model_id!r} has no checkpoint catalog")
-    if UV45_PRIMARY_GPX.exists():
-        try:
-            route = verified_route(
-                route_id=route_id,
-                name="Ultravasan 45 – referensgeometri 2026",
-                years={"from": 2014, "to": 2099},
-                official_distance=float(checkpoints[-1]["distance_km"]),
-                source_path=UV45_PRIMARY_GPX,
-                source_year=2026,
-                race_family="uv45",
-                style={"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
-                checkpoints=checkpoints,
-                expected_start=[61.1263, 14.17957],
-                expected_finish=[61.006997, 14.542826],
-            )
-            route["geometry_note"] = "Verifierad GPX-geometri för loppåret 2026. När denna geometri visas för tidigare loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet."
-            route["historical_note"] = "Källåret är 2026. Bindningar till tidigare Ultravasan 45-år används endast som visningsreferens tills årsvis geometri har verifierats."
-            print(f"Använder {UV45_PRIMARY_GPX.name}: {route['source_point_count']} källpunkter till {route['point_count']} webbpunkter")
-            return route
-        except ValueError as error:
-            print(f"VARNING: {error}. Befintlig UV45-rutt används som fallback.")
-
-    if not UV45_KMZ.exists() and OUT_JSON.exists():
-        existing = json.loads(OUT_JSON.read_text(encoding="utf-8")).get("routes", {}).get("ultravasan45-current")
-        if existing:
-            existing = dict(existing)
-            existing["geometry_quality"] = "existing-registry-fallback"
-            existing["geometry_note"] = "Verifierad GPX och KMZ saknas; befintligt genererat banlager behålls."
-            return existing
-    coords = read_kmz(UV45_KMZ)
-    points, raw_total = cumulative(coords)
-    official_distance = float(race.get("distance_km") or 45.0)
-    points = normalize_distance(points, official_distance)
-    elevation_profile = build_elevation_profile(coords, points)
-    checkpoints = []
-    for cp in sorted(race.get("checkpoints", []), key=lambda item: item["sequence_no"]):
-        distance = float(cp.get("distance_km") or 0.0)
-        key = "finish" if cp["checkpoint_key"] == "mora" else cp["checkpoint_key"]
-        checkpoints.append({
-            "key": key,
-            "name": cp["name"],
-            "short": cp["name"].replace("Start ", "").replace(" mål", ""),
-            "distance_km": distance,
-            "coord": point_at_distance(points, distance),
-        })
-    return {
-        "id": "ultravasan45-current",
-        "route_version": "ultravasan45-current",
-        "race_family": "uv45",
-        "name": "Ultravasan 45 – referensgeometri 2026",
-        "years": {"from": min(r["year"] for r in uv45_races), "to": 2099},
-        "official_distance_km": official_distance,
-        "total_distance_km": round(raw_total, 3),
-        "gps_distance_km": round(raw_total, 3),
-        "point_count": len(points),
-        "source_file": UV45_KMZ.name,
-        "source_type": "fallback-kmz",
-        "source_year": 2026,
-        "geometry_quality": "uploaded-gps",
-        "geometry_note": "GPS-geometri för källåret 2026. När den visas för tidigare loppår är den endast en kartografisk referens.",
-        "elevation_available": bool(elevation_profile),
-        "elevation_note": (
-            "Höjddata extraherad reproducerbart från UV45-KMZ-filen."
-            if elevation_profile
-            else "KMZ-filens höjdkolumn är ofullständig och innehåller orimliga värden. Höjddata används därför inte."
-        ),
-        "elevation_profile": elevation_profile,
-        "style": {"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
-        "bounds": bounds(points),
-        "checkpoints": checkpoints,
-        "points": points,
-    }
-
+    if not UV45_PRIMARY_GPX.exists():
+        raise ValueError(f"UV45 locked reference GPX is missing: {UV45_PRIMARY_GPX.relative_to(ROOT)}")
+    route = verified_route(
+        route_id=route_id,
+        name="Ultravasan 45 – låst CourseVersion-referens",
+        years={"from": 2014, "to": 2099},
+        official_distance=float(checkpoints[-1]["distance_km"]),
+        source_path=UV45_PRIMARY_GPX,
+        source_year=2026,
+        race_family="uv45",
+        style={"color": "#d28b22", "dashArray": None, "label": "Legacy-referens"},
+        checkpoints=checkpoints,
+        expected_start=[61.1263, 14.17957],
+        expected_finish=[61.006997, 14.542826],
+    )
+    route["geometry_note"] = (
+        "Låst legacy-geometri som endast bevarar CourseVersion-fingeravtrycket. "
+        "Den är inte evidens för någon RaceEditions exakta bana; samtliga UV45-år "
+        "väljs explicit via edition_routes.json."
+    )
+    route["historical_note"] = (
+        "Filen har tidigare använts som bred 2026-referens men är en Trace de Trail-export. "
+        "Den officiella UV45 2026-geometrin kommer i stället från Vasaloppets KMZ-override."
+    )
+    print(f"Använder låst UV45-referens {UV45_PRIMARY_GPX.name}: "
+          f"{route['source_point_count']} källpunkter till {route['point_count']} webbpunkter")
+    return route
 
 def build_edition_routes(config, course_config, routes):
-    """Build explicitly sourced annual display routes without changing CourseVersions."""
+    """Build exact annual routes and validate shared-course RaceEdition aliases.
+
+    ``exact-source-year`` entries create geometry. ``verified-shared-course``
+    entries only bind another RaceEdition to an already built exact geometry;
+    they never manufacture a new source year or imply performance comparability.
+    """
     route_config = json.loads(EDITION_ROUTE_CONFIG.read_text(encoding="utf-8"))
-    if route_config.get("schema_version") != 1:
+    if route_config.get("schema_version") not in {1, 2}:
         raise ValueError("Unsupported config/edition_routes.json schema")
     races = {race["race_key"]: race for race in config.get("races", [])}
     courses = course_config.get("courses", {})
@@ -738,12 +789,19 @@ def build_edition_routes(config, course_config, routes):
     unknown = set(overrides) - set(races)
     if unknown:
         raise ValueError(f"Unknown RaceEdition route overrides: {sorted(unknown)}")
+
+    # Exact sources first so shared-course aliases can safely refer to them.
     for race_key, spec in overrides.items():
+        mode = spec.get("mode", "exact-source-year")
+        if mode in {"verified-shared-course", "best-known-reference"}:
+            continue
+        if mode != "exact-source-year":
+            raise ValueError(f"{race_key}: unsupported route override mode {mode!r}")
         race = races[race_key]
         year, family = int(race["year"]), race["race_family"]
         route_id = spec.get("display_route_id")
         if not route_id or int(spec.get("source_year", -1)) != year:
-            raise ValueError(f"{race_key}: an annual route override must declare its exact source year")
+            raise ValueError(f"{race_key}: exact route override must declare its RaceEdition source year")
         if "prebuilt_route_file" in spec:
             route_path = ROOT / spec["prebuilt_route_file"]
             route = json.loads(route_path.read_text(encoding="utf-8"))
@@ -760,16 +818,15 @@ def build_edition_routes(config, course_config, routes):
             route["source_url"] = spec.get("source_url")
             route["geometry_quality"] = "official-organizer-gps"
             route["source_point_count"] = int(route.get("point_count", len(route["points"])))
-            route["point_schema"] = ["lat", "lon", "distance_km"]
-            route["elevation_available"] = False
-            route["elevation_note"] = "The source KMZ-derived route contains no per-point elevation values; no profile is inferred."
+            route.setdefault("point_schema", ["lat", "lon", "distance_km"])
             route["style"] = {"color": "#176d53", "dashArray": None, "label": f"Officiell GPS {year}"}
             route.setdefault("geometry_note", f"Officiell årsspecifik GPS-geometri från {spec.get('source_provider', 'källan')}.")
         else:
             source_path = ROOT / spec["source_file"]
             if not source_path.is_file():
                 raise ValueError(f"{race_key}: annual route source is missing: {spec['source_file']}")
-            reference_id = courses[race["course_version_id"]]["display_route_id"]
+            course = courses[race["course_version_id"]]
+            reference_id = course["display_route_id"]
             reference = routes.get(reference_id)
             if not reference or reference.get("race_family") != family:
                 raise ValueError(f"{race_key}: no same-family reference geometry for endpoint checks")
@@ -779,6 +836,14 @@ def build_edition_routes(config, course_config, routes):
             donor_path = ROOT / donor_file if donor_file else None
             if donor_path is not None and not donor_path.is_file():
                 raise ValueError(f"{race_key}: elevation donor is missing: {donor_file}")
+            dem_file = elevation_transfer.get("dem_file")
+            dem_path = ROOT / dem_file if dem_file else None
+            if dem_path is not None and not dem_path.is_file():
+                raise ValueError(f"{race_key}: DEM cache is missing: {dem_file}")
+            source_format = spec.get("source_format", "gpx")
+            route_checkpoints = race.get("checkpoints", [])
+            if any(item.get("distance_km") is None for item in route_checkpoints):
+                route_checkpoints = course.get("display_anchors") or route_checkpoints
             route = verified_route(
                 route_id=route_id,
                 name=f"{race['name']} – verifierad geometri {year}",
@@ -788,13 +853,16 @@ def build_edition_routes(config, course_config, routes):
                 source_year=year,
                 race_family=family,
                 style={"color": color, "dashArray": None, "label": f"GPS {year}"},
-                checkpoints=race.get("checkpoints", []),
+                checkpoints=route_checkpoints,
                 expected_start=reference["points"][0],
                 expected_finish=reference["points"][-1],
                 elevation_donor_path=donor_path,
                 elevation_donor_year=elevation_transfer.get("donor_year"),
                 elevation_donor_provider=elevation_transfer.get("donor_provider"),
                 elevation_max_match_distance_m=float(elevation_transfer.get("max_match_distance_m", 50.0)),
+                source_format=source_format,
+                elevation_dem_path=dem_path,
+                donor_validation_mode=elevation_transfer.get("validation_mode", "observed"),
             )
             route["source_provider"] = spec.get("source_provider")
             route["source_url"] = spec.get("source_url")
@@ -804,16 +872,39 @@ def build_edition_routes(config, course_config, routes):
                 if spec.get(field) is not None:
                     route[field] = spec[field]
             route["geometry_note"] = (
-                f"Årsspecifik {spec.get('source_provider', 'GPX')}-geometri för {year}. "
-                "Visningsrutt endast; den fastställer inte whole-course-jämförbarhet. "
-                f"Källa: {spec.get('source_url', 'lokal GPX')}"
+                f"Årsspecifik {spec.get('source_provider', 'GPS')}-geometri för {year}. "
+                "Visnings- och terrängrutt för detta RaceEdition; den fastställer inte whole-course-jämförbarhet. "
+                f"Källa: {spec.get('source_url', spec['source_file'])}"
             )
-            route["historical_note"] = "Exakt geometri för angivet RaceEdition-år; andra år använder sina egna tilldelningar eller referensgeometri."
+            route["historical_note"] = "Exakt geometri för angivet RaceEdition-år."
         if route.get("id") != route_id or route.get("race_family") != family or route.get("source_year") != year:
             raise ValueError(f"{race_key}: generated route does not preserve its declared identity")
         routes[route_id] = route
-    return overrides
 
+    # Cross-year mappings are explicit evidence contracts, not copied files.
+    # Only verified-shared-course enables terrain analytics; best-known-reference
+    # is a cartographic fallback and remains reference-only.
+    for race_key, spec in overrides.items():
+        if spec.get("mode", "exact-source-year") not in {"verified-shared-course", "best-known-reference"}:
+            continue
+        race = races[race_key]
+        route_id = spec.get("display_route_id")
+        source_race_key = spec.get("source_race_key")
+        if not route_id or route_id not in routes:
+            raise ValueError(f"{race_key}: shared-course route {route_id!r} is not built")
+        if source_race_key not in races or source_race_key == race_key:
+            raise ValueError(f"{race_key}: invalid shared-course source RaceEdition {source_race_key!r}")
+        source_spec = overrides.get(source_race_key, {})
+        if source_spec.get("display_route_id") != route_id:
+            # Broad built-in exact source-year routes (2022/2024) are valid too.
+            source_year = int(routes[route_id].get("source_year", -1))
+            if source_year != int(races[source_race_key]["year"]):
+                raise ValueError(f"{race_key}: shared-course source does not resolve to exact source-year geometry")
+        if routes[route_id].get("race_family") != race.get("race_family"):
+            raise ValueError(f"{race_key}: shared-course route family mismatch")
+        if not spec.get("evidence_note") or not spec.get("evidence_url"):
+            raise ValueError(f"{race_key}: cross-year assignment requires explicit evidence/limitation note")
+    return overrides
 
 def orient_like_current(coords, current_points):
     """Reverse historical GPX when its endpoint is closer to Sälen than its start."""
@@ -1003,11 +1094,21 @@ def main():
             raise ValueError(f"RaceEdition {race_key!r} route family mismatch for {route_id!r}")
         route_for_edition[race_key] = route_id
         source_year = display_route.get("source_year")
+        override_mode = route_override.get("mode", "exact-source-year") if route_override else None
         exact_display_geometry = source_year is not None and int(source_year) == int(race.get("year"))
+        if override_mode == "verified-shared-course":
+            geometry_usage = "verified-shared-course"
+        elif exact_display_geometry:
+            geometry_usage = "exact-source-year"
+        else:
+            geometry_usage = "reference-only"
         edition_route_contracts[race_key] = {
             "display_route_id": route_id,
-            "display_geometry_usage": "exact-source-year" if exact_display_geometry else "reference-only",
+            "display_geometry_usage": geometry_usage,
             "display_geometry_source_year": source_year,
+            "geometry_source_race_key": route_override.get("source_race_key") if override_mode in {"verified-shared-course", "best-known-reference"} else race_key if geometry_usage == "exact-source-year" else None,
+            "geometry_evidence_url": route_override.get("evidence_url") if override_mode in {"verified-shared-course", "best-known-reference"} else route_override.get("source_url") if route_override else display_route.get("source_url"),
+            "geometry_evidence_note": route_override.get("evidence_note") if override_mode in {"verified-shared-course", "best-known-reference"} else None,
             "course_version_id": course_id,
             "whole_course_comparison_group": race.get("whole_course_comparison_group"),
         }

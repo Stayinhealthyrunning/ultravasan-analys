@@ -1,33 +1,33 @@
 # Ultravasan route and GPX audit
 
-Inventoried 22 imported editions; exact local source-year route files found: 9.
+Inventoried 22 imported editions; exact source-year routes: 9; verified shared-course editions: 4; reference-only editions: 9.
 Curated external year-specific route evidence exists for 12 editions, of which 10 have strong/strong-secondary evidence.
 
 CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.
 
 | RaceEdition | Local exact route | Display geometry | Evidence status | Local route source/year | External annual evidence | Whole-course decision |
 |---|---:|---|---|---|---|---|
-| ultravasan45-2014 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2014 | No | reference-only · source 2022 | reference-only-or-unknown | data/routes/Ultravasan 90 2022.gpx · 2022 | none | Not assigned |
-| ultravasan45-2015 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2015 | No | reference-only · source 2022 | external-candidate | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
-| ultravasan45-2016 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2016 | No | reference-only · source 2022 | reference-only-or-unknown | data/routes/Ultravasan 90 2022.gpx · 2022 | none | Not assigned |
-| ultravasan45-2017 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2017 | No | reference-only · source 2022 | external-year-specific | data/routes/Ultravasan 90 2022.gpx · 2022 | Vasaloppet/Mynewsdesk (official-route-change-notice, strong) | Not assigned |
+| ultravasan45-2014 | No | reference-only · source 2018 | reference-only-or-unknown | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | none | Not assigned |
+| ultravasan90-2014 | No | reference-only · source 2018 | reference-only-or-unknown | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | none | Not assigned |
+| ultravasan45-2015 | No | reference-only · source 2018 | reference-only-or-unknown | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | none | Not assigned |
+| ultravasan90-2015 | No | reference-only · source 2018 | external-candidate-reference-only | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
+| ultravasan45-2016 | No | reference-only · source 2018 | reference-only-or-unknown | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | none | Not assigned |
+| ultravasan90-2016 | No | reference-only · source 2018 | reference-only-or-unknown | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | none | Not assigned |
+| ultravasan45-2017 | No | verified-shared-course · source 2018 | verified-shared-course | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | none | Not assigned |
+| ultravasan90-2017 | No | verified-shared-course · source 2018 | verified-shared-course | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | Vasaloppet/Mynewsdesk (official-route-change-notice, strong) | Not assigned |
 | ultravasan45-2018 | Yes | exact-source-year · source 2018 | local-exact-source-year | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | ITRA / Trace de Trail (year-specific public map geometry with validated donor elevation, strong-secondary) | Not assigned |
 | ultravasan90-2018 | Yes | exact-source-year · source 2018 | local-exact-source-year | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | ITRA / Trace de Trail (year-specific public map geometry, strong-secondary); plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
 | ultravasan45-2019 | Yes | exact-source-year · source 2019 | local-exact-source-year | source/routes/ultravasan45-2019-itra-75784.gpx · 2019 | ITRA / Trace de Trail (year-specific public map geometry with validated donor elevation, strong-secondary) | Not assigned |
-| ultravasan90-2019 | No | reference-only · source 2022 | external-candidate | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
-| ultravasan45-2022 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
+| ultravasan90-2019 | No | reference-only · source 2022 | external-candidate-reference-only | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
+| ultravasan45-2022 | No | reference-only · source 2019 | reference-only-or-unknown | source/routes/ultravasan45-2019-itra-75784.gpx · 2019 | none | Not assigned |
 | ultravasan90-2022 | Yes | exact-source-year · source 2022 | local-exact-source-year | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | Not assigned |
-| ultravasan45-2023 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
+| ultravasan45-2023 | No | reference-only · source 2019 | reference-only-or-unknown | source/routes/ultravasan45-2019-itra-75784.gpx · 2019 | none | Not assigned |
 | ultravasan90-2023 | Yes | exact-source-year · source 2023 | local-exact-source-year | source/routes/ultravasan90-2023-itra-229687.gpx · 2023 | Vasaloppet/Mynewsdesk (official-course-change-notice, strong); ITRA / Trace de Trail (year-specific public map geometry, strong-secondary); plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
 | ultravasan45-2024 | Yes | exact-source-year · source 2024 | local-exact-source-year | source/routes/ultravasan45-2024-itra-267130.gpx · 2024 | ITRA/Trace de Trail (itra-year-specific-course-track, strong) | Not assigned |
 | ultravasan90-2024 | Yes | exact-source-year · source 2024 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet/Mynewsdesk (official-course-change-notice, strong); ITRA/Trace de Trail (itra-year-specific-course-track, strong); plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | ultravasan90-2024-2025 |
-| ultravasan45-2025 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
-| ultravasan90-2025 | No | reference-only · source 2024 | external-year-specific | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet (official-no-course-change-notice, strong); Vasahistorier (race-day-gps-track, strong-secondary) | ultravasan90-2024-2025 |
-| ultravasan45-2026 | Yes | exact-source-year · source 2026 | local-exact-source-year | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
+| ultravasan45-2025 | No | verified-shared-course · source 2024 | verified-shared-course | source/routes/ultravasan45-2024-itra-267130.gpx · 2024 | none | Not assigned |
+| ultravasan90-2025 | No | verified-shared-course · source 2024 | verified-shared-course | data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx · 2024 | Vasaloppet (official-no-course-change-notice, strong); Vasahistorier (race-day-gps-track, strong-secondary) | ultravasan90-2024-2025 |
+| ultravasan45-2026 | Yes | exact-source-year · source 2026 | local-exact-source-year | source/UV45_20260610.kmz · 2026 | none | Not assigned |
 | ultravasan90-2026 | Yes | exact-source-year · source 2026 | local-exact-source-year | source/UV-90_20260610.kmz · 2026 | Vasaloppet (official-course-change-notice, strong); Vasaloppet (official-organizer-kmz, strong); ITRA / Trace de Trail (year-labelled third-party map geometry candidate, candidate) | Not assigned |
 
 ## Whole-course conclusion
@@ -88,10 +88,10 @@ The exact-source-year UV90 geometries for 2018, 2022, 2023, 2024 and 2026 receiv
     "result": {
       "sample_interval_km": 0.5,
       "sample_points_a": 160,
-      "sample_points_b": 171,
-      "symmetric_nearest_median_m": 164.4,
-      "symmetric_nearest_p95_m": 1087.7,
-      "symmetric_nearest_max_m": 1636.6,
+      "sample_points_b": 162,
+      "symmetric_nearest_median_m": 168.8,
+      "symmetric_nearest_p95_m": 1060.3,
+      "symmetric_nearest_max_m": 1733.6,
       "limitation": "coarse nearest-point geometry diagnostic; not a surveyed equivalence proof"
     },
     "decision": "diagnostic only; geometric similarity or difference is evidence input, not by itself a whole-course performance-equivalence contract"
@@ -130,10 +130,10 @@ The exact-source-year UV90 geometries for 2018, 2022, 2023, 2024 and 2026 receiv
     "result": {
       "sample_interval_km": 0.5,
       "sample_points_a": 159,
-      "sample_points_b": 171,
-      "symmetric_nearest_median_m": 101.4,
-      "symmetric_nearest_p95_m": 1000.5,
-      "symmetric_nearest_max_m": 1732.3,
+      "sample_points_b": 162,
+      "symmetric_nearest_median_m": 0.0,
+      "symmetric_nearest_p95_m": 967.4,
+      "symmetric_nearest_max_m": 1749.6,
       "limitation": "coarse nearest-point geometry diagnostic; not a surveyed equivalence proof"
     },
     "decision": "diagnostic only; geometric similarity or difference is evidence input, not by itself a whole-course performance-equivalence contract"
@@ -158,10 +158,10 @@ The exact-source-year UV90 geometries for 2018, 2022, 2023, 2024 and 2026 receiv
     "result": {
       "sample_interval_km": 0.5,
       "sample_points_a": 161,
-      "sample_points_b": 171,
-      "symmetric_nearest_median_m": 88.1,
-      "symmetric_nearest_p95_m": 251.6,
-      "symmetric_nearest_max_m": 762.4,
+      "sample_points_b": 162,
+      "symmetric_nearest_median_m": 0.4,
+      "symmetric_nearest_p95_m": 246.0,
+      "symmetric_nearest_max_m": 350.9,
       "limitation": "coarse nearest-point geometry diagnostic; not a surveyed equivalence proof"
     },
     "decision": "diagnostic only; geometric similarity or difference is evidence input, not by itself a whole-course performance-equivalence contract"
@@ -172,10 +172,10 @@ The exact-source-year UV90 geometries for 2018, 2022, 2023, 2024 and 2026 receiv
     "result": {
       "sample_interval_km": 0.5,
       "sample_points_a": 163,
-      "sample_points_b": 171,
-      "symmetric_nearest_median_m": 68.4,
-      "symmetric_nearest_p95_m": 245.9,
-      "symmetric_nearest_max_m": 762.8,
+      "sample_points_b": 162,
+      "symmetric_nearest_median_m": 0.2,
+      "symmetric_nearest_p95_m": 204.1,
+      "symmetric_nearest_max_m": 321.0,
       "limitation": "coarse nearest-point geometry diagnostic; not a surveyed equivalence proof"
     },
     "decision": "diagnostic only; geometric similarity or difference is evidence input, not by itself a whole-course performance-equivalence contract"
@@ -198,7 +198,7 @@ Geometry was read from each ordinary public route page's map payload and transfo
 | ultravasan90-2026 | 328148 | 200 | 100% | candidate-not-selected — Official Vasaloppet/KMZ 2026 geometry is primary; ITRA candidate is not used as a substitute. |
 | ultravasan45-2026 | 328149 | 200 | 100% | candidate-not-selected — Official Vasaloppet 2026 GPX is primary; ITRA candidate is not used as a substitute. |
 
-UV45 2018/2019 were not promoted because the available map geometries contain elevation for only 55.909%/62.156% of points, below the existing route validation threshold; no broad interpolation was used. UV90 2024 and ITRA 2026 tracks were not promoted because the corresponding organizer-sourced local route is primary. The verified UV90 2026 geometry is from the official Vasaloppet KMZ.
+UV45 2018/2019 keep their exact-year Trace de Trail geometry. Missing native height is filled only through validated <=50 m donor matching against the complete 2024 track. For 2026, Vasaloppet's official KMZ is authoritative geometry; same-year Trace de Trail supplies height only where it matches within 50 m, while unmatched changed sections use the checked-in Copernicus GLO-90 DEM cache. UV90 2024 remains organizer/local primary rather than promoting the secondary ITRA candidate.
 
 ## Plotaroute candidates
 
@@ -214,7 +214,7 @@ The following IDs remain candidate-only; no GPX was downloaded or promoted. Publ
 | ultravasan90-2022 | [1942022](https://www.plotaroute.com/route/1942022) | 90.173 | candidate-only; GPX not retrieved or promoted in this pass |
 | ultravasan90-2024 | [2710347](https://www.plotaroute.com/route/2710347) | 91.987 | candidate-only; GPX not retrieved or promoted in this pass |
 
-Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed on the page. It therefore remains a candidate only; 2025 continues to use its existing display route, and the 2024–2025 whole-course group is unchanged.
+Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed. The geometry is therefore not imported. Vasaloppet's explicit no-change notice instead verifies that the exact 2024 geometry is the shared 2025 course for both UV90 and UV45.
 
 ## External evidence
 

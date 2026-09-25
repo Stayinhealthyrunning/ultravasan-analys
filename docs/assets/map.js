@@ -27,9 +27,9 @@ function displayGeometryStatus(registry,race,route){
   const contract=registry?.edition_route_contracts?.[race?.race_key];
   if(!contract)return `kartreferens ${route?.source_year??'okänt år'}`;
   const sourceYear=contract.display_geometry_source_year??route?.source_year??'okänt år';
-  return contract.display_geometry_usage==='exact-source-year'
-    ?`verifierad årsgeometri ${sourceYear}`
-    :`kartreferens från ${sourceYear}`;
+  if(contract.display_geometry_usage==='exact-source-year')return `verifierad årsgeometri ${sourceYear}`;
+  if(contract.display_geometry_usage==='verified-shared-course')return `verifierad delad bana från ${sourceYear}`;
+  return `kartreferens från ${sourceYear}`;
 }
 function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
 function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
