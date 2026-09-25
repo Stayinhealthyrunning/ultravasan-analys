@@ -240,6 +240,8 @@ def _spatial_elevation_matches(target_coords, donor_coords, max_distance_m=50.0)
                     "distance_m": distance_m,
                     "elevation_m": elevation,
                     "donor_progress_m": matched_progress,
+                    "donor_segment_index": segment_index,
+                    "donor_segment_ratio": ratio,
                 }
         matches.append(best)
     return matches, progress_guard_m
@@ -357,6 +359,84 @@ def _transfer_same_year_donor_with_dem(target_coords, donor_coords, dem_cache_pa
     }
 
 
+
+def _densify_sparse_same_year_geometry(
+    target_coords, donor_coords, *, max_gap_m=200.0, max_endpoint_distance_m=5.0,
+):
+    """Fill sparse official line segments with same-year donor vertices.
+
+    The official endpoints remain authoritative. Donor vertices are inserted
+    only when both endpoints match the same-year donor within a few metres,
+    the donor progresses forward between them, and donor path length is
+    consistent with the official sparse segment. This improves playback and
+    terrain sampling without replacing the official course geometry.
+    """
+    if len(target_coords) < 2:
+        return [list(point) for point in target_coords], {
+            "sparse_gap_threshold_m": float(max_gap_m),
+            "sparse_gaps_densified": 0,
+            "inserted_points": 0,
+            "max_gap_before_m": 0.0,
+            "max_gap_after_m": 0.0,
+        }
+
+    matches, _ = _spatial_elevation_matches(target_coords, donor_coords, max_distance_m=50.0)
+    donor_progress = _cumulative_metres(donor_coords)
+    augmented = [list(target_coords[0])]
+    inserted = 0
+    densified_gaps = 0
+    gaps_before = []
+
+    for index, (start, end) in enumerate(zip(target_coords, target_coords[1:])):
+        gap_m = hav(start, end) * 1000
+        gaps_before.append(gap_m)
+        if gap_m > max_gap_m:
+            left = matches[index]
+            right = matches[index + 1]
+            if left is None or right is None:
+                raise ValueError(f"Sparse official geometry gap at point {index} lacks same-year donor matches")
+            if left["distance_m"] > max_endpoint_distance_m or right["distance_m"] > max_endpoint_distance_m:
+                raise ValueError(f"Sparse official geometry gap at point {index} has donor endpoint mismatch")
+            start_progress = left["donor_progress_m"]
+            end_progress = right["donor_progress_m"]
+            if end_progress <= start_progress:
+                raise ValueError(f"Sparse official geometry gap at point {index} reverses donor progress")
+            donor_path_m = end_progress - start_progress
+            ratio = donor_path_m / gap_m if gap_m else 1.0
+            if not 0.98 <= ratio <= 1.10:
+                raise ValueError(
+                    f"Sparse official geometry gap at point {index} differs from same-year donor path: {ratio:.3f}x"
+                )
+
+            added_here = 0
+            for donor_index, donor_point in enumerate(donor_coords):
+                progress = donor_progress[donor_index]
+                if progress <= start_progress + 0.25 or progress >= end_progress - 0.25:
+                    continue
+                # Donor coordinates are same-year public geometry. Elevation is
+                # already complete and validated by _spatial_elevation_matches.
+                augmented.append([
+                    float(donor_point[0]), float(donor_point[1]), float(donor_point[2]),
+                ])
+                inserted += 1
+                added_here += 1
+            if added_here:
+                densified_gaps += 1
+        augmented.append(list(end))
+
+    gaps_after = [hav(a, b) * 1000 for a, b in zip(augmented, augmented[1:])]
+    max_after = max(gaps_after, default=0.0)
+    if max_after > max(max_gap_m, 250.0):
+        raise ValueError(f"Same-year geometry densification leaves an excessive {max_after:.1f} m gap")
+    return augmented, {
+        "sparse_gap_threshold_m": float(max_gap_m),
+        "sparse_gaps_densified": densified_gaps,
+        "inserted_points": inserted,
+        "max_gap_before_m": round(max(gaps_before, default=0.0), 3),
+        "max_gap_after_m": round(max_after, 3),
+    }
+
+
 def _perpendicular_m(point, start, end, reference_lat):
     scale_x = 111_320.0 * math.cos(math.radians(reference_lat))
     scale_y = 110_540.0
@@ -409,6 +489,7 @@ def build_gpx_route_data(
         coords = [[point[0], point[1], None] for point in read_kmz(path)]
     else:
         raise ValueError(f"Unsupported route source format: {source_format}")
+    original_source_point_count = len(coords)
     if any(not (-90 <= point[0] <= 90 and -180 <= point[1] <= 180) for point in coords):
         raise ValueError(f"{path.name} innehåller ogiltiga koordinater")
     raw_distances = [0.0]
@@ -440,12 +521,27 @@ def build_gpx_route_data(
                 coords, donor_coords, elevation_dem_path,
                 max_distance_m=elevation_max_match_distance_m,
             )
+            coords, geometry_densification = _densify_sparse_same_year_geometry(coords, donor_coords)
+            elevation_transfer["geometry_densification"] = geometry_densification
         elif donor_validation_mode == "observed":
             coords, elevation_transfer = _transfer_missing_elevation(
                 coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
             )
         else:
             raise ValueError(f"Unsupported elevation donor validation mode: {donor_validation_mode}")
+
+    # Same-year donor densification may add vertices after the initial source
+    # validation. Distances used by playback, profile and simplification must
+    # therefore be recalculated from the final processing geometry.
+    raw_distances = [0.0]
+    segment_distances = []
+    for previous, current in zip(coords, coords[1:]):
+        distance = hav(previous, current)
+        segment_distances.append(distance)
+        raw_distances.append(raw_distances[-1] + distance)
+    raw_total = raw_distances[-1]
+    if not official_distance * 0.9 <= raw_total <= official_distance * 1.1:
+        raise ValueError(f"{path.name} has unreasonable post-processing distance {raw_total:.3f} km")
 
     elevations = _fill_small_elevation_gaps(coords)
     smoothed = _median_smooth(elevations)
@@ -519,7 +615,8 @@ def build_gpx_route_data(
     return {
         "points": points,
         "elevation_profile": elevation_profile,
-        "source_point_count": len(coords),
+        "source_point_count": original_source_point_count,
+        "processing_point_count": len(coords),
         "point_count": len(points),
         "raw_total_km": raw_total,
         "min_elevation_m": min(value for value in smoothed if value is not None),

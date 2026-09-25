@@ -119,11 +119,19 @@ class RouteBuildTests(unittest.TestCase):
             self.assertEqual(50.0, exact_2026["elevation_provenance"]["max_match_distance_m"])
             self.assertEqual(52, exact_2026["elevation_provenance"]["dem_fallback_points"])
             self.assertGreater(exact_2026["elevation_provenance"]["donor_match_pct"], 98)
+            densification = exact_2026["elevation_provenance"]["geometry_densification"]
+            self.assertEqual(16, densification["sparse_gaps_densified"])
+            self.assertEqual(129, densification["inserted_points"])
+            self.assertGreater(densification["max_gap_before_m"], 900)
+            self.assertLess(densification["max_gap_after_m"], 200)
+            self.assertLess(exact_2026["source_quality"]["max_geometry_gap_m"], 200)
             exact_45_2026 = registry["routes"][expected_routes["ultravasan45-2026"]]
             self.assertEqual("official-organizer-kmz", exact_45_2026["source_type"])
             self.assertEqual("source/UV45_20260610.kmz", exact_45_2026["source_file"])
             self.assertEqual(55, exact_45_2026["elevation_provenance"]["dem_fallback_points"])
             self.assertGreater(exact_45_2026["elevation_provenance"]["donor_match_pct"], 98)
+            self.assertEqual(0, exact_45_2026["elevation_provenance"]["geometry_densification"]["sparse_gaps_densified"])
+            self.assertLess(exact_45_2026["source_quality"]["max_geometry_gap_m"], 100)
             self.assertEqual("uv90-2026-v1", contracts["ultravasan90-2026"]["course_version_id"])
             self.assertEqual(
                 "ultravasan90-post2023",
