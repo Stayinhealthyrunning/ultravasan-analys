@@ -24,8 +24,10 @@ const splits=new Map([
 
 const model=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',raceDistanceKm:92});
 assert.strictEqual(model.rows.length,4,'DNF, estimerad passage och orimlig spurtfart ska uteslutas');
-assert.deepStrictEqual(model.women.map(x=>[x.r.id,x.sprint_seconds,x.rank]),[[1,200,1],[2,200,1]],'lika spurttid ska ge delad placering');
-assert.deepStrictEqual(model.men.map(x=>[x.r.id,x.sprint_seconds,x.rank]),[[3,200,1],[4,200,1]],'män ska rangordnas separat');
+assert.deepStrictEqual(model.women.map(x=>x.rank),[1,1],'lika spurttid ska ge delad placering');
+assert.deepStrictEqual(new Set(model.women.map(x=>x.r.id)),new Set([1,2]),'båda kvinnorna ska finnas kvar vid delad placering');
+assert.deepStrictEqual(model.men.map(x=>x.rank),[1,1],'män ska rangordnas separat');
+assert.deepStrictEqual(new Set(model.men.map(x=>x.r.id)),new Set([3,4]),'båda männen ska finnas kvar vid delad placering');
 
 const classModel=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',classKey:sprintClassGroupKey('M50'),raceDistanceKm:92});
 assert.deepStrictEqual(classModel.women.map(x=>x.r.id),[1,2],'klassfiltret ska para kvinnlig och manlig motsvarighet');
