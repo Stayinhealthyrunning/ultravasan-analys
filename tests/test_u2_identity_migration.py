@@ -64,15 +64,25 @@ def test_full_migration_on_copy_preserves_payload_and_is_idempotent() -> None:
 
 @pytest.mark.skipif(not U2_BASELINE.exists(), reason="Production U2 baseline is not applied yet")
 def test_checked_in_database_is_already_migrated_and_idempotent() -> None:
-    conn = uvtool.connect(ROOT / "data" / "ultravasan.sqlite")
-    try:
-        state = u2_identity_migration.migrated_state(conn)
-        plan = u2_identity_migration.migration_plan(conn)
-        protected_before = u2_identity_migration.protected_state(conn)
-        result = u2_identity_migration.execute(conn, apply=True)
-        protected_after = u2_identity_migration.protected_state(conn)
-    finally:
-        conn.close()
+    production = ROOT / "data" / "ultravasan.sqlite"
+
+    # The checked-in database is a protected release artifact. The idempotence
+    # proof must be allowed to execute a write transaction, but never against
+    # that artifact itself: even a logically empty SQLite write can change the
+    # physical file hash. Exercise apply=True on a byte-identical copy instead.
+    with tempfile.TemporaryDirectory() as temp:
+        target = Path(temp) / "u2-idempotence.sqlite"
+        shutil.copy2(production, target)
+        conn = uvtool.connect(target)
+        try:
+            state = u2_identity_migration.migrated_state(conn)
+            plan = u2_identity_migration.migration_plan(conn)
+            protected_before = u2_identity_migration.protected_state(conn)
+            result = u2_identity_migration.execute(conn, apply=True)
+            protected_after = u2_identity_migration.protected_state(conn)
+        finally:
+            conn.close()
+
     assert plan["actions"] == []
     assert protected_before == protected_after
     assert result["athletes_created"] == 0
