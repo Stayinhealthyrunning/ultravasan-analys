@@ -68,9 +68,32 @@ def expected_segments(checkpoints):
     ]
 
 
+SOURCE_AUXILIARY_CHECKPOINT_KEYS = {"mora_warning"}
+
+
 def checkpoint_contract(checkpoints):
     fields = ("checkpoint_key", "name", "sequence_no", "distance_km", "elevation_m")
     return [{field: checkpoint.get(field) for field in fields} for checkpoint in checkpoints]
+
+
+def analytical_checkpoint_contract(checkpoints):
+    """Compare CourseVersion controls without source-only timing service points.
+
+    Mora Förvarning is official timing data used by Spurtvinnaren, but it is
+    deliberately excluded from the analytical course segmentation. Removing it
+    here and reindexing preserves the immutable CourseVersion contract while
+    allowing a RaceEdition to receive the auxiliary passage later.
+    """
+    rows = [
+        checkpoint for checkpoint in checkpoints
+        if checkpoint.get("checkpoint_key") not in SOURCE_AUXILIARY_CHECKPOINT_KEYS
+    ]
+    normalized = []
+    for sequence_no, checkpoint in enumerate(rows):
+        item = dict(checkpoint)
+        item["sequence_no"] = sequence_no
+        normalized.append(item)
+    return checkpoint_contract(normalized)
 
 
 def course_material(course_id, definition, registry, root=ROOT):
@@ -162,8 +185,8 @@ def build_catalog(config, definitions, lock, registry, observed, edition_routes=
         if whole_group:
             family_key = (race["event_key"], whole_group)
             comparison_groups.setdefault(family_key, set()).add(race["race_family"])
-        require(checkpoint_contract(race.get("checkpoints", [])) == checkpoint_contract(course["checkpoint_catalog"]),
-                f"{key}: configured controls differ from CourseVersion")
+        require(analytical_checkpoint_contract(race.get("checkpoints", [])) == analytical_checkpoint_contract(course["checkpoint_catalog"]),
+                f"{key}: configured analytical controls differ from CourseVersion")
         competition = source_bindings.competition_contract(config, race)
         editions[key] = {
             **{field: race[field] for field in ("race_key", "event_key", "race_family",
@@ -225,7 +248,8 @@ def build_catalog(config, definitions, lock, registry, observed, edition_routes=
             "Implicit route rules are not allowed")
     for race in observed:
         course = courses[editions[race["race_key"]]["course_version_id"]]
-        require(race["checkpoints"] == course["checkpoint_catalog"], f"{race['race_key']}: observed controls differ from course")
+        require(analytical_checkpoint_contract(race["checkpoints"]) == analytical_checkpoint_contract(course["checkpoint_catalog"]),
+                f"{race['race_key']}: observed analytical controls differ from course")
     return {"schema_version": 1, "event": event,
             "families": {key: {field: family[field] for field in
                 ("event_key", "label", "start_name", "presentation", "music")} for key, family in families.items()},

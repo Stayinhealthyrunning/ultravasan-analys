@@ -52,7 +52,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm -f .github/workflows/enrich-uv90-2025-sprint.yml tests/test_sprint_year_diagnostic.py
+          git rm -f .github/workflows/enrich-uv90-2025-sprint.yml
+          git rm -f tests/test_sprint_year_diagnostic.py 2>/dev/null || true
           git add -f             config/races.json             data/ultravasan.sqlite             docs/data             docs/assets/app.js             docs/index.html             tools/import_sprint_auxiliary.py             tools/verify_local_browser.mjs             reports/UV90_2025_SPRINT_ENRICHMENT.json             reports/U3_MODULAR_DATA_APPLIED.json
           git diff --cached --check
           git commit -m "Enrich UV90 2025 Mora warning for Spurtvinnaren"
