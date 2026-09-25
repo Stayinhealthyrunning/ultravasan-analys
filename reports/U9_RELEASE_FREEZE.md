@@ -25,8 +25,15 @@ Frysta huvudtal:
 
 - 22 RaceEditions,
 - 24 422 resultat,
-- 139 910 passager,
+- 141 429 passager,
 - U2-identitetskontrakt: `u2-person-key-v1`.
+
+Efter den ursprungliga U9-frysningen kompletterades UV90 2025 med 1 519 officiella,
+exakta passager vid den sista registrerade tidkontrollen efter Eldris. Kompletteringen
+är strikt auxiliary-data för Spurtvinnaren: resultatantalet är oförändrat, och
+UV90 2025 hade 14 521 ordinarie icke-auxiliary-passager både före och efter
+enrichmenten. Den skyddade baslinjen flyttades därför explicit från 139 910 till
+141 429 passager efter verifierad import; detta är inte en implicit UI-bieffekt.
 
 `tools/u9_release_audit.py` räknar SHA-256 på de filer som U2-baslinjen skyddar
 och kräver exakt matchning. U9 får alltså inte råka förändra resultat, passager,

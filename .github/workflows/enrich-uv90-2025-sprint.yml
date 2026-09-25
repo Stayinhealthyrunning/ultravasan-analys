@@ -49,6 +49,10 @@ jobs:
           python tools/uvtool.py validate
           python tools/uvtool.py export
           python tools/u3_modularize.py --source docs/data/ultravasan.json --output-dir docs/data --write --check --report reports/U3_MODULAR_DATA_APPLIED.json
+      - name: Flytta verifierad post-release-baseline
+        run: |
+          python tools/u2_baseline.py --write
+          python tools/u2_baseline.py --check
       - name: Kör regressionssvit före publicering
         run: |
           python -m pytest -q
@@ -64,7 +68,11 @@ jobs:
             data/ultravasan.sqlite \
             docs/data \
             reports/UV90_2025_SPRINT_ENRICHMENT.json \
-            reports/U3_MODULAR_DATA_APPLIED.json
+            reports/U3_MODULAR_DATA_APPLIED.json \
+            reports/U2_BASELINE.json \
+            config/release_freeze.json \
+            tools/u2_baseline.py \
+            reports/U9_RELEASE_FREEZE.md
           git diff --cached --check
           git commit -m "Enrich UV90 2025 final control for Spurtvinnaren"
           git push origin HEAD:hotfix/spurtvinnaren-year-switch
