@@ -1,0 +1,20 @@
+name: UV90 historical sprint audit
+on:
+  push:
+    branches:
+      - audit/historical-uv90-sprint-controls
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installera beroenden
+        run: |
+          python -m pip install -r requirements-test.txt
+      - name: Kontrollera historiska UV90-kontroller
+        run: python tools/audit_uv90_sprint_controls.py
