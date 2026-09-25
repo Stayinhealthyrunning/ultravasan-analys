@@ -1,0 +1,1080 @@
+--- repo-snapshot/repo/config/edition_routes.json	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/config/edition_routes.json	2026-09-25 14:01:32.019794082 +0000
+@@ -1,7 +1,36 @@
+ {
+-  "schema_version": 1,
++  "schema_version": 2,
+   "editions": {
++    "ultravasan90-2014": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan90-2018-itra-51602",
++      "source_race_key": "ultravasan90-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-och-vasastafetten-2016-1523960",
++      "evidence_note": "Reference only. Official notices document later route changes in 2016 and 2017, so the 2018 geometry must not be treated as exact for 2014. It is used only as the nearest verified pre-2019 map reference."
++    },
++    "ultravasan90-2015": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan90-2018-itra-51602",
++      "source_race_key": "ultravasan90-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-och-vasastafetten-2016-1523960",
++      "evidence_note": "Reference only. A 4.5 km UV90 route change after Mångsbodarna was introduced in 2016 and another change followed in 2017, so 2018 cannot be claimed exact for 2015."
++    },
++    "ultravasan90-2016": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan90-2018-itra-51602",
++      "source_race_key": "ultravasan90-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
++      "evidence_note": "Reference only. 2016 already included the new 4.5 km section after Mångsbodarna, but 2017 introduced another roughly 3 km change between Krångåsen and Eldris. The exact 2016 geometry has not been recovered reproducibly."
++    },
++    "ultravasan90-2017": {
++      "mode": "verified-shared-course",
++      "display_route_id": "ultravasan90-2018-itra-51602",
++      "source_race_key": "ultravasan90-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/pressinformation-infoer-ultravasan-90-ultravasan-45-vasastafetten-och-vasakvartetten-2018-2637084",
++      "evidence_note": "Vasaloppet explicitly reported no course changes in 2018. The 2018 exact geometry therefore verifies the 2017 course after the documented 2017 Krångåsen–Eldris reroute."
++    },
+     "ultravasan90-2018": {
++      "mode": "exact-source-year",
+       "display_route_id": "ultravasan90-2018-itra-51602",
+       "source_file": "source/routes/ultravasan90-2018-itra-51602.gpx",
+       "source_year": 2018,
+@@ -14,7 +43,15 @@
+       "source_page_sha256": "6b8f12abab8761ce9480e6cb74788d3aca05428e275ae0782f541f073b7b20aa",
+       "candidate_gpx_sha256": "33dd6a4911a22c6bd50169bb8ad2f7d47e1d02ed9a759fe3d2f5402cd76ce226"
+     },
++    "ultravasan90-2019": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan90-pre2023",
++      "source_race_key": "ultravasan90-2022",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2019-2906012",
++      "evidence_note": "Reference only. Vasaloppet documents a roughly 3 km UV90 change before Mångsbodarna in 2019. The verified 2022 geometry is the closest recovered post-change source, but uninterrupted geometry equality for 2019–2022 is not established."
++    },
+     "ultravasan90-2023": {
++      "mode": "exact-source-year",
+       "display_route_id": "ultravasan90-2023-itra-229687",
+       "source_file": "source/routes/ultravasan90-2023-itra-229687.gpx",
+       "source_year": 2023,
+@@ -27,28 +64,60 @@
+       "source_page_sha256": "dd40c985d634addfde4339ca2f3293ba125e5570434b3049f9eba9a27869a7ab",
+       "candidate_gpx_sha256": "5682d74f810852f341374ea643428aa5d1dfdb5e6949552602af59bab8996cf9"
+     },
+-    "ultravasan45-2024": {
+-      "display_route_id": "ultravasan45-2024-itra-267130",
+-      "source_file": "source/routes/ultravasan45-2024-itra-267130.gpx",
+-      "source_year": 2024,
+-      "source_provider": "ITRA / Trace de Trail",
+-      "external_id": 267130,
+-      "source_url": "https://tracedetrail.fr/en/trace/267130",
+-      "source_http_status": 200,
+-      "source_content_type": "text/html; charset=UTF-8",
+-      "source_fetched_at_utc": "2026-09-25T09:56:59+00:00",
+-      "source_page_sha256": "f708e8570fa407d2a935a0e4f1b74f5518517c05a61f16a930273c525655a763",
+-      "candidate_gpx_sha256": "af06d131e70db7f328c75cf535adbfc789e630b3a7d310b2cbf595619aa92ced"
++    "ultravasan90-2025": {
++      "mode": "verified-shared-course",
++      "display_route_id": "ultravasan90-post2023",
++      "source_race_key": "ultravasan90-2024",
++      "evidence_url": "https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025/",
++      "evidence_note": "Vasaloppet explicitly stated that Ultravasan 90 had no course changes in 2025. The exact 2024 route is therefore the verified shared course for 2025."
+     },
+     "ultravasan90-2026": {
+-      "display_route_id": "ultravasan90-2026",
+-      "prebuilt_route_file": "data/routes/ultravasan90-2026.json",
++      "mode": "exact-source-year",
++      "display_route_id": "ultravasan90-2026-official",
+       "source_file": "source/UV-90_20260610.kmz",
++      "source_format": "kmz",
+       "source_year": 2026,
+       "source_provider": "Vasaloppet",
+-      "source_url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz"
++      "source_url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz",
++      "elevation_transfer": {
++        "donor_file": "source/routes/ultravasan90-2026-itra-328148.gpx",
++        "donor_year": 2026,
++        "donor_provider": "ITRA / Trace de Trail",
++        "max_match_distance_m": 50,
++        "validation_mode": "same-year-geometry",
++        "dem_file": "source/routes/ultravasan90-2026-dem.json"
++      }
++    },
++    "ultravasan45-2014": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan45-2018-itra-51603",
++      "source_race_key": "ultravasan45-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
++      "evidence_note": "Reference only. The 2017 Krångåsen–Eldris reroute affected Ultravasan 45, so the exact 2018 geometry cannot be treated as exact for 2014."
++    },
++    "ultravasan45-2015": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan45-2018-itra-51603",
++      "source_race_key": "ultravasan45-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
++      "evidence_note": "Reference only. The 2017 Krångåsen–Eldris reroute affected Ultravasan 45, so the exact 2018 geometry cannot be treated as exact for 2015."
++    },
++    "ultravasan45-2016": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan45-2018-itra-51603",
++      "source_race_key": "ultravasan45-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
++      "evidence_note": "Reference only. The 2016 UV90 change did not affect UV45, but the 2017 Krångåsen–Eldris reroute did. Exact 2016 UV45 geometry has not been recovered reproducibly."
++    },
++    "ultravasan45-2017": {
++      "mode": "verified-shared-course",
++      "display_route_id": "ultravasan45-2018-itra-51603",
++      "source_race_key": "ultravasan45-2018",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/pressinformation-infoer-ultravasan-90-ultravasan-45-vasastafetten-och-vasakvartetten-2018-2637084",
++      "evidence_note": "Vasaloppet explicitly reported no course changes in 2018. The exact 2018 UV45 geometry therefore verifies the 2017 course after the documented 2017 reroute."
+     },
+     "ultravasan45-2018": {
++      "mode": "exact-source-year",
+       "display_route_id": "ultravasan45-2018-itra-51603",
+       "source_file": "source/routes/ultravasan45-2018-itra-51603.gpx",
+       "source_year": 2018,
+@@ -67,6 +136,7 @@
+       }
+     },
+     "ultravasan45-2019": {
++      "mode": "exact-source-year",
+       "display_route_id": "ultravasan45-2019-itra-75784",
+       "source_file": "source/routes/ultravasan45-2019-itra-75784.gpx",
+       "source_year": 2019,
+@@ -83,6 +153,58 @@
+         "donor_provider": "ITRA / Trace de Trail",
+         "max_match_distance_m": 50
+       }
++    },
++    "ultravasan45-2022": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan45-2019-itra-75784",
++      "source_race_key": "ultravasan45-2019",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188",
++      "evidence_note": "Reference only. The recovered 2019 exact route predates the temporary Axi kvarn reroute introduced in 2024. No reproducible exact 2022 UV45 geometry or explicit uninterrupted equality proof has been recovered."
++    },
++    "ultravasan45-2023": {
++      "mode": "best-known-reference",
++      "display_route_id": "ultravasan45-2019-itra-75784",
++      "source_race_key": "ultravasan45-2019",
++      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188",
++      "evidence_note": "Reference only. Vasaloppet describes the 2024 Axi kvarn reroute as new and temporary; the 2023 start change applied to UV90/Vasastafetten, not UV45. Exact UV45 2023 geometry has not been recovered reproducibly."
++    },
++    "ultravasan45-2024": {
++      "mode": "exact-source-year",
++      "display_route_id": "ultravasan45-2024-itra-267130",
++      "source_file": "source/routes/ultravasan45-2024-itra-267130.gpx",
++      "source_year": 2024,
++      "source_provider": "ITRA / Trace de Trail",
++      "external_id": 267130,
++      "source_url": "https://tracedetrail.fr/en/trace/267130",
++      "source_http_status": 200,
++      "source_content_type": "text/html; charset=UTF-8",
++      "source_fetched_at_utc": "2026-09-25T09:56:59+00:00",
++      "source_page_sha256": "f708e8570fa407d2a935a0e4f1b74f5518517c05a61f16a930273c525655a763",
++      "candidate_gpx_sha256": "af06d131e70db7f328c75cf535adbfc789e630b3a7d310b2cbf595619aa92ced"
++    },
++    "ultravasan45-2025": {
++      "mode": "verified-shared-course",
++      "display_route_id": "ultravasan45-2024-itra-267130",
++      "source_race_key": "ultravasan45-2024",
++      "evidence_url": "https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025/",
++      "evidence_note": "Vasaloppet explicitly stated that Ultravasan 45 had no course changes in 2025. The exact 2024 route is therefore the verified shared course for 2025."
++    },
++    "ultravasan45-2026": {
++      "mode": "exact-source-year",
++      "display_route_id": "ultravasan45-2026-official",
++      "source_file": "source/UV45_20260610.kmz",
++      "source_format": "kmz",
++      "source_year": 2026,
++      "source_provider": "Vasaloppet",
++      "source_url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV45_20260610.kmz",
++      "elevation_transfer": {
++        "donor_file": "source/routes/ultravasan45-2026-itra-328149.gpx",
++        "donor_year": 2026,
++        "donor_provider": "ITRA / Trace de Trail",
++        "max_match_distance_m": 50,
++        "validation_mode": "same-year-geometry",
++        "dem_file": "source/routes/ultravasan45-2026-dem.json"
++      }
+     }
+   }
+ }
+--- repo-snapshot/repo/docs/assets/course-intelligence.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/docs/assets/course-intelligence.js	2026-09-25 14:02:23.166343669 +0000
+@@ -362,9 +362,13 @@
+     const course=courseForRace(race);
+     const route=routeForRace(routeRegistry,race);
+     if(!edition||!course)throw new Error(`Loppåret saknar bansträckningskontrakt: ${race.race_key||race.id}`);
++    const routeContract=routeRegistry?.edition_route_contracts?.[edition.race_key]||null;
++    const geometryUsage=routeContract?.display_geometry_usage||
++      (route?.source_year!=null&&Number(route.source_year)===Number(edition.year)?'exact-source-year':'reference-only');
++    const terrainAllowed=geometryUsage==='exact-source-year'||geometryUsage==='verified-shared-course';
+     const rawSegments=segmentContracts(course).map(segment=>Object.freeze({
+       ...segment,
+-      terrain:terrainForSegment(route,segment),
++      terrain:terrainAllowed?terrainForSegment(route,segment):Object.freeze({available:false,reason:'reference-only-geometry'}),
+       field:fieldStatsForSegment(dataset,race,segment,{results,minSample}),
+     }));
+     const segments=rawSegments;
+@@ -375,6 +379,7 @@
+       display_route_id:route?.id||course.display_route_id,
+       route_available:Boolean(route),
+       route_geometry_quality:route?.geometry_quality||null,
++      route_geometry_usage:geometryUsage,
+       course_distance_km:wholeCourseDistance(course),
+       sample_minimum:minSample,
+       segments:Object.freeze(segments),
+--- repo-snapshot/repo/docs/assets/map.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/docs/assets/map.js	2026-09-25 14:18:46.602234937 +0000
+@@ -27,9 +27,9 @@
+   const contract=registry?.edition_route_contracts?.[race?.race_key];
+   if(!contract)return `kartreferens ${route?.source_year??'okänt år'}`;
+   const sourceYear=contract.display_geometry_source_year??route?.source_year??'okänt år';
+-  return contract.display_geometry_usage==='exact-source-year'
+-    ?`verifierad årsgeometri ${sourceYear}`
+-    :`kartreferens från ${sourceYear}`;
++  if(contract.display_geometry_usage==='exact-source-year')return `verifierad årsgeometri ${sourceYear}`;
++  if(contract.display_geometry_usage==='verified-shared-course')return `verifierad delad bana från ${sourceYear}`;
++  return `kartreferens från ${sourceYear}`;
+ }
+ function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_km;return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):routeCheckpoint?.distance_km}
+ function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
+--- repo-snapshot/repo/tests/test_build_routes.py	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_build_routes.py	2026-09-25 14:06:56.893690981 +0000
+@@ -52,6 +52,11 @@
+             self.assertEqual("exact-source-year", contracts["ultravasan45-2019"]["display_geometry_usage"])
+             self.assertEqual("exact-source-year", contracts["ultravasan45-2024"]["display_geometry_usage"])
+             self.assertEqual("exact-source-year", contracts["ultravasan45-2026"]["display_geometry_usage"])
++            for key in ("ultravasan90-2017", "ultravasan90-2025", "ultravasan45-2017", "ultravasan45-2025"):
++                self.assertEqual("verified-shared-course", contracts[key]["display_geometry_usage"])
++            for key in ("ultravasan90-2014", "ultravasan90-2015", "ultravasan90-2016", "ultravasan90-2019",
++                        "ultravasan45-2014", "ultravasan45-2015", "ultravasan45-2016", "ultravasan45-2022", "ultravasan45-2023"):
++                self.assertEqual("reference-only", contracts[key]["display_geometry_usage"])
+             self.assertEqual(2026, contracts["ultravasan90-2026"]["display_geometry_source_year"])
+             self.assertIsNone(contracts["ultravasan90-2023"]["whole_course_comparison_group"])
+             self.assertEqual("ultravasan90-2024-2025", contracts["ultravasan90-2024"]["whole_course_comparison_group"])
+@@ -107,8 +112,18 @@
+                 self.assertGreater(provenance["transferred_missing_pct"], 99)
+                 self.assertLessEqual(provenance["unmatched_after_transfer"], 4)
+             exact_2026 = registry["routes"][expected_routes["ultravasan90-2026"]]
+-            self.assertEqual("official-organizer-gps", exact_2026["source_type"])
++            self.assertEqual("official-organizer-kmz", exact_2026["source_type"])
+             self.assertEqual("source/UV-90_20260610.kmz", exact_2026["source_file"])
++            self.assertTrue(exact_2026["elevation_available"])
++            self.assertEqual("same-year-spatial-donor-with-dem-fallback", exact_2026["elevation_provenance"]["method"])
++            self.assertEqual(50.0, exact_2026["elevation_provenance"]["max_match_distance_m"])
++            self.assertEqual(52, exact_2026["elevation_provenance"]["dem_fallback_points"])
++            self.assertGreater(exact_2026["elevation_provenance"]["donor_match_pct"], 98)
++            exact_45_2026 = registry["routes"][expected_routes["ultravasan45-2026"]]
++            self.assertEqual("official-organizer-kmz", exact_45_2026["source_type"])
++            self.assertEqual("source/UV45_20260610.kmz", exact_45_2026["source_file"])
++            self.assertEqual(55, exact_45_2026["elevation_provenance"]["dem_fallback_points"])
++            self.assertGreater(exact_45_2026["elevation_provenance"]["donor_match_pct"], 98)
+             self.assertEqual("uv90-2026-v1", contracts["ultravasan90-2026"]["course_version_id"])
+             self.assertEqual(
+                 "ultravasan90-post2023",
+--- repo-snapshot/repo/tests/test_course_intelligence.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_course_intelligence.js	2026-09-25 14:02:33.404281275 +0000
+@@ -22,7 +22,8 @@
+ 
+ const model=intelligence.buildCourseModel(data,race2016,routes);
+ assert.strictEqual(model.course_version_id,'uv90-pre2023-v1');
+-assert.strictEqual(model.display_route_id,'ultravasan90-pre2023');
++assert.strictEqual(model.display_route_id,'ultravasan90-2018-itra-51602');
++assert.strictEqual(model.route_geometry_usage,'reference-only');
+ assert.strictEqual(model.route_available,true);
+ assert.strictEqual(model.segments.length,8);
+ assert.strictEqual(model.course_distance_km,90);
+@@ -33,9 +34,8 @@
+ assert.strictEqual(first.display_from_km,0);
+ assert.strictEqual(first.display_to_km,7.373,'terrängaxeln ska använda explicit display-ankare, inte tävlingsdistansen');
+ assert.strictEqual(first.display_to_source,'explicit-anchor');
+-assert.strictEqual(first.terrain.available,true);
+-assert.ok(first.terrain.ascent_m>0);
+-assert.ok(first.terrain.max_elevation_m>=first.terrain.min_elevation_m);
++assert.strictEqual(first.terrain.available,false,'reference-only-geometri får inte användas som terrängfacit');
++assert.strictEqual(first.terrain.reason,'reference-only-geometry');
+ assert.ok(first.field.timing_sample_n>=5);
+ assert.strictEqual(first.field.sufficient_sample,true);
+ assert.ok(Number.isFinite(first.field.median_pace_seconds_per_km));
+@@ -56,7 +56,7 @@
+ assert.strictEqual(last.to_key,'mora');
+ assert.strictEqual(last.display_to_source,'terminal-finish-anchor');
+ assert.strictEqual(last.display_to_km,90.173,'Mora ska strukturellt mappas till explicit finish-ankare');
+-assert.strictEqual(last.terrain.available,true);
++assert.strictEqual(last.terrain.available,false);
+ 
+ const post2023=contracts.catalog.courses['uv90-2023-2025-v1'];
+ assert.ok(!intelligence.checkpointCatalog(post2023).some(row=>row.checkpoint_key==='high_point'));
+@@ -141,7 +141,14 @@
+ assert.strictEqual(intelligence.applyDifficultyIndex,undefined,'Course Difficulty får inte skapa en syntetisk sammanvägd poäng eller ranking');
+ assert.strictEqual(intelligence.percentileRank,undefined,'Course Difficulty ska inte exponera rankinghjälpare');
+ assert.ok(model.segments.every(segment=>!Object.hasOwn(segment,'difficulty')),'Course Intelligence ska lämna separata empiriska dimensioner utan totalscore');
+-assert.ok(model.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'verklig UV90 2016 ska behålla empiriskt terrängunderlag');
++assert.ok(model.segments.every(segment=>segment.terrain?.available===false),'UV90 2016 saknar verifierad års-/delad geometri och får därför inte publicera terrängmått');
++
++const race2017=data.races.find(race=>race.race_key==='ultravasan90-2017');
++const shared2017=intelligence.buildCourseModel(data,race2017,routes);
++assert.strictEqual(shared2017.route_geometry_usage,'verified-shared-course');
++assert.strictEqual(shared2017.display_route_id,'ultravasan90-2018-itra-51602');
++assert.ok(shared2017.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'verifierad delad 2017/2018-bana ska få använda höjdprofil');
++
+ assert.ok(model.segments.some(segment=>segment.field?.median_pacing_loss_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk pacing loss');
+ assert.ok(model.segments.some(segment=>segment.field?.pace_iqr_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk fartspridning');
+ assert.ok(model.segments.some(segment=>segment.field?.dnf_exit_rate_pct!=null),'verklig UV90 2016 ska behålla empirisk DNF-exit');
+@@ -169,6 +176,11 @@
+ assert.ok(Math.abs(fallbackPlan.rows.at(-1).target_cumulative_seconds-36000)<1);
+ 
+ const race2026=data.races.find(race=>race.race_key==='ultravasan90-2026')||{id:999,race_key:'ultravasan90-2026',year:2026};
++const exact2026=intelligence.buildCourseModel(data,race2026,routes);
++assert.strictEqual(exact2026.route_geometry_usage,'exact-source-year');
++assert.strictEqual(exact2026.display_route_id,'ultravasan90-2026-official');
++assert.ok(exact2026.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'officiell 2026-geometri med donor/DEM-höjd ska ge terrängmått');
++
+ const plan2026=intelligence.buildRacePlan({races:[race2026],results:[],splits:[]},race2026,36000);
+ assert.strictEqual(plan2026.complete,true,'officiella 2026-segment med kända kontrollavstånd ska kunna distansfördelas');
+ assert.strictEqual(plan2026.unavailable_segments,0);
+--- repo-snapshot/repo/tests/test_dynamic_2026_frontend.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_dynamic_2026_frontend.js	2026-09-25 14:18:35.970760075 +0000
+@@ -29,8 +29,8 @@
+   const model=evolution.aggregateClassHistory({races:familyRaces,results:results.filter(result=>ids.has(result.race_id)),isStarter,isFinished});
+   assert.deepStrictEqual(model.years,[2025,2026],`${family}: Gapminder ska inkludera exporterade 2026`);
+ }
+-assert.strictEqual(replay.routeForRace(routes,races[1]).id,'ultravasan90-2026');
+-assert.strictEqual(replay.routeForRace(routes,races[3]).id,'ultravasan45-current');
++assert.strictEqual(replay.routeForRace(routes,races[1]).id,'ultravasan90-2026-official');
++assert.strictEqual(replay.routeForRace(routes,races[3]).id,'ultravasan45-2026-official');
+ const replayCheckpoints=[
+   {checkpoint_key:'start',name:'Start',sequence_no:0,distance_km:0},
+   {checkpoint_key:'high_point',name:'Högsta punkten',sequence_no:1,distance_km:null},
+--- repo-snapshot/repo/tests/test_map.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_map.js	2026-09-25 14:18:46.602373485 +0000
+@@ -13,6 +13,15 @@
+     whole_course_comparison_group:null,
+   },
+ }};
++const sharedRegistry={edition_route_contracts:{
++  'ultravasan90-2025':{
++    display_route_id:'ultravasan90-post2023',
++    display_geometry_usage:'verified-shared-course',
++    display_geometry_source_year:2024,
++    course_version_id:'uv90-2023-2025-v1',
++    whole_course_comparison_group:'ultravasan90-2024-2025',
++  },
++}};
+ const referenceRegistry={edition_route_contracts:{
+   'ultravasan90-2026':{
+     display_route_id:'ultravasan90-post2023',
+@@ -32,6 +41,10 @@
+   'kartreferens från 2024'
+ );
+ assert.strictEqual(
++  map.displayGeometryStatus(sharedRegistry,{race_key:'ultravasan90-2025'},route2024),
++  'verifierad delad bana från 2024'
++);
++assert.strictEqual(
+   map.displayGeometryStatus({}, {race_key:'ultravasan90-2023'}, route2024),
+   'kartreferens 2024'
+ );
+--- repo-snapshot/repo/tests/test_race_contracts.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_race_contracts.js	2026-09-25 14:18:35.971011151 +0000
+@@ -47,9 +47,9 @@
+ // Same resolver and generated catalog also work through the browser globals.
+ const browser={window:{}};
+ for(const file of ['../docs/data/race-catalog.js','../docs/assets/race-contracts.js','../docs/assets/map-engine.js','../docs/assets/playback.js','../docs/assets/runner-replay.js','../docs/assets/race-media.js'])vm.runInNewContext(fs.readFileSync(require.resolve(file),'utf8'),browser);
+-assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-current');
++assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-2018-itra-51603');
+ assert.strictEqual(browser.window.RACE_MEDIA_CONFIG.familyForRace({race_key:'ultravasan90-2022',name:'45'}),'uv90');
+ assert.strictEqual(browser.window.RaceContracts.courseForRace('ultravasan90-2026').checkpoint_catalog.find(cp=>cp.checkpoint_key==='high_point').distance_km,null);
+ assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2018').id,'ultravasan90-2018-itra-51602');
+-assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2026').id,'ultravasan90-2026');
++assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2026').id,'ultravasan90-2026-official');
+ console.log('OK: explicit contracts across all 22 editions, unknown keys, immutable snapshots and another event');
+--- repo-snapshot/repo/tests/test_runner_replay.js	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_runner_replay.js	2026-09-25 14:19:15.308643822 +0000
+@@ -60,15 +60,15 @@
+   assert.ok(Math.abs(segment.pace-elapsedDelta/segment.distance)<1e-9,`${model.race.race_key}: ${segment.from.key}–${segment.to.key} använder fel distans`);
+ }
+ 
+-assert.strictEqual(uv90Old.route.id,'ultravasan90-pre2023','Äldre UV90 måste välja äldre ruttversion');
+-assert.strictEqual(uv90New.route.id,'ultravasan90-post2023','Ny UV90 måste välja ny ruttversion');
+-assert.strictEqual(uv45Current.route.id,'ultravasan45-current','UV45 måste välja UV45-rutten');
++assert.strictEqual(uv90Old.route.id,'ultravasan90-2018-itra-51602','UV90 2015 ska använda tydligt märkt 2018-referens när exakt historisk geometri saknas');
++assert.strictEqual(uv90New.route.id,'ultravasan90-post2023','UV90 2025 ska använda verifierat delad 2024-bana');
++assert.strictEqual(uv45Current.route.id,'ultravasan45-2024-itra-267130','UV45 2025 ska använda verifierat delad 2024-bana');
+ assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2022',year:2022}).source_year,2022);
+ assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2023',year:2023}).source_year,2023);
+ assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan90-2025',year:2025}).source_year,2024);
+-assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2014}).source_year,2026);
++assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2014}).source_year,2018);
+ assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2024',year:2024}).source_year,2024);
+-assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2025',year:2025}).source_year,2026);
++assert.strictEqual(replay.routeForRace(registry,{race_key:'ultravasan45-2025',year:2025}).source_year,2024);
+ assert.strictEqual(uv90Old.segments.length,8,'Äldre UV90 ska byggas från årets faktiska kontrollmodell');
+ assert.strictEqual(uv90New.segments.length,9,'UV90 2025 ska inkludera Högsta punkten');
+ assert.strictEqual(uv45Current.segments.length,6,'UV45 2025 ska använda kontrolluppsättning B');
+@@ -91,7 +91,7 @@
+   const historical=config.races.find(item=>item.race_key===`ultravasan45-${year}`);
+   assert.ok(historical,`Konfiguration för UV45 ${year} saknas`);
+   assert.strictEqual(historical.checkpoints.map(cp=>cp.checkpoint_key).join(','),'start,oxberg,hokberg,eldris,mora',`UV45 ${year} ska använda kontrolluppsättning A`);
+-  assert.strictEqual(replay.routeForRace(registry,historical).source_year,year===2024?2024:2026,`UV45 ${year} ska använda rätt årsspecifik GPX`);
++  assert.strictEqual(replay.routeForRace(registry,historical).source_year,year===2024?2024:2018,`UV45 ${year} ska använda rätt verifierad årsgeometri eller tydligt märkt referens`);
+ }
+ 
+ // Färgskalan är relativ till löparens egna segment och saknad passage är neutral.
+--- repo-snapshot/repo/tests/test_u20_route_audit.py	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tests/test_u20_route_audit.py	2026-09-25 14:04:30.289720411 +0000
+@@ -30,9 +30,13 @@
+     assert by_key["ultravasan90-2024"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
+     assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
+     assert by_key["ultravasan90-2026"]["display_route_contract"]["display_geometry_source_year"] == 2026
++    assert set(report["verified_shared_course_editions"]) == {"ultravasan90-2017", "ultravasan90-2025", "ultravasan45-2017", "ultravasan45-2025"}
++    assert len(report["reference_only_editions"]) == 9
++    assert by_key["ultravasan90-2017"]["route_usage"] == "verified-shared-course"
++    assert by_key["ultravasan90-2014"]["route_usage"] == "reference-only"
+ 
+     assert by_key["ultravasan90-2022"]["evidence_status"] == "local-exact-source-year"
+-    assert by_key["ultravasan90-2025"]["evidence_status"] == "external-year-specific"
++    assert by_key["ultravasan90-2025"]["evidence_status"] == "verified-shared-course"
+     assert any(item["evidence_type"] == "official-route-change-notice"
+                for item in by_key["ultravasan90-2017"]["external_route_evidence"])
+     assert any("rerouting" in item["note"]
+--- repo-snapshot/repo/tools/build_routes.py	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tools/build_routes.py	2026-09-25 14:06:56.893543039 +0000
+@@ -172,13 +172,8 @@
+     return distances
+ 
+ 
+-def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0):
+-    """Fill missing elevations from a nearby donor route, never replacing observed values.
+-
+-    A spatial match must be within the configured distance and near the same
+-    normalized along-route progress. The donor is accepted only when it
+-    reproduces the target's already observed elevations with strong accuracy.
+-    """
++def _spatial_elevation_matches(target_coords, donor_coords, max_distance_m=50.0):
++    """Match target points to donor segments using space plus normalized route progress."""
+     if max_distance_m <= 0:
+         raise ValueError("Elevation donor match distance must be positive")
+     donor_present = [point[2] for point in donor_coords if len(point) > 2 and point[2] is not None]
+@@ -217,9 +212,8 @@
+                 grid.setdefault((cell_x, cell_y), []).append(index)
+ 
+     progress_guard_m = max(500.0, min(1500.0, donor_total * 0.03))
+-
+-    def match(index):
+-        qx, qy = target_xy[index]
++    matches = []
++    for index, (qx, qy) in enumerate(target_xy):
+         expected_progress = target_progress[index] / target_total * donor_total
+         candidates = grid.get((math.floor(qx / cell_m), math.floor(qy / cell_m)), ())
+         best = None
+@@ -247,9 +241,19 @@
+                     "elevation_m": elevation,
+                     "donor_progress_m": matched_progress,
+                 }
+-        return best
++        matches.append(best)
++    return matches, progress_guard_m
++
+ 
+-    matches = [match(index) for index in range(len(target_coords))]
++def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0):
++    """Fill missing elevations from a nearby donor route, never replacing observed values.
++
++    The donor must reproduce the target's already observed elevations accurately;
++    this is the strict path used for annual GPX sources with partial native height.
++    """
++    matches, progress_guard_m = _spatial_elevation_matches(
++        target_coords, donor_coords, max_distance_m=max_distance_m
++    )
+     observed_indices = [index for index, point in enumerate(target_coords) if point[2] is not None]
+     observed_matches = [(index, matches[index]) for index in observed_indices if matches[index] is not None]
+     if len(observed_indices) < 20:
+@@ -296,6 +300,63 @@
+     }
+ 
+ 
++def _read_dem_cache(path, target_coords):
++    payload = json.loads(path.read_text(encoding="utf-8"))
++    if payload.get("schema_version") != 1 or not isinstance(payload.get("points"), list):
++        raise ValueError(f"{path.name} has unsupported DEM cache format")
++    values = {}
++    for row in payload["points"]:
++        index = int(row["index"])
++        if not 0 <= index < len(target_coords):
++            raise ValueError(f"{path.name} DEM index is outside target geometry: {index}")
++        if hav(target_coords[index], [float(row["lat"]), float(row["lon"])]) * 1000 > 5:
++            raise ValueError(f"{path.name} DEM coordinate does not match target point {index}")
++        elevation = float(row["elevation_m"])
++        if not -50 <= elevation <= 1000:
++            raise ValueError(f"{path.name} DEM elevation is implausible at point {index}")
++        values[index] = elevation
++    return values, payload
++
++
++def _transfer_same_year_donor_with_dem(target_coords, donor_coords, dem_cache_path, max_distance_m=50.0):
++    """Build height for official geometry from same-year donor plus DEM on changed sections."""
++    target = [[float(point[0]), float(point[1]), None] for point in target_coords]
++    matches, progress_guard_m = _spatial_elevation_matches(target, donor_coords, max_distance_m=max_distance_m)
++    matched_indices = [index for index, match in enumerate(matches) if match is not None]
++    match_pct = 100 * len(matched_indices) / len(target)
++    if match_pct < 95:
++        raise ValueError(f"Same-year donor geometry matches only {match_pct:.1f}% of official route")
++
++    dem_values, dem_payload = _read_dem_cache(dem_cache_path, target)
++    augmented = [list(point) for point in target]
++    distances = []
++    for index, match in enumerate(matches):
++        if match is None:
++            if index not in dem_values:
++                raise ValueError(f"DEM cache misses official route point {index}")
++            augmented[index][2] = dem_values[index]
++        else:
++            augmented[index][2] = match["elevation_m"]
++            distances.append(match["distance_m"])
++    extra_dem = set(dem_values) - {index for index, match in enumerate(matches) if match is None}
++    if extra_dem:
++        raise ValueError(f"DEM cache contains {len(extra_dem)} points that have a valid same-year donor match")
++
++    return augmented, {
++        "method": "same-year-spatial-donor-with-dem-fallback",
++        "max_match_distance_m": float(max_distance_m),
++        "progress_guard_m": round(progress_guard_m, 1),
++        "official_geometry_points": len(target),
++        "donor_matched_points": len(matched_indices),
++        "donor_match_pct": round(match_pct, 3),
++        "dem_fallback_points": len(dem_values),
++        "median_transfer_distance_m": round(_percentile(distances, 0.5) or 0.0, 3),
++        "p95_transfer_distance_m": round(_percentile(distances, 0.95) or 0.0, 3),
++        "dem_provider": dem_payload.get("provider"),
++        "dem_dataset": dem_payload.get("dataset"),
++    }
++
++
+ def _perpendicular_m(point, start, end, reference_lat):
+     scale_x = 111_320.0 * math.cos(math.radians(reference_lat))
+     scale_y = 110_540.0
+@@ -336,9 +397,18 @@
+ def build_gpx_route_data(
+     path, official_distance, expected_start, expected_finish,
+     elevation_donor_path=None, elevation_max_match_distance_m=50.0,
++    source_format="gpx", elevation_dem_path=None, donor_validation_mode="observed",
+ ):
+-    """Validate and transform one verified GPX into the compact browser schema."""
+-    coords = read_gpx(path)
++    """Validate and transform verified GPX/KMZ geometry into the compact browser schema."""
++    if source_format == "gpx":
++        coords = read_gpx(path)
++    elif source_format == "kmz":
++        # Vasaloppet's 2026 KMZ altitude column is not a trustworthy terrain
++        # profile (mostly zero with isolated impossible values). Keep its
++        # authoritative geometry and build elevation separately.
++        coords = [[point[0], point[1], None] for point in read_kmz(path)]
++    else:
++        raise ValueError(f"Unsupported route source format: {source_format}")
+     if any(not (-90 <= point[0] <= 90 and -180 <= point[1] <= 180) for point in coords):
+         raise ValueError(f"{path.name} innehåller ogiltiga koordinater")
+     raw_distances = [0.0]
+@@ -363,9 +433,19 @@
+     elevation_transfer = None
+     if elevation_donor_path is not None:
+         donor_coords = read_gpx(elevation_donor_path)
+-        coords, elevation_transfer = _transfer_missing_elevation(
+-            coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
+-        )
++        if donor_validation_mode == "same-year-geometry":
++            if elevation_dem_path is None:
++                raise ValueError(f"{path.name} same-year donor mode requires a DEM cache")
++            coords, elevation_transfer = _transfer_same_year_donor_with_dem(
++                coords, donor_coords, elevation_dem_path,
++                max_distance_m=elevation_max_match_distance_m,
++            )
++        elif donor_validation_mode == "observed":
++            coords, elevation_transfer = _transfer_missing_elevation(
++                coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
++            )
++        else:
++            raise ValueError(f"Unsupported elevation donor validation mode: {donor_validation_mode}")
+ 
+     elevations = _fill_small_elevation_gaps(coords)
+     smoothed = _median_smooth(elevations)
+@@ -556,12 +636,16 @@
+     *, route_id, name, years, official_distance, source_path, source_year,
+     race_family, style, checkpoints, expected_start, expected_finish,
+     elevation_donor_path=None, elevation_donor_year=None, elevation_donor_provider=None,
+-    elevation_max_match_distance_m=50.0,
++    elevation_max_match_distance_m=50.0, source_format="gpx", elevation_dem_path=None,
++    donor_validation_mode="observed",
+ ):
+     data = build_gpx_route_data(
+         source_path, official_distance, expected_start, expected_finish,
+         elevation_donor_path=elevation_donor_path,
+         elevation_max_match_distance_m=elevation_max_match_distance_m,
++        source_format=source_format,
++        elevation_dem_path=elevation_dem_path,
++        donor_validation_mode=donor_validation_mode,
+     )
+     high_point = data["high_point"]
+     route = {
+@@ -574,12 +658,12 @@
+         "total_distance_km": round(data["raw_total_km"], 3),
+         "gps_distance_km": round(data["raw_total_km"], 3),
+         "source_file": source_path.relative_to(ROOT).as_posix(),
+-        "source_type": "verified-gpx",
++        "source_type": "official-organizer-kmz" if source_format == "kmz" else "verified-gpx",
+         "source_year": int(source_year),
+         "source_point_count": data["source_point_count"],
+         "point_count": data["point_count"],
+         "point_schema": POINT_SCHEMA,
+-        "geometry_quality": "verified-gpx",
++        "geometry_quality": "official-organizer-gps" if source_format == "kmz" else "verified-gpx",
+         "geometry_note": "Verifierad GPX-geometri. Distansaxeln är normaliserad till loppets officiella distans.",
+         "elevation_available": True,
+         "elevation_note": (
+@@ -631,6 +715,7 @@
+                 "donor_file": elevation_donor_path.relative_to(ROOT).as_posix(),
+                 "donor_year": int(elevation_donor_year) if elevation_donor_year is not None else None,
+                 "donor_provider": elevation_donor_provider,
++                "dem_file": elevation_dem_path.relative_to(ROOT).as_posix() if elevation_dem_path else None,
+             }
+             if data.get("elevation_transfer") else None
+         ),
+@@ -643,6 +728,13 @@
+ 
+ 
+ def build_uv45_route(course_config):
++    """Build the locked legacy UV45 CourseVersion display reference.
++
++    No RaceEdition relies on this layer once ``edition_routes.json`` supplies
++    explicit exact/shared/reference bindings.  Keeping the historical
++    CourseVersion source here preserves its immutable fingerprint while the
++    edition registry carries the corrected annual geometry.
++    """
+     route_id = "ultravasan45-current"
+     model_id = course_config.get("route_build_models", {}).get(route_id)
+     model = course_config.get("courses", {}).get(model_id)
+@@ -653,84 +745,43 @@
+     checkpoints = model.get("checkpoint_catalog") or []
+     if not checkpoints:
+         raise ValueError(f"Route build model {model_id!r} has no checkpoint catalog")
+-    if UV45_PRIMARY_GPX.exists():
+-        try:
+-            route = verified_route(
+-                route_id=route_id,
+-                name="Ultravasan 45 – referensgeometri 2026",
+-                years={"from": 2014, "to": 2099},
+-                official_distance=float(checkpoints[-1]["distance_km"]),
+-                source_path=UV45_PRIMARY_GPX,
+-                source_year=2026,
+-                race_family="uv45",
+-                style={"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
+-                checkpoints=checkpoints,
+-                expected_start=[61.1263, 14.17957],
+-                expected_finish=[61.006997, 14.542826],
+-            )
+-            route["geometry_note"] = "Verifierad GPX-geometri för loppåret 2026. När denna geometri visas för tidigare loppår är den endast en kartografisk referens och utgör inte bevis för exakt årssträckning eller whole-course-jämförbarhet."
+-            route["historical_note"] = "Källåret är 2026. Bindningar till tidigare Ultravasan 45-år används endast som visningsreferens tills årsvis geometri har verifierats."
+-            print(f"Använder {UV45_PRIMARY_GPX.name}: {route['source_point_count']} källpunkter till {route['point_count']} webbpunkter")
+-            return route
+-        except ValueError as error:
+-            print(f"VARNING: {error}. Befintlig UV45-rutt används som fallback.")
+-
+-    if not UV45_KMZ.exists() and OUT_JSON.exists():
+-        existing = json.loads(OUT_JSON.read_text(encoding="utf-8")).get("routes", {}).get("ultravasan45-current")
+-        if existing:
+-            existing = dict(existing)
+-            existing["geometry_quality"] = "existing-registry-fallback"
+-            existing["geometry_note"] = "Verifierad GPX och KMZ saknas; befintligt genererat banlager behålls."
+-            return existing
+-    coords = read_kmz(UV45_KMZ)
+-    points, raw_total = cumulative(coords)
+-    official_distance = float(race.get("distance_km") or 45.0)
+-    points = normalize_distance(points, official_distance)
+-    elevation_profile = build_elevation_profile(coords, points)
+-    checkpoints = []
+-    for cp in sorted(race.get("checkpoints", []), key=lambda item: item["sequence_no"]):
+-        distance = float(cp.get("distance_km") or 0.0)
+-        key = "finish" if cp["checkpoint_key"] == "mora" else cp["checkpoint_key"]
+-        checkpoints.append({
+-            "key": key,
+-            "name": cp["name"],
+-            "short": cp["name"].replace("Start ", "").replace(" mål", ""),
+-            "distance_km": distance,
+-            "coord": point_at_distance(points, distance),
+-        })
+-    return {
+-        "id": "ultravasan45-current",
+-        "route_version": "ultravasan45-current",
+-        "race_family": "uv45",
+-        "name": "Ultravasan 45 – referensgeometri 2026",
+-        "years": {"from": min(r["year"] for r in uv45_races), "to": 2099},
+-        "official_distance_km": official_distance,
+-        "total_distance_km": round(raw_total, 3),
+-        "gps_distance_km": round(raw_total, 3),
+-        "point_count": len(points),
+-        "source_file": UV45_KMZ.name,
+-        "source_type": "fallback-kmz",
+-        "source_year": 2026,
+-        "geometry_quality": "uploaded-gps",
+-        "geometry_note": "GPS-geometri för källåret 2026. När den visas för tidigare loppår är den endast en kartografisk referens.",
+-        "elevation_available": bool(elevation_profile),
+-        "elevation_note": (
+-            "Höjddata extraherad reproducerbart från UV45-KMZ-filen."
+-            if elevation_profile
+-            else "KMZ-filens höjdkolumn är ofullständig och innehåller orimliga värden. Höjddata används därför inte."
+-        ),
+-        "elevation_profile": elevation_profile,
+-        "style": {"color": "#d28b22", "dashArray": None, "label": "Referens 2026"},
+-        "bounds": bounds(points),
+-        "checkpoints": checkpoints,
+-        "points": points,
+-    }
+-
++    if not UV45_PRIMARY_GPX.exists():
++        raise ValueError(f"UV45 locked reference GPX is missing: {UV45_PRIMARY_GPX.relative_to(ROOT)}")
++    route = verified_route(
++        route_id=route_id,
++        name="Ultravasan 45 – låst CourseVersion-referens",
++        years={"from": 2014, "to": 2099},
++        official_distance=float(checkpoints[-1]["distance_km"]),
++        source_path=UV45_PRIMARY_GPX,
++        source_year=2026,
++        race_family="uv45",
++        style={"color": "#d28b22", "dashArray": None, "label": "Legacy-referens"},
++        checkpoints=checkpoints,
++        expected_start=[61.1263, 14.17957],
++        expected_finish=[61.006997, 14.542826],
++    )
++    route["geometry_note"] = (
++        "Låst legacy-geometri som endast bevarar CourseVersion-fingeravtrycket. "
++        "Den är inte evidens för någon RaceEditions exakta bana; samtliga UV45-år "
++        "väljs explicit via edition_routes.json."
++    )
++    route["historical_note"] = (
++        "Filen har tidigare använts som bred 2026-referens men är en Trace de Trail-export. "
++        "Den officiella UV45 2026-geometrin kommer i stället från Vasaloppets KMZ-override."
++    )
++    print(f"Använder låst UV45-referens {UV45_PRIMARY_GPX.name}: "
++          f"{route['source_point_count']} källpunkter till {route['point_count']} webbpunkter")
++    return route
+ 
+ def build_edition_routes(config, course_config, routes):
+-    """Build explicitly sourced annual display routes without changing CourseVersions."""
++    """Build exact annual routes and validate shared-course RaceEdition aliases.
++
++    ``exact-source-year`` entries create geometry. ``verified-shared-course``
++    entries only bind another RaceEdition to an already built exact geometry;
++    they never manufacture a new source year or imply performance comparability.
++    """
+     route_config = json.loads(EDITION_ROUTE_CONFIG.read_text(encoding="utf-8"))
+-    if route_config.get("schema_version") != 1:
++    if route_config.get("schema_version") not in {1, 2}:
+         raise ValueError("Unsupported config/edition_routes.json schema")
+     races = {race["race_key"]: race for race in config.get("races", [])}
+     courses = course_config.get("courses", {})
+@@ -738,12 +789,19 @@
+     unknown = set(overrides) - set(races)
+     if unknown:
+         raise ValueError(f"Unknown RaceEdition route overrides: {sorted(unknown)}")
++
++    # Exact sources first so shared-course aliases can safely refer to them.
+     for race_key, spec in overrides.items():
++        mode = spec.get("mode", "exact-source-year")
++        if mode in {"verified-shared-course", "best-known-reference"}:
++            continue
++        if mode != "exact-source-year":
++            raise ValueError(f"{race_key}: unsupported route override mode {mode!r}")
+         race = races[race_key]
+         year, family = int(race["year"]), race["race_family"]
+         route_id = spec.get("display_route_id")
+         if not route_id or int(spec.get("source_year", -1)) != year:
+-            raise ValueError(f"{race_key}: an annual route override must declare its exact source year")
++            raise ValueError(f"{race_key}: exact route override must declare its RaceEdition source year")
+         if "prebuilt_route_file" in spec:
+             route_path = ROOT / spec["prebuilt_route_file"]
+             route = json.loads(route_path.read_text(encoding="utf-8"))
+@@ -760,16 +818,15 @@
+             route["source_url"] = spec.get("source_url")
+             route["geometry_quality"] = "official-organizer-gps"
+             route["source_point_count"] = int(route.get("point_count", len(route["points"])))
+-            route["point_schema"] = ["lat", "lon", "distance_km"]
+-            route["elevation_available"] = False
+-            route["elevation_note"] = "The source KMZ-derived route contains no per-point elevation values; no profile is inferred."
++            route.setdefault("point_schema", ["lat", "lon", "distance_km"])
+             route["style"] = {"color": "#176d53", "dashArray": None, "label": f"Officiell GPS {year}"}
+             route.setdefault("geometry_note", f"Officiell årsspecifik GPS-geometri från {spec.get('source_provider', 'källan')}.")
+         else:
+             source_path = ROOT / spec["source_file"]
+             if not source_path.is_file():
+                 raise ValueError(f"{race_key}: annual route source is missing: {spec['source_file']}")
+-            reference_id = courses[race["course_version_id"]]["display_route_id"]
++            course = courses[race["course_version_id"]]
++            reference_id = course["display_route_id"]
+             reference = routes.get(reference_id)
+             if not reference or reference.get("race_family") != family:
+                 raise ValueError(f"{race_key}: no same-family reference geometry for endpoint checks")
+@@ -779,6 +836,14 @@
+             donor_path = ROOT / donor_file if donor_file else None
+             if donor_path is not None and not donor_path.is_file():
+                 raise ValueError(f"{race_key}: elevation donor is missing: {donor_file}")
++            dem_file = elevation_transfer.get("dem_file")
++            dem_path = ROOT / dem_file if dem_file else None
++            if dem_path is not None and not dem_path.is_file():
++                raise ValueError(f"{race_key}: DEM cache is missing: {dem_file}")
++            source_format = spec.get("source_format", "gpx")
++            route_checkpoints = race.get("checkpoints", [])
++            if any(item.get("distance_km") is None for item in route_checkpoints):
++                route_checkpoints = course.get("display_anchors") or route_checkpoints
+             route = verified_route(
+                 route_id=route_id,
+                 name=f"{race['name']} – verifierad geometri {year}",
+@@ -788,13 +853,16 @@
+                 source_year=year,
+                 race_family=family,
+                 style={"color": color, "dashArray": None, "label": f"GPS {year}"},
+-                checkpoints=race.get("checkpoints", []),
++                checkpoints=route_checkpoints,
+                 expected_start=reference["points"][0],
+                 expected_finish=reference["points"][-1],
+                 elevation_donor_path=donor_path,
+                 elevation_donor_year=elevation_transfer.get("donor_year"),
+                 elevation_donor_provider=elevation_transfer.get("donor_provider"),
+                 elevation_max_match_distance_m=float(elevation_transfer.get("max_match_distance_m", 50.0)),
++                source_format=source_format,
++                elevation_dem_path=dem_path,
++                donor_validation_mode=elevation_transfer.get("validation_mode", "observed"),
+             )
+             route["source_provider"] = spec.get("source_provider")
+             route["source_url"] = spec.get("source_url")
+@@ -804,16 +872,39 @@
+                 if spec.get(field) is not None:
+                     route[field] = spec[field]
+             route["geometry_note"] = (
+-                f"Årsspecifik {spec.get('source_provider', 'GPX')}-geometri för {year}. "
+-                "Visningsrutt endast; den fastställer inte whole-course-jämförbarhet. "
+-                f"Källa: {spec.get('source_url', 'lokal GPX')}"
++                f"Årsspecifik {spec.get('source_provider', 'GPS')}-geometri för {year}. "
++                "Visnings- och terrängrutt för detta RaceEdition; den fastställer inte whole-course-jämförbarhet. "
++                f"Källa: {spec.get('source_url', spec['source_file'])}"
+             )
+-            route["historical_note"] = "Exakt geometri för angivet RaceEdition-år; andra år använder sina egna tilldelningar eller referensgeometri."
++            route["historical_note"] = "Exakt geometri för angivet RaceEdition-år."
+         if route.get("id") != route_id or route.get("race_family") != family or route.get("source_year") != year:
+             raise ValueError(f"{race_key}: generated route does not preserve its declared identity")
+         routes[route_id] = route
+-    return overrides
+ 
++    # Cross-year mappings are explicit evidence contracts, not copied files.
++    # Only verified-shared-course enables terrain analytics; best-known-reference
++    # is a cartographic fallback and remains reference-only.
++    for race_key, spec in overrides.items():
++        if spec.get("mode", "exact-source-year") not in {"verified-shared-course", "best-known-reference"}:
++            continue
++        race = races[race_key]
++        route_id = spec.get("display_route_id")
++        source_race_key = spec.get("source_race_key")
++        if not route_id or route_id not in routes:
++            raise ValueError(f"{race_key}: shared-course route {route_id!r} is not built")
++        if source_race_key not in races or source_race_key == race_key:
++            raise ValueError(f"{race_key}: invalid shared-course source RaceEdition {source_race_key!r}")
++        source_spec = overrides.get(source_race_key, {})
++        if source_spec.get("display_route_id") != route_id:
++            # Broad built-in exact source-year routes (2022/2024) are valid too.
++            source_year = int(routes[route_id].get("source_year", -1))
++            if source_year != int(races[source_race_key]["year"]):
++                raise ValueError(f"{race_key}: shared-course source does not resolve to exact source-year geometry")
++        if routes[route_id].get("race_family") != race.get("race_family"):
++            raise ValueError(f"{race_key}: shared-course route family mismatch")
++        if not spec.get("evidence_note") or not spec.get("evidence_url"):
++            raise ValueError(f"{race_key}: cross-year assignment requires explicit evidence/limitation note")
++    return overrides
+ 
+ def orient_like_current(coords, current_points):
+     """Reverse historical GPX when its endpoint is closer to Sälen than its start."""
+@@ -1003,11 +1094,21 @@
+             raise ValueError(f"RaceEdition {race_key!r} route family mismatch for {route_id!r}")
+         route_for_edition[race_key] = route_id
+         source_year = display_route.get("source_year")
++        override_mode = route_override.get("mode", "exact-source-year") if route_override else None
+         exact_display_geometry = source_year is not None and int(source_year) == int(race.get("year"))
++        if override_mode == "verified-shared-course":
++            geometry_usage = "verified-shared-course"
++        elif exact_display_geometry:
++            geometry_usage = "exact-source-year"
++        else:
++            geometry_usage = "reference-only"
+         edition_route_contracts[race_key] = {
+             "display_route_id": route_id,
+-            "display_geometry_usage": "exact-source-year" if exact_display_geometry else "reference-only",
++            "display_geometry_usage": geometry_usage,
+             "display_geometry_source_year": source_year,
++            "geometry_source_race_key": route_override.get("source_race_key") if override_mode in {"verified-shared-course", "best-known-reference"} else race_key if geometry_usage == "exact-source-year" else None,
++            "geometry_evidence_url": route_override.get("evidence_url") if override_mode in {"verified-shared-course", "best-known-reference"} else route_override.get("source_url") if route_override else display_route.get("source_url"),
++            "geometry_evidence_note": route_override.get("evidence_note") if override_mode in {"verified-shared-course", "best-known-reference"} else None,
+             "course_version_id": course_id,
+             "whole_course_comparison_group": race.get("whole_course_comparison_group"),
+         }
+--- repo-snapshot/repo/tools/race_contracts.py	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tools/race_contracts.py	2026-09-25 14:04:10.537893351 +0000
+@@ -129,7 +129,7 @@
+     resolved_sources = source_bindings.validate_config(config)
+     require(definitions["schema_version"] == 1 and lock["schema_version"] == 1, "Unsupported schema")
+     edition_routes = edition_routes or read_json(root / "config/edition_routes.json")
+-    require(edition_routes.get("schema_version") == 1, "Unsupported RaceEdition route assignment schema")
++    require(edition_routes.get("schema_version") in {1, 2}, "Unsupported RaceEdition route assignment schema")
+     annual_routes = edition_routes.get("editions", {})
+     event = config["event"]
+     event_key = event["event_key"]
+@@ -189,15 +189,38 @@
+         require(route is not None, f"{key}: assigned display route is missing")
+         require(route.get("race_family") == edition["race_family"], f"{key}: display route family mismatch")
+         if override:
+-            require(int(override.get("source_year", -1)) == int(edition["year"]),
+-                    f"{key}: explicit annual route source year mismatch")
+-            require(int(route.get("source_year", -1)) == int(edition["year"]),
+-                    f"{key}: assigned route is not exact-year geometry")
+-            if override.get("source_file"):
+-                require(route.get("source_file") == override["source_file"], f"{key}: annual source file mismatch")
++            mode = override.get("mode", "exact-source-year")
++            require(mode in {"exact-source-year", "verified-shared-course", "best-known-reference"},
++                    f"{key}: unsupported RaceEdition route mode")
++            if mode == "exact-source-year":
++                require(int(override.get("source_year", -1)) == int(edition["year"]),
++                        f"{key}: explicit annual route source year mismatch")
++                require(int(route.get("source_year", -1)) == int(edition["year"]),
++                        f"{key}: assigned route is not exact-year geometry")
++                if override.get("source_file"):
++                    require(route.get("source_file") == override["source_file"], f"{key}: annual source file mismatch")
++            else:
++                source_key = override.get("source_race_key")
++                require(source_key in editions and source_key != key, f"{key}: invalid shared/reference source RaceEdition")
++                require(editions[source_key]["race_family"] == edition["race_family"], f"{key}: shared/reference source family mismatch")
++                require(bool(override.get("evidence_url")) and bool(override.get("evidence_note")),
++                        f"{key}: shared/reference route requires explicit evidence/limitation")
+         expected_routes[key] = route_id
+     require(registry.get("route_for_edition") == expected_routes,
+             "Route registry does not match explicit RaceEdition/CourseVersion assignments")
++    route_contracts = registry.get("edition_route_contracts", {})
++    require(set(route_contracts) == set(editions), "Display route contracts must cover every RaceEdition")
++    for key, edition in editions.items():
++        override = annual_routes.get(key, {})
++        mode = override.get("mode", "exact-source-year") if override else None
++        expected_usage = (
++            "verified-shared-course" if mode == "verified-shared-course" else
++            "reference-only" if mode == "best-known-reference" else
++            "exact-source-year" if int(registry["routes"][expected_routes[key]].get("source_year", -1)) == int(edition["year"]) else
++            "reference-only"
++        )
++        require(route_contracts[key].get("display_geometry_usage") == expected_usage,
++                f"{key}: display geometry usage contract mismatch")
+     require("route_for_race" not in registry and "route_for_year" not in registry,
+             "Implicit route rules are not allowed")
+     for race in observed:
+--- repo-snapshot/repo/tools/u20_route_audit.py	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tools/u20_route_audit.py	2026-09-25 14:03:12.344313255 +0000
+@@ -248,14 +248,16 @@
+     }
+ 
+ 
+-def evidence_status(local_exact, external):
++def evidence_status(route_usage, external):
+     strengths = {item.get("strength") for item in external}
+-    if local_exact:
++    if route_usage == "exact-source-year":
+         return "local-exact-source-year"
++    if route_usage == "verified-shared-course":
++        return "verified-shared-course"
+     if "strong" in strengths or "strong-secondary" in strengths:
+-        return "external-year-specific"
++        return "external-year-specific-reference-only"
+     if external:
+-        return "external-candidate"
++        return "external-candidate-reference-only"
+     return "reference-only-or-unknown"
+ 
+ 
+@@ -294,10 +296,16 @@
+         route_id = route_index["route_for_edition"].get(key)
+         route = routes.get(route_id)
+         points = route.get("points", []) if route else []
+-        exact_source_year = bool(route and int(route.get("source_year", -1)) == year)
++        display_contract = display_contracts.get(key) or {}+        route_usage = display_contract.get("display_geometry_usage") or (
++            "exact-source-year" if route and int(route.get("source_year", -1)) == year else "reference-only"
++        )
++        exact_source_year = route_usage == "exact-source-year"
+         provenance = ""
+         provider = route.get("source_provider", "not recorded") if route else "not recorded"
+-        if route:
++        if display_contract.get("geometry_evidence_note"):
++            provenance = display_contract["geometry_evidence_note"]
++        elif route:
+             provenance = route.get("geometry_note") or route.get("historical_note") or route.get("elevation_note") or "Route file is tagged to its source year; other edition bindings are reference-only."
+         edition_version = versions.get(edition.get("course_version_id"), {})
+         geometry_source = edition_version.get("geometry_source", {})
+@@ -311,9 +319,9 @@
+             "course_version_id": edition.get("course_version_id"),
+             "route_id": route_id,
+             "exact_edition_route_found": exact_source_year,
+-            "route_usage": "exact-source-year" if exact_source_year else ("reference-only" if route else "unknown"),
+-            "display_route_contract": display_contracts.get(key),
+-            "evidence_status": evidence_status(exact_source_year, external),
++            "route_usage": route_usage if route else "unknown",
++            "display_route_contract": display_contract,
++            "evidence_status": evidence_status(route_usage, external),
+             "source_provider": provider,
+             "source_year": route.get("source_year") if route else None,
+             "source_path": route.get("source_file") if route else source_path,
+@@ -364,12 +372,13 @@
+         "title": "Ultravasan RaceEdition route/GPX audit",
+         "evidence_checked_on": EVIDENCE_CHECKED_ON,
+         "edition_count": len(editions),
+-        "exact_edition_routes_found": sum(item["exact_edition_route_found"] for item in editions),
++        "exact_edition_routes_found": sum(item["route_usage"] == "exact-source-year" for item in editions),
++        "verified_shared_course_editions": [item["race_key"] for item in editions if item["route_usage"] == "verified-shared-course"],
++        "reference_only_editions": [item["race_key"] for item in editions if item["route_usage"] == "reference-only"],
+         "external_year_specific_evidence_editions": external_keys,
+         "strong_external_year_specific_evidence_editions": strong_external_keys,
+         "reference_or_unknown_editions": [
+-            item["race_key"] for item in editions
+-            if not item["exact_edition_route_found"] and not item["external_route_evidence"]
++            item["race_key"] for item in editions if item["route_usage"] in {"reference-only", "unknown"}
+         ],
+         "course_version_equals_whole_course_comparison": False,
+         "display_route_contracts_complete": len(display_contracts) == len(editions),
+@@ -425,7 +434,7 @@
+     lines = [
+         "# Ultravasan route and GPX audit",
+         "",
+-        f"Inventoried {report['edition_count']} imported editions; exact local source-year route files found: {report['exact_edition_routes_found']}.",
++        f"Inventoried {report['edition_count']} imported editions; exact source-year routes: {report['exact_edition_routes_found']}; verified shared-course editions: {len(report['verified_shared_course_editions'])}; reference-only editions: {len(report['reference_only_editions'])}.",
+         f"Curated external year-specific route evidence exists for {len(report['external_year_specific_evidence_editions'])} editions, of which {len(report['strong_external_year_specific_evidence_editions'])} have strong/strong-secondary evidence.",
+         "",
+         "CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.",
+@@ -477,7 +486,7 @@
+         )
+     lines += [
+         "",
+-        "UV45 2018/2019 were not promoted because the available map geometries contain elevation for only 55.909%/62.156% of points, below the existing route validation threshold; no broad interpolation was used. UV90 2024 and ITRA 2026 tracks were not promoted because the corresponding organizer-sourced local route is primary. The verified UV90 2026 geometry is from the official Vasaloppet KMZ.",
++        "UV45 2018/2019 keep their exact-year Trace de Trail geometry. Missing native height is filled only through validated <=50 m donor matching against the complete 2024 track. For 2026, Vasaloppet's official KMZ is authoritative geometry; same-year Trace de Trail supplies height only where it matches within 50 m, while unmatched changed sections use the checked-in Copernicus GLO-90 DEM cache. UV90 2024 remains organizer/local primary rather than promoting the secondary ITRA candidate.",
+         "",
+         "## Plotaroute candidates",
+         "",
+@@ -492,7 +501,7 @@
+         )
+     lines += [
+         "",
+-        "Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed on the page. It therefore remains a candidate only; 2025 continues to use its existing display route, and the 2024–2025 whole-course group is unchanged.",
++        "Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08-16, but no public GPX download URL is exposed. The geometry is therefore not imported. Vasaloppet's explicit no-change notice instead verifies that the exact 2024 geometry is the shared 2025 course for both UV90 and UV45.",
+         "",
+         "## External evidence",
+         "",
+--- repo-snapshot/repo/tools/verify_local_browser.mjs	2026-09-25 12:28:39.000000000 +0000
++++ uvrepo/repo/tools/verify_local_browser.mjs	2026-09-25 14:18:35.971444402 +0000
+@@ -799,7 +799,7 @@
+   uv45Progressive:uv45Progressive.verified,
+   modules:moduleChecks.verified,
+   courseIntelligence:Boolean(
+-    u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
++    u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026-official'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
+     u6Initial.spreadHeaders.join('|')==='Q25–Q75|Q10–Q90'&&u6Initial.outerSpreadCells.length>0&&
+     (u6Initial.elevationAvailable
+       ? u6Initial.elevationSegments>0
