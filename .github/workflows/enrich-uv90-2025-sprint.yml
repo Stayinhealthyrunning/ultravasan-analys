@@ -96,6 +96,22 @@ jobs:
         run: |
           python tools/u2_baseline.py --write
           python tools/u2_baseline.py --check
+      - name: Kontrollera U9 direkt efter baselineflytt
+        run: |
+          python tools/u9_release_audit.py --modular-report reports/U3_MODULAR_DATA_APPLIED.json
+      - name: Identifiera eventuell testskrivning i standarddatabasen
+        run: |
+          BEFORE="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
+          for file in $(find tests -maxdepth 1 -type f -name 'test_*.py' | sort); do
+            python -m pytest -q "$file"
+            AFTER="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
+            if [ "$AFTER" != "$BEFORE" ]; then
+              echo "DATABASE_MUTATED_BY=$file"
+              echo "before=$BEFORE"
+              echo "after=$AFTER"
+              exit 3
+            fi
+          done
       - name: Kör regressionssvit före publicering
         run: |
           python -m pytest -q

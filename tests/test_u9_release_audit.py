@@ -14,7 +14,7 @@ def modular_report() -> dict:
     return {
         "races": 22,
         "results": 24422,
-        "splits": 139910,
+        "splits": 141429,
         "editions": {"count": 22},
         "largest_default_first_paint_bytes": 1_087_000,
         "largest_default_first_paint_with_catalog_bytes": 1_339_829,
@@ -32,7 +32,7 @@ def test_release_freeze_matches_current_protected_repository(tmp_path: Path) -> 
     assert result["checks"]["protected_totals"]["actual"] == {
         "race_editions": 22,
         "results": 24422,
-        "splits": 139910,
+        "splits": 141429,
     }
     assert result["checks"]["frontend_wiring"]["no_legacy_monolith_script"] is True
     assert result["checks"]["frontend_wiring"]["remediation_cache_generation"] is True
