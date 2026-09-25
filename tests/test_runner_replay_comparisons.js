@@ -125,7 +125,7 @@ assert.strictEqual((html.match(/class-evolution\.js/g)||[]).length,1,'class-evol
 assert.ok(css.includes('.runner-replay-reference.medal line')&&css.includes('.runner-replay-analysis-tabs')&&css.includes('.runner-replay-comparison-controls'));
 assert.ok(css.includes('grid-template-columns:minmax(175px,190px) minmax(0,1fr) minmax(250px,275px)'),'Desktoplayouten ska prioritera en större karta och smalare sidopaneler');
 assert.ok(css.includes('.runner-replay-map{flex:1;height:470px;min-height:430px'),'Desktopkartan ska vara större än tidigare');
-assert.ok(css.includes('.runner-replay-map-tiles{opacity:.32'),'OSM-bakgrunden ska ha exakt 0,32 i opacitet');
+assert.ok(css.includes('.runner-replay-map-tiles{opacity:.52'),'OSM-bakgrunden ska vara tydligare med 0,52 i opacitet');
 assert.ok(css.includes('.runner-replay-insight-grid{display:grid;grid-template-columns:1fr'),'Insikter ska visas i en kolumn');
 assert.ok(css.includes('.runner-elevation-dock.expanded .runner-elevation-chart{height:235px}'),'Expanderat desktopläge för höjdprofilen ska finnas');
 assert.ok(css.includes('.runner-replay-rank-card{grid-column:1/-1;text-align:center}')&&css.includes('.runner-replay-rank-card dd{display:grid;grid-template-rows:3rem 1.45em'),'Placeringskorten ska använda full bredd och fasta separata rader');
