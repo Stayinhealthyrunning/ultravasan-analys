@@ -486,7 +486,7 @@ function renderSprintWinners(){
   };
   women.innerHTML=render(womenModel.women,'kvinna');men.innerHTML=render(menModel.men,'man');
   if(coverage)coverage.textContent=`${race.year} · ${womenModel.rows.length.toLocaleString('sv-SE')} giltiga kvinnliga spurttider · ${menModel.rows.length.toLocaleString('sv-SE')} giltiga manliga spurttider`;
-  n$('.sprint-row').forEach(button=>button.onclick=()=>typeof openRunner==='function'&&openRunner(Number(button.dataset.id)));
+  n$$('.sprint-row').forEach(button=>button.onclick=()=>typeof openRunner==='function'&&openRunner(Number(button.dataset.id)));
 }
 
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];

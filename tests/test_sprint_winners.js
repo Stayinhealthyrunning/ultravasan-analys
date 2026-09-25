@@ -85,6 +85,7 @@ const css=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
 const nerd=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
 for(const text of ['SPURTVINNAREN','Årets snabbaste löpare på målspurten','Loppets spurtdrottning','Loppets spurtkung','Mora Förvarning','id="sprintWomenClass"','id="sprintMenClass"','alla klasser i aktuellt loppår'])assert.ok(html.includes(text),'Spurtvinnaren saknar '+text);
 assert.ok(!html.includes('id="sprintClass"'),'gemensam klassdropdown ska vara borttagen');
+assert.ok(nerd.includes("n$('#sprintWomenClass')?.addEventListener")&&nerd.includes("n$('#sprintMenClass')?.addEventListener"),'båda separata klassfilter ska vara interaktiva');
 for(const klass of ['medal-1','medal-2','medal-3'])assert.ok(css.includes('.sprint-row.'+klass),'medaljfärg saknas för '+klass);
 assert.ok(nerd.includes("renderSprintWinners()")&&nerd.includes("item.rank<=5"),'Top 5 per kön ska renderas');
 assert.ok(nerd.includes("n$$('.sprint-row').forEach"),'alla renderade sprintrader ska få klickbindning');
