@@ -6,10 +6,13 @@ file is a browser wrapper containing the same parsed payload.
 
 Verified GPX sources
 --------------------
-The three GPX files in ``data/routes`` are primary reproducible source-year
-geometries: UV90 has verified 2022 and 2024 tracks and UV45 has a verified 2026
-track. Other RaceEditions may use these as display references only; display
-geometry never establishes whole-course performance comparability.
+The registry keeps broad reference routes separate from exact RaceEdition
+geometry. Exact annual routes are declared in ``config/edition_routes.json``
+and can therefore improve map geometry without changing CourseVersion or
+whole-course performance comparability. When an annual GPX has incomplete
+native elevation, missing heights may be transferred from an explicitly
+configured complete donor only after spatial/progress matching and
+cross-validation against the target route's observed heights.
 
 Fallback
 --------
