@@ -15,6 +15,7 @@ import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import time
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -226,16 +227,24 @@ def run(args):
                     # One HTTP session per worker thread; no database access happens here.
                     worker=mika_import.Fetcher(args.delay,False,args.force)
                     thread_state.fetcher=worker
-                try:
-                    html,_,_,mode=worker.get(url,cache)
-                    parsed=mika_import.apply_fallback(
-                        uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
-                        entry
-                    )
-                    warning=extract_last_pre_finish_control(html)
-                    return idx,entry,idp,parsed,warning,None
-                except Exception as exc:
-                    return idx,entry,idp,None,None,str(exc)
+                last_error=None
+                for attempt in range(4):
+                    try:
+                        html,_,_,mode=worker.get(url,cache)
+                        parsed=mika_import.apply_fallback(
+                            uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
+                            entry
+                        )
+                        warning=extract_last_pre_finish_control(html)
+                        return idx,entry,idp,parsed,warning,None
+                    except Exception as exc:
+                        last_error=exc
+                        message=str(exc)
+                        transient=("403" in message or "429" in message or "502" in message or "503" in message or "504" in message)
+                        if not transient or attempt==3:
+                            break
+                        time.sleep((attempt+1)*2.0)
+                return idx,entry,idp,None,None,str(last_error)
 
             items=list(enumerate(entries.values(),1))
             with ThreadPoolExecutor(max_workers=max(1,args.workers)) as pool:

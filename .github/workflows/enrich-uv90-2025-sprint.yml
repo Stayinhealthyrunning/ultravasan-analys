@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: uv90-2025-sprint-enrichment-v2
+  group: uv90-2025-sprint-enrichment-v3
   cancel-in-progress: true
 
 jobs:
@@ -40,8 +40,8 @@ jobs:
             --output-db "$RUNNER_TEMP/ultravasan-sprint.sqlite" \
             --raw "$RUNNER_TEMP/sprint-raw" \
             --report "$RUNNER_TEMP/sprint-report.json" \
-            --delay 0.25 \
-            --workers 4 \
+            --delay 0.5 \
+            --workers 1 \
             --min-exact 1000
           cp "$RUNNER_TEMP/ultravasan-sprint.sqlite" data/ultravasan.sqlite
           cp "$RUNNER_TEMP/sprint-report.json" reports/UV90_2025_SPRINT_ENRICHMENT.json
