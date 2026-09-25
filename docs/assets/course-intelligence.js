@@ -99,7 +99,7 @@
     const rawKeys=new Set(rawCheckpoints.map(checkpoint=>keyOf(checkpoint.checkpoint_key)));
     for(const segment of course?.segments||[]){
       if(!rawKeys.has(keyOf(segment.from))||!rawKeys.has(keyOf(segment.to))){
-        throw new Error(`Segment ${segment.from}→${segment.to} saknar explicit checkpoint i CourseVersion.`);
+        throw new Error(`Segment ${segment.from}→${segment.to} saknar explicit kontroll i bansträckningen.`);
       }
     }
     const checkpoints=checkpointCatalog(course);
@@ -287,7 +287,7 @@
     const target=Number(targetFinishSeconds);
     if(!Number.isFinite(target)||target<=0)throw new Error('Måltiden måste vara ett positivt antal sekunder.');
     const course=courseForRace(race);
-    if(!course)throw new Error('Loppplan kräver explicit CourseVersion.');
+    if(!course)throw new Error('Loppplan kräver en explicit bansträckning.');
     const segments=segmentContracts(course);
     const raceIds=new Set(comparableCourseRaces(dataset,race).map(item=>String(item.id)));
     const cohort=(dataset?.results||[]).filter(result=>{
@@ -361,7 +361,7 @@
     const edition=contracts.editionForRace(race);
     const course=courseForRace(race);
     const route=routeForRace(routeRegistry,race);
-    if(!edition||!course)throw new Error(`RaceEdition saknar CourseVersion-kontrakt: ${race.race_key||race.id}`);
+    if(!edition||!course)throw new Error(`Loppåret saknar bansträckningskontrakt: ${race.race_key||race.id}`);
     const rawSegments=segmentContracts(course).map(segment=>Object.freeze({
       ...segment,
       terrain:terrainForSegment(route,segment),
