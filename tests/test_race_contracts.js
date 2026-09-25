@@ -47,9 +47,9 @@ assert.throws(()=>contracts.create(other),/Ogiltigt loppkontrakt/);
 // Same resolver and generated catalog also work through the browser globals.
 const browser={window:{}};
 for(const file of ['../docs/data/race-catalog.js','../docs/assets/race-contracts.js','../docs/assets/map-engine.js','../docs/assets/playback.js','../docs/assets/runner-replay.js','../docs/assets/race-media.js'])vm.runInNewContext(fs.readFileSync(require.resolve(file),'utf8'),browser);
-assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-current');
+assert.strictEqual(browser.window.RunnerReplay.routeForRace(registry,{race_key:'ultravasan45-2014',year:2099}).id,'ultravasan45-2018-itra-51603');
 assert.strictEqual(browser.window.RACE_MEDIA_CONFIG.familyForRace({race_key:'ultravasan90-2022',name:'45'}),'uv90');
 assert.strictEqual(browser.window.RaceContracts.courseForRace('ultravasan90-2026').checkpoint_catalog.find(cp=>cp.checkpoint_key==='high_point').distance_km,null);
 assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2018').id,'ultravasan90-2018-itra-51602');
-assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2026').id,'ultravasan90-2026');
+assert.strictEqual(browser.window.RaceContracts.routeForRace(registry,'ultravasan90-2026').id,'ultravasan90-2026-official');
 console.log('OK: explicit contracts across all 22 editions, unknown keys, immutable snapshots and another event');

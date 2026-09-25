@@ -799,7 +799,7 @@ const checks = {
   uv45Progressive:uv45Progressive.verified,
   modules:moduleChecks.verified,
   courseIntelligence:Boolean(
-    u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
+    u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026-official'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
     u6Initial.spreadHeaders.join('|')==='Q25–Q75|Q10–Q90'&&u6Initial.outerSpreadCells.length>0&&
     (u6Initial.elevationAvailable
       ? u6Initial.elevationSegments>0

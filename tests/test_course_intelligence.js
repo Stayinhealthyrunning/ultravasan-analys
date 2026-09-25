@@ -22,7 +22,8 @@ assert.ok(race2016,'verklig UV90 2016 RaceEdition ska finnas');
 
 const model=intelligence.buildCourseModel(data,race2016,routes);
 assert.strictEqual(model.course_version_id,'uv90-pre2023-v1');
-assert.strictEqual(model.display_route_id,'ultravasan90-pre2023');
+assert.strictEqual(model.display_route_id,'ultravasan90-2018-itra-51602');
+assert.strictEqual(model.route_geometry_usage,'reference-only');
 assert.strictEqual(model.route_available,true);
 assert.strictEqual(model.segments.length,8);
 assert.strictEqual(model.course_distance_km,90);
@@ -33,9 +34,8 @@ assert.strictEqual(first.distance_km,8.83,'tävlings-/tempodistansen ska komma f
 assert.strictEqual(first.display_from_km,0);
 assert.strictEqual(first.display_to_km,7.373,'terrängaxeln ska använda explicit display-ankare, inte tävlingsdistansen');
 assert.strictEqual(first.display_to_source,'explicit-anchor');
-assert.strictEqual(first.terrain.available,true);
-assert.ok(first.terrain.ascent_m>0);
-assert.ok(first.terrain.max_elevation_m>=first.terrain.min_elevation_m);
+assert.strictEqual(first.terrain.available,false,'reference-only-geometri får inte användas som terrängfacit');
+assert.strictEqual(first.terrain.reason,'reference-only-geometry');
 assert.ok(first.field.timing_sample_n>=5);
 assert.strictEqual(first.field.sufficient_sample,true);
 assert.ok(Number.isFinite(first.field.median_pace_seconds_per_km));
@@ -56,7 +56,7 @@ const last=model.segments.at(-1);
 assert.strictEqual(last.to_key,'mora');
 assert.strictEqual(last.display_to_source,'terminal-finish-anchor');
 assert.strictEqual(last.display_to_km,90.173,'Mora ska strukturellt mappas till explicit finish-ankare');
-assert.strictEqual(last.terrain.available,true);
+assert.strictEqual(last.terrain.available,false);
 
 const post2023=contracts.catalog.courses['uv90-2023-2025-v1'];
 assert.ok(!intelligence.checkpointCatalog(post2023).some(row=>row.checkpoint_key==='high_point'));
@@ -141,7 +141,14 @@ assert.strictEqual(tooSmall.q90_pace_seconds_per_km,null);
 assert.strictEqual(intelligence.applyDifficultyIndex,undefined,'Course Difficulty får inte skapa en syntetisk sammanvägd poäng eller ranking');
 assert.strictEqual(intelligence.percentileRank,undefined,'Course Difficulty ska inte exponera rankinghjälpare');
 assert.ok(model.segments.every(segment=>!Object.hasOwn(segment,'difficulty')),'Course Intelligence ska lämna separata empiriska dimensioner utan totalscore');
-assert.ok(model.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'verklig UV90 2016 ska behålla empiriskt terrängunderlag');
+assert.ok(model.segments.every(segment=>segment.terrain?.available===false),'UV90 2016 saknar verifierad års-/delad geometri och får därför inte publicera terrängmått');
+
+const race2017=data.races.find(race=>race.race_key==='ultravasan90-2017');
+const shared2017=intelligence.buildCourseModel(data,race2017,routes);
+assert.strictEqual(shared2017.route_geometry_usage,'verified-shared-course');
+assert.strictEqual(shared2017.display_route_id,'ultravasan90-2018-itra-51602');
+assert.ok(shared2017.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'verifierad delad 2017/2018-bana ska få använda höjdprofil');
+
 assert.ok(model.segments.some(segment=>segment.field?.median_pacing_loss_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk pacing loss');
 assert.ok(model.segments.some(segment=>segment.field?.pace_iqr_seconds_per_km!=null),'verklig UV90 2016 ska behålla empirisk fartspridning');
 assert.ok(model.segments.some(segment=>segment.field?.dnf_exit_rate_pct!=null),'verklig UV90 2016 ska behålla empirisk DNF-exit');
@@ -169,6 +176,11 @@ assert.ok(fallbackPlan.rows.every(row=>row.source==='distance-fallback'));
 assert.ok(Math.abs(fallbackPlan.rows.at(-1).target_cumulative_seconds-36000)<1);
 
 const race2026=data.races.find(race=>race.race_key==='ultravasan90-2026')||{id:999,race_key:'ultravasan90-2026',year:2026};
+const exact2026=intelligence.buildCourseModel(data,race2026,routes);
+assert.strictEqual(exact2026.route_geometry_usage,'exact-source-year');
+assert.strictEqual(exact2026.display_route_id,'ultravasan90-2026-official');
+assert.ok(exact2026.segments.some(segment=>segment.terrain?.ascent_m_per_km!=null),'officiell 2026-geometri med donor/DEM-höjd ska ge terrängmått');
+
 const plan2026=intelligence.buildRacePlan({races:[race2026],results:[],splits:[]},race2026,36000);
 assert.strictEqual(plan2026.complete,true,'officiella 2026-segment med kända kontrollavstånd ska kunna distansfördelas');
 assert.strictEqual(plan2026.unavailable_segments,0);
