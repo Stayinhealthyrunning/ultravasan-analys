@@ -137,12 +137,18 @@
     return Object.freeze({id,label,available:true,index:round(index,1),current:Number(current),reference:Number(reference),reference_scope:scope||null,reference_years:Object.freeze(years||[]),current_n:currentN??null,reference_n:referenceN??null,note});
   }
 
+  function performanceRouteKey(race){
+    const course=contracts.courseForRace(race),routeId=String(course?.display_route_id||'').trim(),distance=Number(race?.distance_km);
+    if(routeId)return `route:${routeId}|${Number.isFinite(distance)?distance.toFixed(1):'unknown'}km`;
+    return Number.isFinite(distance)&&distance>0?`distance:${distance.toFixed(1)}km`:null;
+  }
+
   function fingerprint(dataset,race,{currentResults=null,referenceResults=null,minReferenceYears=2,sexFilterActive=false}={}){
-    if(!race)throw new Error('Historiskt fingeravtryck kräver en explicit RaceEdition.');
+    if(!race)throw new Error('Historiskt fingeravtryck kräver ett explicit loppår.');
     const family=contracts.familyForRace(race),allFamilyRaces=familyRaces(dataset,family).slice().sort((a,b)=>Number(a.year)-Number(b.year));
     const baseRows=referenceResults||familyResults(dataset,family),currentRows=currentResults||baseRows.filter(row=>String(row.race_id)===String(race.id));
-    const current=yearSummary(dataset,race,currentRows),currentKey=comparisonKeyForRace(race);
-    const performanceYears=allFamilyRaces.filter(candidate=>currentKey&&Number(candidate.year)<Number(race.year)&&comparisonKeyForRace(candidate)===currentKey)
+    const current=yearSummary(dataset,race,currentRows),currentKey=comparisonKeyForRace(race),routeKey=performanceRouteKey(race);
+    const performanceYears=allFamilyRaces.filter(candidate=>routeKey&&Number(candidate.year)<Number(race.year)&&performanceRouteKey(candidate)===routeKey)
       .map(candidate=>yearSummary(dataset,candidate,baseRows)).filter(summary=>summary.finishers_n>0);
     const structuralYears=allFamilyRaces.filter(candidate=>Number(candidate.year)<Number(race.year))
       .map(candidate=>yearSummary(dataset,candidate,baseRows)).filter(summary=>summary.starters_n>0);
@@ -153,17 +159,21 @@
     const perfDnf=perfEnough?median(performanceYears.map(summary=>summary.dnf_rate)):null;
     const structFemale=structEnough&&!sexFilterActive?median(structuralYears.map(summary=>summary.female_share)):null;
     const structSize=structEnough?median(structuralYears.map(summary=>summary.starters_n)):null;
-    const noPerformanceReference=currentKey?'Inga andra loppår med verifierad bansträckningsserie har tillräckligt underlag.':'Inga historiska helbanereferenser är verifierade; ändrad bansträckning eller kontrollstruktur avgör inte ensam jämförbarheten.';
+    const noPerformanceReference=routeKey?'Minst två tidigare loppår med samma kända bansträckningsfamilj krävs för ett prestationsindex.':'Historisk bansträckningsreferens saknas för prestationsmåtten.';
     const metrics=[
-      metric('finish_difficulty','Mediantidsindex',current.median_finish_seconds,perfFinish,{scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder längre mediantid än den jämförbara historiska normalnivån; indexet beskriver skillnad men förklarar inte orsaken.':noPerformanceReference}),
-      metric('pace_level','Fartnivå',current.median_pace_seconds_per_km,perfPace,{direction:'inverse',scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder snabbare medianfart än den jämförbara historiska normalnivån.':noPerformanceReference}),
-      metric('dnf_load','DNF-belastning',current.dnf_rate,perfDnf,{scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.starters_n,referenceN:performanceYears.length,note:perfEnough?'DNF jämförs endast inom verifierad bansträckningsserie.':noPerformanceReference}),
+      metric('finish_difficulty','Mediantidsindex',current.median_finish_seconds,perfFinish,{scope:'same-route-family-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder längre mediantid än normalnivån för tidigare loppår med samma kända bansträckningsfamilj. Indexet beskriver skillnad men förklarar inte orsaken.':noPerformanceReference}),
+      metric('pace_level','Fartnivå',current.median_pace_seconds_per_km,perfPace,{direction:'inverse',scope:'same-route-family-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder snabbare medianfart än normalnivån för tidigare loppår med samma kända bansträckningsfamilj.':noPerformanceReference}),
+      metric('dnf_load','DNF-belastning',current.dnf_rate,perfDnf,{scope:'same-route-family-race-medians',years:perfYears,currentN:current.starters_n,referenceN:performanceYears.length,note:perfEnough?'DNF-belastningen jämförs med tidigare loppår inom samma kända bansträckningsfamilj.':noPerformanceReference}),
       sexFilterActive?Object.freeze({id:'female_share',label:'Kvinnorepresentation',available:false,index:null,current:null,reference:null,reference_scope:'family-race-medians',reference_years:Object.freeze(structYears),current_n:null,reference_n:structuralYears.length,note:'Döljs när könsfilter är aktivt.'})
         :metric('female_share','Kvinnorepresentation',current.female_share,structFemale,{scope:'family-race-medians',years:structYears,currentN:current.starters_n,referenceN:structuralYears.length,note:'Deltagarsammansättning är inte ett banprestationsmått och kan därför jämföras över olika bansträckningar.'}),
       metric('field_size','Fältstorlek',current.starters_n,structSize,{scope:'family-race-medians',years:structYears,currentN:current.starters_n,referenceN:structuralYears.length,note:'Fältstorlek jämför faktiska startande och är inte ett banprestationsmått.'})
     ];
-    const performanceExclusions=allFamilyRaces.filter(candidate=>Number(candidate.year)<Number(race.year)&&!performanceYears.some(summary=>summary.race_id===candidate.id)).map(candidate=>Object.freeze({year:Number(candidate.year)||null,race_key:candidate.race_key||null,reason:!comparisonKeyForRace(candidate)||!currentKey?'no verified whole-course group':'different whole-course group or no finisher evidence'}));
-    return Object.freeze({race,family,course_version_id:courseVersionId(race),comparison_key:currentKey,current,performance_reference_years:Object.freeze(perfYears),structural_reference_years:Object.freeze(structYears),performance_exclusions:Object.freeze(performanceExclusions),min_reference_years:minReferenceYears,metrics:Object.freeze(metrics)});
+    const performanceExclusions=allFamilyRaces.filter(candidate=>Number(candidate.year)<Number(race.year)&&!performanceYears.some(summary=>summary.race_id===candidate.id)).map(candidate=>Object.freeze({
+      year:Number(candidate.year)||null,
+      race_key:candidate.race_key||null,
+      reason:!routeKey||!performanceRouteKey(candidate)?'missing route family':'different route family or no finisher evidence'
+    }));
+    return Object.freeze({race,family,course_version_id:courseVersionId(race),comparison_key:currentKey,performance_route_key:routeKey,current,performance_reference_years:Object.freeze(perfYears),structural_reference_years:Object.freeze(structYears),performance_exclusions:Object.freeze(performanceExclusions),min_reference_years:minReferenceYears,metrics:Object.freeze(metrics)});
   }
 
   function closingPair(race){
