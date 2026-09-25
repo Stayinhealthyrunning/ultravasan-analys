@@ -255,7 +255,7 @@ jobs:
           curl -fsSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' https://www.plotaroute.com/js/Route_1.41.js -o tmp/route-source-research/Route_1.41.js
           curl -fsSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' https://www.plotaroute.com/js/Route_Plugins_1.6.js -o tmp/route-source-research/Route_Plugins_1.6.js
           grep -Ein 'GPX|download|DownloadFormats|DL_Format' tmp/route-source-research/Route_1.41.js | head -80 > tmp/route-source-research/plotaroute-download-js.txt || true
-          curl -fsSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' 'https://www.plotaroute.com/routeviewer/2311120?self=1&units=km' -o tmp/route-source-research/routeviewer-2311120.html
+          curl -sSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' -w '%{http_code}\n' 'https://www.plotaroute.com/routeviewer/2311120?self=1&units=km' -o tmp/route-source-research/routeviewer-2311120.html > tmp/route-source-research/routeviewer-http-status.txt || true
           grep -Eio '<script[^>]+src=["'"'"'][^"'"'"']+' tmp/route-source-research/routeviewer-2311120.html | sed -E 's/.*src=["'"'"']//' > tmp/route-source-research/routeviewer-scripts.txt || true
           python - <<'PY2'
           import re, urllib.parse, urllib.request
@@ -274,6 +274,75 @@ jobs:
                   (p.parent/f"routeviewer-script-{i}.error.txt").write_text(repr(e))
           PY2
           grep -RniE 'DL_GPX|GPX|download|DownloadRoute|route.*file|\.gpx' tmp/route-source-research/routeviewer-* > tmp/route-source-research/routeviewer-download-hits.txt || true
+      - name: Try public Plotaroute GPX downloads in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements-browser.txt
+          python -m playwright install --with-deps chromium
+          python - <<'PY3'
+          from pathlib import Path
+          import json, re, time
+          from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+          out=Path("tmp/route-source-research")
+          ids=[2311120,2311944,2311126,2311089,2356968,1942022,2710347]
+          report={}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              context=browser.new_context(accept_downloads=True)
+              page=context.new_page()
+              for rid in ids:
+                  row={"route_id":rid,"status":"not-downloaded"}
+                  try:
+                      page.goto(f"https://www.plotaroute.com/route/{rid}?units=km",wait_until="domcontentloaded",timeout=45000)
+                      page.wait_for_timeout(2500)
+                      # Consent only when presented; no login/session bypass.
+                      for label in ("Accept","I Accept","ACCEPT"):
+                          try:
+                              btn=page.get_by_role("button",name=label,exact=True)
+                              if btn.count(): btn.first.click(timeout=1500); break
+                          except Exception: pass
+                      # Outer page forwards to the public route-player download UI.
+                      try:
+                          page.locator("#ActionBut_Download").click(timeout=10000)
+                      except Exception:
+                          pass
+                      page.wait_for_timeout(2500)
+                      frame=None
+                      for fr in page.frames:
+                          if "routeviewer" in fr.url.lower():
+                              frame=fr; break
+                      if not frame:
+                          row["reason"]="routeviewer-frame-not-loaded"
+                      else:
+                          row["routeviewer_url"]=frame.url
+                          # Open GPS then GPX. Select Track if exposed.
+                          for sel in ("#Icon_Download","#DL_GPS"):
+                              try: frame.locator(sel).click(timeout=5000); frame.wait_for_timeout(500)
+                              except Exception: pass
+                          for txt in ("Track","GPX Track"):
+                              try:
+                                  loc=frame.get_by_text(txt,exact=True)
+                                  if loc.count(): loc.first.click(timeout=1000)
+                              except Exception: pass
+                          try:
+                              with page.expect_download(timeout=15000) as info:
+                                  frame.locator("#DL_GPX").click(timeout=5000)
+                              dl=info.value
+                              target=out/f"plotaroute-{rid}.gpx"
+                              dl.save_as(target)
+                              body=target.read_bytes()
+                              row.update({"status":"downloaded","file":target.name,"bytes":len(body),"suggested_filename":dl.suggested_filename})
+                          except Exception as e:
+                              row["reason"]=f"download-failed:{type(e).__name__}:{e}"
+                  except Exception as e:
+                      row["reason"]=f"page-failed:{type(e).__name__}:{e}"
+                  report[str(rid)]=row
+              browser.close()
+          (out/"plotaroute-browser-downloads.json").write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n")
+          print(json.dumps(report,indent=2,ensure_ascii=False))
+          PY3
       - name: Pack repository snapshot
         shell: bash
         run: |
