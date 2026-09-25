@@ -19,15 +19,15 @@ specificHelp('#histogram',['FINISHED-resultat','15-minutersintervall','Q25–Q75
 specificHelp('#paceChart',['uttryckligt definierad delsträcka','exakta segmenttider','estimerade mellantider','separat för varje segment','olika bansträckningar']);
 specificHelp('#fieldFlow',['sammanhängande följd','estimerad passage bryter','råobservation fyller inte luckan','DNS räknas inte']);
 specificHelp('#placementScatter',['Varje punkt är en löpare','slutplacering','män och kvinnor']);
-specificHelp('#classHistoryChart',['median sluttid','verifierade helbaneserie','DNS räknas inte']);
-specificHelp('#clubHistoryChart',['deltagandestaplar','prestationslinje kräver','verifierade helbanenyckel']);
+specificHelp('#classHistoryChart',['median sluttid','efterföljande tävlingsår','kalenderluckor','DNS räknas inte']);
+specificHelp('#clubHistoryChart',['medianlinjen binds samman','kalenderluckor','tidslinjen beskrivande']);
 specificHelp('#percentileLadder',['FINISHED','linjära kvantilmetod','DNS och DNF']);
 specificHelp('.runner-development',['faktiskt registrerad checkpoint','kompletta finished-kohort','olika bansträckningar','startar inte uppspelning eller musik']);
 assert.ok(app.includes('class="h2h-method"')&&app.includes('samma uttryckligen verifierade bansträckningsserie')&&app.includes('banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna'),'H2H ska visa synlig metodtext för kohort och bansträckningsblockering');
 for(const [symbol,terms] of [
   ['COURSE_INTELLIGENCE_METHOD_HELP',['exakta, ej estimerade passager','n≥20','separata empiriska dimensioner','bansträckning']],
   ['COURSE_PLAN_METHOD_HELP',['historiska fullföljare','exakt samma bansträckning','minst n=5','ingen resttid fördelas genom gissning']],
-  ['HISTORY_FINGERPRINT_METHOD_HELP',['medianen av loppårsmedianerna','Minst två andra jämförbara loppår','bansträckningsserie']],
+  ['HISTORY_FINGERPRINT_METHOD_HELP',['medianen av loppårsmedianerna','minst två tidigare referensår','bansträckningsfamilj']],
   ['HISTORY_HALL_METHOD_HELP',['verifierad personidentitet','bansträckningsserie','Mest förbättrad']],
 ]){
   const line=nerd.split(/\r?\n/).find(value=>value.startsWith(`const ${symbol}=`));

@@ -880,3 +880,48 @@ html,body{max-width:100%;overflow-x:hidden}
   .h2h-course-panel-head{display:grid;gap:3px}
   .h2h-course-panel-head small{text-align:left}
 }
+
+
+/* 2026-09-25: readable historical charts, Hall of Fame depth and DNA speed reference */
+.hall-sex-scroll{
+  display:grid;
+  gap:7px;
+  max-height:650px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding-right:5px;
+}
+.club-dna .speed-index>i{position:relative}
+.club-dna-reference{
+  position:absolute;
+  left:83.333%;
+  top:-4px;
+  bottom:-4px;
+  width:2px;
+  border-radius:2px;
+  background:var(--ink);
+  opacity:.55;
+  z-index:2;
+}
+.world-card.club-compare-card,
+.world-card.club-history-card{grid-column:1/-1}
+.club-history-card .club-chart{
+  height:500px!important;
+  min-height:500px!important;
+  overflow-x:auto;
+  overflow-y:visible;
+}
+.club-history-card .club-chart svg{
+  height:455px!important;
+  min-height:455px;
+  width:100%;
+}
+.club-history-card .club-history-axis-title{font-size:12px}
+.club-history-card .club-history-time-label{font-size:11px}
+.club-history-card .club-chart svg text{font-size:11px}
+@media(max-width:720px){
+  .club-history-card .club-chart{height:455px!important;min-height:455px!important}
+  .club-history-card .club-chart svg{width:900px!important;min-width:900px!important;height:410px!important;min-height:410px}
+  .hall-sex-scroll{max-height:560px}
+}
