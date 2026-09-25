@@ -362,9 +362,13 @@
     const course=courseForRace(race);
     const route=routeForRace(routeRegistry,race);
     if(!edition||!course)throw new Error(`Loppåret saknar bansträckningskontrakt: ${race.race_key||race.id}`);
+    const routeContract=routeRegistry?.edition_route_contracts?.[edition.race_key]||null;
+    const geometryUsage=routeContract?.display_geometry_usage||
+      (route?.source_year!=null&&Number(route.source_year)===Number(edition.year)?'exact-source-year':'reference-only');
+    const terrainAllowed=geometryUsage==='exact-source-year'||geometryUsage==='verified-shared-course';
     const rawSegments=segmentContracts(course).map(segment=>Object.freeze({
       ...segment,
-      terrain:terrainForSegment(route,segment),
+      terrain:terrainAllowed?terrainForSegment(route,segment):Object.freeze({available:false,reason:'reference-only-geometry'}),
       field:fieldStatsForSegment(dataset,race,segment,{results,minSample}),
     }));
     const segments=rawSegments;
@@ -372,9 +376,10 @@
       race,
       race_family:edition.race_family,
       course_version_id:edition.course_version_id,
-      display_route_id:course.display_route_id,
+      display_route_id:route?.id||course.display_route_id,
       route_available:Boolean(route),
       route_geometry_quality:route?.geometry_quality||null,
+      route_geometry_usage:geometryUsage,
       course_distance_km:wholeCourseDistance(course),
       sample_minimum:minSample,
       segments:Object.freeze(segments),

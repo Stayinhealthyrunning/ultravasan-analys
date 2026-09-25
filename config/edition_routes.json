@@ -1,0 +1,210 @@
+{
+  "schema_version": 2,
+  "editions": {
+    "ultravasan90-2014": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan90-2018-itra-51602",
+      "source_race_key": "ultravasan90-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-och-vasastafetten-2016-1523960",
+      "evidence_note": "Reference only. Official notices document later route changes in 2016 and 2017, so the 2018 geometry must not be treated as exact for 2014. It is used only as the nearest verified pre-2019 map reference."
+    },
+    "ultravasan90-2015": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan90-2018-itra-51602",
+      "source_race_key": "ultravasan90-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-och-vasastafetten-2016-1523960",
+      "evidence_note": "Reference only. A 4.5 km UV90 route change after Mångsbodarna was introduced in 2016 and another change followed in 2017, so 2018 cannot be claimed exact for 2015."
+    },
+    "ultravasan90-2016": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan90-2018-itra-51602",
+      "source_race_key": "ultravasan90-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
+      "evidence_note": "Reference only. 2016 already included the new 4.5 km section after Mångsbodarna, but 2017 introduced another roughly 3 km change between Krångåsen and Eldris. The exact 2016 geometry has not been recovered reproducibly."
+    },
+    "ultravasan90-2017": {
+      "mode": "verified-shared-course",
+      "display_route_id": "ultravasan90-2018-itra-51602",
+      "source_race_key": "ultravasan90-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/pressinformation-infoer-ultravasan-90-ultravasan-45-vasastafetten-och-vasakvartetten-2018-2637084",
+      "evidence_note": "Vasaloppet explicitly reported no course changes in 2018. The 2018 exact geometry therefore verifies the 2017 course after the documented 2017 Krångåsen–Eldris reroute."
+    },
+    "ultravasan90-2018": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan90-2018-itra-51602",
+      "source_file": "source/routes/ultravasan90-2018-itra-51602.gpx",
+      "source_year": 2018,
+      "source_provider": "ITRA / Trace de Trail",
+      "external_id": 51602,
+      "source_url": "https://tracedetrail.fr/en/trace/51602",
+      "source_http_status": 200,
+      "source_content_type": "text/html; charset=UTF-8",
+      "source_fetched_at_utc": "2026-09-25T09:56:51+00:00",
+      "source_page_sha256": "6b8f12abab8761ce9480e6cb74788d3aca05428e275ae0782f541f073b7b20aa",
+      "candidate_gpx_sha256": "33dd6a4911a22c6bd50169bb8ad2f7d47e1d02ed9a759fe3d2f5402cd76ce226"
+    },
+    "ultravasan90-2019": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan90-pre2023",
+      "source_race_key": "ultravasan90-2022",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2019-2906012",
+      "evidence_note": "Reference only. Vasaloppet documents a roughly 3 km UV90 change before Mångsbodarna in 2019. The verified 2022 geometry is the closest recovered post-change source, but uninterrupted geometry equality for 2019–2022 is not established."
+    },
+    "ultravasan90-2023": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan90-2023-itra-229687",
+      "source_file": "source/routes/ultravasan90-2023-itra-229687.gpx",
+      "source_year": 2023,
+      "source_provider": "ITRA / Trace de Trail",
+      "external_id": 229687,
+      "source_url": "https://tracedetrail.fr/en/trace/229687",
+      "source_http_status": 200,
+      "source_content_type": "text/html; charset=UTF-8",
+      "source_fetched_at_utc": "2026-09-25T09:56:56+00:00",
+      "source_page_sha256": "dd40c985d634addfde4339ca2f3293ba125e5570434b3049f9eba9a27869a7ab",
+      "candidate_gpx_sha256": "5682d74f810852f341374ea643428aa5d1dfdb5e6949552602af59bab8996cf9"
+    },
+    "ultravasan90-2025": {
+      "mode": "verified-shared-course",
+      "display_route_id": "ultravasan90-post2023",
+      "source_race_key": "ultravasan90-2024",
+      "evidence_url": "https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025/",
+      "evidence_note": "Vasaloppet explicitly stated that Ultravasan 90 had no course changes in 2025. The exact 2024 route is therefore the verified shared course for 2025."
+    },
+    "ultravasan90-2026": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan90-2026-official",
+      "source_file": "source/UV-90_20260610.kmz",
+      "source_format": "kmz",
+      "source_year": 2026,
+      "source_provider": "Vasaloppet",
+      "source_url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV-90_20260610.kmz",
+      "elevation_transfer": {
+        "donor_file": "source/routes/ultravasan90-2026-itra-328148.gpx",
+        "donor_year": 2026,
+        "donor_provider": "ITRA / Trace de Trail",
+        "max_match_distance_m": 50,
+        "validation_mode": "same-year-geometry",
+        "dem_file": "source/routes/ultravasan90-2026-dem.json"
+      }
+    },
+    "ultravasan45-2014": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan45-2018-itra-51603",
+      "source_race_key": "ultravasan45-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
+      "evidence_note": "Reference only. The 2017 Krångåsen–Eldris reroute affected Ultravasan 45, so the exact 2018 geometry cannot be treated as exact for 2014."
+    },
+    "ultravasan45-2015": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan45-2018-itra-51603",
+      "source_race_key": "ultravasan45-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
+      "evidence_note": "Reference only. The 2017 Krångåsen–Eldris reroute affected Ultravasan 45, so the exact 2018 geometry cannot be treated as exact for 2015."
+    },
+    "ultravasan45-2016": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan45-2018-itra-51603",
+      "source_race_key": "ultravasan45-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278",
+      "evidence_note": "Reference only. The 2016 UV90 change did not affect UV45, but the 2017 Krångåsen–Eldris reroute did. Exact 2016 UV45 geometry has not been recovered reproducibly."
+    },
+    "ultravasan45-2017": {
+      "mode": "verified-shared-course",
+      "display_route_id": "ultravasan45-2018-itra-51603",
+      "source_race_key": "ultravasan45-2018",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/pressinformation-infoer-ultravasan-90-ultravasan-45-vasastafetten-och-vasakvartetten-2018-2637084",
+      "evidence_note": "Vasaloppet explicitly reported no course changes in 2018. The exact 2018 UV45 geometry therefore verifies the 2017 course after the documented 2017 reroute."
+    },
+    "ultravasan45-2018": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan45-2018-itra-51603",
+      "source_file": "source/routes/ultravasan45-2018-itra-51603.gpx",
+      "source_year": 2018,
+      "source_provider": "ITRA / Trace de Trail",
+      "external_id": 51603,
+      "source_url": "https://tracedetrail.fr/en/trace/51603",
+      "source_http_status": 200,
+      "source_content_type": "text/html; charset=UTF-8",
+      "source_fetched_at_utc": "2026-09-25T11:34:55+00:00",
+      "source_page_sha256": "0fa263936a73dd68742aa80ba9de12a576683ee98d0dcd10d4e5d2829ab4ea03",
+      "elevation_transfer": {
+        "donor_file": "source/routes/ultravasan45-2024-itra-267130.gpx",
+        "donor_year": 2024,
+        "donor_provider": "ITRA / Trace de Trail",
+        "max_match_distance_m": 50
+      }
+    },
+    "ultravasan45-2019": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan45-2019-itra-75784",
+      "source_file": "source/routes/ultravasan45-2019-itra-75784.gpx",
+      "source_year": 2019,
+      "source_provider": "ITRA / Trace de Trail",
+      "external_id": 75784,
+      "source_url": "https://tracedetrail.fr/en/trace/75784",
+      "source_http_status": 200,
+      "source_content_type": "text/html; charset=UTF-8",
+      "source_fetched_at_utc": "2026-09-25T11:34:57+00:00",
+      "source_page_sha256": "91486c08f0a65ecb60b06a358924701a76800c55abd6dbb34e4fc69ef6417eb0",
+      "elevation_transfer": {
+        "donor_file": "source/routes/ultravasan45-2024-itra-267130.gpx",
+        "donor_year": 2024,
+        "donor_provider": "ITRA / Trace de Trail",
+        "max_match_distance_m": 50
+      }
+    },
+    "ultravasan45-2022": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan45-2019-itra-75784",
+      "source_race_key": "ultravasan45-2019",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188",
+      "evidence_note": "Reference only. The recovered 2019 exact route predates the temporary Axi kvarn reroute introduced in 2024. No reproducible exact 2022 UV45 geometry or explicit uninterrupted equality proof has been recovered."
+    },
+    "ultravasan45-2023": {
+      "mode": "best-known-reference",
+      "display_route_id": "ultravasan45-2019-itra-75784",
+      "source_race_key": "ultravasan45-2019",
+      "evidence_url": "https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2024-3337188",
+      "evidence_note": "Reference only. Vasaloppet describes the 2024 Axi kvarn reroute as new and temporary; the 2023 start change applied to UV90/Vasastafetten, not UV45. Exact UV45 2023 geometry has not been recovered reproducibly."
+    },
+    "ultravasan45-2024": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan45-2024-itra-267130",
+      "source_file": "source/routes/ultravasan45-2024-itra-267130.gpx",
+      "source_year": 2024,
+      "source_provider": "ITRA / Trace de Trail",
+      "external_id": 267130,
+      "source_url": "https://tracedetrail.fr/en/trace/267130",
+      "source_http_status": 200,
+      "source_content_type": "text/html; charset=UTF-8",
+      "source_fetched_at_utc": "2026-09-25T09:56:59+00:00",
+      "source_page_sha256": "f708e8570fa407d2a935a0e4f1b74f5518517c05a61f16a930273c525655a763",
+      "candidate_gpx_sha256": "af06d131e70db7f328c75cf535adbfc789e630b3a7d310b2cbf595619aa92ced"
+    },
+    "ultravasan45-2025": {
+      "mode": "verified-shared-course",
+      "display_route_id": "ultravasan45-2024-itra-267130",
+      "source_race_key": "ultravasan45-2024",
+      "evidence_url": "https://www.vasaloppet.se/nyheter/infor-ultravasan-trailvasan-funkisvasan-och-vasastafetten-2025/",
+      "evidence_note": "Vasaloppet explicitly stated that Ultravasan 45 had no course changes in 2025. The exact 2024 route is therefore the verified shared course for 2025."
+    },
+    "ultravasan45-2026": {
+      "mode": "exact-source-year",
+      "display_route_id": "ultravasan45-2026-official",
+      "source_file": "source/UV45_20260610.kmz",
+      "source_format": "kmz",
+      "source_year": 2026,
+      "source_provider": "Vasaloppet",
+      "source_url": "https://vasaloppet.se/wp-content/uploads/2026/06/UV45_20260610.kmz",
+      "elevation_transfer": {
+        "donor_file": "source/routes/ultravasan45-2026-itra-328149.gpx",
+        "donor_year": 2026,
+        "donor_provider": "ITRA / Trace de Trail",
+        "max_match_distance_m": 50,
+        "validation_mode": "same-year-geometry",
+        "dem_file": "source/routes/ultravasan45-2026-dem.json"
+      }
+    }
+  }
+}
