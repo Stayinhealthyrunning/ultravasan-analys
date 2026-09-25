@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: uv90-2025-sprint-enrichment-v3
+  group: uv90-2025-sprint-enrichment-v4
   cancel-in-progress: true
 
 jobs:
