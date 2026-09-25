@@ -24,11 +24,63 @@ const nIsStarter=r=>nResultStatus(r).started;
 const nIsFinished=r=>nResultStatus(r).finished;
 const nIsDnf=r=>nResultStatus(r).dnf;
 const nIsDns=r=>nResultStatus(r).dns;
+const nSplitEstimated=split=>Boolean(split&&(split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true'));
+const nCheckpointToken=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+function sprintClassGroupKey(value){
+  const info=nClassInfo(value);
+  if((info.s.startsWith('W')||info.s.startsWith('M'))&&info.age!==999)return `age:${info.age}:${info.tail}`;
+  return `class:${info.s}`;
+}
+function sprintClassOptions(rows){
+  const groups=new Map();
+  (rows||[]).forEach(row=>{
+    const raw=String(row?.age_class||'').trim();if(!raw)return;
+    const key=sprintClassGroupKey(raw);
+    if(!groups.has(key))groups.set(key,[]);
+    if(!groups.get(key).includes(raw))groups.get(key).push(raw);
+  });
+  return [...groups.entries()].map(([value,labels])=>{
+    labels.sort(nCompareClasses);
+    const sample=nClassInfo(labels[0]);
+    return {value,label:labels.join(' / '),age:sample.age,tail:sample.tail};
+  }).sort((a,b)=>a.age-b.age||String(a.tail).localeCompare(String(b.tail),'sv')||a.label.localeCompare(b.label,'sv'));
+}
+function nMoraWarningSplit(splits){
+  const candidates=(splits||[]).filter(split=>{
+    const key=nCheckpointToken(split?.checkpoint_key),name=nCheckpointToken(split?.checkpoint_name);
+    return key==='mora_warning'||key==='mora_forvarning'||name==='mora_warning'||name==='mora_forvarning'||name.includes('mora_forvarning');
+  });
+  return candidates.find(split=>!nSplitEstimated(split))||candidates[0]||null;
+}
+function finishSprintRanking(results,{getSplits=()=>[],isFinished=row=>String(row?.status||'').toUpperCase()==='FINISHED',classKey='',raceDistanceKm=null,maxSpeedKmh=30}={}){
+  const eligible=(results||[]).map(row=>{
+    if(!isFinished(row))return null;
+    if(classKey&&sprintClassGroupKey(row.age_class)!==classKey)return null;
+    const finish=Number(row.finish_seconds);if(!Number.isFinite(finish)||finish<=0)return null;
+    const warning=nMoraWarningSplit(getSplits(row.id));if(!warning||nSplitEstimated(warning))return null;
+    const warned=Number(warning.elapsed_seconds);if(!Number.isFinite(warned)||warned<=0||warned>=finish)return null;
+    const sprint=finish-warned,warningDistance=Number(warning.distance_km),finishDistance=Number(raceDistanceKm);
+    if(Number.isFinite(warningDistance)&&Number.isFinite(finishDistance)&&finishDistance>warningDistance){
+      const speed=(finishDistance-warningDistance)/(sprint/3600);
+      if(!Number.isFinite(speed)||speed<=0||speed>maxSpeedKmh)return null;
+    }
+    const sex=nSex(row);if(sex!=='F'&&sex!=='M')return null;
+    return {r:row,warning,sprint_seconds:sprint,sex};
+  }).filter(Boolean);
+  const rankSex=sex=>{
+    let previous=null,rank=0;
+    return eligible.filter(item=>item.sex===sex)
+      .sort((a,b)=>a.sprint_seconds-b.sprint_seconds||(Number(a.r.overall_place)||Number.MAX_SAFE_INTEGER)-(Number(b.r.overall_place)||Number.MAX_SAFE_INTEGER)||String(a.r.name_as_published||'').localeCompare(String(b.r.name_as_published||''),'sv'))
+      .map((item,index)=>{if(previous===null||item.sprint_seconds!==previous){rank=index+1;previous=item.sprint_seconds}return {...item,rank}});
+  };
+  return {rows:eligible,women:rankSex('F'),men:rankSex('M')};
+}
 
 const COURSE_INTELLIGENCE_METHOD_HELP='Course Intelligence analyserar endast delsträckor som finns explicit i vald bansträckning. Tävlingsdistans och kontrollordning kommer från bansträckningskontraktet, medan karta, höjd och stigning kommer från den låsta display-rutten. Display-rutten kan vara en verifierad GPX från ett referensår och är därför inte i sig bevis för exakt historisk geometri varje enskilt loppår. Fältmåtten använder aktuellt filtrerat urval. Segmenttid kräver en fullföljare och exakta, ej estimerade passager i båda segmentändarna; minst n=5 krävs för median och Q25–Q75. Q10 och Q90 publiceras först vid n≥20 och visar den centrala 80-procentiga spridningen; Q25–Q75 visar den centrala 50-procentiga spridningen. Pacing loss är medianen av segmentets sekunder/km minus samma löpares hel-loppsfart i sekunder/km. Spridning är Q75 minus Q25 för segmentfarten. DNF-exit räknas konservativt: en DNF placeras bara efter sin sista säkra registrerade passage, och löpare utan sådan passage gissas inte in på ett segment. Banans svårighetsprofil redovisar stigning per km, pacing loss, fartspridning och DNF-exit som separata empiriska dimensioner. De slås inte ihop till en totalscore eller ranking eftersom måtten kan samvariera och deras relativa vikt saknar verifierad extern grund. Dimensionerna beskriver observerade mönster inom valt lopp och vald bansträckning och är inte i sig bevis för teknisk svårighet eller orsak.';
 const COURSE_PLAN_METHOD_HELP='Måltempo/loppplan använder bara historiska fullföljare från exakt samma bansträckning som det valda loppet. För varje segment beräknas medianen av segmenttid/sluttid bland löpare med exakta passager; minst n=5 krävs. Dessa segmentandelar normaliseras sedan så att de tillsammans motsvarar den angivna måltiden. Om ett segment saknar tillräcklig historik får explicit distans för bansträckningen användas som tydligt märkt distansreservberäkning. Om även segmentdistansen är okänd lämnas segmentet oallokerat och ingen resttid fördelas genom gissning. Planen är en historiskt kalibrerad pacingreferens, inte en prognos: väder, dagsform, underlag, energiintag och individuell terrängstyrka modelleras inte.';
 const HISTORY_ARCHIVE_METHOD_HELP='Löpararkivet använder endast verifierad personidentitet från U2. Namn, startnummer eller legacy athlete_id får aldrig ensamma länka en person mellan år. Alla verifierat länkade resultat visas, men sluttidsutveckling och bästa tid beräknas endast inom en uttryckligt verifierad bansträckningsserie. Bansträckningskontraktet definierar kontroller och delsträckor men räcker inte ensamt som bevis för identisk helbana. Om ingen sådan grupp är verifierad visas målgångarna separat utan konstruerad tidstrend. DNF och DNS kan visas i personens tidslinje men ingår inte i sluttidsserier. Om personidentiteten inte är verifierad visar arkivet endast det enskilda publicerade resultatet.';
 const HISTORY_HALL_METHOD_HELP='Hall of Fame använder History Intelligence i stället för namnmatchning. Flest lopp kräver verifierad personidentitet men kan räkna fullföljda starter över banversioner eftersom måttet bara är antal genomföranden. Mest förbättrad och Jämnast kräver verifierad personidentitet och räknas endast inom en uttryckligen jämförbar bansträckningsserie; tider från andra bansträckningar blandas inte in. Starkast avslutning är ett enskilt-loppmått: endast exakta, ej estimerade placeringspassager används. Delsträckan väljs strukturellt från bansträckningen (Evertsberg→mål när det finns, annars Eldris→mål) och placeringslyftet normaliseras mot antal faktiska startande för att minska fältstorleksbias. Kvinnor och män redovisas separat.';
+const SPRINT_WINNER_METHOD_HELP='Spurtvinnaren använder endast fullföljare i valt loppår som har en faktiskt registrerad, ej estimerad passage vid Mora Förvarning. Spurttiden är officiell sluttid minus tiden vid Mora Förvarning. Kartans referenspunkt används aldrig som ersättning för en saknad mellantid. Orimligt hög fart filtreras bort när återstående distans är verifierbar. Standard är hela loppet och klassväljaren begränsar endast denna topplista. Kvinnor och män rangordnas separat; lika spurttid ger delad placering och delad femteplats visas i sin helhet.';
 const HISTORY_FINGERPRINT_METHOD_HELP='Årets fingeravtryck sätter index 100 till historisk normalnivå. Mediantidsindex, fartnivå och DNF-belastning jämför med tidigare loppår som tillhör samma kända bansträckningsfamilj och tävlingsdistans; minst två tidigare referensår krävs. Varje referensår sammanfattas separat och normalnivån är medianen av loppårsmedianerna. Det gör måtten användbara när kontrollstrukturen har ändrats utan att vi påstår att varje meter bana eller varje tävlingsförhållande varit identiskt. Kvinnorepresentation och fältstorlek jämförs inom hela loppfamiljen. Index beskriver observerad skillnad, inte orsak.';
 const CLASS_HISTORY_METHOD_HELP='Klasshistorik visar median, startande och DNF som en beskrivande årsserie. Medianlinjen binds samman mellan efterföljande tävlingsår med data och bryts vid kalenderluckor utan lopp. Bansträckningen har förändrats över historiken, så nivåskillnader mellan år ska inte tolkas som ren prestationsutveckling. Klassutvecklingen visar samma historiska data år för år; tekniska jämförbarhetsgränser visas inte som egna linjer i diagrammet. DNS räknas inte som startande; medianfart och sluttid bygger på fullföljande med giltig sluttid.';
 function replaceInfoPopup(seed,text){
@@ -40,6 +92,7 @@ function replaceInfoPopup(seed,text){
 function installHistoryMethodInfo(){
   replaceInfoPopup(n$('.history-lab'),HISTORY_ARCHIVE_METHOD_HELP);
   replaceInfoPopup(n$('.hall-card'),HISTORY_HALL_METHOD_HELP);
+  replaceInfoPopup(n$('.sprint-card'),SPRINT_WINNER_METHOD_HELP);
   replaceInfoPopup(n$('.fingerprint-card'),HISTORY_FINGERPRINT_METHOD_HELP);
   replaceInfoPopup(n$('#classEvolutionChart'),CLASS_HISTORY_METHOD_HELP);
   replaceInfoPopup(n$('#classHistoryChart'),CLASS_HISTORY_METHOD_HELP);
@@ -69,6 +122,7 @@ function initNerdLab(){
   nerd.ready=true;
   installCourseMethodInfo();installHistoryMethodInfo();
   const selects=['segmentFrom','segmentTo','segmentClass','segmentMetric'];selects.forEach(id=>n$('#'+id)?.addEventListener('change',renderSegmentLab));
+  n$('#sprintClass')?.addEventListener('change',renderSprintWinners);
   n$('#historySearch')?.addEventListener('input',renderHistorySuggestions);
   document.addEventListener('click',e=>{if(!e.target.closest('.history-lab')){const b=n$('#historySuggestions');if(b)b.hidden=true}});
   n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
@@ -90,7 +144,7 @@ function populateSegmentSelectors(){
 }
 
 function renderNerdLab(){
-  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderCourseIntelligence();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderFingerprint();
+  if(!nerd.ready)return;populateSegmentSelectorsPreserve();populateSegmentClassFilter();renderCoverage();renderCourseIntelligence();renderStories();renderSegmentLab();renderPercentiles();renderFieldFlow();renderHall();renderSprintWinners();renderFingerprint();
 }
 function populateSegmentSelectorsPreserve(){
   const from=n$('#segmentFrom'),to=n$('#segmentTo');if(!from||!to)return;const old=[from.value,to.value],oldRace=from.dataset.race;
@@ -390,6 +444,43 @@ function renderHall(){
 }
 
 
+const nSprintTime=seconds=>{
+  const total=Math.round(Number(seconds));if(!Number.isFinite(total)||total<0)return'–';
+  if(total>=3600)return nTime(total);
+  return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
+};
+function populateSprintClassFilter(){
+  const select=n$('#sprintClass');if(!select)return'';
+  const rows=state.data.results.filter(row=>String(row.race_id)===String(state.raceId));
+  const sameRace=select.dataset.race===String(state.raceId),old=sameRace?select.value:'',options=sprintClassOptions(rows);
+  select.innerHTML='<option value="">Alla klasser</option>'+options.map(option=>`<option value="${nEsc(option.value)}">${nEsc(option.label)}</option>`).join('');
+  select.value=options.some(option=>option.value===old)?old:'';
+  select.dataset.race=String(state.raceId);
+  return select.value;
+}
+function renderSprintWinners(){
+  const women=n$('#sprintWomen'),men=n$('#sprintMen'),coverage=n$('#sprintCoverage');if(!women||!men)return;
+  const race=activeRace();
+  if(!race){women.innerHTML=men.innerHTML='<div class="empty compact-empty">Loppår saknas.</div>';if(coverage)coverage.textContent='';return}
+  const classKey=populateSprintClassFilter(),raceRows=state.data.results.filter(row=>String(row.race_id)===String(race.id));
+  const model=finishSprintRanking(raceRows,{getSplits:nSplitsForResult,isFinished:nIsFinished,classKey,raceDistanceKm:race.distance_km});
+  const top=list=>list.filter(item=>item.rank<=5);
+  const rowHtml=item=>{
+    const medal=item.rank<=3?` medal-${item.rank}`:'',place=item.r.overall_place==null?'–':item.r.overall_place;
+    return `<button class="sprint-row${medal}" data-id="${item.r.id}" aria-label="Öppna loppanalys för ${nEsc(item.r.name_as_published)}"><b class="sprint-rank">${item.rank}</b><span class="sprint-runner"><strong>${nEsc(item.r.name_as_published)}</strong><small>${nEsc(item.r.age_class||'Okänd klass')} · slutplats ${nEsc(place)}</small></span><em class="sprint-time"><span>Spurttid</span><strong>${nSprintTime(item.sprint_seconds)}</strong></em></button>`;
+  };
+  const render=(list,label)=>{
+    const selected=top(list);
+    return selected.length?selected.map(rowHtml).join(''):`<div class="empty compact-empty">Ingen ${label} har en giltig registrerad passage vid Mora Förvarning i detta urval.</div>`;
+  };
+  women.innerHTML=render(model.women,'kvinna');men.innerHTML=render(model.men,'man');
+  if(coverage){
+    const cls=n$('#sprintClass')?.selectedOptions?.[0]?.textContent||'Alla klasser';
+    coverage.textContent=model.rows.length?`${model.rows.length.toLocaleString('sv-SE')} giltiga spurttider · ${cls}`:`Ingen verifierad spurttid · ${cls}`;
+  }
+  n$$('.sprint-row').forEach(button=>button.onclick=()=>typeof openRunner==='function'&&openRunner(Number(button.dataset.id)));
+}
+
 const HALL_SEGMENT_COLORS=['#0d4c3a','#1b7659','#3a9b73','#d69b2d','#e86f3b','#7c3aed','#2878b5','#a63d68','#203d62'];
 function ensureHallLeaflet(){
   return globalThis.UltravasanMapEngine?.ensureLeaflet?.({root:window,document})??Promise.resolve(false);
@@ -475,7 +566,7 @@ function renderRunnerHistory(resultId){
 }
 
 
-if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses,fieldFlowProgression};
+if(typeof module!=='undefined'&&module.exports)module.exports={athleteIdentityKey,groupAthleteHistories,segmentClassOptions,filterRowsBySegmentClass,nCompareClasses,fieldFlowProgression,sprintClassGroupKey,sprintClassOptions,finishSprintRanking};
 if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const nerdTimer=setInterval(()=>{try{if(window.ULTRAVASAN_SPLITS_READY)initNerdLab();if(nerd.ready)clearInterval(nerdTimer)}catch(e){console.error('NerdLab',e);clearInterval(nerdTimer)}},60);
 }

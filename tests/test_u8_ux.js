@@ -56,7 +56,8 @@ assert.ok(html.includes('Q25–Q75')&&app.includes('p25:quantile(g.vals,.25)')&&
 assert.ok(html.includes('id="classCompareChart"')&&html.includes('id="clubCompareChart"'),'U8 ska behålla gruppvyer för både klass och klubb/ort');
 assert.ok(audience.includes('function renderClassCompare(stats)')&&audience.includes('function renderClubCompare(stats)'),'klass- och klubbgruppvyerna ska ha egna jämförelserenderare');
 assert.ok(app.includes("['#genderRetentionChart'")&&app.includes("['#classCompareChart'")&&app.includes("['#clubCompareChart'"),'U8:s grupp- och retentionvyer ska ha metodhjälp');
-for(const asset of ['styles.css','course-intelligence.js','app.js','audience-analytics.js'])assert.ok(html.includes('assets/'+asset+'?v=20260924-r3'),'oförändrade remediation-assets ska behålla cacheversion: '+asset);
-assert.ok(html.includes('assets/nerdlab.js?v=20260924-r4'),'Hall of Fame-leafletfixen ska cache-busta NerdLab separat');
+for(const asset of ['course-intelligence.js','app.js','audience-analytics.js'])assert.ok(html.includes('assets/'+asset+'?v=20260924-r3'),'oförändrade remediation-assets ska behålla cacheversion: '+asset);
+assert.ok(html.includes('assets/styles.css?v=20260924-r3&amp;ci=1&amp;classhistory=1&amp;polish=1&amp;sprint=1'),'Spurtvinnaren ska cache-busta styles utan att bryta U9-generationen');
+assert.ok(html.includes('assets/nerdlab.js?v=20260924-r4&amp;polish=1&amp;sprint=1'),'Spurtvinnaren ska cache-busta NerdLab utan att bryta U9-generationen');
 
 console.log('OK: U8 UX/metodik låser finish progression 10/25/50/75/90, fartretention, spridning, gruppvyer, metodhjälp och tillgänglighet');
