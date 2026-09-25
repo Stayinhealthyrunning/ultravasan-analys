@@ -3,6 +3,14 @@ import json
 from tools import u20_route_audit
 
 
+def test_route_source_digest_is_stable_across_windows_and_linux_line_endings(tmp_path):
+    lf = tmp_path / "source.gpx"
+    crlf = tmp_path / "source-copy.gpx"
+    lf.write_bytes(b"<gpx>\n<trk/>\n</gpx>\n")
+    crlf.write_bytes(lf.read_bytes().replace(b"\n", b"\r\n"))
+    assert u20_route_audit.source_file_sha256(lf) == u20_route_audit.source_file_sha256(crlf)
+
+
 def test_route_audit_covers_all_editions_and_separates_evidence_from_comparability():
     report = u20_route_audit.build_report()
     assert report["edition_count"] == 22

@@ -189,6 +189,14 @@ def fingerprint(points):
     return hashlib.sha256(canonical.encode("ascii")).hexdigest()
 
 
+def source_file_sha256(path: Path) -> str:
+    """Hash textual route sources independently of checkout line-ending policy."""
+    payload = path.read_bytes()
+    if path.suffix.lower() in {".gpx", ".xml"}:
+        payload = payload.replace(b"\r\n", b"\n")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def haversine(a, b):
     radius = 6_371_000
     lat1, lat2 = math.radians(a[0]), math.radians(b[0])
@@ -304,7 +312,7 @@ def build_report():
             "source_fetched_at_utc": route.get("source_fetched_at_utc") if route else None,
             "source_page_sha256": route.get("source_page_sha256") if route else None,
             "source_sha256": (
-                hashlib.sha256((ROOT / route["source_file"]).read_bytes()).hexdigest()
+                source_file_sha256(ROOT / route["source_file"])
                 if route and route.get("source_file") and (ROOT / route["source_file"]).exists()
                 else None
             ),
