@@ -23,6 +23,11 @@ const splits=new Map([
   [7,[{checkpoint_key:'mora_warning',checkpoint_name:'Mora Förvarning',elapsed_seconds:36550,distance_km:91.3,is_estimated:false}]]
 ]);
 
+const nullDistanceRows=[{id:8,status:'FINISHED',finish_seconds:36000,sex:'F',age_class:'W40',overall_place:55,name_as_published:'Saknad kontrolldistans'}];
+const nullDistanceSplits=new Map([[8,[{checkpoint_key:'mora_warning',elapsed_seconds:35760,distance_km:null,is_estimated:false}]]]);
+const nullDistanceModel=finishSprintRanking(nullDistanceRows,{getSplits:id=>nullDistanceSplits.get(id)||[],isFinished:r=>r.status==='FINISHED',raceDistanceKm:92});
+assert.strictEqual(nullDistanceModel.women.length,1,'saknad Förvarning-distans får inte tolkas som 0 km och filtrera bort giltig spurttid');
+
 const model=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',raceDistanceKm:92});
 assert.strictEqual(model.rows.length,4,'DNF, estimerad passage och orimlig spurtfart ska uteslutas');
 assert.deepStrictEqual(model.women.map(x=>x.rank),[1,1],'lika spurttid ska ge delad placering');

@@ -66,7 +66,10 @@ function finishSprintRanking(results,{getSplits=()=>[],isFinished=row=>String(ro
     const finish=Number(row.finish_seconds);if(!Number.isFinite(finish)||finish<=0)return null;
     const warning=nMoraWarningSplit(getSplits(row.id));if(!warning||nSplitEstimated(warning))return null;
     const warned=Number(warning.elapsed_seconds);if(!Number.isFinite(warned)||warned<=0||warned>=finish)return null;
-    const sprint=finish-warned,warningDistance=Number(warning.distance_km),finishDistance=Number(raceDistanceKm);
+    const sprint=finish-warned;
+    const warningDistanceRaw=warning.distance_km,finishDistanceRaw=raceDistanceKm;
+    const warningDistance=warningDistanceRaw==null||warningDistanceRaw===''?null:Number(warningDistanceRaw);
+    const finishDistance=finishDistanceRaw==null||finishDistanceRaw===''?null:Number(finishDistanceRaw);
     if(Number.isFinite(warningDistance)&&Number.isFinite(finishDistance)&&finishDistance>warningDistance){
       const speed=(finishDistance-warningDistance)/(sprint/3600);
       if(!Number.isFinite(speed)||speed<=0||speed>maxSpeedKmh)return null;
