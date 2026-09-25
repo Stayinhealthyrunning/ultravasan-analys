@@ -36,7 +36,7 @@ function sprintClassOptions(rows,sex=''){
   const target=String(sex||'').toUpperCase();
   return [...new Set((rows||[])
     .filter(row=>!target||nSex(row)===target)
-    .map(row=>String(row?.age_class||'').trim())
+    .map(row=>nClassInfo(row?.age_class).s)
     .filter(Boolean))]
     .sort(nCompareClasses);
 }
@@ -57,7 +57,7 @@ function finishSprintRanking(results,{getSplits=()=>[],isFinished=row=>String(ro
     const sex=nSex(row);if(sex!=='F'&&sex!=='M')return null;
     if(classKey&&sprintClassGroupKey(row.age_class)!==classKey)return null;
     const selectedClass=sex==='F'?String(womenClass||''):String(menClass||'');
-    if(selectedClass&&String(row.age_class||'')!==selectedClass)return null;
+    if(selectedClass&&nClassInfo(row.age_class).s!==nClassInfo(selectedClass).s)return null;
     const finish=Number(row.finish_seconds);if(!Number.isFinite(finish)||finish<=0)return null;
     const warning=nMoraWarningSplit(getSplits(row.id));if(!warning||nSplitEstimated(warning))return null;
     const warned=Number(warning.elapsed_seconds);if(!Number.isFinite(warned)||warned<=0||warned>=finish)return null;
@@ -465,7 +465,7 @@ function populateSprintClassFilters(rows){
   };
   return {
     womenClass:populate(n$('#sprintClassWomen'),'F','Alla kvinnoklasser'),
-    menClass:populate(n$('#sprintClassMen'),'M','Alla mansk­lasser')
+    menClass:populate(n$('#sprintClassMen'),'M','Alla mansklasser')
   };
 }
 function renderSprintWinners(){

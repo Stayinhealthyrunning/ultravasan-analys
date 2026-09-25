@@ -37,7 +37,7 @@ assert.deepStrictEqual(new Set(menOnly.women.map(x=>x.r.id)),new Set([1,2]),'man
 assert.deepStrictEqual(menOnly.men.map(x=>x.r.id),[3],'mansfiltret ska filtrera endast manslistan');
 
 assert.deepStrictEqual(sprintClassOptions(rows,'F'),['W50','W55'],'kvinnodropdown ska bara innehålla kvinnoklasser');
-assert.deepStrictEqual(sprintClassOptions(rows,'M'),['M50','M55'],'mansdropdown ska bara innehålla mansklasser');
+assert.deepStrictEqual(sprintClassOptions([...rows,{id:8,sex:'M',age_class:'H80-'}],'M'),['M50','M55','M80-'],'mansdropdown ska normalisera äldre H-prefix till M');
 
 const tieRows=[],tieSplits=new Map();
 for(let i=1;i<=7;i++){
