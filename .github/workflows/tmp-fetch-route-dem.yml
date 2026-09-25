@@ -1,0 +1,38 @@
+name: Temporary cache 2026 route elevation sources
+
+on:
+  push:
+    branches:
+      - feature/year-specific-gpx-routes
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/year-specific-gpx-routes
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch same-year public donor geometry
+        run: |
+          python tools/download_trace_de_trail_routes.py --refresh --delay 1 --ids 328148 328149
+          mkdir -p source/routes
+          cp tmp/route-candidates/tracedetrail/ultravasan90-2026-trace-328148.gpx source/routes/ultravasan90-2026-itra-328148.gpx
+          cp tmp/route-candidates/tracedetrail/ultravasan45-2026-trace-328149.gpx source/routes/ultravasan45-2026-itra-328149.gpx
+      - name: Fetch DEM only for unmatched official points
+        run: python tools/fetch_route_dem.py --fetch
+      - name: Commit source caches and remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-fetch-route-dem.yml
+          git add source/routes/ultravasan45-2026-itra-328149.gpx source/routes/ultravasan90-2026-itra-328148.gpx
+          git add source/routes/ultravasan45-2026-dem.json source/routes/ultravasan90-2026-dem.json
+          git commit -m "Cache official 2026 elevation sources [skip ci]"
+          git push origin HEAD:feature/year-specific-gpx-routes
