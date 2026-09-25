@@ -34,8 +34,8 @@ PUBLIC_TRACKS = {
 }
 PROMOTION_DECISIONS = {
     51602: ("promote", "Exact-year UV90 2018 candidate passed start/finish, distance and elevation validation."),
-    51603: ("do-not-promote", "Only 55.909% elevation coverage; existing route builder requires at least 95%."),
-    75784: ("do-not-promote", "Only 62.156% elevation coverage; existing route builder requires at least 95%."),
+    51603: ("promote-with-elevation-transfer", "Exact-year UV45 2018 geometry is valid; incomplete native elevation is supplemented only through separately validated <=50 m spatial transfer from the complete 2024 ITRA route."),
+    75784: ("promote-with-elevation-transfer", "Exact-year UV45 2019 geometry is valid; incomplete native elevation is supplemented only through separately validated <=50 m spatial transfer from the complete 2024 ITRA route."),
     229687: ("promote", "Exact-year UV90 2023 candidate passed start/finish, distance and elevation validation."),
     267129: ("candidate-not-selected", "Valid ITRA candidate is secondary to the already checked-in year-specific Vasaloppet/KMZ route."),
     267130: ("promote", "Exact-year UV45 2024 candidate passed start/finish, distance and elevation validation."),
@@ -180,7 +180,10 @@ def main() -> int:
                 entry["rejection_reason"] = "Page identity does not establish the expected Ultravasan year."
             elif present / len(points) < 0.95:
                 entry["status"] = "candidate-incomplete-elevation"
-                entry["rejection_reason"] = "Less than 95% of public geometry points carry elevation; do not interpolate broadly."
+                entry["limitation_reason"] = (
+                    "Less than 95% of public geometry points carry native elevation. "
+                    "Geometry may still be promoted when a separately validated spatial elevation donor is configured."
+                )
             entries.append(entry)
             print(f"{track_id}: {entry['status']} · {title} · {page_distance or '?'} km · elevation {entry['elevation_coverage_pct']}%")
         except Exception as error:  # Preserve the exact failure as an auditable candidate row.
