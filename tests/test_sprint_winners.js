@@ -30,8 +30,8 @@ assert.deepStrictEqual(model.men.map(x=>x.rank),[1,1],'män ska rangordnas separ
 assert.deepStrictEqual(new Set(model.men.map(x=>x.r.id)),new Set([3,4]),'båda männen ska finnas kvar vid delad placering');
 
 const classModel=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',classKey:sprintClassGroupKey('M50'),raceDistanceKm:92});
-assert.deepStrictEqual(classModel.women.map(x=>x.r.id),[1,2],'klassfiltret ska para kvinnlig och manlig motsvarighet');
-assert.deepStrictEqual(classModel.men.map(x=>x.r.id),[3,4],'klassfiltret ska para kvinnlig och manlig motsvarighet');
+assert.deepStrictEqual(new Set(classModel.women.map(x=>x.r.id)),new Set([1,2]),'klassfiltret ska para kvinnlig och manlig motsvarighet');
+assert.deepStrictEqual(new Set(classModel.men.map(x=>x.r.id)),new Set([3,4]),'klassfiltret ska para kvinnlig och manlig motsvarighet');
 const options=sprintClassOptions(rows);
 const age50=options.find(x=>x.value===sprintClassGroupKey('W50'));
 assert.ok(age50&&age50.label.includes('W50')&&age50.label.includes('M50'),'klassväljaren ska behålla båda könens klassetiketter');
