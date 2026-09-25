@@ -153,6 +153,146 @@ def _median_smooth(elevations, radius=2):
     return smoothed
 
 
+
+def _percentile(values, fraction):
+    if not values:
+        return None
+    ordered = sorted(float(value) for value in values)
+    index = min(len(ordered) - 1, max(0, math.ceil(len(ordered) * fraction) - 1))
+    return ordered[index]
+
+
+def _cumulative_metres(coords):
+    distances = [0.0]
+    for previous, current in zip(coords, coords[1:]):
+        distances.append(distances[-1] + hav(previous, current) * 1000)
+    return distances
+
+
+def _transfer_missing_elevation(target_coords, donor_coords, max_distance_m=50.0):
+    """Fill missing elevations from a nearby donor route, never replacing observed values.
+
+    A spatial match must be within the configured distance and near the same
+    normalized along-route progress. The donor is accepted only when it
+    reproduces the target's already observed elevations with strong accuracy.
+    """
+    if max_distance_m <= 0:
+        raise ValueError("Elevation donor match distance must be positive")
+    donor_present = [point[2] for point in donor_coords if len(point) > 2 and point[2] is not None]
+    if len(donor_present) / len(donor_coords) < 0.95:
+        raise ValueError("Elevation donor has less than 95% elevation coverage")
+    if donor_present and (min(donor_present) < -50 or max(donor_present) > 1000):
+        raise ValueError("Elevation donor contains implausible elevations")
+
+    reference_lat = sum(point[0] for point in target_coords + donor_coords) / (len(target_coords) + len(donor_coords))
+    scale_x = 111_320.0 * math.cos(math.radians(reference_lat))
+    scale_y = 110_540.0
+
+    def xy(point):
+        return point[1] * scale_x, point[0] * scale_y
+
+    target_xy = [xy(point) for point in target_coords]
+    donor_xy = [xy(point) for point in donor_coords]
+    target_progress = _cumulative_metres(target_coords)
+    donor_progress = _cumulative_metres(donor_coords)
+    target_total = target_progress[-1]
+    donor_total = donor_progress[-1]
+    if target_total <= 0 or donor_total <= 0:
+        raise ValueError("Elevation target/donor route has zero length")
+
+    cell_m = max(25.0, float(max_distance_m))
+    grid = {}
+    for index, (a, b) in enumerate(zip(donor_xy, donor_xy[1:])):
+        if donor_coords[index][2] is None or donor_coords[index + 1][2] is None:
+            continue
+        min_x = math.floor((min(a[0], b[0]) - max_distance_m) / cell_m)
+        max_x = math.floor((max(a[0], b[0]) + max_distance_m) / cell_m)
+        min_y = math.floor((min(a[1], b[1]) - max_distance_m) / cell_m)
+        max_y = math.floor((max(a[1], b[1]) + max_distance_m) / cell_m)
+        for cell_x in range(min_x, max_x + 1):
+            for cell_y in range(min_y, max_y + 1):
+                grid.setdefault((cell_x, cell_y), []).append(index)
+
+    progress_guard_m = max(500.0, min(1500.0, donor_total * 0.03))
+
+    def match(index):
+        qx, qy = target_xy[index]
+        expected_progress = target_progress[index] / target_total * donor_total
+        candidates = grid.get((math.floor(qx / cell_m), math.floor(qy / cell_m)), ())
+        best = None
+        for segment_index in candidates:
+            ax, ay = donor_xy[segment_index]
+            bx, by = donor_xy[segment_index + 1]
+            vx, vy = bx - ax, by - ay
+            length_sq = vx * vx + vy * vy
+            ratio = 0.0 if length_sq <= 0 else ((qx - ax) * vx + (qy - ay) * vy) / length_sq
+            ratio = max(0.0, min(1.0, ratio))
+            px, py = ax + ratio * vx, ay + ratio * vy
+            distance_m = math.hypot(qx - px, qy - py)
+            if distance_m > max_distance_m:
+                continue
+            segment_length = math.sqrt(length_sq)
+            matched_progress = donor_progress[segment_index] + ratio * segment_length
+            if abs(matched_progress - expected_progress) > progress_guard_m:
+                continue
+            left = float(donor_coords[segment_index][2])
+            right = float(donor_coords[segment_index + 1][2])
+            elevation = left + ratio * (right - left)
+            if best is None or distance_m < best["distance_m"]:
+                best = {
+                    "distance_m": distance_m,
+                    "elevation_m": elevation,
+                    "donor_progress_m": matched_progress,
+                }
+        return best
+
+    matches = [match(index) for index in range(len(target_coords))]
+    observed_indices = [index for index, point in enumerate(target_coords) if point[2] is not None]
+    observed_matches = [(index, matches[index]) for index in observed_indices if matches[index] is not None]
+    if len(observed_indices) < 20:
+        raise ValueError("Elevation transfer needs at least 20 observed target elevations for validation")
+    observed_match_pct = 100 * len(observed_matches) / len(observed_indices)
+    errors = [
+        abs(float(target_coords[index][2]) - matched["elevation_m"])
+        for index, matched in observed_matches
+    ]
+    median_error = _percentile(errors, 0.5)
+    p95_error = _percentile(errors, 0.95)
+    if observed_match_pct < 90 or median_error is None or p95_error is None or median_error > 5 or p95_error > 10:
+        raise ValueError(
+            "Elevation donor validation failed: "
+            f"{observed_match_pct:.1f}% matched, median error {median_error}, p95 error {p95_error}"
+        )
+
+    augmented = [list(point) for point in target_coords]
+    transferred = 0
+    transfer_distances = []
+    missing_before = sum(point[2] is None for point in target_coords)
+    for index, point in enumerate(augmented):
+        if point[2] is not None or matches[index] is None:
+            continue
+        point[2] = matches[index]["elevation_m"]
+        transferred += 1
+        transfer_distances.append(matches[index]["distance_m"])
+
+    return augmented, {
+        "method": "spatial-nearest-segment-with-progress-guard",
+        "max_match_distance_m": float(max_distance_m),
+        "progress_guard_m": round(progress_guard_m, 1),
+        "observed_target_points": len(observed_indices),
+        "observed_validation_matches": len(observed_matches),
+        "observed_validation_match_pct": round(observed_match_pct, 3),
+        "validation_median_abs_error_m": round(median_error, 3),
+        "validation_p95_abs_error_m": round(p95_error, 3),
+        "missing_before_transfer": missing_before,
+        "transferred_points": transferred,
+        "transferred_missing_pct": round(100 * transferred / missing_before, 3) if missing_before else 100.0,
+        "median_transfer_distance_m": round(_percentile(transfer_distances, 0.5) or 0.0, 3),
+        "p95_transfer_distance_m": round(_percentile(transfer_distances, 0.95) or 0.0, 3),
+        "unmatched_after_transfer": missing_before - transferred,
+    }
+
+
 def _perpendicular_m(point, start, end, reference_lat):
     scale_x = 111_320.0 * math.cos(math.radians(reference_lat))
     scale_y = 110_540.0
@@ -190,7 +330,10 @@ def simplify_indices(points, tolerance_m=GEOMETRY_TOLERANCE_M):
     return indices, measured
 
 
-def build_gpx_route_data(path, official_distance, expected_start, expected_finish):
+def build_gpx_route_data(
+    path, official_distance, expected_start, expected_finish,
+    elevation_donor_path=None, elevation_max_match_distance_m=50.0,
+):
     """Validate and transform one verified GPX into the compact browser schema."""
     coords = read_gpx(path)
     if any(not (-90 <= point[0] <= 90 and -180 <= point[1] <= 180) for point in coords):
@@ -209,19 +352,31 @@ def build_gpx_route_data(path, official_distance, expected_start, expected_finis
     if max(segment_distances, default=0) > 2:
         raise ValueError(f"{path.name} innehåller ett geografiskt hopp över 2 km")
 
-    raw_elevations = [point[2] for point in coords if len(point) > 2 and point[2] is not None]
-    if len(raw_elevations) / len(coords) < 0.95:
-        raise ValueError(f"{path.name} saknar höjd för mer än fem procent av punkterna")
-    if raw_elevations and (min(raw_elevations) < -50 or max(raw_elevations) > 1000):
+    original_elevations = [point[2] for point in coords if len(point) > 2 and point[2] is not None]
+    original_coverage_pct = 100 * len(original_elevations) / len(coords)
+    if original_elevations and (min(original_elevations) < -50 or max(original_elevations) > 1000):
         raise ValueError(f"{path.name} innehåller orimliga höjder")
-    raw_deltas = [b - a for a, b in zip(raw_elevations, raw_elevations[1:])]
-    if max((abs(value) for value in raw_deltas), default=0) > 80:
-        raise ValueError(f"{path.name} innehåller en orimlig höjdspik")
+
+    elevation_transfer = None
+    if elevation_donor_path is not None:
+        donor_coords = read_gpx(elevation_donor_path)
+        coords, elevation_transfer = _transfer_missing_elevation(
+            coords, donor_coords, max_distance_m=elevation_max_match_distance_m,
+        )
 
     elevations = _fill_small_elevation_gaps(coords)
     smoothed = _median_smooth(elevations)
-    if sum(value is not None for value in smoothed) / len(smoothed) < 0.95:
-        raise ValueError(f"{path.name} saknar tillräckligt säker höjd efter interpolation")
+    final_coverage_pct = 100 * sum(value is not None for value in smoothed) / len(smoothed)
+    if final_coverage_pct < 95:
+        raise ValueError(f"{path.name} saknar tillräckligt säker höjd efter donoröverföring/interpolation")
+    raw_elevations = [value for value in elevations if value is not None]
+    raw_deltas = [
+        current - previous
+        for previous, current in zip(elevations, elevations[1:])
+        if previous is not None and current is not None
+    ]
+    if max((abs(value) for value in raw_deltas), default=0) > 80:
+        raise ValueError(f"{path.name} innehåller en orimlig höjdspik")
     distance_scale = float(official_distance) / raw_total
     cumulative_ascent = [0.0]
     cumulative_descent = [0.0]
@@ -293,7 +448,9 @@ def build_gpx_route_data(path, official_distance, expected_start, expected_finis
         "high_point": full_points[high_index],
         "max_geometry_gap_m": max_gap_m,
         "max_elevation_jump_m": max((abs(value) for value in raw_deltas), default=0),
-        "elevation_coverage_pct": 100 * len(raw_elevations) / len(coords),
+        "elevation_coverage_pct": final_coverage_pct,
+        "elevation_original_coverage_pct": original_coverage_pct,
+        "elevation_transfer": elevation_transfer,
         "clipped_grade_points": clipped_grades,
         "max_deviation_m": measured_deviation,
         "warnings": warnings,
@@ -395,8 +552,14 @@ def project_checkpoints(checkpoints, points):
 def verified_route(
     *, route_id, name, years, official_distance, source_path, source_year,
     race_family, style, checkpoints, expected_start, expected_finish,
+    elevation_donor_path=None, elevation_donor_year=None, elevation_donor_provider=None,
+    elevation_max_match_distance_m=50.0,
 ):
-    data = build_gpx_route_data(source_path, official_distance, expected_start, expected_finish)
+    data = build_gpx_route_data(
+        source_path, official_distance, expected_start, expected_finish,
+        elevation_donor_path=elevation_donor_path,
+        elevation_max_match_distance_m=elevation_max_match_distance_m,
+    )
     high_point = data["high_point"]
     route = {
         "id": route_id,
@@ -416,7 +579,12 @@ def verified_route(
         "geometry_quality": "verified-gpx",
         "geometry_note": "Verifierad GPX-geometri. Distansaxeln är normaliserad till loppets officiella distans.",
         "elevation_available": True,
-        "elevation_note": "Höjdprofil från verifierad GPX; korta luckor interpoleras och en fempunkts median används mot enstaka spikar.",
+        "elevation_note": (
+            "Höjdprofil från årsspårets observerade höjd kompletterad geografiskt från verifierat donorspår; "
+            "endast matchningar inom angiven radie och samma ungefärliga banprogress accepteras."
+            if data.get("elevation_transfer")
+            else "Höjdprofil från verifierad GPX; korta luckor interpoleras och en fempunkts median används mot enstaka spikar."
+        ),
         "elevation_profile_schema": [
             "distance_km", "elevation_m", "grade_percent",
             "cumulative_ascent_m", "cumulative_descent_m",
@@ -435,7 +603,11 @@ def verified_route(
         },
         "processing": {
             "elevation_smoothing": "centered-median-5-points",
-            "missing_elevation": "linear-only-for-bounded-gaps-up-to-8-points-and-0.5-km",
+            "missing_elevation": (
+                "spatial-donor-transfer-then-linear-only-for-bounded-gaps-up-to-8-points-and-0.5-km"
+                if data.get("elevation_transfer")
+                else "linear-only-for-bounded-gaps-up-to-8-points-and-0.5-km"
+            ),
             "grade_min_span_m": int(MIN_GRADE_SPAN_KM * 1000),
             "grade_clip_percent": MAX_GRADE_PERCENT,
             "grade_clipped_points": data["clipped_grade_points"],
@@ -445,10 +617,20 @@ def verified_route(
         },
         "source_quality": {
             "elevation_coverage_pct": round(data["elevation_coverage_pct"], 3),
+            "elevation_original_coverage_pct": round(data["elevation_original_coverage_pct"], 3),
             "max_geometry_gap_m": round(data["max_geometry_gap_m"], 1),
             "max_elevation_jump_m": round(data["max_elevation_jump_m"], 1),
             "warnings": data["warnings"],
         },
+        "elevation_provenance": (
+            {
+                **data["elevation_transfer"],
+                "donor_file": elevation_donor_path.relative_to(ROOT).as_posix(),
+                "donor_year": int(elevation_donor_year) if elevation_donor_year is not None else None,
+                "donor_provider": elevation_donor_provider,
+            }
+            if data.get("elevation_transfer") else None
+        ),
         "style": style,
         "bounds": bounds(data["points"]),
         "checkpoints": project_checkpoints(checkpoints, data["points"]),
@@ -589,6 +771,11 @@ def build_edition_routes(config, course_config, routes):
             if not reference or reference.get("race_family") != family:
                 raise ValueError(f"{race_key}: no same-family reference geometry for endpoint checks")
             color = "#8056a8" if family == "uv90" else "#d28b22"
+            elevation_transfer = spec.get("elevation_transfer") or {}
+            donor_file = elevation_transfer.get("donor_file")
+            donor_path = ROOT / donor_file if donor_file else None
+            if donor_path is not None and not donor_path.is_file():
+                raise ValueError(f"{race_key}: elevation donor is missing: {donor_file}")
             route = verified_route(
                 route_id=route_id,
                 name=f"{race['name']} – verifierad geometri {year}",
@@ -601,6 +788,10 @@ def build_edition_routes(config, course_config, routes):
                 checkpoints=race.get("checkpoints", []),
                 expected_start=reference["points"][0],
                 expected_finish=reference["points"][-1],
+                elevation_donor_path=donor_path,
+                elevation_donor_year=elevation_transfer.get("donor_year"),
+                elevation_donor_provider=elevation_transfer.get("donor_provider"),
+                elevation_max_match_distance_m=float(elevation_transfer.get("max_match_distance_m", 50.0)),
             )
             route["source_provider"] = spec.get("source_provider")
             route["source_url"] = spec.get("source_url")
