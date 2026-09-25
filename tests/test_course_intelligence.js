@@ -148,7 +148,7 @@ assert.ok(model.segments.some(segment=>segment.field?.dnf_exit_rate_pct!=null),'
 
 assert.throws(
   ()=>intelligence.segmentContracts({...post2023,segments:[{from:'start',to:'not-a-checkpoint',distance_km:1}]}),
-  /saknar explicit checkpoint/,
+  /saknar explicit kontroll/,
   'segmentendpoints får inte gissas från namn eller distans'
 );
 
