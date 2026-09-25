@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import only the official Mora Förvarning passage for Spurtvinnaren.
+"""Import the last official timing passage after Eldris for Spurtvinnaren.
 
 This tool deliberately does NOT update results, athletes, finish times, placements,
 classes or ordinary checkpoints/splits. The service point remains auxiliary-only.
@@ -22,6 +22,44 @@ import source_bindings
 import uvtool
 
 WARNING_KEY="mora_warning"
+
+
+def extract_last_pre_finish_control(html: str) -> dict | None:
+    """Return the last exact official timing row after Eldris and before finish.
+
+    The source label is deliberately not part of the contract. Vasaloppet may
+    call this control 'Mora Förvarning' in one year and something else in
+    another. Spurtvinnaren is defined by control position: last official split
+    after Eldris, before Mora mål.
+    """
+    soup=uvtool.BeautifulSoup(html,"lxml")
+    after_eldris=False
+    candidates=[]
+    for row in soup.select("tr.split"):
+        row_classes=set(row.get("class",[]))
+        row_text=row.get_text(" ",strip=True)
+        if "estimated" in row_classes or (row.select_one("strong") and "*" in row_text):
+            continue
+        label=uvtool._class_text(row,["desc","name","split-name"])
+        key=uvtool.checkpoint_key(label)
+        if key=="eldris":
+            after_eldris=True
+            continue
+        if key=="mora":
+            break
+        if not after_eldris:
+            continue
+        elapsed=uvtool.parse_time(uvtool._class_text(row,["time","elapsed","time_total"]))
+        if elapsed is None:
+            continue
+        candidates.append({
+            "checkpoint_key":WARNING_KEY,
+            "source_label":label,
+            "elapsed_seconds":elapsed,
+            "time_of_day":uvtool._class_text(row,["daytime","time_of_day","time-day"]),
+            "is_estimated":False,
+        })
+    return candidates[-1] if candidates else None
 
 def ensure_checkpoint_order(conn: sqlite3.Connection, race_id: int, warning_cfg: dict, finish_cfg: dict) -> tuple[int,int]:
     rows={row["checkpoint_key"]:row for row in conn.execute(
@@ -151,7 +189,7 @@ def run(args):
     warning_cfg=next((c for c in race_cfg.get("checkpoints",[]) if c["checkpoint_key"]==WARNING_KEY),None)
     finish_cfg=next((c for c in race_cfg.get("checkpoints",[]) if c["checkpoint_key"]=="mora"),None)
     if not warning_cfg or not finish_cfg:
-        raise SystemExit("Konfigurationen saknar Mora Förvarning eller Mora mål")
+        raise SystemExit("Konfigurationen saknar intern spurtkontroll eller Mora mål")
     shutil.copy2(args.db,args.output_db)
     conn=uvtool.connect(args.output_db)
     try:
@@ -184,7 +222,7 @@ def run(args):
                         uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
                         entry
                     )
-                    warning=next((s for s in parsed.splits or [] if s.get("checkpoint_key")==WARNING_KEY and not s.get("is_estimated")),None)
+                    warning=extract_last_pre_finish_control(html)
                     if not warning or not warning.get("elapsed_seconds"):
                         no_warning+=1; continue
                     target,method=choose_target(parsed,race_cfg["event_code"],idp,indexes)
@@ -238,11 +276,11 @@ def run(args):
         if before_non_aux!=after_non_aux:
             raise RuntimeError("Ordinarie splitdata ändrades; enrichment stoppas")
         if exact<args.min_exact:
-            raise RuntimeError(f"För få verifierade Förvarning-tider: {exact} < {args.min_exact}")
+            raise RuntimeError(f"För få verifierade slutkontrollstider: {exact} < {args.min_exact}")
         if not any(str(k).upper() in {"F","W","K","D"} and v>0 for k,v in report["sex_counts"].items()):
-            raise RuntimeError("Inga kvinnliga Förvarning-tider efter enrichment")
+            raise RuntimeError("Inga kvinnliga slutkontrollstider efter enrichment")
         if not any(str(k).upper() in {"M","H"} and v>0 for k,v in report["sex_counts"].items()):
-            raise RuntimeError("Inga manliga Förvarning-tider efter enrichment")
+            raise RuntimeError("Inga manliga slutkontrollstider efter enrichment")
         args.report.parent.mkdir(parents=True,exist_ok=True)
         args.report.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
         print(json.dumps(report,ensure_ascii=False,indent=2))
