@@ -2,6 +2,8 @@ name: Tests
 
 on:
   push:
+    branches-ignore:
+      - route-finalize-staging
   pull_request:
 
 permissions:
