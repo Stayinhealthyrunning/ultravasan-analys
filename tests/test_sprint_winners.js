@@ -3,6 +3,7 @@ const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
 const {finishSprintRanking,sprintClassOptions,sprintClassGroupKey}=require('../docs/assets/nerdlab.js');
+const adapter=require('../docs/assets/data-adapter.js');
 
 const rows=[
   {id:1,status:'FINISHED',finish_seconds:36000,sex:'F',age_class:'W50',overall_place:101,name_as_published:'Kvinna A'},
@@ -46,6 +47,37 @@ for(let i=1;i<=7;i++){
 const tied=finishSprintRanking(tieRows,{getSplits:id=>tieSplits.get(id)||[],isFinished:()=>true}).women;
 assert.deepStrictEqual(tied.map(x=>x.rank),[1,2,3,4,5,5,5],'delad femteplats ska få samma rank och kunna visas i sin helhet');
 assert.strictEqual(tied.filter(x=>x.rank<=5).length,7,'alla på delad femteplats ska följa med i topplistan');
+
+
+const adapted=adapter.normalizeBase({
+  races:[{id:21,race_key:'ultravasan90-2025',year:2025,distance_km:92}],
+  results:[
+    {id:901,race_id:21,status:'FINISHED',finish_seconds:36000,sex:'F',age_class:'W50',overall_place:11,name_as_published:'Adapter Kvinna'},
+    {id:902,race_id:21,status:'FINISHED',finish_seconds:35900,sex:'M',age_class:'M50',overall_place:8,name_as_published:'Adapter Man'}
+  ],
+  checkpoints:[
+    {race_id:21,checkpoint_key:'start',name:'Start Sälen',sequence_no:0,distance_km:0},
+    {race_id:21,checkpoint_key:'mora_warning',name:'Mora Förvarning',sequence_no:1,distance_km:91.3},
+    {race_id:21,checkpoint_key:'mora',name:'Mora mål',sequence_no:2,distance_km:92}
+  ],
+  splits:[
+    {result_id:901,checkpoint_key:'mora_warning',elapsed_seconds:35760,is_estimated:0},
+    {result_id:901,checkpoint_key:'mora',elapsed_seconds:36000,is_estimated:0},
+    {result_id:902,checkpoint_key:'mora_warning',elapsed_seconds:35680,is_estimated:0},
+    {result_id:902,checkpoint_key:'mora',elapsed_seconds:35900,is_estimated:0}
+  ],
+  stats:{},sources:[]
+});
+assert.ok(!adapted.splits.some(row=>row.checkpoint_key==='mora_warning'),'Förvarning ska fortsatt vara utesluten ur vanliga splits');
+const adaptedSprint=finishSprintRanking(adapted.results,{
+  getSplits:id=>adapted.auxiliarySplitsByResult.get(id)||[],
+  isFinished:r=>r.status==='FINISHED',
+  raceDistanceKm:92
+});
+assert.strictEqual(adaptedSprint.women.length,1,'Spurtvinnaren ska läsa kvinnans Förvarning från auxiliary-index');
+assert.strictEqual(adaptedSprint.men.length,1,'Spurtvinnaren ska läsa mannens Förvarning från auxiliary-index');
+assert.strictEqual(adaptedSprint.women[0].sprint_seconds,240);
+assert.strictEqual(adaptedSprint.men[0].sprint_seconds,220);
 
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
