@@ -48,6 +48,8 @@ class RouteBuildTests(unittest.TestCase):
             self.assertEqual("exact-source-year", contracts["ultravasan90-2024"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan90-2023"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan90-2026"]["display_geometry_usage"])
+            self.assertEqual("exact-source-year", contracts["ultravasan45-2018"]["display_geometry_usage"])
+            self.assertEqual("exact-source-year", contracts["ultravasan45-2019"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan45-2024"]["display_geometry_usage"])
             self.assertEqual("exact-source-year", contracts["ultravasan45-2026"]["display_geometry_usage"])
             self.assertEqual(2026, contracts["ultravasan90-2026"]["display_geometry_source_year"])
@@ -80,6 +82,8 @@ class RouteBuildTests(unittest.TestCase):
             for key, expected_file, expected_year in (
                 ("ultravasan90-2018", "source/routes/ultravasan90-2018-itra-51602.gpx", 2018),
                 ("ultravasan90-2023", "source/routes/ultravasan90-2023-itra-229687.gpx", 2023),
+                ("ultravasan45-2018", "source/routes/ultravasan45-2018-itra-51603.gpx", 2018),
+                ("ultravasan45-2019", "source/routes/ultravasan45-2019-itra-75784.gpx", 2019),
                 ("ultravasan45-2024", "source/routes/ultravasan45-2024-itra-267130.gpx", 2024),
             ):
                 annual = registry["routes"][expected_routes[key]]
@@ -89,6 +93,19 @@ class RouteBuildTests(unittest.TestCase):
                 self.assertTrue(annual["source_url"].startswith("https://tracedetrail.fr/"))
                 self.assertGreater(annual["source_point_count"], 1000)
                 self.assertGreaterEqual(annual["source_quality"]["elevation_coverage_pct"], 95)
+            for key in ("ultravasan45-2018", "ultravasan45-2019"):
+                annual = registry["routes"][expected_routes[key]]
+                provenance = annual["elevation_provenance"]
+                self.assertTrue(annual["elevation_available"])
+                self.assertLess(annual["source_quality"]["elevation_original_coverage_pct"], 65)
+                self.assertEqual("spatial-nearest-segment-with-progress-guard", provenance["method"])
+                self.assertEqual(50.0, provenance["max_match_distance_m"])
+                self.assertEqual(2024, provenance["donor_year"])
+                self.assertEqual("source/routes/ultravasan45-2024-itra-267130.gpx", provenance["donor_file"])
+                self.assertGreater(provenance["observed_validation_match_pct"], 99)
+                self.assertLess(provenance["validation_p95_abs_error_m"], 3)
+                self.assertGreater(provenance["transferred_missing_pct"], 99)
+                self.assertLessEqual(provenance["unmatched_after_transfer"], 4)
             exact_2026 = registry["routes"][expected_routes["ultravasan90-2026"]]
             self.assertEqual("official-organizer-gps", exact_2026["source_type"])
             self.assertEqual("source/UV-90_20260610.kmz", exact_2026["source_file"])
