@@ -37,7 +37,7 @@ assert.deepStrictEqual([...fp.performance_reference_years],[2024],'2025 ska anv�
 const finishMetric=fp.metrics.find(metric=>metric.id==='finish_difficulty');
 assert.strictEqual(finishMetric.reference_n,1);
 assert.strictEqual(finishMetric.available,false,'ett referensår räcker inte för publicerat prestationsindex');
-assert.ok(finishMetric.note.includes('Inga andra loppår med verifierad whole-course-grupp har tillräckligt underlag'));
+assert.ok(finishMetric.note.includes('Inga andra loppår med verifierad bansträckningsserie har tillräckligt underlag'));
 assert.strictEqual(fp.metrics.find(metric=>metric.id==='female_share').reference_scope,'family-race-medians');
 assert.deepStrictEqual([...fp.structural_reference_years],[2019,2023,2024],'deltagandemått får fortfarande använda tidigare loppår');
 const fp2026=H.fingerprint(dataset,races[4],{currentResults:results.filter(r=>r.race_id===5),referenceResults:results});
