@@ -249,8 +249,23 @@ jobs:
           print(json.dumps(report,ensure_ascii=False,indent=2))
           print("ROUTE_SOURCE_RESEARCH_END")
           PY
+      - name: Fetch public Plotaroute client scripts
+        shell: bash
+        run: |
+          curl -fsSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' https://www.plotaroute.com/js/Route_1.41.js -o tmp/route-source-research/Route_1.41.js
+          curl -fsSL -A 'Mozilla/5.0 (compatible; UltravasanRouteAudit/1.0)' https://www.plotaroute.com/js/Route_Plugins_1.6.js -o tmp/route-source-research/Route_Plugins_1.6.js
+          grep -Ein 'GPX|download|DownloadFormats|DL_Format' tmp/route-source-research/Route_1.41.js | head -80 > tmp/route-source-research/plotaroute-download-js.txt || true
+      - name: Pack repository snapshot
+        shell: bash
+        run: |
+          zip -qr "$RUNNER_TEMP/repo-snapshot.zip" . -x '.git/*' 'tmp/*'
       - uses: actions/upload-artifact@v4
         with:
           name: route-source-research
           path: tmp/route-source-research
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo-snapshot
+          path: ${{ runner.temp }}/repo-snapshot.zip
           retention-days: 3
