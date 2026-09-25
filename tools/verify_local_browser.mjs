@@ -722,7 +722,7 @@ const h2hChangedCourse=await evaluate(`(() => ({
   placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
   courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
   warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
-  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
+  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,1800),
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
 
@@ -817,7 +817,7 @@ const checks = {
     u7History.classBreaks===0&&u7History.classMethod.includes('Bansträckningskontraktet beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
     u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>=1&&u7History.seriesRendered===u7History.expectedSeries&&
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
-    u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('checkpoint-/segmentkontrakt')
+    u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('kontroller och delsträckor')
   ),
   clubHistoryCourseVersion:Boolean(
     clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope==='group:ultravasan90-2024-2025'&&
