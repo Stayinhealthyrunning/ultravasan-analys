@@ -62,5 +62,7 @@ def test_checked_in_candidate_manifest_records_all_ids_and_rejection_reasons():
     assert by_id[267130]["promotion_decision"] == "promote"
     assert by_id[51603]["elevation_coverage_pct"] < 95
     assert by_id[75784]["elevation_coverage_pct"] < 95
-    assert "at least 95%" in by_id[51603]["decision_reason"]
-    assert "at least 95%" in by_id[75784]["decision_reason"]
+    assert by_id[51603]["promotion_decision"] == "promote-with-elevation-transfer"
+    assert by_id[75784]["promotion_decision"] == "promote-with-elevation-transfer"
+    assert "50 m" in by_id[51603]["decision_reason"]
+    assert "50 m" in by_id[75784]["decision_reason"]
