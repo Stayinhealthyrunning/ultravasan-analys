@@ -115,7 +115,7 @@ assert.ok(source.includes('historyMax=moving?fromIndex:fromIndex-1'),'framtida s
 assert.ok(source.includes('point.comparisonKey===previousPoint.comparisonKey')&&source.includes('from.comparisonKey!==to.comparisonKey'),'historiska och levande fartspår ska brytas vid banjämförbarhetsgräns');
 assert.ok(!source.includes("class:'class-evolution-course-break'")&&!source.includes("class:'class-evolution-course-break-label'"),'tekniska jämförbarhetsgränser ska inte ritas som vertikala linjer eller överlappande etiketter i diagrammet');
 assert.ok(source.includes('calendarGaps')&&source.includes('class-evolution-calendar-gap-label'),'luckor utan tävling ska märkas separat');
-assert.ok(audience.includes('comparisonKeyForRace:historyComparisonKey')&&audience.includes('comparableHistoryRuns(valid,years)'),'både Klassutveckling och Klasshistorik ska använda U7:s jämförbarhetsgräns');
+assert.ok(audience.includes('comparisonKeyForRace:historyComparisonKey')&&audience.includes('descriptiveHistoryRuns(valid,years)'),'Klassutveckling ska behålla jämförbarhetsregler för fartinterpolation medan Klasshistorik ritar en beskrivande årsserie');
 assert.ok(source.includes("yTitle.textContent='Medianfart, min/km'")&&source.includes('formatPaceValue(value,false)'),'Y-axeln ska visa min/km');
 assert.ok(source.includes("class:'class-evolution-shadow',tabindex:'0',role:'img'")&&source.includes('this._bindTooltipTarget(shadow)'),'historiska skuggpunkter ska vara fokuserbara och återanvända tooltipen');
 assert.ok(css.includes('.class-evolution-chart{position:relative;width:100%;height:600px')&&css.includes('@media(max-width:620px)'),'diagrammet ska ha responsiva desktop- och mobilhöjder');
