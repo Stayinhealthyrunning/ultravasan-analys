@@ -41,7 +41,7 @@ jobs:
             --raw "$RUNNER_TEMP/sprint-raw" \
             --report "$RUNNER_TEMP/sprint-report.json" \
             --delay 0.5 \
-            --workers 1 \
+            --workers 2 \
             --min-exact 1000
           cp "$RUNNER_TEMP/ultravasan-sprint.sqlite" data/ultravasan.sqlite
           cp "$RUNNER_TEMP/sprint-report.json" reports/UV90_2025_SPRINT_ENRICHMENT.json
