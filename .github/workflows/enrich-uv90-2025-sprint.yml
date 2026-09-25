@@ -40,7 +40,7 @@ jobs:
             --output-db "$RUNNER_TEMP/ultravasan-sprint.sqlite" \
             --raw "$RUNNER_TEMP/sprint-raw" \
             --report "$RUNNER_TEMP/sprint-report.json" \
-            --delay 0.5 \
+            --delay 0.25 \
             --min-exact 1000
           cp "$RUNNER_TEMP/ultravasan-sprint.sqlite" data/ultravasan.sqlite
           cp "$RUNNER_TEMP/sprint-report.json" reports/UV90_2025_SPRINT_ENRICHMENT.json
@@ -49,6 +49,49 @@ jobs:
           python tools/uvtool.py validate
           python tools/uvtool.py export
           python tools/u3_modularize.py --source docs/data/ultravasan.json --output-dir docs/data --write --check --report reports/U3_MODULAR_DATA_APPLIED.json
+      - name: Verifiera att endast sprint-auxiliary har ändrats
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0, "tools")
+          import u2_baseline
+
+          report=json.loads(Path("reports/UV90_2025_SPRINT_ENRICHMENT.json").read_text(encoding="utf-8"))
+          old=json.loads(Path("reports/U2_BASELINE.json").read_text(encoding="utf-8"))
+          new=u2_baseline.build_snapshot()
+
+          assert report["race_key"]=="ultravasan90-2025"
+          assert report["auxiliary_only"] is True
+          assert report["inserted_or_updated"]==1519, report
+          assert report["exact_finished"]==1519, report
+          assert report["errors"]==0, report
+          assert report["sex_counts"]=={"F":441,"M":1078}, report
+          assert report["non_aux_splits_before"]==report["non_aux_splits_after"]==14521, report
+
+          assert new["totals"]["results"]==old["totals"]["results"]==24422
+          assert new["totals"]["splits"]==old["totals"]["splits"]+1519==141429
+          assert new["source_results"]==old["source_results"]
+          assert new["identity_state"]==old["identity_state"]
+          assert new["identity_evidence_distribution"]==old["identity_evidence_distribution"]
+
+          protected_unchanged=(
+            "results_count",
+            "external_ids_count",
+            "result_payload_digest",
+            "external_id_values_digest",
+            "source_records_digest",
+          )
+          for key in protected_unchanged:
+              assert new["protected_payload"][key]==old["protected_payload"][key], key
+          assert new["protected_payload"]["splits_count"]==old["protected_payload"]["splits_count"]+1519
+          assert new["protected_payload"]["split_digest"]!=old["protected_payload"]["split_digest"]
+
+          for key in ("athletes","external_ids","person_keys","identity_evidence","pending_review_candidates"):
+              assert new["totals"][key]==old["totals"][key], key
+
+          print("Verified auxiliary-only baseline migration:", report["inserted_or_updated"], "new exact sprint splits")
+          PY
       - name: Flytta verifierad post-release-baseline
         run: |
           python tools/u2_baseline.py --write
