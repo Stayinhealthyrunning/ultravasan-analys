@@ -113,6 +113,50 @@ const moduleChecks=await evaluate(`(() => ({
 }))()`);
 moduleChecks.verified=Boolean(moduleChecks.nerdCoverage&&moduleChecks.nerdStories>=3&&moduleChecks.segmentOptions>0&&moduleChecks.genderKpis>=2);
 
+const sprintInitial=await evaluate(`(() => ({
+  year:Number(document.querySelector('#yearFilter')?.selectedOptions?.[0]?.textContent||0),
+  womenClass:document.querySelector('#sprintClassWomen')?.value??null,
+  menClass:document.querySelector('#sprintClassMen')?.value??null,
+  womenOptions:[...document.querySelectorAll('#sprintClassWomen option')].map(option=>option.value).filter(Boolean),
+  menOptions:[...document.querySelectorAll('#sprintClassMen option')].map(option=>option.value).filter(Boolean),
+  womenRows:document.querySelectorAll('#sprintWomen .sprint-row').length,
+  menRows:document.querySelectorAll('#sprintMen .sprint-row').length,
+  womenCoverage:(document.querySelector('#sprintWomenCoverage')?.textContent||'').trim(),
+  menCoverage:(document.querySelector('#sprintMenCoverage')?.textContent||'').trim(),
+  auxWarningRows:[...window.ULTRAVASAN_ACTIVE_DATA.auxiliarySplitsByResult.values()].flat().filter(split=>split.checkpoint_key==='mora_warning').length,
+}))()`);
+await evaluate(`(() => {
+  const select=document.querySelector('#sprintClassWomen');
+  if(select&&[...select.options].some(option=>option.value==='W50')){select.value='W50';select.dispatchEvent(new Event('change',{bubbles:true}))}
+})()`);
+await delay(80);
+const sprintWomenFiltered=await evaluate(`(() => ({
+  womenClass:document.querySelector('#sprintClassWomen')?.value??null,
+  menClass:document.querySelector('#sprintClassMen')?.value??null,
+  womenRows:document.querySelectorAll('#sprintWomen .sprint-row').length,
+  menRows:document.querySelectorAll('#sprintMen .sprint-row').length,
+  womenClasses:[...document.querySelectorAll('#sprintWomen .sprint-runner small')].map(node=>(node.textContent||'').split('·')[0].trim()),
+}))()`);
+await evaluate(`(() => {
+  const women=document.querySelector('#sprintClassWomen'),men=document.querySelector('#sprintClassMen');
+  if(women){women.value='';women.dispatchEvent(new Event('change',{bubbles:true}))}
+  if(men&&[...men.options].some(option=>option.value==='M50')){men.value='M50';men.dispatchEvent(new Event('change',{bubbles:true}))}
+})()`);
+await delay(80);
+const sprintMenFiltered=await evaluate(`(() => ({
+  womenClass:document.querySelector('#sprintClassWomen')?.value??null,
+  menClass:document.querySelector('#sprintClassMen')?.value??null,
+  womenRows:document.querySelectorAll('#sprintWomen .sprint-row').length,
+  menRows:document.querySelectorAll('#sprintMen .sprint-row').length,
+  menClasses:[...document.querySelectorAll('#sprintMen .sprint-runner small')].map(node=>(node.textContent||'').split('·')[0].trim()),
+}))()`);
+await evaluate(`(() => {
+  for(const id of ['sprintClassWomen','sprintClassMen']){
+    const select=document.querySelector('#'+id);if(select){select.value='';select.dispatchEvent(new Event('change',{bubbles:true}))}
+  }
+})()`);
+await delay(80);
+
 const u6Initial=await evaluate(`(() => ({
   api:Boolean(window.CourseIntelligence),
   version:(document.querySelector('#courseIntelligenceVersion')?.textContent||'').trim(),
@@ -798,6 +842,17 @@ const checks = {
   progressive:progressiveLoad.verified,
   uv45Progressive:uv45Progressive.verified,
   modules:moduleChecks.verified,
+  spurtvinnaren:Boolean(
+    sprintInitial.year===2026&&sprintInitial.womenClass===''&&sprintInitial.menClass===''&&
+    sprintInitial.womenRows>0&&sprintInitial.menRows>0&&sprintInitial.auxWarningRows>0&&
+    sprintInitial.womenOptions.length>0&&sprintInitial.womenOptions.every(value=>/^W/.test(value))&&
+    sprintInitial.menOptions.length>0&&sprintInitial.menOptions.every(value=>/^M/.test(value))&&
+    sprintInitial.womenCoverage.includes('2026')&&sprintInitial.menCoverage.includes('2026')&&
+    sprintWomenFiltered.womenClass==='W50'&&sprintWomenFiltered.menClass===''&&
+    sprintWomenFiltered.womenRows>0&&sprintWomenFiltered.menRows>0&&sprintWomenFiltered.womenClasses.every(value=>value==='W50')&&
+    sprintMenFiltered.womenClass===''&&sprintMenFiltered.menClass==='M50'&&
+    sprintMenFiltered.womenRows>0&&sprintMenFiltered.menRows>0&&sprintMenFiltered.menClasses.every(value=>value==='M50')
+  ),
   courseIntelligence:Boolean(
     u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026-official'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
     u6Initial.spreadHeaders.join('|')==='Q25–Q75|Q10–Q90'&&u6Initial.outerSpreadCells.length>0&&
@@ -875,7 +930,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,sprintInitial,sprintWomenFiltered,sprintMenFiltered,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

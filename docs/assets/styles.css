@@ -302,15 +302,16 @@ main{margin-top:-54px}
 
 /* Spurtvinnaren */
 .sprint-card{grid-column:1/-1;min-height:0}
-.sprint-explanation{margin:12px 0 0;padding:11px 13px;border-radius:11px;background:#eef3ec;color:var(--muted);font-size:.68rem;line-height:1.55}
-.sprint-controls{display:flex;justify-content:space-between;align-items:end;gap:14px;margin:14px 0}
-.sprint-controls label{min-width:240px;font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.sprint-coverage{font-size:.63rem;line-height:1.45;color:var(--muted);text-align:right}
+.sprint-explanation{margin:12px 0 14px;padding:11px 13px;border-radius:11px;background:#eef3ec;color:var(--muted);font-size:.68rem;line-height:1.55}
 .sprint-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .sprint-sex-group{min-width:0}
 .sprint-sex-group h4{margin:3px 0 9px;padding:8px 10px;border-radius:9px;font-size:.8rem}
 .sprint-sex-group.women h4{background:rgba(219,39,119,.11);color:var(--female)}
 .sprint-sex-group.men h4{background:rgba(37,99,235,.11);color:var(--male)}
+.sprint-sex-controls{display:grid;grid-template-columns:minmax(180px,260px) minmax(0,1fr);gap:10px;align-items:end;margin:0 0 10px}
+.sprint-sex-controls label{font-size:.61rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.sprint-sex-controls select{margin-top:5px}
+.sprint-coverage{font-size:.61rem;line-height:1.4;color:var(--muted);text-align:right;padding-bottom:9px}
 .sprint-list{display:grid;gap:7px}
 .sprint-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:10px 11px;border:1px solid transparent;border-radius:12px;background:#f0f3ed;color:var(--ink);text-align:left}
 .sprint-row:hover{filter:none;transform:translateY(-1px)}
@@ -329,7 +330,7 @@ main{margin-top:-54px}
 .sprint-row.medal-2 .sprint-rank{background:#879198;color:#fff}
 .sprint-row.medal-3{background:linear-gradient(135deg,#fbefe6,#e5b995);border-color:#b77a4b}
 .sprint-row.medal-3 .sprint-rank{background:#9c5d35;color:#fff}
-@media(max-width:720px){.sprint-columns{grid-template-columns:1fr}.sprint-controls{align-items:stretch;flex-direction:column}.sprint-controls label{min-width:0}.sprint-coverage{text-align:left}}
+@media(max-width:720px){.sprint-columns{grid-template-columns:1fr}.sprint-sex-controls{grid-template-columns:1fr}.sprint-coverage{text-align:left;padding:0}}
 
 /* Resultatdatabas */
 .results-panel .table-actions{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.results-panel .table-actions small{font-size:.62rem;color:var(--muted)}
