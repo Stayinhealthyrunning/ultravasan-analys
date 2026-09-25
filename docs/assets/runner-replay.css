@@ -143,7 +143,7 @@ body.race-uv45 .runner-replay-now{background:radial-gradient(circle at 100% 0,rg
 .runner-replay-map-attribution:hover,.runner-replay-map-attribution:focus{text-decoration:underline}
 .runner-replay-map svg{display:block;width:100%;height:100%;touch-action:pan-y}
 .runner-replay-map-world{will-change:transform}
-.runner-replay-map-tiles{opacity:.32;pointer-events:none}
+.runner-replay-map-tiles{opacity:.52;pointer-events:none}
 .runner-replay-map-world.dragging{cursor:grabbing}
 .runner-replay-map-world.zoomed .runner-replay-checkpoint,
 .runner-replay-map-world.zoomed .runner-replay-insight-marker,
