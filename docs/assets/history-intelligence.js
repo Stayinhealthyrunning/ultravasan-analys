@@ -153,13 +153,13 @@
     const perfDnf=perfEnough?median(performanceYears.map(summary=>summary.dnf_rate)):null;
     const structFemale=structEnough&&!sexFilterActive?median(structuralYears.map(summary=>summary.female_share)):null;
     const structSize=structEnough?median(structuralYears.map(summary=>summary.starters_n)):null;
-    const noPerformanceReference=currentKey?'Inga andra loppår med verifierad whole-course-grupp har tillräckligt underlag.':'Inga historiska helbanereferenser är verifierade; CourseVersion/checkpointändring ensam avgör inte jämförbarheten.';
+    const noPerformanceReference=currentKey?'Inga andra loppår med verifierad bansträckningsserie har tillräckligt underlag.':'Inga historiska helbanereferenser är verifierade; ändrad bansträckning eller kontrollstruktur avgör inte ensam jämförbarheten.';
     const metrics=[
       metric('finish_difficulty','Mediantidsindex',current.median_finish_seconds,perfFinish,{scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder längre mediantid än den jämförbara historiska normalnivån; indexet beskriver skillnad men förklarar inte orsaken.':noPerformanceReference}),
       metric('pace_level','Fartnivå',current.median_pace_seconds_per_km,perfPace,{direction:'inverse',scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.finishers_n,referenceN:performanceYears.length,note:perfEnough?'Över 100 betyder snabbare medianfart än den jämförbara historiska normalnivån.':noPerformanceReference}),
-      metric('dnf_load','DNF-belastning',current.dnf_rate,perfDnf,{scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.starters_n,referenceN:performanceYears.length,note:perfEnough?'DNF jämförs endast inom verifierad whole-course-grupp.':noPerformanceReference}),
+      metric('dnf_load','DNF-belastning',current.dnf_rate,perfDnf,{scope:'whole-course-comparable-race-medians',years:perfYears,currentN:current.starters_n,referenceN:performanceYears.length,note:perfEnough?'DNF jämförs endast inom verifierad bansträckningsserie.':noPerformanceReference}),
       sexFilterActive?Object.freeze({id:'female_share',label:'Kvinnorepresentation',available:false,index:null,current:null,reference:null,reference_scope:'family-race-medians',reference_years:Object.freeze(structYears),current_n:null,reference_n:structuralYears.length,note:'Döljs när könsfilter är aktivt.'})
-        :metric('female_share','Kvinnorepresentation',current.female_share,structFemale,{scope:'family-race-medians',years:structYears,currentN:current.starters_n,referenceN:structuralYears.length,note:'Deltagarsammansättning är inte ett banprestationsmått och kan därför jämföras över CourseVersions.'}),
+        :metric('female_share','Kvinnorepresentation',current.female_share,structFemale,{scope:'family-race-medians',years:structYears,currentN:current.starters_n,referenceN:structuralYears.length,note:'Deltagarsammansättning är inte ett banprestationsmått och kan därför jämföras över olika bansträckningar.'}),
       metric('field_size','Fältstorlek',current.starters_n,structSize,{scope:'family-race-medians',years:structYears,currentN:current.starters_n,referenceN:structuralYears.length,note:'Fältstorlek jämför faktiska startande och är inte ett banprestationsmått.'})
     ];
     const performanceExclusions=allFamilyRaces.filter(candidate=>Number(candidate.year)<Number(race.year)&&!performanceYears.some(summary=>summary.race_id===candidate.id)).map(candidate=>Object.freeze({year:Number(candidate.year)||null,race_key:candidate.race_key||null,reason:!comparisonKeyForRace(candidate)||!currentKey?'no verified whole-course group':'different whole-course group or no finisher evidence'}));
@@ -192,7 +192,7 @@
       rows=histories.map(group=>{
         const candidates=comparableSeriesForRows(dataset,group.rows,{minCount:2}).map(series=>{
           const delta=Number(series.first.finish_seconds)-Number(series.last.finish_seconds);
-          return delta>0?{identity_key:group.key,rows:series.rows,score:delta,label:Math.round(delta/60)+' min snabbare',detail:series.year_from+' → '+series.year_to,reason:'Verifierad personidentitet · förbättring inom '+series.key+'; andra CourseVersions blandas inte in.',scope:series.key}:null;
+          return delta>0?{identity_key:group.key,rows:series.rows,score:delta,label:Math.round(delta/60)+' min snabbare',detail:series.year_from+' → '+series.year_to,reason:'Verifierad personidentitet · förbättring inom '+series.key+'; andra bansträckningar blandas inte in.',scope:series.key}:null;
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         return candidates[0]||null;
       }).filter(Boolean).sort((a,b)=>b.score-a.score);
@@ -200,7 +200,7 @@
       rows=histories.map(group=>{
         const candidates=comparableSeriesForRows(dataset,group.rows,{minCount:minRuns}).map(series=>{
           const times=series.rows.map(row=>Number(row.finish_seconds)),range=Math.max(...times)-Math.min(...times);
-          return {identity_key:group.key,rows:series.rows,score:-range,label:Math.round(range/60)+' min spridning',detail:series.count+' jämförbara målgångar',reason:'Verifierad personidentitet · spridning inom '+series.key+'; andra CourseVersions blandas inte in.',scope:series.key};
+          return {identity_key:group.key,rows:series.rows,score:-range,label:Math.round(range/60)+' min spridning',detail:series.count+' jämförbara målgångar',reason:'Verifierad personidentitet · spridning inom '+series.key+'; andra bansträckningar blandas inte in.',scope:series.key};
         }).sort((a,b)=>b.score-a.score);
         return candidates[0]||null;
       }).filter(Boolean).sort((a,b)=>b.score-a.score);

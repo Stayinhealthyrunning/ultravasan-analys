@@ -14,7 +14,7 @@ const statusClassToken=v=>{const token=String(v??'').trim().toUpperCase();return
 const normClassLabel=v=>{let s=String(v||'Okänd').toUpperCase().replace(/\s+/g,'');if(/^H\d/.test(s))s='M'+s.slice(1);if(/^D\d/.test(s)||/^K\d/.test(s))s='W'+s.slice(1);return s||'Okänd'};
 const classOrderInfo=v=>{const s=normClassLabel(v),sex=s.startsWith('W')?0:s.startsWith('M')?1:2,m=s.match(/(\d{1,3})/),age=m?Number(m[1]):999,tail=s.replace(/^[A-Z]?\d{1,3}/,'');return {s,sex,age,tail}};
 const compareClasses=(a,b)=>{const A=classOrderInfo(a),B=classOrderInfo(b);return A.sex-B.sex||A.age-B.age||A.tail.localeCompare(B.tail,'sv')||A.s.localeCompare(B.s,'sv')};
-const cleanCheckpointName=v=>String(v||'').replace('Mora mål','Mora').replace('Start Sälen','Start').trim();
+const cleanCheckpointName=v=>{const raw=String(v||'').trim(),key=raw.toLowerCase(),names={start:'Start',smagan:'Smågan',mangsbodarna:'Mångsbodarna',risberg:'Risberg',evertsberg:'Evertsberg',oxberg:'Oxberg',hokberg:'Hökberg',eldris:'Eldris',mora:'Mora',lillsjon:'Lillsjön',high_point:'Högsta punkten',mora_warning:'Mora Förvarning'};return names[key]||raw.replace('Mora mål','Mora').replace('Start Sälen','Start').trim()};
 const segmentRangeLabel=(from,to)=>`${cleanCheckpointName(from)||'Start'} – ${cleanCheckpointName(to)}`;
 const median=window.UltravasanCharts.median;
 const quantile=window.UltravasanCharts.quantile;
@@ -242,7 +242,7 @@ function isRunnerFavorite(reference){return Boolean(reference&&window.RunnerFavo
 function renderRunnerFavoriteButton(reference){
   if(!reference)return'';
   const active=isRunnerFavorite(reference);
-  return `<button type="button" class="runner-favorite-toggle${active?' active':''}" data-runner-favorite="${esc(reference.key)}" aria-pressed="${String(active)}" title="${active?'Ta bort från favoriter':'Spara loppet som favorit'}"><span aria-hidden="true">${active?'★':'☆'}</span> ${active?'Sparad':'Spara lopp'}</button>`;
+  return `<button type="button" class="runner-favorite-toggle${active?' active':''}" data-runner-favorite="${esc(reference.key)}" aria-pressed="${String(active)}" title="${active?'Ta bort från favoriter':'Spara löparen som favorit'}"><span aria-hidden="true">${active?'★':'☆'}</span> ${active?'Sparad':'Spara löpare'}</button>`;
 }
 function renderRunnerFavorites(){
   const list=$('#runnerFavoritesList'),count=$('#runnerFavoritesCount');if(!list||!window.RunnerFavorites)return;
@@ -269,8 +269,8 @@ function toggleRunnerFavorite(reference,button=null){
   if(button){
     button.classList.toggle('active',result.active);
     button.setAttribute('aria-pressed',String(result.active));
-    button.title=result.active?'Ta bort från favoriter':'Spara loppet som favorit';
-    button.innerHTML=`<span aria-hidden="true">${result.active?'★':'☆'}</span> ${result.active?'Sparad':'Spara lopp'}`;
+    button.title=result.active?'Ta bort från favoriter':'Spara löparen som favorit';
+    button.innerHTML=`<span aria-hidden="true">${result.active?'★':'☆'}</span> ${result.active?'Sparad':'Spara löpare'}`;
   }
   renderRunnerFavorites();
 }
@@ -331,7 +331,7 @@ function renderRunnerVerifiedHistory(profile){
     const family=race?window.RaceUI.labelFor(race):'Ultravasan';
     return `<span><strong>${race?.year||'–'}</strong><small>${esc(family)} · ${result.finish_seconds?fmtTime(result.finish_seconds):esc(result.status||'–')}</small></span>`;
   }).join('');
-  return `<aside class="runner-history-note verified"><div><strong>Verifierad flerårshistorik</strong><small>${rows.length} matchade resultat · sluttider jämförs bara inom en uttryckligt verifierad helbaneserie</small></div><div class="runner-history-years">${items}</div></aside>`;
+  return `<aside class="runner-history-note verified"><div><strong>Verifierad flerårshistorik</strong><small>${rows.length} matchade resultat · sluttider jämförs bara inom en uttryckligt verifierad bansträckningsserie</small></div><div class="runner-history-years">${items}</div></aside>`;
 }
 function renderRunnerJourneyTable(profile){
   const rows=(profile?.journey?.rows||[]).filter(row=>row.source!=='start');
@@ -372,8 +372,8 @@ async function openRunner(id){
   }
   const profile=window.RunnerAnalysis?.profileForResult(state.data,id);if(!profile)return;
   const r=profile.result,race=profile.race,splits=splitsForResult(id).slice().sort((a,b)=>a.sequence_no-b.sequence_no),route=runnerRouteForRace(race),raceCheckpoints=state.data.checkpoints.filter(x=>x.race_id===r.race_id).sort((a,b)=>a.sequence_no-b.sequence_no),model=window.RunnerReplay?.createModel({race,result:r,route,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus});
-  const replay=model?window.RunnerReplay.render(model):'<div class="runner-map-empty">Loppreplay kunde inte startas. Mellantiderna visas nedan.</div>',clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven',classPlace=window.RunnerReplay?.formatClassPlace(r.class_place)||'Saknas',wholePace=window.RunnerReplay?.wholeRacePace(r,race);
-  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><div class="runner-title-copy"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||window.RaceUI.labelFor(race))}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div>${renderRunnerFavoriteButton(runnerFavoriteReference(r,race))}</div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div><section class="runner-map-section">${replay}</section>${renderRunnerVerifiedHistory(profile)}${renderRunnerJourney(profile)}${renderRunnerDevelopment(model)}<details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th><th>Kvalitet</th></tr></thead><tbody>${renderRunnerJourneyTable(profile)}</tbody></table></div></details></div>`;
+  const replay=model?window.RunnerReplay.render(model):'<div class="runner-map-empty">Loppreplay kunde inte startas. Mellantiderna visas nedan.</div>',clubOrPlace=[r.club,r.city].filter(Boolean).join(' · ')||'Ingen klubb/ort angiven',classPlace=window.RunnerReplay?.formatClassPlace(r.class_place)||'Saknas',wholePace=window.RunnerReplay?.wholeRacePace(r,race),historyBlock=renderRunnerVerifiedHistory(profile),journeyBlock=renderRunnerJourney(profile);
+  $('#runnerDetail').innerHTML=`<div class="runner-detail"><div class="runner-title"><div class="runner-title-copy"><p class="eyebrow">${race?.year||'–'} · ${esc(race?.name||window.RaceUI.labelFor(race))}</p><h2>${esc(r.name_as_published)}</h2><p>${esc(clubOrPlace)}${r.nationality?' · '+esc(r.nationality):''}</p></div>${renderRunnerFavoriteButton(runnerFavoriteReference(r,race))}</div><div class="detail-kpis"><div><span>Sluttid</span><strong>${fmtTime(r.finish_seconds)}</strong></div><div><span>Totalplats</span><strong>${r.overall_place??'–'}</strong></div><div><span>Klass</span><strong>${esc(r.age_class||'–')}</strong></div><div><span>Klassplacering</span><strong>${classPlace}</strong></div><div><span>Snittfart</span><strong>${fmtPace(wholePace)}</strong></div></div><section class="runner-map-section">${replay}</section><div class="runner-context-grid">${historyBlock}${journeyBlock}</div>${renderRunnerDevelopment(model)}<details class="runner-split-details"><summary>Visa alla passager och mellantider</summary><div class="table-wrap"><table class="split-table"><thead><tr><th>Kontroll</th><th>Distans</th><th>Passagetid</th><th>Delsträcka</th><th>Fart</th><th>Plats</th><th>Kvalitet</th></tr></thead><tbody>${renderRunnerJourneyTable(profile)}</tbody></table></div></details></div>`;
   const favoriteReference=runnerFavoriteReference(r,race),favoriteButton=$('#runnerDetail [data-runner-favorite]');if(favoriteButton&&favoriteReference)favoriteButton.onclick=()=>toggleRunnerFavorite(favoriteReference,favoriteButton);
   if(!dialog.open)dialog.showModal();const replayController=model?window.RunnerReplay.mount($('#runnerDetail [data-runner-replay]'),model,window.RaceMedia):null;bindRunnerDevelopment(replayController);window.refreshInfoTips?.();
 }
@@ -576,7 +576,7 @@ function h2hPlacementChange(value){
   const n=Number(value);return `${n>0?'+':''}${n} ${n>0?'platser':'platser'}`;
 }
 function renderH2HCheckpoints(model){
-  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Checkpointgap och placeringsresa visas inte.</strong><span>De kräver exakt samma CourseVersion. Sluttid och explicita segment kan fortfarande följa sina egna jämförbarhetskontrakt.</span></aside>';
+  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Passagegap och placeringsresa visas inte.</strong><span>De kräver exakt samma bansträckning. Sluttid och uttryckligen jämförbara delsträckor kan fortfarande följa sina egna jämförbarhetsregler.</span></aside>';
   const rows=(model.checkpoints||[]).filter(row=>row.comparable);
   if(!rows.length)return '<aside class="h2h-warning"><strong>Checkpointunderlag saknas.</strong><span>Inga gemensamma säkra passager kunde byggas för de valda resultaten.</span></aside>';
   const headers=model.results.map(result=>`<th>${esc(headToHeadRunnerLabel(result))}</th>`).join('');
@@ -590,7 +590,7 @@ function renderH2HCheckpoints(model){
     }).join('');
     return `<tr data-h2h-checkpoint="${esc(row.checkpoint_key)}"><th>${esc(cleanCheckpointName(row.checkpoint_name))}</th>${cells}</tr>`;
   }).join('');
-  return `<section class="h2h-checkpoints"><div class="runner-section-head"><div><p class="eyebrow">CHECKPOINTGAP</p><h3>Passagetid och placering</h3></div><span class="pill">samma CourseVersion</span></div><div class="table-wrap"><table class="h2h-checkpoint-table"><thead><tr><th>Kontroll</th>${headers}</tr></thead><tbody>${body}</tbody></table></div></section>`;
+  return `<section class="h2h-checkpoints"><div class="runner-section-head"><div><p class="eyebrow">PASSAGEGAP</p><h3>Passagetid och placering</h3></div><span class="pill">samma bansträckning</span></div><div class="table-wrap"><table class="h2h-checkpoint-table"><thead><tr><th>Kontroll</th>${headers}</tr></thead><tbody>${body}</tbody></table></div></section>`;
 }
 function renderH2HPlacementJourney(model){
   if(!model.same_course_version)return'';
@@ -614,17 +614,17 @@ function renderH2HPlacementJourney(model){
   return `<section class="h2h-placement"><div class="runner-section-head"><div><p class="eyebrow">PLACERINGSRESA</p><h3>Officiell totalplacering genom loppet</h3></div></div><div class="h2h-placement-legend">${legend}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Officiell placering vid jämförbara checkpoints">${marks}</svg></section>`;
 }
 function renderH2HCourseContext(model){
-  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Karta och höjd visas inte gemensamt.</strong><span>De valda resultaten tillhör olika CourseVersions. Öppna Kartduell för separata banversioner utan att blanda geometri.</span></aside>';
+  if(!model.same_course_version)return '<aside class="h2h-warning"><strong>Karta och höjd visas inte gemensamt.</strong><span>De valda resultaten tillhör olika bansträckningar. Öppna Kartduell för separata bansträckningar utan att blanda geometri.</span></aside>';
   const context=h2hCourseContext(model);
   if(!context?.route?.points?.length)return '<aside class="h2h-warning"><strong>Verifierad rutt saknas.</strong><span>Checkpoint- och segmentjämförelsen fungerar ändå.</span></aside>';
   const projection=window.RunnerReplay.mapProjection(context.route),routePath=context.route.points.map((point,index)=>{const [x,y]=projection.project(point);return `${index?'L':'M'}${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ');
   const checkpoints=context.checkpoints.map(cp=>{const point=window.RunnerReplay.pointAtDistance(context.route.points,cp.distance);if(!point)return'';const [x,y]=projection.project(point);return `<g class="h2h-course-checkpoint"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/><title>${esc(cleanCheckpointName(cp.name))}</title></g>`}).join('');
-  let elevation='<div class="h2h-elevation-unavailable">Verifierad höjdprofil saknas för denna CourseVersion.</div>';
+  let elevation='<div class="h2h-elevation-unavailable">Verifierad höjdprofil saknas för denna bansträckning.</div>';
   if(context.elevationProfile?.length){
     const ep=window.RunnerReplay.elevationProjection(context,920),path=context.elevationProfile.map((point,index)=>`${index?'L':'M'}${ep.x(point[0]).toFixed(1)} ${ep.y(point[1]).toFixed(1)}`).join(' '),cpMarks=context.checkpoints.map(cp=>{const value=window.RunnerReplay.elevationAtDistance(context.elevationProfile,cp.distance);if(!Number.isFinite(Number(value)))return'';return `<line class="h2h-elevation-checkpoint" x1="${ep.x(cp.distance).toFixed(1)}" x2="${ep.x(cp.distance).toFixed(1)}" y1="${ep.y(value).toFixed(1)}" y2="${ep.height-ep.pad.b}"><title>${esc(cleanCheckpointName(cp.name))} · ${Math.round(value)} m</title></line>`}).join('');
-    elevation=`<svg class="h2h-elevation-svg" viewBox="0 0 ${ep.width} ${ep.height}" role="img" aria-label="Gemensam höjdprofil för vald CourseVersion"><path d="${path}" class="h2h-elevation-line"/>${cpMarks}</svg>`;
+    elevation=`<svg class="h2h-elevation-svg" viewBox="0 0 ${ep.width} ${ep.height}" role="img" aria-label="Gemensam höjdprofil för vald bansträckning"><path d="${path}" class="h2h-elevation-line"/>${cpMarks}</svg>`;
   }
-  return `<section class="h2h-course-context"><div class="runner-section-head"><div><p class="eyebrow">BANA OCH HÖJD</p><h3>Gemensam CourseVersion</h3></div><span class="pill">${esc(model.course_version_ids?.[0]||'')}</span></div><div class="h2h-course-grid"><div class="h2h-course-map"><svg viewBox="0 0 920 430" role="img" aria-label="Gemensam bansträckning"><path d="${routePath}" class="h2h-course-route"/>${checkpoints}</svg></div><div class="h2h-course-elevation">${elevation}</div></div></section>`;
+  return `<section class="h2h-course-context"><div class="runner-section-head"><div><p class="eyebrow">BANA OCH HÖJD</p><h3>Gemensam bansträckning</h3></div><span class="pill">${esc(model.course_version_ids?.[0]||'')}</span></div><div class="h2h-course-grid"><div class="h2h-course-map"><div class="h2h-course-panel-head"><strong>Bansträckning ovanifrån</strong><small>Gemensam GPS-referens</small></div><svg viewBox="0 0 920 430" role="img" aria-label="Gemensam bansträckning ovanifrån"><path d="${routePath}" class="h2h-course-route"/>${checkpoints}</svg></div><div class="h2h-course-elevation"><div class="h2h-course-panel-head"><strong>Höjdprofil</strong><small>Höjd längs samma bansträckning</small></div>${elevation}</div></div></section>`;
 }
 function headToHeadRunnerLabel(result){
   const race=state.data.races.find(item=>String(item.id)===String(result?.race_id));
@@ -659,9 +659,9 @@ function renderHeadToHead(model){
       }).join('');
       return `<article class="h2h-segment"><header><strong>${esc(cleanCheckpointName(segment.from))} → ${esc(cleanCheckpointName(segment.to))}</strong></header>${rows}</article>`;
     }).join('')}</div></section>`
-    :'<aside class="h2h-warning"><strong>Inga jämförbara delsträckor.</strong><span>CourseVersion-kontrakten öppnar inte något gemensamt segment för de valda resultaten.</span></aside>';
+    :'<aside class="h2h-warning"><strong>Inga jämförbara delsträckor.</strong><span>Bansträckningarna ger ingen gemensam jämförbar delsträcka för de valda resultaten.</span></aside>';
 
-  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Sluttid, checkpoints och segment följer separata jämförbarhetskontrakt. Inga gap skapas där respektive jämförbarhetskontrakt saknar verifierad evidens.</p><p class="h2h-method"><strong>Metod:</strong> Sluttid jämförs bara för fullföljare i samma whole-course-jämförbarhetsserie. Kontrolltid och officiell placeringsrörelse använder exakta, ej estimerade registrerade passager; geometri och höjd kräver samma CourseVersion och verifierad rutt. Saknade observationer lämnas tomma och banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna.</p></header>${finish}${renderH2HCheckpoints(model)}${renderH2HPlacementJourney(model)}${segments}${renderH2HCourseContext(model)}</div>`;
+  return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Sluttid, checkpoints och segment följer separata jämförbarhetskontrakt. Inga gap skapas där respektive jämförbarhetskontrakt saknar verifierad evidens.</p><p class="h2h-method"><strong>Metod:</strong> Sluttid jämförs bara för fullföljare inom samma uttryckligen verifierade bansträckningsserie. Kontrolltid och officiell placeringsrörelse använder exakta, ej estimerade registrerade passager; geometri och höjd kräver samma bansträckning och verifierad rutt. Saknade observationer lämnas tomma och banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna.</p></header>${finish}${renderH2HCheckpoints(model)}${renderH2HPlacementJourney(model)}${segments}${renderH2HCourseContext(model)}</div>`;
 }
 async function openHeadToHead(){
   if(compareState.selected.length<2)return;
@@ -754,7 +754,7 @@ function setupMainRunnerSearch(rebuild=false){
 const INFO_HELP_EXTENDED=[
   ['.analysis-nav','Navigera direkt till översikt, genusperspektiv, klassanalys, statistik för klubb/ort, löparlista eller kartduell. Den aktuella vyn kan delas med länken Dela vy.'],
   ['.individual-runner-panel','Välj ett specifikt år eller Alla år och sök på namn eller startnummer för att öppna löparens individuella loppanalys. Valet påverkar inte statistiken för hela startfältet.'],
-  ['.runner-development','Varje rad är en faktiskt registrerad checkpoint för den öppnade löparen. Gap mot hela fältet, eget kön och egen klass är referensens medianpassagetid minus löparens passagetid: ett positivt gap betyder att löparen ligger före medianprofilen. Referenserna byggs av samma loppårs kompletta FINISHED-kohort som Replay, jämförs inte över CourseVersion och saknade passager fylls aldrig ut. Total- och klassplacering är officiella checkpointvärden. Segment mot egen helfart jämför segmentets sekunder/km med löparens sluttid dividerad med loppdistansen; index 100 är egen helfart, över 100 snabbare segment. Klick flyttar endast Replay-positionen och startar inte uppspelning eller musik.'],
+  ['.runner-development','Varje rad är en faktiskt registrerad checkpoint för den öppnade löparen. Gap mot hela fältet, eget kön och egen klass är referensens medianpassagetid minus löparens passagetid: ett positivt gap betyder att löparen ligger före medianprofilen. Referenserna byggs av samma loppårs kompletta FINISHED-kohort som Replay, jämförs inte över olika bansträckningar och saknade passager fylls aldrig ut. Total- och klassplacering är officiella checkpointvärden. Segment mot egen helfart jämför segmentets sekunder/km med löparens sluttid dividerad med loppdistansen; index 100 är egen helfart, över 100 snabbare segment. Klick flyttar endast Replay-positionen och startar inte uppspelning eller musik.'],
   ['#overview','Filtrera lopp- och fältstatistiken efter år, kön, åldersklass, klubb/ort och status. Dessa filter påverkar alla efterföljande diagram och tabeller.'],
   ['.compare-panel','Välj en till fem löpare och öppna en separat kartvy. Officiella mellantider används som fasta hållpunkter och positionen beräknas mellan kontrollerna.'],
   ['.kpis article:nth-child(1)','Antalet resultat som återstår efter de filter du har valt.'],
@@ -762,7 +762,7 @@ const INFO_HELP_EXTENDED=[
   ['.kpis article:nth-child(3)','Den snabbaste registrerade sluttiden i det aktuella urvalet.'],
   ['.kpis article:nth-child(4)','Andelen i urvalet som har en registrerad måltid. DNS och DNF saknar normalt sluttid.'],
   ['#histogram','Visar giltiga sluttider för FINISHED-resultat i det aktuella filterurvalet. Varje stapel räknar resultat i ett fast 15-minutersintervall; kön delas separat när båda visningsvalen är aktiva. Kvartilintervallet är Q25–Q75 med linjär kvantilberäkning. DNF och DNS utan sluttid ingår inte. Det är en beskrivning av importerade resultat, inte av sluttider som saknas i källan.'],
-  ['#paceChart','Visar medianfarten per uttryckligt CourseVersion-segment för det aktuella filterurvalet. Endast giltiga, exakta segmenttider från fullföljare med passage vid båda segmentändarna ingår; saknade och estimerade mellantider utelämnas. Medianen beräknas separat för varje segment och visas i den gemensamma enheten min/km eller km/h. Startpunkten saknar fartvärde. Segment mellan olika CourseVersions ska inte jämföras som samma historiska sträcka.'],
+  ['#paceChart','Visar medianfarten per uttryckligt definierad delsträcka för det aktuella filterurvalet. Endast giltiga, exakta segmenttider från fullföljare med passage vid båda segmentändarna ingår; saknade och estimerade mellantider utelämnas. Medianen beräknas separat för varje segment och visas i den gemensamma enheten min/km eller km/h. Startpunkten saknar fartvärde. Delsträckor från olika bansträckningar ska inte jämföras som om de vore identiska.'],
   ['.stats-studio .studio-head','Statistikstudion sammanfattar sambandet mellan tid, placering, avhopp, delsträckor och historisk utveckling för det aktuella urvalet.'],
   ['#placementScatter','Varje punkt är en löpare. Diagrammet visar sambandet mellan sluttid och slutplacering. Kryssa i eller ur män och kvinnor för att fokusera jämförelsen. Håll över en punkt för detaljer.'],
   ['.target-card','Välj en sluttid i jämna minuter för att se vilken ungefärlig placering och percentil den brukar motsvara i det valda urvalet.'],

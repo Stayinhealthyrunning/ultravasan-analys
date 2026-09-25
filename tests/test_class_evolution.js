@@ -113,7 +113,7 @@ assert.ok(source.includes('requestAnimationFrame(tick)')&&source.includes('cance
 assert.ok(source.includes("matchMedia('(prefers-reduced-motion: reduce)')")&&source.includes('Reducerad rörelse'),'reducerad rörelse ska respekteras');
 assert.ok(source.includes('historyMax=moving?fromIndex:fromIndex-1'),'framtida spår får inte visas');
 assert.ok(source.includes('point.comparisonKey===previousPoint.comparisonKey')&&source.includes('from.comparisonKey!==to.comparisonKey'),'historiska och levande fartspår ska brytas vid banjämförbarhetsgräns');
-assert.ok(source.includes('class-evolution-course-break')&&source.includes('label.textContent=boundary.label')&&!source.includes("label.textContent='banversion'"),'endast jämförbarhetsbeslutet ska märkas, inte en generell banversion');
+assert.ok(!source.includes("class:'class-evolution-course-break'")&&!source.includes("class:'class-evolution-course-break-label'"),'tekniska jämförbarhetsgränser ska inte ritas som vertikala linjer eller överlappande etiketter i diagrammet');
 assert.ok(source.includes('calendarGaps')&&source.includes('class-evolution-calendar-gap-label'),'luckor utan tävling ska märkas separat');
 assert.ok(audience.includes('comparisonKeyForRace:historyComparisonKey')&&audience.includes('comparableHistoryRuns(valid,years)'),'både Klassutveckling och Klasshistorik ska använda U7:s jämförbarhetsgräns');
 assert.ok(source.includes("yTitle.textContent='Medianfart, min/km'")&&source.includes('formatPaceValue(value,false)'),'Y-axeln ska visa min/km');

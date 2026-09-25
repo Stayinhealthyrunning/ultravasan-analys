@@ -16,19 +16,19 @@ function specificHelp(selector,required){
 }
 
 specificHelp('#histogram',['FINISHED-resultat','15-minutersintervall','Q25–Q75','DNF och DNS']);
-specificHelp('#paceChart',['CourseVersion-segment','exakta segmenttider','estimerade mellantider','separat för varje segment']);
+specificHelp('#paceChart',['uttryckligt definierad delsträcka','exakta segmenttider','estimerade mellantider','separat för varje segment','olika bansträckningar']);
 specificHelp('#fieldFlow',['sammanhängande följd','estimerad passage bryter','råobservation fyller inte luckan','DNS räknas inte']);
 specificHelp('#placementScatter',['Varje punkt är en löpare','slutplacering','män och kvinnor']);
 specificHelp('#classHistoryChart',['median sluttid','verifierade helbaneserie','DNS räknas inte']);
 specificHelp('#clubHistoryChart',['deltagandestaplar','prestationslinje kräver','verifierade helbanenyckel']);
 specificHelp('#percentileLadder',['FINISHED','linjära kvantilmetod','DNS och DNF']);
-specificHelp('.runner-development',['faktiskt registrerad checkpoint','kompletta finished-kohort','courseversion','startar inte uppspelning eller musik']);
-assert.ok(app.includes('class="h2h-method"')&&app.includes('samma whole-course-jämförbarhetsserie')&&app.includes('banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna'),'H2H ska visa synlig metodtext för kohort och CourseVersion-blockering');
+specificHelp('.runner-development',['faktiskt registrerad checkpoint','kompletta finished-kohort','olika bansträckningar','startar inte uppspelning eller musik']);
+assert.ok(app.includes('class="h2h-method"')&&app.includes('samma uttryckligen verifierade bansträckningsserie')&&app.includes('banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna'),'H2H ska visa synlig metodtext för kohort och bansträckningsblockering');
 for(const [symbol,terms] of [
-  ['COURSE_INTELLIGENCE_METHOD_HELP',['exakta, ej estimerade passager','n≥20','separata empiriska dimensioner','CourseVersion']],
-  ['COURSE_PLAN_METHOD_HELP',['historiska fullföljare','exakt samma CourseVersion','minst n=5','ingen resttid fördelas genom gissning']],
-  ['HISTORY_FINGERPRINT_METHOD_HELP',['medianen av loppårsmedianerna','Minst två andra jämförbara loppår','CourseVersion']],
-  ['HISTORY_HALL_METHOD_HELP',['verifierad personidentitet','CourseVersion','Mest förbättrad']],
+  ['COURSE_INTELLIGENCE_METHOD_HELP',['exakta, ej estimerade passager','n≥20','separata empiriska dimensioner','bansträckning']],
+  ['COURSE_PLAN_METHOD_HELP',['historiska fullföljare','exakt samma bansträckning','minst n=5','ingen resttid fördelas genom gissning']],
+  ['HISTORY_FINGERPRINT_METHOD_HELP',['medianen av loppårsmedianerna','Minst två andra jämförbara loppår','bansträckningsserie']],
+  ['HISTORY_HALL_METHOD_HELP',['verifierad personidentitet','bansträckningsserie','Mest förbättrad']],
 ]){
   const line=nerd.split(/\r?\n/).find(value=>value.startsWith(`const ${symbol}=`));
   assert.ok(line&&terms.every(term=>line.includes(term)),`${symbol} ska behålla sin specifika metodbegränsning`);

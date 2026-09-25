@@ -722,7 +722,7 @@ const h2hChangedCourse=await evaluate(`(() => ({
   placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
   courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
   warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
-  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,800),
+  text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,1800),
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
 
@@ -803,7 +803,7 @@ const checks = {
     Number(u6Initial.outerQuantiles.q10)<=Number(u6Initial.outerQuantiles.q25)&&Number(u6Initial.outerQuantiles.q75)<=Number(u6Initial.outerQuantiles.q90)&&
     u6Initial.method.includes('n≥20')&&u6Initial.method.includes('separata empiriska dimensioner')&&u6Initial.method.includes('inte ihop till en totalscore eller ranking')&&
     u6Initial.method.includes('inte i sig bevis för exakt historisk geometri')&&
-    u6Initial.planMethod.includes('exakt samma CourseVersion')&&
+    u6Initial.planMethod.includes('exakt samma bansträckning')&&
     u6Synced.key&&u6Synced.rowSelected===1&&u6Synced.routeSelected===1&&u6Synced.elevationSelected===1&&
     u6Synced.paceSelected===1&&u6Synced.legacyFrom===u6Synced.expectedFrom&&u6Synced.legacyTo===u6Synced.expectedTo&&
     u6Plan.target==='09:30:00'&&u6Plan.rows===u6Initial.rows&&u6Plan.historical>0&&u6Plan.unavailable===0&&
@@ -813,11 +813,11 @@ const checks = {
     u7Switch?.key==='ultravasan90-2025'&&u7History.api&&
     u7History.fingerprintPerformanceYears.join(',')==='2024'&&u7History.fingerprintRows===5&&
     u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===false&&item[2]==='whole-course-comparable-race-medians'&&item[3]===1)&&
-    u7History.fingerprintMethod.includes('uttryckligt verifierade whole-course-grupp')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
-    u7History.classBreaks>0&&u7History.classMethod.includes('CourseVersion beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
+    u7History.fingerprintMethod.includes('uttryckligt verifierade bansträckningsserie')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
+    u7History.classBreaks===0&&u7History.classMethod.includes('Bansträckningskontraktet beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
     u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>=1&&u7History.seriesRendered===u7History.expectedSeries&&
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
-    u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('checkpoint-/segmentkontrakt')
+    u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('kontroller och delsträckor')
   ),
   clubHistoryCourseVersion:Boolean(
     clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope==='group:ultravasan90-2024-2025'&&
@@ -862,9 +862,9 @@ const checks = {
     sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('CHECKPOINTGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('PASSAGEGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
   h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Sluttid och gap'),
-  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings>=2 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt') && h2hChangedCourse.text.includes('Checkpointgap och placeringsresa visas inte'),
+  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings>=2 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt') && h2hChangedCourse.text.includes('Passagegap och placeringsresa visas inte'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };

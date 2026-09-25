@@ -15,8 +15,8 @@
 <meta content="Analysera resultat, mellantider, fart och loppförlopp för Ultravasan 90 och Ultravasan 45." name="twitter:description"/>
 <meta content="https://stayinhealthyrunning.github.io/ultravasan-analys/assets/salen-mora-header.png" name="twitter:image"/>
 <title>Sälen-Mora splits</title>
-<link href="assets/styles.css?v=20260924-r3&amp;ci=1&amp;classhistory=1" rel="stylesheet"/>
-<link href="assets/runner-replay.css?v=20260716-livecompare5" rel="stylesheet"/>
+<link href="assets/styles.css?v=20260924-r3&amp;ci=1&amp;classhistory=1&amp;polish=1" rel="stylesheet"/>
+<link href="assets/runner-replay.css?v=20260716-livecompare5&amp;polish=1" rel="stylesheet"/>
 <link href="data:," rel="icon"/>
 </head>
 <body>
@@ -64,7 +64,7 @@
     <div class="analysis-guide-grid">
       <article><span class="analysis-guide-mark source" aria-hidden="true">1</span><div><strong>Källvärde</strong><p>Sluttid, officiell passage, placering och status visas som publicerade observationer när de finns.</p></div></article>
       <article><span class="analysis-guide-mark estimate" aria-hidden="true">2</span><div><strong>Beräknat</strong><p>Position mellan kontroller och vissa visualiseringar är rekonstruktioner. De märks som estimerade och ska inte läsas som individuell GPS.</p></div></article>
-      <article><span class="analysis-guide-mark compare" aria-hidden="true">3</span><div><strong>Jämförbart</strong><p>Fart- och sluttidstrender mellan år kräver samma CourseVersion eller ett explicit jämförbarhetskontrakt. Banbyten bryter prestationsserien.</p></div></article>
+      <article><span class="analysis-guide-mark compare" aria-hidden="true">3</span><div><strong>Jämförbart</strong><p>Fart- och sluttidstrender mellan år kan påverkas av ändrad bansträckning. Där strikt jämförbarhet krävs används bara uttryckligen verifierade bansträckningar.</p></div></article>
       <article><span class="analysis-guide-mark filter" aria-hidden="true">4</span><div><strong>Aktuellt urval</strong><p>Kön, klass, klubb/ort och status filtrerar fältanalyserna. Individuell löparsökning och kartduell har egna val och blandas inte in i fälturvalet.</p></div></article>
     </div>
     <p class="analysis-guide-foot" id="analysisGuideFilterStatus">Inga fältfilter är aktiva.</p>
@@ -73,7 +73,7 @@
 <section class="analysis-scope individual-scope runner-lookup-panel individual-runner-panel panel" id="individual-analysis"><div class="individual-runner-copy"><p class="eyebrow">Individuell loppanalys</p><h2>Analysera en löpares lopp i realtid</h2><p>Välj år eller sök i hela historiken. Klicka på ett namn för att i realtid analysera löparens lopp, mellantider, placering totalt, placering mot klass samt få prestationsinsikter</p></div><div class="individual-runner-search"><h3>Hitta en löpare</h3><div class="lookup-controls"><label>År<select id="mainSearchYear"><option value="all">Alla år</option></select></label><div class="main-runner-picker">
 <label>Sök löpare<input autocomplete="off" id="nameFilter" placeholder="Namn eller startnummer" type="search"/></label>
 <div class="main-runner-suggestions" hidden="" id="mainRunnerSuggestions"></div>
-</div></div><div class="runner-favorites-panel" id="runnerFavorites"><div class="runner-favorites-head"><div><strong>Favoriter</strong><small>Sparade lopp på den här enheten</small></div><span id="runnerFavoritesCount">0</span></div><div class="runner-favorites-list" id="runnerFavoritesList"><span class="runner-favorites-empty">Inga sparade lopp ännu.</span></div></div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
+</div></div><div class="runner-favorites-panel" id="runnerFavorites"><div class="runner-favorites-head"><div><strong>Favoriter</strong><small>Sparade löpare på den här enheten</small></div><span id="runnerFavoritesCount">0</span></div><div class="runner-favorites-list" id="runnerFavoritesList"><span class="runner-favorites-empty">Inga sparade löpare ännu.</span></div></div></div></section><section aria-label="Jämför löpare på karta" class="compare-panel panel" id="kartduell">
 <div class="compare-copy"><span class="scope-chip individual">Individuell jämförelse</span>
 <p class="eyebrow">ANIMERAD KARTDUELL</p>
 <h2>Se loppet utvecklas på kartan</h2>
@@ -190,7 +190,7 @@
 <div class="live-chip"><i></i><span id="intelligenceCoverage">Läser historiken…</span></div>
 </div>
 <article class="panel course-intelligence-card" id="courseIntelligenceCard">
-<div class="panel-head wrap"><div><p class="eyebrow">COURSE INTELLIGENCE</p><h3>Var avgörs loppet?</h3><p class="panel-subtitle">Terräng, pacing, spridning och avhopp på samma CourseVersion. Klicka på ett segment för att synka analysen.</p></div><span class="pill" id="courseIntelligenceVersion">CourseVersion</span></div>
+<div class="panel-head wrap"><div><p class="eyebrow">COURSE INTELLIGENCE</p><h3>Var avgörs loppet?</h3><p class="panel-subtitle">Terräng, pacing, spridning och avhopp på samma bansträckning. Klicka på ett segment för att synka analysen.</p></div><span class="pill" id="courseIntelligenceVersion">Bansträckning</span></div>
 <div class="course-intelligence-summary" id="courseIntelligenceSummary"></div>
 <div class="course-intelligence-views">
 <div class="course-route-view" id="courseRouteView" aria-label="Interaktiv banöversikt"></div>
@@ -200,7 +200,7 @@
 <div class="course-segment-narrative" id="courseSegmentNarrative"></div>
 <div class="table-wrap course-intelligence-table-wrap"><table class="course-intelligence-table"><thead><tr><th>Segment</th><th>Distans</th><th>Stigning</th><th>Nedför</th><th>Medianfart</th><th>Q25–Q75</th><th>Q10–Q90</th><th>Pacing loss</th><th>Plats ±</th><th>DNF</th></tr></thead><tbody id="courseIntelligenceRows"></tbody></table></div>
 <section class="course-race-plan" id="courseRacePlan">
-<div class="course-race-plan-head"><div><p class="eyebrow">MÅLTEMPO / LOPPPLAN</p><h4>Fördela en måltid efter samma CourseVersion</h4><p>Historiska exakta segmentandelar används först. Distans används bara som tydligt märkt reservberäkning.</p></div><label>Måltid <input id="courseTargetTime" inputmode="numeric" value="10:00:00" aria-label="Måltid i timmar minuter sekunder"></label></div>
+<div class="course-race-plan-head"><div><p class="eyebrow">MÅLTEMPO / LOPPPLAN</p><h4>Fördela en måltid efter samma bansträckning</h4><p>Historiska exakta segmentandelar används först. Distans används bara som tydligt märkt reservberäkning.</p></div><label>Måltid <input id="courseTargetTime" inputmode="numeric" value="10:00:00" aria-label="Måltid i timmar minuter sekunder"></label></div>
 <div class="course-plan-status" id="coursePlanStatus"></div>
 <div class="table-wrap"><table class="course-plan-table"><thead><tr><th>Till kontroll</th><th>Segmenttid</th><th>Kumulativt</th><th>Måltempo</th><th>Underlag</th></tr></thead><tbody id="coursePlanRows"></tbody></table></div>
 </section>
@@ -331,11 +331,11 @@
 <script src="assets/history-intelligence.js?v=20260923-u7"></script>
 <script src="assets/runner-analysis.js?v=20260923-u5"></script>
 <script src="assets/runner-favorites.js?v=20260923-u5"></script>
-<script src="assets/course-intelligence.js?v=20260924-r3&amp;official=1"></script>
-<script src="assets/app.js?v=20260924-r3"></script>
-<script src="assets/nerdlab.js?v=20260924-r4"></script>
-<script src="assets/class-evolution.js?v=20260924-route-evidence1"></script>
-<script src="assets/audience-analytics.js?v=20260924-r3&amp;classhistory=1"></script>
+<script src="assets/course-intelligence.js?v=20260924-r3&amp;official=1&amp;polish=1"></script>
+<script src="assets/app.js?v=20260924-r3&amp;polish=1"></script>
+<script src="assets/nerdlab.js?v=20260924-r4&amp;polish=1"></script>
+<script src="assets/class-evolution.js?v=20260924-route-evidence1&amp;polish=1"></script>
+<script src="assets/audience-analytics.js?v=20260924-r3&amp;classhistory=1&amp;polish=1"></script>
 
   <!-- Cloudflare Web Analytics: production hostname only -->
   <script>

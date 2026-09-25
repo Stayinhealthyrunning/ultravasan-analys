@@ -830,3 +830,53 @@ html,body{max-width:100%;overflow-x:hidden}
 .class-history-line{pointer-events:none}
 .class-history-hit{cursor:help;outline:none}
 .class-history-hit:focus{stroke:var(--ink);stroke-width:1.5;stroke-opacity:.22}
+
+
+/* 2026-09-25: runner context cards and clearer head-to-head course panels */
+.runner-context-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin:18px 0 24px;
+  align-items:stretch;
+}
+.runner-context-grid>:only-child{grid-column:1/-1}
+.runner-context-grid>.runner-history-note,
+.runner-context-grid>.runner-journey{
+  box-sizing:border-box;
+  min-width:0;
+  height:100%;
+  margin:0;
+}
+.runner-context-grid>.runner-journey{
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#f5f7f2;
+  overflow:hidden;
+}
+.runner-context-grid>.runner-journey .runner-section-head{margin:0 0 10px}
+.runner-context-grid>.runner-history-note{align-self:stretch}
+.h2h-course-map,.h2h-course-elevation{display:flex;flex-direction:column}
+.h2h-course-panel-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px 7px;
+  border-bottom:1px solid rgba(16,36,29,.08);
+  background:rgba(255,255,255,.58);
+}
+.h2h-course-panel-head strong{font-size:.72rem;color:var(--forest)}
+.h2h-course-panel-head small{font-size:.58rem;color:var(--muted);text-align:right}
+.h2h-course-map svg,.h2h-course-elevation svg{flex:1;height:auto!important;min-height:0}
+@media(max-width:900px){
+  .runner-context-grid{grid-template-columns:1fr}
+  .runner-context-grid>:only-child{grid-column:auto}
+}
+@media(max-width:620px){
+  .runner-context-grid{gap:10px;margin:14px 0 20px}
+  .runner-context-grid>.runner-journey{padding:12px 10px}
+  .h2h-course-panel-head{display:grid;gap:3px}
+  .h2h-course-panel-head small{text-align:left}
+}
