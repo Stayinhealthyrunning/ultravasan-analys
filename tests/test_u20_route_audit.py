@@ -14,13 +14,17 @@ def test_route_source_digest_is_stable_across_windows_and_linux_line_endings(tmp
 def test_route_audit_covers_all_editions_and_separates_evidence_from_comparability():
     report = u20_route_audit.build_report()
     assert report["edition_count"] == 22
-    assert report["exact_edition_routes_found"] == 7
+    assert report["exact_edition_routes_found"] == 9
     by_key = {row["race_key"]: row for row in report["routes"]}
 
     assert by_key["ultravasan90-2022"]["exact_edition_route_found"]
     assert by_key["ultravasan90-2024"]["exact_edition_route_found"]
     assert by_key["ultravasan90-2026"]["exact_edition_route_found"]
     assert by_key["ultravasan45-2026"]["exact_edition_route_found"]
+    assert by_key["ultravasan45-2018"]["exact_edition_route_found"]
+    assert by_key["ultravasan45-2019"]["exact_edition_route_found"]
+    assert by_key["ultravasan45-2018"]["evidence_status"] == "local-exact-source-year"
+    assert by_key["ultravasan45-2019"]["evidence_status"] == "local-exact-source-year"
     assert by_key["ultravasan90-2023"]["route_usage"] == "exact-source-year"
     assert report["display_route_contracts_complete"]
     assert by_key["ultravasan90-2024"]["display_route_contract"]["display_geometry_usage"] == "exact-source-year"
