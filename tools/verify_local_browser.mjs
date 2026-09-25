@@ -34,7 +34,7 @@ function command(method, params = {}) {
 }
 async function evaluate(expression) {
   const result = await command("Runtime.evaluate", {expression, awaitPromise: true, returnByValue: true});
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || "Browser evaluation failed");
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text || "Browser evaluation failed");
   return result.result.value;
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
