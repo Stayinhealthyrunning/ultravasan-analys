@@ -16,6 +16,7 @@ function segmentClassOptions(rows){return [...new Set((rows||[]).map(r=>String(r
 function filterRowsBySegmentClass(rows,selectedClass){const selected=String(selectedClass||'').trim();return selected?(rows||[]).filter(r=>String(r?.age_class||'')===selected):[...(rows||[])]}
 const activeRace=()=>state.data.races.find(r=>r.id===state.raceId);
 const nSplitsForResult=id=>state.data.splitsByResult.get(id)||window.UltravasanDataIndex.EMPTY_SPLITS;
+const nAuxSplitsForResult=id=>state.data.auxiliarySplitsByResult?.get(id)||window.UltravasanDataIndex.EMPTY_SPLITS;
 const nSplitsForResults=rows=>window.UltravasanDataIndex.splitsForResults(state.data,rows);
 const splitMap=id=>new Map(nSplitsForResult(id).map(s=>[s.sequence_no,s]));
 const nSex=r=>{const x=String(r?.sex||'').toUpperCase();return ['F','W','K','D'].includes(x)?'F':['M','H'].includes(x)?'M':'U'};
@@ -463,7 +464,7 @@ function renderSprintWinners(){
   const race=activeRace();
   if(!race){women.innerHTML=men.innerHTML='<div class="empty compact-empty">Loppår saknas.</div>';if(coverage)coverage.textContent='';return}
   const classKey=populateSprintClassFilter(),raceRows=state.data.results.filter(row=>String(row.race_id)===String(race.id));
-  const model=finishSprintRanking(raceRows,{getSplits:nSplitsForResult,isFinished:nIsFinished,classKey,raceDistanceKm:race.distance_km});
+  const model=finishSprintRanking(raceRows,{getSplits:nAuxSplitsForResult,isFinished:nIsFinished,classKey,raceDistanceKm:race.distance_km});
   const top=list=>list.filter(item=>item.rank<=5);
   const rowHtml=item=>{
     const medal=item.rank<=3?` medal-${item.rank}`:'',place=item.r.overall_place==null?'–':item.r.overall_place;

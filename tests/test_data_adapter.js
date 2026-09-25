@@ -85,5 +85,13 @@ assert.strictEqual(auxiliary.splits[0].segment_seconds,4000,'Sälen→Smågan sk
 assert.strictEqual(auxiliary.splits[1].segment_seconds,32000,'Smågan→Mora ska bortse från Mora Förvarning');
 assert.ok(!auxiliary.checkpoints.some(row=>['high_point','mora_warning'].includes(row.checkpoint_key)));
 assert.ok(!auxiliary.splits.some(row=>['high_point','mora_warning'].includes(row.checkpoint_key)));
+assert.ok(auxiliary.auxiliarySplitsByResult instanceof Map,'icke-analytiska passager ska bevaras i separat index');
+const auxRows=auxiliary.auxiliarySplitsByResult.get(202);
+assert.deepStrictEqual(auxRows.map(row=>row.checkpoint_key),['high_point','mora_warning']);
+const warning=auxRows.find(row=>row.checkpoint_key==='mora_warning');
+assert.strictEqual(warning.checkpoint_name,'Mora Förvarning');
+assert.strictEqual(warning.distance_km,91.3);
+assert.strictEqual(warning.elapsed_seconds,35600);
+assert.strictEqual(Object.prototype.propertyIsEnumerable.call(auxiliary,'auxiliarySplitsByResult'),false);
 
 console.log('OK: U4 DataAdapter normaliserar, berikar och exkluderar icke-analytiska timingpunkter deterministiskt');

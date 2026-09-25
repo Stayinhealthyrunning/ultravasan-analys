@@ -52,6 +52,7 @@
       checkpoint.sequence_no=numberOr(checkpoint.sequence_no);
       checkpoint.distance_km=numberOr(checkpoint.distance_km);
     });
+    const rawCheckpoints=data.checkpoints.slice();
 
     // Speaker-/servicepunkter kan finnas i källdatan men ska aldrig bli analytiska
     // checkpoints. Frontendens gemensamma datalager exponerar bara officiella
@@ -72,13 +73,15 @@
 
     const raceByResult=new Map(data.results.map(result=>[result.id,result.race_id]));
     const checkpointByRaceAndKey=new Map(
-      data.checkpoints.map(checkpoint=>[
+      rawCheckpoints.map(checkpoint=>[
         `${checkpoint.race_id}|${checkpointKey(checkpoint.checkpoint_key)}`,
         checkpoint
       ])
     );
 
-    data.splits=data.splits.filter(split=>!AUXILIARY_CHECKPOINT_KEYS.has(checkpointKey(split.checkpoint_key)));
+    // Normalisera alla råpassager först. De icke-analytiska passagerna bevaras
+    // i ett separat index för funktioner som uttryckligen behöver dem, men tas
+    // fortfarande bort från den ordinarie analytiska splitlistan.
     data.splits.forEach(split=>{
       split.result_id=numberOr(split.result_id);
       for(const key of [
@@ -96,6 +99,12 @@
       if(split.is_estimated==null)split.is_estimated=0;
       else split.is_estimated=numberOr(split.is_estimated);
     });
+    const auxiliarySplits=data.splits.filter(split=>AUXILIARY_CHECKPOINT_KEYS.has(checkpointKey(split.checkpoint_key)));
+    const auxiliarySplitsByResult=dataIndex?.buildSplitsByResult
+      ?dataIndex.buildSplitsByResult(auxiliarySplits)
+      :new Map();
+    defineOnce(data,'auxiliarySplitsByResult',auxiliarySplitsByResult);
+    data.splits=data.splits.filter(split=>!AUXILIARY_CHECKPOINT_KEYS.has(checkpointKey(split.checkpoint_key)));
 
     // Segmenttid och segmentfart måste räknas om efter att mellanliggande
     // icke-analytiska punkter tagits bort. Vi räknar bara när båda officiella
