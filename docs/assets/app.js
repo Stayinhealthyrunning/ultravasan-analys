@@ -242,7 +242,7 @@ function isRunnerFavorite(reference){return Boolean(reference&&window.RunnerFavo
 function renderRunnerFavoriteButton(reference){
   if(!reference)return'';
   const active=isRunnerFavorite(reference);
-  return `<button type="button" class="runner-favorite-toggle${active?' active':''}" data-runner-favorite="${esc(reference.key)}" aria-pressed="${String(active)}" title="${active?'Ta bort från favoriter':'Spara löparen som favorit'}"><span aria-hidden="true">${active?'★':'☆'}</span> ${active?'Sparad':'Spara lopp'}</button>`;
+  return `<button type="button" class="runner-favorite-toggle${active?' active':''}" data-runner-favorite="${esc(reference.key)}" aria-pressed="${String(active)}" title="${active?'Ta bort från favoriter':'Spara löparen som favorit'}"><span aria-hidden="true">${active?'★':'☆'}</span> ${active?'Sparad':'Spara löpare'}</button>`;
 }
 function renderRunnerFavorites(){
   const list=$('#runnerFavoritesList'),count=$('#runnerFavoritesCount');if(!list||!window.RunnerFavorites)return;
