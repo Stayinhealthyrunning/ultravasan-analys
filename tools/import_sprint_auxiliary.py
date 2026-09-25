@@ -216,19 +216,16 @@ def run(args):
             report["list_entries"]=len(entries)
             methods=defaultdict(int); inserted=0; no_warning=0; unmatched=0; errors=0
             thread_state=threading.local()
-            failed_fetches=[]
 
-            def fetch_detail(item,worker=None):
+            def fetch_detail(item):
                 idx,entry=item
                 idp=entry["idp"]
                 url=mika_import.detail_url(race_cfg,idp,entry.get("url",""))
                 cache=raw_root/"details"/f"{re.sub(r'[^A-Za-z0-9_.-]','_',idp)}.html"
+                worker=getattr(thread_state,"fetcher",None)
                 if worker is None:
-                    worker=getattr(thread_state,"fetcher",None)
-                    if worker is None:
-                        # One HTTP session per worker thread; no database access happens here.
-                        worker=mika_import.Fetcher(args.delay,False,args.force)
-                        thread_state.fetcher=worker
+                    worker=mika_import.Fetcher(args.delay,False,args.force)
+                    thread_state.fetcher=worker
                 try:
                     html,_,_,mode=worker.get(url,cache)
                     parsed=mika_import.apply_fallback(
@@ -243,19 +240,14 @@ def run(args):
             def apply_detail(idx,entry,idp,parsed,warning):
                 nonlocal inserted,no_warning,unmatched,errors
                 if not warning or not warning.get("elapsed_seconds"):
-                    no_warning+=1
-                    return
+                    no_warning+=1; return
                 target,method=choose_target(parsed,race_cfg["event_code"],idp,indexes)
                 methods[method]+=1
                 if not target:
-                    unmatched+=1
-                    return
+                    unmatched+=1; return
                 elapsed=int(warning["elapsed_seconds"])
                 if target["finish_seconds"] is not None and elapsed>=int(target["finish_seconds"]):
-                    errors+=1
-                    if len(report["details"])<50:
-                        report["details"].append({"idp":idp,"error":"auxiliary elapsed time is not before finish"})
-                    return
+                    errors+=1; return
                 raw=json.dumps({"auxiliary_only":True,"source":"vasaloppet_mika","source_result_id":f"{race_cfg['event_code']}:{idp}","source_label":warning.get("source_label")},ensure_ascii=False)
                 conn.execute("""
                   INSERT INTO splits(result_id,checkpoint_id,elapsed_seconds,segment_seconds,place_overall,place_gender,place_class,
@@ -271,37 +263,41 @@ def run(args):
                     conn.commit()
 
             items=list(enumerate(entries.values(),1))
-            with ThreadPoolExecutor(max_workers=max(1,args.workers)) as pool:
-                for result in pool.map(fetch_detail,items):
-                    idx,entry,idp,parsed,warning,fetch_error=result
-                    if fetch_error is not None:
-                        failed_fetches.append((idx,entry,idp,fetch_error))
-                        continue
-                    apply_detail(idx,entry,idp,parsed,warning)
+            retry=[]
+            if args.workers>1:
+                with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                    for idx,entry,idp,parsed,warning,fetch_error in pool.map(fetch_detail,items):
+                        if fetch_error is not None:
+                            retry.append((idx,entry,idp,fetch_error))
+                            continue
+                        apply_detail(idx,entry,idp,parsed,warning)
+            else:
+                retry=[(idx,entry,entry["idp"],"serial") for idx,entry in items]
 
-            # Mika can temporarily return HTTP 403 when several detail pages are
-            # fetched concurrently.  Do not accept an incomplete enrichment.
-            # Cool down, then retry only those failed pages serially with the
-            # already warmed list-page session.  Final errors are counted only
-            # after this recovery pass.
-            report["parallel_fetch_failures"]=len(failed_fetches)
-            report["serial_retry_recovered"]=0
-            if failed_fetches:
-                time.sleep(args.retry_cooldown)
-                for idx,entry,idp,first_error in failed_fetches:
-                    result=fetch_detail((idx,entry),worker=fetcher)
-                    _,_,_,parsed,warning,retry_error=result
-                    if retry_error is not None:
-                        errors+=1
-                        if len(report["details"])<50:
-                            report["details"].append({
-                                "idp":idp,
-                                "error":retry_error,
-                                "initial_error":first_error,
-                            })
-                        continue
-                    report["serial_retry_recovered"]+=1
-                    apply_detail(idx,entry,idp,parsed,warning)
+            # Mika may throttle concurrent detail requests with HTTP 403.
+            # Retry only failed pages with the original single session and delay.
+            # This keeps the fast path while preserving the same completeness
+            # contract as the proven serial import.
+            if retry:
+                recovery=mika_import.Fetcher(max(args.delay,0.25),args.browser_fallback,args.force)
+                try:
+                    for idx,entry,idp,first_error in retry:
+                        url=mika_import.detail_url(race_cfg,idp,entry.get("url",""))
+                        cache=raw_root/"details"/f"{re.sub(r'[^A-Za-z0-9_.-]','_',idp)}.html"
+                        try:
+                            html,_,_,mode=recovery.get(url,cache)
+                            parsed=mika_import.apply_fallback(
+                                uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
+                                entry
+                            )
+                            warning=extract_last_pre_finish_control(html)
+                            apply_detail(idx,entry,idp,parsed,warning)
+                        except Exception as exc:
+                            errors+=1
+                            if len(report["details"])<50:
+                                report["details"].append({"idp":idp,"error":str(exc),"first_error":first_error})
+                finally:
+                    recovery.close()
             conn.commit()
         finally:
             fetcher.close()
