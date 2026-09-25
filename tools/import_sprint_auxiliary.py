@@ -13,6 +13,8 @@ import shutil
 import sqlite3
 import sys
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+import threading
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -212,17 +214,37 @@ def run(args):
             entries=list_entries(fetcher,race_cfg,raw_root)
             report["list_entries"]=len(entries)
             methods=defaultdict(int); inserted=0; no_warning=0; unmatched=0; errors=0
-            for idx,entry in enumerate(entries.values(),1):
+            thread_state=threading.local()
+
+            def fetch_detail(item):
+                idx,entry=item
                 idp=entry["idp"]
                 url=mika_import.detail_url(race_cfg,idp,entry.get("url",""))
                 cache=raw_root/"details"/f"{re.sub(r'[^A-Za-z0-9_.-]','_',idp)}.html"
+                worker=getattr(thread_state,"fetcher",None)
+                if worker is None:
+                    # One HTTP session per worker thread; no database access happens here.
+                    worker=mika_import.Fetcher(args.delay,False,args.force)
+                    thread_state.fetcher=worker
                 try:
-                    html,_,_,mode=fetcher.get(url,cache)
+                    html,_,_,mode=worker.get(url,cache)
                     parsed=mika_import.apply_fallback(
                         uvtool.parse_detail_html(html,f"{race_cfg['event_code']}:{idp}",url,race_cfg["checkpoints"]),
                         entry
                     )
                     warning=extract_last_pre_finish_control(html)
+                    return idx,entry,idp,parsed,warning,None
+                except Exception as exc:
+                    return idx,entry,idp,None,None,str(exc)
+
+            items=list(enumerate(entries.values(),1))
+            with ThreadPoolExecutor(max_workers=max(1,args.workers)) as pool:
+                for idx,entry,idp,parsed,warning,fetch_error in pool.map(fetch_detail,items):
+                    if fetch_error is not None:
+                        errors+=1
+                        if len(report["details"])<50:
+                            report["details"].append({"idp":idp,"error":fetch_error})
+                        continue
                     if not warning or not warning.get("elapsed_seconds"):
                         no_warning+=1; continue
                     target,method=choose_target(parsed,race_cfg["event_code"],idp,indexes)
@@ -245,10 +267,6 @@ def run(args):
                     inserted+=1
                     if idx%100==0:
                         conn.commit()
-                except Exception as exc:
-                    errors+=1
-                    if len(report["details"])<50:
-                        report["details"].append({"idp":idp,"error":str(exc)})
             conn.commit()
         finally:
             fetcher.close()
@@ -296,6 +314,7 @@ def main():
     p.add_argument("--raw",type=Path,required=True)
     p.add_argument("--report",type=Path,required=True)
     p.add_argument("--delay",type=float,default=0.5)
+    p.add_argument("--workers",type=int,default=1,help="Parallel detail-page HTTP workers; database writes remain serial")
     p.add_argument("--min-exact",type=int,default=1000)
     p.add_argument("--force",action="store_true")
     p.add_argument("--browser-fallback",action="store_true")
