@@ -260,7 +260,7 @@ const clubHistoryCourseVersion=await evaluate(`(() => {
   const currentRace=state.data.races.find(race=>String(race.id)===String(state.raceId));
   const currentScope=currentRace?window.HistoryIntelligence.comparisonKeyForRace(currentRace):null;
   const paths=[...document.querySelectorAll('#clubHistoryChart .club-history-line')].map(path=>({scope:path.dataset.historyScope||'',from:Number(path.dataset.historyFrom),to:Number(path.dataset.historyTo)}));
-  const pathScopesValid=paths.length>=1&&paths.every(path=>path.scope&&scopeForYear(path.from)===path.scope&&scopeForYear(path.to)===path.scope);
+  const pathScopesValid=paths.length>=1&&paths.every(path=>path.scope==='descriptive'&&Number.isFinite(path.from)&&Number.isFinite(path.to)&&path.to>path.from);
   const improvedButton=document.querySelector('#clubRankingTabs button[data-metric="improved"]');
   improvedButton?.click();
   const rankingRows=[...document.querySelectorAll('#clubRankings button')].map(button=>{
@@ -811,10 +811,10 @@ const checks = {
   ),
   historyIntelligence:Boolean(
     u7Switch?.key==='ultravasan90-2025'&&u7History.api&&
-    u7History.fingerprintPerformanceYears.join(',')==='2024'&&u7History.fingerprintRows===5&&
-    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===false&&item[2]==='whole-course-comparable-race-medians'&&item[3]===1)&&
-    u7History.fingerprintMethod.includes('uttryckligt verifierade bansträckningsserie')&&u7History.hallRows>0&&u7History.hallMethod.includes('verifierad personidentitet')&&
-    u7History.classBreaks===0&&u7History.classMethod.includes('Bansträckningskontraktet beskriver')&&u7History.classMethod.includes('helbanans jämförbarhet saknas')&&
+    u7History.fingerprintPerformanceYears.join(',')==='2023,2024'&&u7History.fingerprintRows===5&&
+    u7History.fingerprintScopes.filter(item=>['finish_difficulty','pace_level','dnf_load'].includes(item[0])).every(item=>item[1]===true&&item[2]==='same-route-family-race-medians'&&item[3]===2)&&
+    u7History.fingerprintMethod.includes('samma kända bansträckningsfamilj')&&u7History.fingerprintMethod.includes('medianen av loppårsmedianerna')&&u7History.hallRows>=20&&u7History.hallMethod.includes('verifierad personidentitet')&&
+    u7History.classBreaks===0&&u7History.classMethod.includes('beskrivande årsserie')&&u7History.classMethod.includes('tekniska jämförbarhetsgränser visas inte')&&
     u7History.candidateId&&u7History.verifiedPerson&&u7History.expectedSeries>=1&&u7History.seriesRendered===u7History.expectedSeries&&
     u7History.separateRendered===u7History.expectedSeparate&&u7History.historyNote.includes('Verifierad personidentitet')&&
     u7History.archiveMethod.includes('Namn, startnummer')&&u7History.archiveMethod.includes('kontroller och delsträckor')
@@ -822,7 +822,7 @@ const checks = {
   clubHistoryCourseVersion:Boolean(
     clubHistoryCourseVersion.available&&clubHistoryCourseVersion.currentScope==='group:ultravasan90-2024-2025'&&
     clubHistoryCourseVersion.pathScopesValid&&clubHistoryCourseVersion.improvementValid&&
-    clubHistoryCourseVersion.method.includes('verifierade helbanenyckel')
+    clubHistoryCourseVersion.method.includes('beskrivande')&&clubHistoryCourseVersion.method.includes('bansträckningen')
   ),
   finishProgression:Boolean(
     finishProgression.shares.join(',')==='10,25,50,75,90'&&
