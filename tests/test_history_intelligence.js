@@ -33,18 +33,19 @@ assert.strictEqual(H.sameWholeCourse(races[1],races[2]),false);
 assert.strictEqual(H.sameWholeCourse(races[0],races[1]),false);
 
 const fp=H.fingerprint(dataset,races[3],{currentResults:results.filter(r=>r.race_id===4),referenceResults:results});
-assert.deepStrictEqual([...fp.performance_reference_years],[2024],'2025 ska använda 2024 som enda verifierade helbanereferens');
+assert.deepStrictEqual([...fp.performance_reference_years],[2023,2024],'2025 ska kunna använda två tidigare år inom samma kända bansträckningsfamilj/distans');
 const finishMetric=fp.metrics.find(metric=>metric.id==='finish_difficulty');
-assert.strictEqual(finishMetric.reference_n,1);
-assert.strictEqual(finishMetric.available,false,'ett referensår räcker inte för publicerat prestationsindex');
-assert.ok(finishMetric.note.includes('Inga andra loppår med verifierad whole-course-grupp har tillräckligt underlag'));
+assert.strictEqual(finishMetric.reference_n,2);
+assert.strictEqual(finishMetric.available,true,'två tidigare referensår ska räcka för publicerat prestationsindex');
+assert.strictEqual(finishMetric.reference_scope,'same-route-family-race-medians');
+assert.ok(finishMetric.note.includes('samma kända bansträckningsfamilj'));
 assert.strictEqual(fp.metrics.find(metric=>metric.id==='female_share').reference_scope,'family-race-medians');
 assert.deepStrictEqual([...fp.structural_reference_years],[2019,2023,2024],'deltagandemått får fortfarande använda tidigare loppår');
 const fp2026=H.fingerprint(dataset,races[4],{currentResults:results.filter(r=>r.race_id===5),referenceResults:results});
-assert.deepStrictEqual([...fp2026.performance_reference_years],[],'2026 ska inte ärva helbanereferenser från checkpointkontraktet');
-assert.strictEqual(fp2026.metrics.find(metric=>metric.id==='finish_difficulty').available,false);
-assert.ok(fp2026.performance_exclusions.some(item=>item.year===2019&&item.reason==='no verified whole-course group'));
-assert.ok(fp2026.performance_exclusions.some(item=>item.year===2025&&item.reason==='no verified whole-course group'));
+assert.deepStrictEqual([...fp2026.performance_reference_years],[2023,2024,2025],'2026 ska använda tidigare år inom samma kända bansträckningsfamilj/distans');
+assert.strictEqual(fp2026.metrics.find(metric=>metric.id==='finish_difficulty').available,true);
+assert.ok(fp2026.performance_exclusions.some(item=>item.year===2019&&item.reason==='different route family or no finisher evidence'));
+assert.ok(!fp2026.performance_exclusions.some(item=>item.year===2025),'ett giltigt referensår får inte samtidigt markeras som exkluderat');
 
 const sexFiltered=H.fingerprint(dataset,races[3],{
   currentResults:results.filter(r=>r.race_id===4&&r.sex==='F'),
@@ -104,4 +105,4 @@ assert.strictEqual(chargers.length,2,'estimerad placeringspassage får inte ing�
 assert.strictEqual(chargers[0].raw_gain,3);
 assert.strictEqual(chargers[0].score,75,'placeringslyft ska normaliseras mot faktiska startande');
 
-console.log('OK: U7 History Intelligence låser personidentitet, CourseVersion-serier, fingeravtryck och Hall of Fame');
+console.log('OK: U7 History Intelligence låser personidentitet, bansträckningsserier, fingeravtryck och Hall of Fame');
