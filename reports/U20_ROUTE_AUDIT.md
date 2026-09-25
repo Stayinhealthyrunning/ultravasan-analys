@@ -1,7 +1,7 @@
 # Ultravasan route and GPX audit
 
-Inventoried 22 imported editions; exact local source-year route files found: 7.
-Curated external year-specific route evidence exists for 12 editions, of which 8 have strong/strong-secondary evidence.
+Inventoried 22 imported editions; exact local source-year route files found: 9.
+Curated external year-specific route evidence exists for 12 editions, of which 10 have strong/strong-secondary evidence.
 
 CourseVersion is not treated as whole-course comparability. Reference tracks and year-labelled routes are evidence inputs, not automatic comparison contracts.
 
@@ -15,9 +15,9 @@ CourseVersion is not treated as whole-course comparability. Reference tracks and
 | ultravasan90-2016 | No | reference-only · source 2022 | reference-only-or-unknown | data/routes/Ultravasan 90 2022.gpx · 2022 | none | Not assigned |
 | ultravasan45-2017 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
 | ultravasan90-2017 | No | reference-only · source 2022 | external-year-specific | data/routes/Ultravasan 90 2022.gpx · 2022 | Vasaloppet/Mynewsdesk (official-route-change-notice, strong) | Not assigned |
-| ultravasan45-2018 | No | reference-only · source 2026 | external-candidate | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | ITRA / Trace de Trail (year-labelled map geometry candidate, candidate) | Not assigned |
+| ultravasan45-2018 | Yes | exact-source-year · source 2018 | local-exact-source-year | source/routes/ultravasan45-2018-itra-51603.gpx · 2018 | ITRA / Trace de Trail (year-specific public map geometry with validated donor elevation, strong-secondary) | Not assigned |
 | ultravasan90-2018 | Yes | exact-source-year · source 2018 | local-exact-source-year | source/routes/ultravasan90-2018-itra-51602.gpx · 2018 | ITRA / Trace de Trail (year-specific public map geometry, strong-secondary); plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
-| ultravasan45-2019 | No | reference-only · source 2026 | external-candidate | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | ITRA / Trace de Trail (year-labelled map geometry candidate, candidate) | Not assigned |
+| ultravasan45-2019 | Yes | exact-source-year · source 2019 | local-exact-source-year | source/routes/ultravasan45-2019-itra-75784.gpx · 2019 | ITRA / Trace de Trail (year-specific public map geometry with validated donor elevation, strong-secondary) | Not assigned |
 | ultravasan90-2019 | No | reference-only · source 2022 | external-candidate | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (downloadable-year-labelled-route, candidate) | Not assigned |
 | ultravasan45-2022 | No | reference-only · source 2026 | reference-only-or-unknown | data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx · 2026 | none | Not assigned |
 | ultravasan90-2022 | Yes | exact-source-year · source 2022 | local-exact-source-year | data/routes/Ultravasan 90 2022.gpx · 2022 | plotaroute.com (organizer-kmz-derived-downloadable-route, strong-secondary) | Not assigned |
@@ -189,14 +189,14 @@ Geometry was read from each ordinary public route page's map payload and transfo
 
 | RaceEdition | Track ID | HTTP | Elevation coverage | Decision |
 |---|---:|---:|---:|---|
-| ultravasan90-2018 | 51602 | 200 | 100.0% | promote — Exact-year UV90 2018 candidate passed start/finish, distance and elevation validation. |
-| ultravasan45-2018 | 51603 | 200 | 55.909% | do-not-promote — Only 55.909% elevation coverage; existing route builder requires at least 95%. |
-| ultravasan45-2019 | 75784 | 200 | 62.156% | do-not-promote — Only 62.156% elevation coverage; existing route builder requires at least 95%. |
+| ultravasan90-2018 | 51602 | 200 | 100% | promote — Exact-year UV90 2018 candidate passed start/finish, distance and elevation validation. |
+| ultravasan45-2018 | 51603 | 200 | 55.909% | promote-with-elevation-transfer — Exact-year UV45 2018 geometry is valid; incomplete native elevation is supplemented only through separately validated <=50 m spatial transfer from the complete 2024 ITRA route. |
+| ultravasan45-2019 | 75784 | 200 | 62.156% | promote-with-elevation-transfer — Exact-year UV45 2019 geometry is valid; incomplete native elevation is supplemented only through separately validated <=50 m spatial transfer from the complete 2024 ITRA route. |
 | ultravasan90-2023 | 229687 | 200 | 99.573% | promote — Exact-year UV90 2023 candidate passed start/finish, distance and elevation validation. |
-| ultravasan90-2024 | 267129 | 200 | 100.0% | candidate-not-selected — Valid ITRA candidate is secondary to the already checked-in year-specific Vasaloppet/KMZ route. |
-| ultravasan45-2024 | 267130 | 200 | 100.0% | promote — Exact-year UV45 2024 candidate passed start/finish, distance and elevation validation. |
-| ultravasan90-2026 | 328148 | 200 | 100.0% | candidate-not-selected — Official Vasaloppet/KMZ 2026 geometry is primary; ITRA candidate is not used as a substitute. |
-| ultravasan45-2026 | 328149 | 200 | 100.0% | candidate-not-selected — Official Vasaloppet 2026 GPX is primary; ITRA candidate is not used as a substitute. |
+| ultravasan90-2024 | 267129 | 200 | 100% | candidate-not-selected — Valid ITRA candidate is secondary to the already checked-in year-specific Vasaloppet/KMZ route. |
+| ultravasan45-2024 | 267130 | 200 | 100% | promote — Exact-year UV45 2024 candidate passed start/finish, distance and elevation validation. |
+| ultravasan90-2026 | 328148 | 200 | 100% | candidate-not-selected — Official Vasaloppet/KMZ 2026 geometry is primary; ITRA candidate is not used as a substitute. |
+| ultravasan45-2026 | 328149 | 200 | 100% | candidate-not-selected — Official Vasaloppet 2026 GPX is primary; ITRA candidate is not used as a substitute. |
 
 UV45 2018/2019 were not promoted because the available map geometries contain elevation for only 55.909%/62.156% of points, below the existing route validation threshold; no broad interpolation was used. UV90 2024 and ITRA 2026 tracks were not promoted because the corresponding organizer-sourced local route is primary. The verified UV90 2026 geometry is from the official Vasaloppet KMZ.
 
@@ -220,10 +220,10 @@ Vasahistorier states that its 2025 profile uses race-day GPS recorded on 2025-08
 
 - **ultravasan90-2015** — plotaroute.com: Year-labelled downloadable route exists, but the page does not establish organizer provenance. (https://www.plotaroute.com/route/2311120)
 - **ultravasan90-2017** — Vasaloppet/Mynewsdesk: Organizer states that the 2017 course routing changed, although total distance and elevation difference were unchanged. (https://www.mynewsdesk.com/se/vasaloppet/pressreleases/infoer-ultravasan-vasastafetten-och-vasakvartetten-2017-2109278)
-- **ultravasan45-2018** — ITRA / Trace de Trail: Not promoted: only 55.909% elevation coverage. (https://tracedetrail.fr/en/trace/51603)
+- **ultravasan45-2018** — ITRA / Trace de Trail: Exact-year 2018 geometry is promoted. Native elevation is incomplete, so only missing heights are supplemented from the complete 2024 ITRA route within 50 m after observed-point cross-validation. (https://tracedetrail.fr/en/trace/51603)
 - **ultravasan90-2018** — ITRA / Trace de Trail: ITRA-created 2018 Ultravasan 90 track; public page geometry was transformed and validated against the local route checks. (https://tracedetrail.fr/en/trace/51602)
 - **ultravasan90-2018** — plotaroute.com: Year-labelled downloadable route exists, but organizer provenance is not established. (https://www.plotaroute.com/route/2311944)
-- **ultravasan45-2019** — ITRA / Trace de Trail: Not promoted: only 62.156% elevation coverage. (https://tracedetrail.fr/en/trace/75784)
+- **ultravasan45-2019** — ITRA / Trace de Trail: Exact-year 2019 geometry is promoted. Native elevation is incomplete, so only missing heights are supplemented from the complete 2024 ITRA route within 50 m after observed-point cross-validation. (https://tracedetrail.fr/en/trace/75784)
 - **ultravasan90-2019** — plotaroute.com: Year-labelled downloadable route exists, but organizer provenance is not established. (https://www.plotaroute.com/route/2311126)
 - **ultravasan90-2022** — plotaroute.com: Route description states it is based on a KMZ supplied by the organizer on 2022-06-16; GPX/KML downloads are offered. (https://www.plotaroute.com/route/1942022)
 - **ultravasan90-2023** — Vasaloppet/Mynewsdesk: Organizer documents the new 2023 start routing via the first Vasalopp hill, extending the running course to 92 km. (https://vasaloppet.mynewsdesk.com/pressreleases/ny-banstraeckning-2023-cyklister-och-loepare-tar-sig-an-vasaloppets-foersta-backe-3254898)
