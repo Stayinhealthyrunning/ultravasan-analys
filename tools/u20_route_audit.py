@@ -160,10 +160,22 @@ EXTERNAL_ROUTE_EVIDENCE = {
         },
     ],
     "ultravasan45-2018": [
-        {"provider": "ITRA / Trace de Trail", "url": "https://tracedetrail.fr/en/trace/51603", "evidence_type": "year-labelled map geometry candidate", "strength": "candidate", "note": "Not promoted: only 55.909% elevation coverage."},
+        {
+            "provider": "ITRA / Trace de Trail",
+            "url": "https://tracedetrail.fr/en/trace/51603",
+            "evidence_type": "year-specific public map geometry with validated donor elevation",
+            "strength": "strong-secondary",
+            "note": "Exact-year 2018 geometry is promoted. Native elevation is incomplete, so only missing heights are supplemented from the complete 2024 ITRA route within 50 m after observed-point cross-validation.",
+        },
     ],
     "ultravasan45-2019": [
-        {"provider": "ITRA / Trace de Trail", "url": "https://tracedetrail.fr/en/trace/75784", "evidence_type": "year-labelled map geometry candidate", "strength": "candidate", "note": "Not promoted: only 62.156% elevation coverage."},
+        {
+            "provider": "ITRA / Trace de Trail",
+            "url": "https://tracedetrail.fr/en/trace/75784",
+            "evidence_type": "year-specific public map geometry with validated donor elevation",
+            "strength": "strong-secondary",
+            "note": "Exact-year 2019 geometry is promoted. Native elevation is incomplete, so only missing heights are supplemented from the complete 2024 ITRA route within 50 m after observed-point cross-validation.",
+        },
     ],
     "ultravasan45-2024": [
         {
