@@ -343,6 +343,14 @@ jobs:
           (out/"plotaroute-browser-downloads.json").write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n")
           print(json.dumps(report,indent=2,ensure_ascii=False))
           PY3
+      - name: Fetch 2026 public Trace de Trail elevation donors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/download_trace_de_trail_routes.py --refresh --delay 1 --ids 328148 328149 --cache-dir tmp/route-source-research/tracedetrail
+          cp tmp/route-source-research/tracedetrail/ultravasan90-2026-trace-328148.gpx tmp/route-source-research/ultravasan90-2026-itra-328148.gpx
+          cp tmp/route-source-research/tracedetrail/ultravasan45-2026-trace-328149.gpx tmp/route-source-research/ultravasan45-2026-itra-328149.gpx
+
       - name: Pack repository snapshot
         shell: bash
         run: |
