@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: uv90-2025-sprint-enrichment
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   enrich:
