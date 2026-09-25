@@ -116,6 +116,9 @@ moduleChecks.verified=Boolean(moduleChecks.nerdCoverage&&moduleChecks.nerdStorie
 const u6Initial=await evaluate(`(() => ({
   api:Boolean(window.CourseIntelligence),
   version:(document.querySelector('#courseIntelligenceVersion')?.textContent||'').trim(),
+  displayRouteId:currentCourseModel()?.display_route_id||null,
+  elevationAvailable:globalThis.ULTRAVASAN_ROUTES?.routes?.[currentCourseModel()?.display_route_id]?.elevation_available===true,
+  elevationFallback:(document.querySelector('#courseElevationView .course-view-empty')?.textContent||'').trim(),
   rows:document.querySelectorAll('#courseIntelligenceRows tr[data-course-segment]').length,
   routeSegments:document.querySelectorAll('#courseRouteView [data-course-segment]').length,
   elevationSegments:document.querySelectorAll('#courseElevationView [data-course-segment]').length,
@@ -796,15 +799,19 @@ const checks = {
   uv45Progressive:uv45Progressive.verified,
   modules:moduleChecks.verified,
   courseIntelligence:Boolean(
-    u6Initial.api&&u6Initial.version&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
+    u6Initial.api&&u6Initial.version&&u6Initial.displayRouteId==='ultravasan90-2026'&&u6Initial.rows>0&&u6Initial.routeSegments>0&&
     u6Initial.spreadHeaders.join('|')==='Q25–Q75|Q10–Q90'&&u6Initial.outerSpreadCells.length>0&&
-    u6Initial.elevationSegments>0&&u6Initial.paceSegments>0&&u6Initial.selectedRows===1&&u6Initial.planRows>0&&
+    (u6Initial.elevationAvailable
+      ? u6Initial.elevationSegments>0
+      : u6Initial.elevationSegments===0&&u6Initial.elevationFallback==='Höjdprofil saknas för denna låsta display-rutt.')&&
+    u6Initial.paceSegments>0&&u6Initial.selectedRows===1&&u6Initial.planRows>0&&
     u6Initial.outerQuantiles&&u6Initial.outerQuantiles.n>=20&&u6Initial.outerQuantiles.min===20&&Number.isFinite(Number(u6Initial.outerQuantiles.q10))&&Number.isFinite(Number(u6Initial.outerQuantiles.q90))&&
     Number(u6Initial.outerQuantiles.q10)<=Number(u6Initial.outerQuantiles.q25)&&Number(u6Initial.outerQuantiles.q75)<=Number(u6Initial.outerQuantiles.q90)&&
     u6Initial.method.includes('n≥20')&&u6Initial.method.includes('separata empiriska dimensioner')&&u6Initial.method.includes('inte ihop till en totalscore eller ranking')&&
     u6Initial.method.includes('inte i sig bevis för exakt historisk geometri')&&
     u6Initial.planMethod.includes('exakt samma bansträckning')&&
-    u6Synced.key&&u6Synced.rowSelected===1&&u6Synced.routeSelected===1&&u6Synced.elevationSelected===1&&
+    u6Synced.key&&u6Synced.rowSelected===1&&u6Synced.routeSelected===1&&
+    (u6Initial.elevationAvailable?u6Synced.elevationSelected===1:u6Synced.elevationSelected===0)&&
     u6Synced.paceSelected===1&&u6Synced.legacyFrom===u6Synced.expectedFrom&&u6Synced.legacyTo===u6Synced.expectedTo&&
     u6Plan.target==='09:30:00'&&u6Plan.rows===u6Initial.rows&&u6Plan.historical>0&&u6Plan.unavailable===0&&
     !u6Plan.status.includes('kan inte beräknas')&&u6Plan.lastCumulative&&u6Plan.lastCumulative!=='–'
