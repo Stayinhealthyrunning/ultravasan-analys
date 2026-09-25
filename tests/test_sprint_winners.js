@@ -2,7 +2,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
-const {finishSprintRanking,sprintClassOptions,sprintClassGroupKey}=require('../docs/assets/nerdlab.js');
+const {finishSprintRanking,sprintSexClassOptions}=require('../docs/assets/nerdlab.js');
 const adapter=require('../docs/assets/data-adapter.js');
 
 const rows=[
@@ -23,6 +23,11 @@ const splits=new Map([
   [7,[{checkpoint_key:'mora_warning',checkpoint_name:'Mora Förvarning',elapsed_seconds:36550,distance_km:91.3,is_estimated:false}]]
 ]);
 
+const nullDistanceRows=[{id:8,status:'FINISHED',finish_seconds:36000,sex:'F',age_class:'W40',overall_place:55,name_as_published:'Saknad kontrolldistans'}];
+const nullDistanceSplits=new Map([[8,[{checkpoint_key:'mora_warning',elapsed_seconds:35760,distance_km:null,is_estimated:false}]]]);
+const nullDistanceModel=finishSprintRanking(nullDistanceRows,{getSplits:id=>nullDistanceSplits.get(id)||[],isFinished:r=>r.status==='FINISHED',raceDistanceKm:92});
+assert.strictEqual(nullDistanceModel.women.length,1,'saknad Förvarning-distans får inte tolkas som 0 km och filtrera bort giltig spurttid');
+
 const model=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',raceDistanceKm:92});
 assert.strictEqual(model.rows.length,4,'DNF, estimerad passage och orimlig spurtfart ska uteslutas');
 assert.deepStrictEqual(model.women.map(x=>x.rank),[1,1],'lika spurttid ska ge delad placering');
@@ -30,12 +35,12 @@ assert.deepStrictEqual(new Set(model.women.map(x=>x.r.id)),new Set([1,2]),'båda
 assert.deepStrictEqual(model.men.map(x=>x.rank),[1,1],'män ska rangordnas separat');
 assert.deepStrictEqual(new Set(model.men.map(x=>x.r.id)),new Set([3,4]),'båda männen ska finnas kvar vid delad placering');
 
-const classModel=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',classKey:sprintClassGroupKey('M50'),raceDistanceKm:92});
-assert.deepStrictEqual(new Set(classModel.women.map(x=>x.r.id)),new Set([1,2]),'klassfiltret ska para kvinnlig och manlig motsvarighet');
-assert.deepStrictEqual(new Set(classModel.men.map(x=>x.r.id)),new Set([3,4]),'klassfiltret ska para kvinnlig och manlig motsvarighet');
-const options=sprintClassOptions(rows);
-const age50=options.find(x=>x.value===sprintClassGroupKey('W50'));
-assert.ok(age50&&age50.label.includes('W50')&&age50.label.includes('M50'),'klassväljaren ska behålla båda könens klassetiketter');
+const womenClassModel=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',classValue:'W50',sexFilter:'F',raceDistanceKm:92});
+const menClassModel=finishSprintRanking(rows,{getSplits:id=>splits.get(id)||[],isFinished:r=>r.status==='FINISHED',classValue:'M50',sexFilter:'M',raceDistanceKm:92});
+assert.deepStrictEqual(new Set(womenClassModel.women.map(x=>x.r.id)),new Set([1,2]),'kvinnoklassfiltret ska bara filtrera kvinnolistan');
+assert.deepStrictEqual(new Set(menClassModel.men.map(x=>x.r.id)),new Set([3,4]),'mansklassfiltret ska bara filtrera manslistan');
+assert.deepStrictEqual(sprintSexClassOptions(rows,'F'),['W50','W55'],'kvinnodropdown ska bara innehålla kvinnoklasser');
+assert.deepStrictEqual(sprintSexClassOptions(rows,'M'),['M50','M55'],'mansdropdown ska bara innehålla mansklasser');
 
 const tieRows=[];
 const tieSplits=new Map();
@@ -83,7 +88,9 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
 const nerd=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
-for(const text of ['SPURTVINNAREN','Årets snabbaste löpare på målspurten','Loppets spurtdrottning','Loppets spurtkung','Mora Förvarning','id="sprintClass"'])assert.ok(html.includes(text),'Spurtvinnaren saknar '+text);
+for(const text of ['SPURTVINNAREN','Årets snabbaste löpare på målspurten','Loppets spurtdrottning','Loppets spurtkung','Mora Förvarning','id="sprintWomenClass"','id="sprintMenClass"','alla klasser i aktuellt loppår'])assert.ok(html.includes(text),'Spurtvinnaren saknar '+text);
+assert.ok(!html.includes('id="sprintClass"'),'gemensam klassdropdown ska vara borttagen');
+assert.ok(nerd.includes("n$('#sprintWomenClass')?.addEventListener")&&nerd.includes("n$('#sprintMenClass')?.addEventListener"),'båda separata klassfilter ska vara interaktiva');
 for(const klass of ['medal-1','medal-2','medal-3'])assert.ok(css.includes('.sprint-row.'+klass),'medaljfärg saknas för '+klass);
 assert.ok(nerd.includes("renderSprintWinners()")&&nerd.includes("item.rank<=5"),'Top 5 per kön ska renderas');
 assert.ok(nerd.includes("n$$('.sprint-row').forEach"),'alla renderade sprintrader ska få klickbindning');
