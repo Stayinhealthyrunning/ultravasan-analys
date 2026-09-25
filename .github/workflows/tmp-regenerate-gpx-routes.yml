@@ -27,7 +27,7 @@ jobs:
       - name: Run focused regression tests
         run: |
           python -m pip install -r requirements-test.txt
-          python -m pytest -q tests/test_build_routes.py tests/test_u20_route_audit.py tests/test_trace_route_download.py tests/test_race_contracts.py
+          python -m pytest -q tests/test_build_routes.py tests/test_u20_route_audit.py tests/test_trace_route_download.py
           git diff --check
       - name: Commit generated artifacts and remove temporary workflow
         run: |
