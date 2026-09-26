@@ -94,7 +94,7 @@ assert.ok(html.includes('grid two overview-chart-row')&&html.includes('finish-di
 assert.ok(css.includes('.grid.two.overview-chart-row{width:100%;max-width:100%;grid-template-columns:minmax(0,3.25fr) minmax(300px,1fr)'),'desktopgriden ska ge cirka 75/25 utan att lämna huvudcontainern');
 assert.ok(!app.includes('style="min-width:${W}px"')&&!audience.includes('style="min-width:${W}px"'),'histogrammets SVG får inte tvingas bredare än kortet på desktop');
 assert.ok(audience.includes("overviewPace?420:760")&&audience.includes("compactSegmentLabel({from:parts[0],to:parts[1]})"),'dynamikdiagrammet ska använda ett smalt viewBox och kompakta, läsbara segmentetiketter');
-assert.ok(html.includes('Median, startande och DNF över åren'));
+assert.ok(html.includes('Klasshistorik över åren')&&html.includes('Växla mellan klassernas mediantid och deltagande med DNF.'),'klasshistorikens rubrik ska beskriva den förenklade tvålägesvyn');
 assert.ok(html.includes('Välj upp till fem klasser')&&audience.includes('advanced.classSelection.length<5'),'Klassduellen ska tillåta högst fem val');
 assert.ok(audience.includes('classSelectionInitialized')&&audience.includes('Inga klasser valda.'),'användaren ska kunna avmarkera alla klasser utan automatisk återställning');
 assert.ok(css.includes('.percentile-card .panel-head h3{white-space:nowrap}'),'Percentiltrappan ska hållas på en rad');
