@@ -88,12 +88,12 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'docs/assets/styles.css'),'utf8');
 const nerd=fs.readFileSync(path.join(root,'docs/assets/nerdlab.js'),'utf8');
-for(const text of ['SPURTVINNAREN','Årets snabbaste löpare på målspurten','Loppets spurtdrottning','Loppets spurtkung','Mora Förvarning','id="sprintWomenClass"','id="sprintMenClass"','alla klasser i aktuellt loppår'])assert.ok(html.includes(text),'Spurtvinnaren saknar '+text);
+for(const text of ['SPURTVINNAREN','Årets snabbaste löpare på målspurten','Loppets spurtdrottning','Loppets spurtkung','Sista kontrollen → mål','sista officiellt registrerade mellantidskontrollen efter Eldris','id="sprintWomenClass"','id="sprintMenClass"','alla klasser i aktuellt loppår'])assert.ok(html.includes(text),'Spurtvinnaren saknar '+text);
 assert.ok(!html.includes('id="sprintClass"'),'gemensam klassdropdown ska vara borttagen');
 assert.ok(nerd.includes("n$('#sprintWomenClass')?.addEventListener")&&nerd.includes("n$('#sprintMenClass')?.addEventListener"),'båda separata klassfilter ska vara interaktiva');
 for(const klass of ['medal-1','medal-2','medal-3'])assert.ok(css.includes('.sprint-row.'+klass),'medaljfärg saknas för '+klass);
 assert.ok(nerd.includes("renderSprintWinners()")&&nerd.includes("item.rank<=5"),'Top 5 per kön ska renderas');
 assert.ok(nerd.includes("n$$('.sprint-row').forEach"),'alla renderade sprintrader ska få klickbindning');
-assert.ok(nerd.includes("Kartans referenspunkt används aldrig som ersättning"),'metodhjälpen ska förbjuda konstruerad Mora Förvarning');
+assert.ok(nerd.includes("Källans kontrollnamn får variera mellan år")&&nerd.includes("Kartans referenspunkt används aldrig som ersättning"),'metodhjälpen ska vara positionsbaserad och förbjuda konstruerad kontroll');
 
-console.log('OK: Spurtvinnaren använder verifierad Mora Förvarning, klassfilter, delade placeringar och medaljfärger');
+console.log('OK: Spurtvinnaren använder sista verifierade kontrollen efter Eldris, klassfilter, delade placeringar och medaljfärger');

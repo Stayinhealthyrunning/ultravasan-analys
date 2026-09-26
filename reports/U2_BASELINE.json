@@ -5,29 +5,29 @@
   "files": {
     "database": {
       "path": "data/ultravasan.sqlite",
-      "bytes": 75825152,
-      "sha256": "837823aa7ba736a067d84a86de73d73ac421c43af150fbb0d68d7730db1f9c85"
+      "bytes": 76169216,
+      "sha256": "8f2b89a2ec28c855ebe1b32056f230a3988ffbe7d1fd1673cb5f75dbed718269"
     },
     "web_json": {
       "path": "docs/data/ultravasan.json",
-      "bytes": 42688494,
-      "sha256": "dccbfdf501cd85611da46a0aae3b0c66bd5030204e024dd3c037a0cc8823f18d"
+      "bytes": 42802555,
+      "sha256": "e19e3e6b62804b3ac2231e867538f3b0aefec34e2e87c8e2c71112ceab1bea89"
     },
     "web_javascript": {
       "path": "docs/data/ultravasan-data.js",
-      "bytes": 42688519,
-      "sha256": "ab8b61ee9ad3a95a3f3be045e31061d32231275f0d41dfe0eeede9b59bba3b8a"
+      "bytes": 42802580,
+      "sha256": "5700ba8038470eff427ffb7646aafa0cf02fdbaf22ccfe557ee7c5dc8aa576f3"
     },
     "manifest": {
       "path": "docs/data/manifest.json",
       "bytes": 125,
-      "sha256": "4be91df1dbfb468d39a13094fd6fc0b30aeee6f90e5b0522ded040d5313e7534"
+      "sha256": "ca0c7764c0bae3072f1292a2e2eb4f48518750b3067e2fd602d9bb53172f9b8a"
     }
   },
   "totals": {
     "race_editions": 22,
     "results": 24422,
-    "splits": 139910,
+    "splits": 141429,
     "athletes": 20805,
     "external_ids": 20805,
     "person_keys": 9571,
@@ -64,10 +64,10 @@
   ],
   "protected_payload": {
     "results_count": 24422,
-    "splits_count": 139910,
+    "splits_count": 141429,
     "external_ids_count": 20805,
     "result_payload_digest": "52bca3a938eb94d1167d2f889bc438fc8d3da28a70292689fa30d5154cd14a46",
-    "split_digest": "80ad571172edd4a691f235cff9e8e6a797ba21214c6466d0dd5dc0dddcce2149",
+    "split_digest": "f39741dab55630fdd5f943632ddb54c4bd663460bdf6a0158ed5c9edc275dc2b",
     "external_id_values_digest": "bb16719e6f847d9c9e0905a728587dab47514b9ffb73c60eb84ef01533d82045",
     "source_records_digest": "5a8381000f3fa67bc7146497ba13778e461561c510ff69ae5767d815804b459f"
   },
@@ -83,7 +83,7 @@
   "web_export": {
     "identity_contract": "u2-person-key-v1",
     "results": 24422,
-    "splits": 139910,
+    "splits": 141429,
     "person_key_rows": 13188,
     "distinct_person_keys": 9571,
     "person_key_prefixes": {

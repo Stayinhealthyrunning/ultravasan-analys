@@ -187,7 +187,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
     expected = {
         "race_editions": 22,
         "results": 24422,
-        "splits": 139910,
+        "splits": 141429,
         "athletes": 20805,
         "external_ids": 20805,
         "person_keys": 9571,
@@ -221,7 +221,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
     web = snapshot["web_export"]
     if web["identity_contract"] != "u2-person-key-v1":
         issues.append(f"web identity contract={web['identity_contract']!r}")
-    if web["results"] != 24422 or web["splits"] != 139910:
+    if web["results"] != 24422 or web["splits"] != 141429:
         issues.append(f"web parity results={web['results']} splits={web['splits']}")
     if web["person_key_rows"] != 13188 or web["distinct_person_keys"] != 9571:
         issues.append(
