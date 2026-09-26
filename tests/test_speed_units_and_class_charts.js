@@ -82,8 +82,8 @@ assert.ok(audience.includes('relativeToplistWidth(classIndexMetric(x),maxBarValu
 assert.ok(html.includes('id="raceIndexTable"')&&html.includes('Loppets starkaste prestationer'),'separat topplista för hela loppet ska finnas');
 assert.ok(audience.includes('selectedClasses.has(normClass(x.r.age_class))')&&audience.includes('renderClassIndexList(raceEl,rows)'),'klassens topplista ska följa Klassduellens val medan loppets topplista använder alla klasser');
 assert.ok(audience.includes('descriptiveHistoryRuns(valid,years)'),'klasshistorikens medianlinjer ska vara beskrivande över efterföljande loppår');
-assert.ok(audience.includes('Median sluttid')&&audience.includes('Antal personer'),'klasshistoriken ska ha separata y-axlar');
-assert.ok(audience.includes('visibleCountBarHeight(d.dnf,maxN,plotHeight)'),'DNF-staplar ska behålla synlig minimihöjd');
+assert.ok(audience.includes("data-class-history-mode=\"median\"")&&audience.includes("data-class-history-mode=\"participation\""),'klasshistoriken ska separera mediantid och deltagande i två tydliga lägen');
+assert.ok(audience.includes("Math.max(2,dnfRaw)")&&audience.includes("DNF · mörk del av stapeln"),'DNF ska vara en synlig mörk del av deltagandestapeln');
 assert.ok(audience.includes('axisValues=relative')&&!audience.includes("'Snitt 100'"),'pacingindex ska visa 100 på y-axeln utan separat Snitt 100-etikett');
 assert.ok(app.includes('fixedFinishTimeBins')&&audience.includes('fixedFinishBins(times)'),'båda histogramrenderarna ska använda fasta kvartstidsintervall');
 assert.ok(app.includes('15-minutersintervall från')&&audience.includes('15-minutersintervall från'),'båda histogramrenderarna ska beskriva 15-minutersintervallen');
@@ -94,7 +94,7 @@ assert.ok(html.includes('grid two overview-chart-row')&&html.includes('finish-di
 assert.ok(css.includes('.grid.two.overview-chart-row{width:100%;max-width:100%;grid-template-columns:minmax(0,3.25fr) minmax(300px,1fr)'),'desktopgriden ska ge cirka 75/25 utan att lämna huvudcontainern');
 assert.ok(!app.includes('style="min-width:${W}px"')&&!audience.includes('style="min-width:${W}px"'),'histogrammets SVG får inte tvingas bredare än kortet på desktop');
 assert.ok(audience.includes("overviewPace?420:760")&&audience.includes("compactSegmentLabel({from:parts[0],to:parts[1]})"),'dynamikdiagrammet ska använda ett smalt viewBox och kompakta, läsbara segmentetiketter');
-assert.ok(html.includes('Median, startande och DNF över åren'));
+assert.ok(html.includes('Klasshistorik över åren')&&html.includes('Växla mellan klassernas mediantid och deltagande med DNF.'),'klasshistorikens rubrik ska beskriva den förenklade tvålägesvyn');
 assert.ok(html.includes('Välj upp till fem klasser')&&audience.includes('advanced.classSelection.length<5'),'Klassduellen ska tillåta högst fem val');
 assert.ok(audience.includes('classSelectionInitialized')&&audience.includes('Inga klasser valda.'),'användaren ska kunna avmarkera alla klasser utan automatisk återställning');
 assert.ok(css.includes('.percentile-card .panel-head h3{white-space:nowrap}'),'Percentiltrappan ska hållas på en rad');

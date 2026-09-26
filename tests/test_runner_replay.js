@@ -119,6 +119,7 @@ assert.ok(renderedOld.includes('Banan i fäders spår för framtids segrar')&&!r
 assert.ok(renderedOld.includes('id="runnerReplayInsightsTab" aria-controls="runnerReplayInsightsPanel" aria-selected="true" tabindex="0"')&&renderedOld.includes('id="runnerReplayComparisonsTab" aria-controls="runnerReplayComparisonsPanel" aria-selected="false" tabindex="-1"'),'Insikter ska vara runner replay-standardflik');
 assert.ok(renderedOld.includes('data-analysis-panel="comparisons" hidden')&&!renderedOld.includes('data-analysis-panel="insights" hidden'),'Endast jämförelsepanelen ska vara dold i standardläget');
 assert.ok(!renderedOld.includes('runner-elevation-high'),'Separat GPX-baserad toppmarkör får inte finnas i höjdprofilen');
+assert.ok(!uv90Old.insights.some(item=>item.type==='high'),'Högsta punkten är en banegenskap och ska inte visas som löparspecifik insikt');
 assert.ok(renderedNew.includes('data-elevation-checkpoint="high_point"'),'Den officiella kontrollen Högsta punkten ska finnas kvar');
 
 // Zoom, panorering, helbana och följning ändrar bara kartvyn, aldrig distansmodellen.
