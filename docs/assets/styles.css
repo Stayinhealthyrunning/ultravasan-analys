@@ -971,3 +971,21 @@ html,body{max-width:100%;overflow-x:hidden}
 .class-history-note{margin:8px 2px 0;color:#6b776f;font-size:.86rem;line-height:1.45}
 .class-history-chart .class-history-hit:focus{outline:none;stroke:#123d30;stroke-width:2}
 @media(max-width:720px){.class-history-toolbar{align-items:flex-start}.class-history-subcopy{width:100%}.class-history-modes{width:100%}.class-history-modes button{flex:1}}
+
+/* Klubb/ort: håll analysen av valda klubbar samlad före topplistan för hela fältet. */
+.club-analysis-grid .club-dna-card{grid-column:span 4}
+.club-analysis-grid .club-history-card{grid-column:span 8}
+.club-analysis-grid .club-compare-card{grid-column:1/-1}
+.club-analysis-grid .club-ranking-card{grid-column:1/-1}
+.club-analysis-grid .club-compare-card .world-chart{min-height:315px}
+.club-analysis-grid .club-ranking-card{height:auto}
+.club-analysis-grid .club-ranking-card .club-rankings{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px}
+.club-analysis-grid .club-ranking-card .club-rankings button{margin-bottom:0;min-width:0}
+@media(max-width:1100px){
+  .club-analysis-grid .club-dna-card,.club-analysis-grid .club-history-card,.club-analysis-grid .club-compare-card,.club-analysis-grid .club-ranking-card{grid-column:1/-1}
+  .club-analysis-grid .club-ranking-card .club-rankings{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){
+  .club-analysis-grid .club-ranking-card .club-rankings{grid-template-columns:1fr}
+  .club-analysis-grid .club-compare-card .world-chart{min-height:0}
+}
