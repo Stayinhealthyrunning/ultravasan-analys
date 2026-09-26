@@ -82,8 +82,8 @@ assert.ok(audience.includes('relativeToplistWidth(classIndexMetric(x),maxBarValu
 assert.ok(html.includes('id="raceIndexTable"')&&html.includes('Loppets starkaste prestationer'),'separat topplista för hela loppet ska finnas');
 assert.ok(audience.includes('selectedClasses.has(normClass(x.r.age_class))')&&audience.includes('renderClassIndexList(raceEl,rows)'),'klassens topplista ska följa Klassduellens val medan loppets topplista använder alla klasser');
 assert.ok(audience.includes('descriptiveHistoryRuns(valid,years)'),'klasshistorikens medianlinjer ska vara beskrivande över efterföljande loppår');
-assert.ok(audience.includes('Median sluttid')&&audience.includes('Antal personer'),'klasshistoriken ska ha separata y-axlar');
-assert.ok(audience.includes('visibleCountBarHeight(d.dnf,maxN,plotHeight)'),'DNF-staplar ska behålla synlig minimihöjd');
+assert.ok(audience.includes("data-class-history-mode=\"median\"")&&audience.includes("data-class-history-mode=\"participation\""),'klasshistoriken ska separera mediantid och deltagande i två tydliga lägen');
+assert.ok(audience.includes("Math.max(2,dnfRaw)")&&audience.includes("DNF · mörk del av stapeln"),'DNF ska vara en synlig mörk del av deltagandestapeln');
 assert.ok(audience.includes('axisValues=relative')&&!audience.includes("'Snitt 100'"),'pacingindex ska visa 100 på y-axeln utan separat Snitt 100-etikett');
 assert.ok(app.includes('fixedFinishTimeBins')&&audience.includes('fixedFinishBins(times)'),'båda histogramrenderarna ska använda fasta kvartstidsintervall');
 assert.ok(app.includes('15-minutersintervall från')&&audience.includes('15-minutersintervall från'),'båda histogramrenderarna ska beskriva 15-minutersintervallen');
