@@ -1,0 +1,22 @@
+{
+  "race_key": "ultravasan90-2025",
+  "event_code": "UL90_HCH8NDMR2501",
+  "auxiliary_only": true,
+  "details": [],
+  "list_entries": 1912,
+  "inserted_or_updated": 1519,
+  "exact_finished": 1519,
+  "no_warning": 390,
+  "unmatched": 3,
+  "errors": 0,
+  "match_methods": {
+    "exact-name-finish": 1519,
+    "unmatched": 3
+  },
+  "sex_counts": {
+    "F": 441,
+    "M": 1078
+  },
+  "non_aux_splits_before": 14521,
+  "non_aux_splits_after": 14521
+}

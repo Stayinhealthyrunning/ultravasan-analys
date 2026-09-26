@@ -1,0 +1,52 @@
+{
+  "races": 22,
+  "results": 24422,
+  "splits": 141429,
+  "families": {
+    "uv90": {
+      "results": 15521,
+      "splits": 110159,
+      "default_race_id": 21,
+      "shell_json_bytes": 20651,
+      "default_edition_core_json_bytes": 1066485,
+      "default_first_paint_json_bytes": 1087136,
+      "default_first_paint_with_catalog_bytes": 1339965,
+      "core_json_bytes": 7386737,
+      "split_json_bytes": 24790297
+    },
+    "uv45": {
+      "results": 8901,
+      "splits": 31270,
+      "default_race_id": 22,
+      "shell_json_bytes": 15223,
+      "default_edition_core_json_bytes": 420924,
+      "default_first_paint_json_bytes": 436147,
+      "default_first_paint_with_catalog_bytes": 688976,
+      "core_json_bytes": 4174374,
+      "split_json_bytes": 6453998
+    }
+  },
+  "editions": {
+    "count": 22,
+    "largest_core_json_bytes": 1066485,
+    "smallest_core_json_bytes": 252303,
+    "total_core_json_bytes": 11596392,
+    "largest_json_bytes": 5072378,
+    "smallest_json_bytes": 581025,
+    "total_json_bytes": 42839543
+  },
+  "catalog_bytes": 252829,
+  "largest_family_shell_bytes": 20651,
+  "largest_family_core_bytes": 7386737,
+  "largest_family_split_bytes": 24790297,
+  "largest_edition_core_bytes": 1066485,
+  "largest_edition_bytes": 5072378,
+  "largest_default_first_paint_bytes": 1087136,
+  "largest_default_first_paint_with_catalog_bytes": 1339965,
+  "legacy_bytes": 42802555,
+  "largest_family_core_reduction_pct": 82.7,
+  "largest_active_edition_core_reduction_pct": 97.5,
+  "largest_default_first_paint_reduction_pct": 97.5,
+  "largest_default_first_paint_with_catalog_reduction_pct": 96.9,
+  "largest_edition_reduction_pct": 88.1
+}
