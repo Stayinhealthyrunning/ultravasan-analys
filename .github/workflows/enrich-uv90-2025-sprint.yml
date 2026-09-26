@@ -106,16 +106,14 @@ jobs:
       - name: Identifiera eventuell testskrivning i standarddatabasen
         run: |
           BEFORE="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
-          for file in $(find tests -maxdepth 1 -type f -name 'test_*.py' | sort); do
-            PYTHONPATH=tools python -m pytest -q "$file"
-            AFTER="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
-            if [ "$AFTER" != "$BEFORE" ]; then
-              echo "DATABASE_MUTATED_BY=$file"
-              echo "before=$BEFORE"
-              echo "after=$AFTER"
-              exit 3
-            fi
-          done
+          PYTHONPATH=tools python -m pytest -q
+          AFTER="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
+          if [ "$AFTER" != "$BEFORE" ]; then
+            echo "DATABASE_MUTATED_BY_PYTHON_TEST_SUITE"
+            echo "before=$BEFORE"
+            echo "after=$AFTER"
+            exit 3
+          fi
       - name: Kör regressionssvit före publicering
         run: |
           python -m pytest -q
