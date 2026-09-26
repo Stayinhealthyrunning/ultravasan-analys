@@ -959,3 +959,15 @@ html,body{max-width:100%;overflow-x:hidden}
   .club-history-card .club-chart svg{width:900px!important;min-width:900px!important;height:410px!important;min-height:410px}
   .hall-sex-scroll{max-height:560px}
 }
+
+/* Klasshistorik: separera tid från deltagande för en tydligare läsordning. */
+.class-history-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 12px}
+.class-history-modes{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid rgba(18,75,57,.14);border-radius:999px;background:#edf2ec}
+.class-history-modes button{border:0;background:transparent;color:#5b6962;font:inherit;font-weight:750;padding:8px 15px;border-radius:999px;cursor:pointer;transition:background .16s ease,color .16s ease,box-shadow .16s ease}
+.class-history-modes button:hover{color:#164d3c}
+.class-history-modes button:focus-visible{outline:2px solid #1b7659;outline-offset:2px}
+.class-history-modes button.active{background:#fff;color:#123d30;box-shadow:0 1px 4px rgba(18,61,48,.13)}
+.class-history-subcopy{margin:0;color:#66756d;font-size:.9rem;font-weight:600}
+.class-history-note{margin:8px 2px 0;color:#6b776f;font-size:.86rem;line-height:1.45}
+.class-history-chart .class-history-hit:focus{outline:none;stroke:#123d30;stroke-width:2}
+@media(max-width:720px){.class-history-toolbar{align-items:flex-start}.class-history-subcopy{width:100%}.class-history-modes{width:100%}.class-history-modes button{flex:1}}
