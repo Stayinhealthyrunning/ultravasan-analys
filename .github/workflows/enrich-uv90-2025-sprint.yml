@@ -107,7 +107,7 @@ jobs:
         run: |
           BEFORE="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
           for file in $(find tests -maxdepth 1 -type f -name 'test_*.py' | sort); do
-            python -m pytest -q "$file"
+            PYTHONPATH=tools python -m pytest -q "$file"
             AFTER="$(sha256sum data/ultravasan.sqlite | cut -d' ' -f1)"
             if [ "$AFTER" != "$BEFORE" ]; then
               echo "DATABASE_MUTATED_BY=$file"
