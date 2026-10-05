@@ -33,10 +33,12 @@ import requests
 from bs4 import BeautifulSoup
 
 import identity_contracts
+from privacy import load_rules, sanitize_identity
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data" / "ultravasan.sqlite"
 DEFAULT_CONFIG = ROOT / "config" / "races.json"
+PRIVACY_CONFIG = ROOT / "config" / "privacy-suppressions.json"
 DEFAULT_WEB_JSON = ROOT / "docs" / "data" / "ultravasan.json"
 DEFAULT_RAW = ROOT / "raw"
 TIME_RE = re.compile(r"(?<!\d)(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)(?!\d)")
@@ -1679,6 +1681,16 @@ def export_web(args: argparse.Namespace) -> None:
     incomplete_years = [str(r["year"]) for r in races if stats.get(str(r["id"]), {}).get("count", 0) < 100]
     if incomplete_years:
         meta["coverage_note"] = "Ofullständig datatäckning för loppår: " + ", ".join(incomplete_years) + ". Kör onlineimporten eller ladda upp en officiell CSV-fil."
+    # Apply public identity suppression only after statistics and source merging.
+    # Local database IDs/times remain available for analytics; direct identity
+    # fields are removed from the distributed result rows.
+    privacy_rules = load_rules(PRIVACY_CONFIG)
+    for row in results:
+        if sanitize_identity(row, privacy_rules):
+            row["source_result_id"] = None
+            row["athlete_id"] = None
+            row["person_key"] = None
+
     # Keep the public static bundle below GitHub's 25 MiB browser-upload limit.
     # Repeated checkpoint metadata is hydrated in the browser from checkpoints.
     result_fields = {
