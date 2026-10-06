@@ -137,7 +137,7 @@
     root.innerHTML='<div class="c2-shell"><header class="c2-hero"><div><p class="eyebrow">DIREKTJÄMFÖRELSE 2.0</p><h2>Två lopp. Ett gemensamt analysflöde.</h2><p>Officiella passager är fasta observationer. Rörelse mellan dem är en tydligt märkt rekonstruktion längs verifierad banreferens.</p></div><span class="pill">'+esc(model.same_course_version?'Samma CourseVersion':'Begränsad geometri')+'</span></header>'+
       '<section class="c2-people">'+[p0,p1].map((p,index)=>'<article style="--runner:'+COLORS[index]+'"><span>'+(index?'B':'A')+'</span><div><p>'+esc((p.year||'–')+(p.bib?' · #'+p.bib:''))+'</p><h3>'+esc(resultName(p,index))+'</h3><small>'+esc(p.className||p.status||'')+'</small></div><strong>'+duration(p.finishSeconds)+'</strong></article>').join('')+'</section>'+
       '<div class="c2-actions"><button type="button" class="secondary" data-c2-share>↗ Dela jämförelsen</button><button type="button" data-c2-map-duel>Öppna i Kartduell</button><span data-c2-feedback aria-live="polite"></span></div>'+
-      '<section class="c2-kpis">'+kpi('SLUTLIG SKILLNAD',view.final,model.whole_course_comparable?'Verifierad helbaneserie':'Ingen direkt helbaneranking')+kpi('PASSAGER FÖRE','A: '+view.leaders.a+' · B: '+view.leaders.b+' · lika: '+view.leaders.equal,'Endast gemensamma exakta passager')+kpi('LEDNINGSVÄXLINGAR',String(view.leadChanges),'Observerade skiften mellan passager')+kpi('NÄRMAST',gapWords(view.nearest),view.nearest?.checkpoint_name||'–')+kpi('STÖRSTA LUCKA',gapWords(view.largestGap),view.largestGap?.checkpoint_name||'–')+'</section>'+
+      '<section class="c2-kpis">'+kpi('SLUTLIG SKILLNAD',view.final,model.whole_course_comparable?'Verifierad helbaneserie':'Ingen direkt helbaneranking')+kpi('PASSAGER FÖRE','A: '+view.leaders.a+' · B: '+view.leaders.b+' · lika: '+view.leaders.equal,'Endast gemensamma exakta passager')+kpi('LEDNINGSVÄXLINGAR',String(view.leadChanges),'Observerade skiften mellan passager')+kpi('NÄRMAST',gapWords(view.nearest),view.nearest?.checkpoint_name||'–')+kpi('STÖRSTA LUCKA',gapWords(view.largestGap),view.largestGap?.checkpoint_name||'–')+kpi('A VANN MEST TID',view.mostA?duration(view.mostA.pair_delta_seconds):'–',view.mostA?segmentName(model,view.mostA):resultName(p0,0))+kpi('B VANN MEST TID',view.mostB?duration(view.mostB.pair_delta_seconds):'–',view.mostB?segmentName(model,view.mostB):resultName(p1,1))+'</section>'+
       '<section class="c2-grid-two"><article class="c2-panel"><h3>Tidslucka genom loppet</h3><p>Klicka en verklig passage för att flytta tävlingsklockan till när den ledande löparen nådde kontrollen.</p>'+gapChart(model,participants)+'</article><article class="c2-panel"><h3>Officiell placeringsresa</h3><p>Publicerad totalplacering vid gemensamma exakta passager.</p>'+placementChart(model,participants)+'</article></section>'+
       '<section class="c2-panel"><h3>Segmentduellen</h3><p>Välj en delsträcka. Valet synkas med bana och höjdprofil där gemensam geometri är verifierad.</p><div class="c2-segments">'+segmentButtons+'</div></section>'+
       '<section class="c2-panel"><h3>Pacing mot respektive års fält</h3><p>Varje löpare normaliseras mot medianfarten i sitt eget loppår. Positivt betyder snabbare än det årets segmentmedian. Referens kräver minst fem säkra fullföljare.</p>'+fieldChart(model,participants)+'</section>'+
@@ -148,7 +148,7 @@
   }
   function bind(root,options){
     const model=options.model,participants=options.participants||[],models=options.replayModels||[];
-    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,map=null,markers=[],highlight=null,destroyed=false;
+    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCamera=0,map=null,markers=[],highlight=null,destroyed=false;
     const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]');
     if(slider){slider.max=String(Math.ceil(maxTime));clockMax.textContent='av '+duration(maxTime)}
     const stateAtTime=(runner,t)=>{
@@ -200,7 +200,9 @@
       time=clamp(value,0,maxTime);if(slider)slider.value=String(Math.round(time));if(clock)clock.textContent=duration(time);
       const states=models.map((runner,index)=>({...stateAtTime(runner,time),index}));
       markers.forEach((marker,index)=>{const coord=states[index]?.state.coordinate;if(coord)marker.setLatLng(coord)});
-      updateElevation(states);if(forceCamera)updateCamera(states);
+      updateElevation(states);
+      const now=typeof performance!=='undefined'?performance.now():Date.now();
+      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>650)){lastCamera=now;updateCamera(states)}
       const sorted=states.slice().sort((a,b)=>b.distance-a.distance),leader=sorted[0],gap=states[0]&&states[1]?states[0].distance-states[1].distance:0;
       const cards=root.querySelector('[data-c2-live-cards]');
       if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultName(participants[index],index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
@@ -252,7 +254,7 @@
       try{await navigator.clipboard.writeText(url);if(feedback)feedback.textContent='Länk kopierad'}catch{if(feedback)feedback.textContent='Kopiera adressen i webbläsaren för att dela jämförelsen.'}
     });
     if(models.length===2){setTime(0,false);updateSegment(0,false);mountMap()}
-    return{destroy(){destroyed=true;stop();if(highlight)highlight.remove();if(map)map.remove();map=null;markers=[]},setTime,selectSegment:updateSegment};
+    return{destroy(){destroyed=true;stop();if(highlight)highlight.remove();if(map)map.remove();map=null;markers=[]},setTime,selectSegment:updateSegment,getTime:()=>time,getSelectedSegment:()=>selectedSegment};
   }
   function mount(root,options){
     if(!root)return null;
