@@ -697,6 +697,9 @@ function headToHeadShareUrl(model){
   url.hash='';
   url.searchParams.set('race',state.raceFamily);
   url.searchParams.set('compare',(model?.results||[]).map(result=>result.id).join(','));
+  const comparisonTime=comparison2Controller?.getTime?.(),segment=comparison2Controller?.getSelectedSegment?.();
+  if(Number.isFinite(Number(comparisonTime))&&Number(comparisonTime)>0)url.searchParams.set('ct',String(Math.round(Number(comparisonTime))));else url.searchParams.delete('ct');
+  if(Number.isInteger(Number(segment))&&Number(segment)>0)url.searchParams.set('cs',String(Number(segment)));else url.searchParams.delete('cs');
   return url.href;
 }
 async function restoreComparisonFromUrl(){
@@ -741,6 +744,10 @@ async function openHeadToHead(){
       shareUrl:()=>headToHeadShareUrl(model),
       onOpenMapDuel:()=>{if(dialog.open)dialog.close();openMapWithRunners(compareState.selected)},
     });
+    const sharedState=new URLSearchParams(location.search);
+    const sharedSegment=Number(sharedState.get('cs')),sharedTime=Number(sharedState.get('ct'));
+    if(comparison2Controller&&Number.isInteger(sharedSegment)&&sharedSegment>=0)comparison2Controller.selectSegment?.(sharedSegment,false);
+    if(comparison2Controller&&Number.isFinite(sharedTime)&&sharedTime>=0)comparison2Controller.setTime?.(sharedTime,true);
   }else{
     detail.innerHTML=renderHeadToHead(model);
   }
