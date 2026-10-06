@@ -38,6 +38,13 @@ async function evaluate(expression) {
   return result.result.value;
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function waitForBrowser(expression,{attempts=40,interval=100}={}){
+  for(let attempt=0;attempt<attempts;attempt++){
+    if(await evaluate(expression))return true;
+    await delay(interval);
+  }
+  return false;
+}
 await command("Runtime.enable");
 await command("Log.enable");
 await command("Page.enable");
@@ -721,7 +728,7 @@ await evaluate(`(() => {
   addCompareRunner(a?.id||0);addCompareRunner(b?.id||0);
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await delay(250);
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
 const h2hComparable=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
   finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
@@ -769,7 +776,7 @@ await evaluate(`(() => {
   finishers.forEach(item=>addCompareRunner(item.id));
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await delay(250);
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
 const h2hSameEdition=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
   finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
