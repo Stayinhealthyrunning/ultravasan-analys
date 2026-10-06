@@ -99,6 +99,18 @@ const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&s
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
 assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
+assert.deepStrictEqual(sameCourse.insights.signed_checkpoints.map(row=>[row.checkpoint_key,row.gap_seconds]),[['smagan',50],['mangsbodarna',100],['mora',1200]],'positivt gap betyder att löpare A ligger före B');
+assert.strictEqual(sameCourse.insights.final_gap_seconds,1200);
+assert.deepStrictEqual(sameCourse.insights.leaders,{a:3,b:0,equal:0});
+assert.strictEqual(sameCourse.insights.lead_changes,0);
+assert.strictEqual(sameCourse.insights.nearest.checkpoint_key,'smagan');
+assert.strictEqual(sameCourse.insights.largest_gap.checkpoint_key,'mora');
+assert.strictEqual(sameCourse.insights.most_time_won_a.from,'start');
+assert.strictEqual(sameCourse.insights.most_time_won_a.to,'smagan');
+
+const tooMany=analysis.headToHead(dataset,[101,102,103]);
+assert.strictEqual(tooMany.available,false);
+assert.strictEqual(tooMany.reason,'exactly-two-runners','Direktjämförelse 2.0 ska alltid vara exakt två löpare');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
 assert.strictEqual(changedCourse.available,true);
