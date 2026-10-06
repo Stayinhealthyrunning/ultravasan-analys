@@ -750,6 +750,17 @@ const h2hInteraction=await evaluate(`(() => {
   };
 })()`);
 
+const h2hShareState=await evaluate(`(() => {
+  const model=window.RunnerAnalysis.headToHead(state.data,compareState.selected.map(item=>item.id));
+  const url=new URL(headToHeadShareUrl(model));
+  return {
+    race:url.searchParams.get('race'),
+    compare:url.searchParams.get('compare'),
+    ct:Number(url.searchParams.get('ct')||0),
+    cs:Number(url.searchParams.get('cs')||0),
+  };
+})()`);
+
 await evaluate(`(() => {
   const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
   compareState.selected=[];
@@ -939,12 +950,13 @@ const checks = {
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Pacing mot respektive års fält') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
   h2hInteraction: h2hInteraction.available && h2hInteraction.max>0 && h2hInteraction.after!==h2hInteraction.before && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
+  h2hShareState: h2hShareState.race==='uv90' && h2hShareState.compare.split(',').length===2 && h2hShareState.ct>0 && h2hShareState.cs===1,
   h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.text.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hInteraction,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hInteraction,h2hShareState,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
