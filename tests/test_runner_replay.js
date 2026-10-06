@@ -274,6 +274,9 @@ const comparisonSource=fs.readFileSync(require.resolve('../docs/assets/compariso
 assert.ok(comparisonSource.includes('CAMERA_CENTER_EASE=.38')&&comparisonSource.includes('CAMERA_ZOOM_MS=450')&&comparisonSource.includes('map.panBy([dx*factor,dy*factor]'),'Direktjämförelsens kartkamera ska flytta centrum mjukt varje animationsframe');
 assert.ok(comparisonSource.includes("root.querySelector('input[data-c2-time]')"),'Direktjämförelsens tidsreglage måste bindas till range-inputen, inte checkpointpunkternas data-c2-time-attribut');
 assert.ok(comparisonSource.includes('preferCanvas:false')&&mapSource.includes('preferCanvas:false'),'Comparison och Kartduell ska använda SVG-renderer för mjuk följning utan Leaflet Canvas teardown-race');
+const siteCss=fs.readFileSync(require.resolve('../docs/assets/styles.css'),'utf8');
+assert.ok(siteCss.includes('.c2-panel svg:not(.leaflet-zoom-animated)')&&siteCss.includes('.c2-map .leaflet-overlay-pane svg.leaflet-zoom-animated{width:auto!important;height:auto!important'),'Comparison-panelens diagramregel får inte skala sönder Leaflets SVG-lager');
+assert.ok(comparisonSource.includes("className:'c2-route-line'")&&comparisonSource.includes("className:'c2-runner-marker c2-runner-marker-'"),'Comparison-kartans bana och löparmarkörer ska ha stabila vektorklasser för visuell regression');
 assert.ok(appStateSource.includes('speed:playback.DEFAULT_MODE')&&mapSource.includes('mapPlayback.rateFor'),'Kartduellen ska använda gemensam Playback-standard och rate-beräkning');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');

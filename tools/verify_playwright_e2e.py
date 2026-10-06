@@ -266,13 +266,17 @@ def run(base_url: str) -> None:
             cameraDefault:document.querySelector('#headToHeadDetail [data-c2-camera]')?.value||null,
             audio:document.querySelector('#headToHeadDetail [data-c2-audio]')?.getAttribute('src')||null,
             expectedAudio:window.RaceMedia.musicForRace(race),
-            leafletFlag:document.querySelectorAll('#headToHeadDetail .leaflet-attribution-flag').length
+            leafletFlag:document.querySelectorAll('#headToHeadDetail .leaflet-attribution-flag').length,
+            routeVector:(()=>{const node=document.querySelector('#headToHeadDetail .c2-route-line');if(!node)return null;const r=node.getBoundingClientRect();return{width:r.width,height:r.height,opacity:Number(getComputedStyle(node).opacity||1),display:getComputedStyle(node).display};})(),
+            runnerVectors:[...document.querySelectorAll('#headToHeadDetail .c2-runner-marker')].map(node=>{const r=node.getBoundingClientRect();return{width:r.width,height:r.height,opacity:Number(getComputedStyle(node).opacity||1),display:getComputedStyle(node).display};})
           };
         }""", h2h_seed)
         check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 2
               and h2h["gapAxisLabels"] >= 9 and h2h["fieldAxisLabels"] >= 6 and h2h["playbackDefault"] == "120s"
-              and h2h["cameraDefault"] == "both" and h2h["audio"] == h2h["expectedAudio"] and h2h["leafletFlag"] == 0,
-              f"verified 2024-2025 cross-edition Comparison 2.0 must expose scaled charts and aligned replay: {h2h}")
+              and h2h["cameraDefault"] == "both" and h2h["audio"] == h2h["expectedAudio"] and h2h["leafletFlag"] == 0
+              and h2h["routeVector"] and h2h["routeVector"]["width"] > 20 and h2h["routeVector"]["height"] > 20
+              and len(h2h["runnerVectors"]) == 2 and all(v["width"] > 5 and v["height"] > 5 and v["display"] != "none" and v["opacity"] > 0 for v in h2h["runnerVectors"]),
+              f"verified 2024-2025 cross-edition Comparison 2.0 must expose visible route and runner vectors: {h2h}")
 
         timeline = page.locator("#headToHeadDetail input[data-c2-time]")
         timeline_max = int(float(timeline.get_attribute("max") or "0"))
