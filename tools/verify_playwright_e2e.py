@@ -292,12 +292,15 @@ def run(base_url: str) -> None:
             placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
             sameRaceEdition:model.same_race_edition,
             allSegmentsComparable:model.segments.every(segment=>segment.comparable),
-            blockedCopy:(document.querySelector('#headToHeadDetail')?.innerText||'').includes('Ej jämförbart')
+            blockedCopy:(document.querySelector('#headToHeadDetail')?.innerText||'').includes('Ej jämförbart'),
+            dialogWidth:document.querySelector('#headToHeadDialog')?.getBoundingClientRect().width||0,
+            innerOverflow:Math.max(0,(document.querySelector('#headToHeadDetail')?.scrollWidth||0)-(document.querySelector('#headToHeadDetail')?.clientWidth||0))
           };
         }""", same_edition_count)
         check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0 and same_edition["placement"]
-              and same_edition["sameRaceEdition"] and same_edition["allSegmentsComparable"] and not same_edition["blockedCopy"],
-              f"same-RaceEdition Comparison 2.0 must compare every exact official segment: {same_edition}")
+              and same_edition["sameRaceEdition"] and same_edition["allSegmentsComparable"] and not same_edition["blockedCopy"]
+              and same_edition["dialogWidth"] >= 1450 and same_edition["innerOverflow"] <= 2,
+              f"same-RaceEdition Comparison 2.0 must use the wide desktop dialog without horizontal scrolling: {same_edition}")
 
         page.evaluate("""id => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
