@@ -95,10 +95,49 @@ const cpMangs=sameCourse.checkpoints.find(row=>row.checkpoint_key==='mangsbodarn
 assert.strictEqual(cpSmagan.comparable,true,'samma CourseVersion ska tillåta checkpointgap');
 assert.deepStrictEqual(cpSmagan.entries.map(row=>[row.result_id,row.gap_seconds,row.place_overall]),[[102,0,50],[103,50,60]]);
 assert.deepStrictEqual(cpMangs.entries.map(row=>[row.result_id,row.gap_seconds,row.placement_change]),[[102,0,10],[103,100,15]],'checkpoint-H2H ska visa kumulativt gap och officiell placeringsrörelse');
+const firstSegment=sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan');
+assert.strictEqual(firstSegment?.comparable,false,'startsegmentet får inte bli direkt jämförbart utan uttryckligt segmentkontrakt');
 const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
-assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
+assert.strictEqual(sameCourse.comparison_contract_version,'2.0');
+assert.strictEqual(cpSmagan.pair_gap_seconds,50,'positivt pargap betyder att A passerade före B');
+assert.strictEqual(sharedSegment.pair_delta_seconds,50,'positivt segmentdelta betyder att A vann segmentet');
+assert.strictEqual(sameCourse.pairwise_insights.leaders.a,3);
+assert.strictEqual(sameCourse.pairwise_insights.lead_changes,0);
+assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_reference_n,2);
+assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_median_pace_seconds_per_km,null,'fältmedian kräver minst fem säkra referenser');
+
+const fieldDataset={
+  ...dataset,
+  results:[
+    ...dataset.results,
+    {id:108,race_id:2,person_key:'p8',status:'FINISHED',finish_seconds:35900},
+    {id:109,race_id:2,person_key:'p9',status:'FINISHED',finish_seconds:36100},
+    {id:110,race_id:2,person_key:'p10',status:'FINISHED',finish_seconds:36300},
+  ],
+  splits:[
+    ...dataset.splits,
+    {result_id:108,checkpoint_key:'smagan',elapsed_seconds:3520,segment_seconds:3520,pace_seconds_per_km:352},
+    {result_id:108,checkpoint_key:'mangsbodarna',elapsed_seconds:8770,segment_seconds:5250,pace_seconds_per_km:350},
+    {result_id:108,checkpoint_key:'mora',elapsed_seconds:35900,segment_seconds:27130,pace_seconds_per_km:405},
+    {result_id:109,checkpoint_key:'smagan',elapsed_seconds:3540,segment_seconds:3540,pace_seconds_per_km:354},
+    {result_id:109,checkpoint_key:'mangsbodarna',elapsed_seconds:8940,segment_seconds:5400,pace_seconds_per_km:360},
+    {result_id:109,checkpoint_key:'mora',elapsed_seconds:36100,segment_seconds:27160,pace_seconds_per_km:405},
+    {result_id:110,checkpoint_key:'smagan',elapsed_seconds:3530,segment_seconds:3530,pace_seconds_per_km:353},
+    {result_id:110,checkpoint_key:'mangsbodarna',elapsed_seconds:8855,segment_seconds:5325,pace_seconds_per_km:355},
+    {result_id:110,checkpoint_key:'mora',elapsed_seconds:36300,segment_seconds:27445,pace_seconds_per_km:410},
+  ],
+};
+const normalized=analysis.headToHead(fieldDataset,[102,103]);
+const normalizedSegment=normalized.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
+const normalizedA=normalizedSegment.entries.find(row=>row.result_id===102);
+const normalizedB=normalizedSegment.entries.find(row=>row.result_id===103);
+assert.strictEqual(normalizedA.field_reference_n,5);
+assert.strictEqual(normalizedA.field_median_pace_seconds_per_km,355);
+assert.ok(Math.abs(normalizedA.performance_vs_field_percent-(355/353-1)*100)<1e-9,'A ska normaliseras mot sitt eget loppårs segmentmedian');
+assert.ok(Math.abs(normalizedB.performance_vs_field_percent-(355/357-1)*100)<1e-9,'B ska använda samma års kohort men sin egen segmentfart');
+assert.ok(normalizedA.performance_vs_field_percent>0&&normalizedB.performance_vs_field_percent<0,'normaliseringen ska skilja snabbare och långsammare än årsmedianen');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
 assert.strictEqual(changedCourse.available,true);
@@ -112,6 +151,11 @@ const mixed=analysis.headToHead(dataset,[102,105]);
 assert.strictEqual(mixed.available,false);
 assert.strictEqual(mixed.reason,'mixed-race-family');
 
+const tooMany=analysis.headToHead(dataset,[101,102,103]);
+assert.strictEqual(tooMany.available,false);
+assert.strictEqual(tooMany.reason,'need-exactly-two-runners','Comparison 2.0 ska vara strikt tvåpersonersanalys');
+
+
 const race2024=real.races.find(race=>race.race_key==='ultravasan90-2024');
 const race2025=real.races.find(race=>race.race_key==='ultravasan90-2025');
 const finisher2024=real.results.find(result=>result.race_id===race2024?.id&&result.status==='FINISHED');
@@ -122,4 +166,4 @@ assert.strictEqual(evidencedWholeCourse.same_course_version,true);
 assert.strictEqual(evidencedWholeCourse.finish_ranking.length,2,'verifierad helbaneserie ska öppna finish-gap mellan 2024 och 2025');
 assert.ok(evidencedWholeCourse.finish_ranking.every(row=>Number.isFinite(row.gap_seconds)));
 
-console.log('OK: U5 RunnerAnalysis bygger Journey, verifierad profilhistorik och CourseVersion-säker head-to-head');
+console.log('OK: RunnerAnalysis bygger Journey och Comparison 2.0 med CourseVersion-säkra parvisa gap');

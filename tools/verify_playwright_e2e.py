@@ -240,34 +240,59 @@ def run(base_url: str) -> None:
         # verified 2024-2025 whole-course group => finish + checkpoint dimensions across editions;
         # different unverified CourseVersion => checkpoint/course dimensions blocked too.
         family_full(page, "uv90")
-        h2h = page.evaluate("""() => {
+        h2h_seed = page.evaluate("""() => {
           const data=window.ULTRAVASAN_ACTIVE_DATA;
           const r25=data.races.find(r=>r.race_key==='ultravasan90-2025'),r24=data.races.find(r=>r.race_key==='ultravasan90-2024'),r19=data.races.find(r=>r.race_key==='ultravasan90-2019');
           const a=data.results.find(r=>r.race_id===r25?.id&&r.status==='FINISHED'),b=data.results.find(r=>r.race_id===r24?.id&&r.status==='FINISHED'),c=data.results.find(r=>r.race_id===r19?.id&&r.status==='FINISHED');
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           compareState.raceId='all';compareState.selected=[];addCompareRunner(a?.id);addCompareRunner(b?.id);document.querySelector('#compareH2HButton')?.click();
-          return {same:!!a&&!!b,course:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,changed:!!c,id:c?.id};
+          return {same:!!a&&!!b,changed:!!c,id:c?.id};
         }""")
+        page.wait_for_selector("#headToHeadDetail .c2-shell", timeout=4000)
+        page.wait_for_selector("#headToHeadDetail .c2-map.leaflet-container", timeout=5000)
+        h2h = page.evaluate("""seed => ({
+          ...seed,
+          course:!!document.querySelector('#headToHeadDetail .c2-map.leaflet-container'),
+          elevation:!!document.querySelector('#headToHeadDetail .c2-elevation'),
+          placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
+          checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+          finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+          warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length
+        })""", h2h_seed)
         check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 2,
-              f"verified 2024-2025 cross-edition H2H must expose finish and checkpoint comparison: {h2h}")
+              f"verified 2024-2025 cross-edition Comparison 2.0 must expose finish and checkpoint comparison: {h2h}")
 
-        same_edition = page.evaluate("""() => {
+        same_edition_count = page.evaluate("""() => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           const data=window.ULTRAVASAN_ACTIVE_DATA,r25=data.races.find(r=>r.race_key==='ultravasan90-2025');
           const finishers=data.results.filter(r=>r.race_id===r25?.id&&r.status==='FINISHED').slice(0,2);
           compareState.selected=[];finishers.forEach(r=>addCompareRunner(r.id));document.querySelector('#compareH2HButton')?.click();
-          return {count:finishers.length,finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,checkpoints:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length};
+          return finishers.length;
         }""")
-        check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0,
-              f"same-RaceEdition H2H must allow direct finish comparison: {same_edition}")
+        page.wait_for_selector("#headToHeadDetail .c2-shell", timeout=4000)
+        page.wait_for_selector("#headToHeadDetail .c2-map.leaflet-container", timeout=5000)
+        same_edition = page.evaluate("""count => ({
+          count,
+          finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+          checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+          placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart')
+        })""", same_edition_count)
+        check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0 and same_edition["placement"],
+              f"same-RaceEdition Comparison 2.0 must allow direct comparison: {same_edition}")
 
-        blocked = page.evaluate("""id => {
+        page.evaluate("""id => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           const first=compareState.selected[0];compareState.selected=[];if(first)addCompareRunner(first.id);if(id)addCompareRunner(id);document.querySelector('#compareH2HButton')?.click();
-          return {map:!!document.querySelector('#headToHeadDetail .h2h-course-map svg'),elevation:!!document.querySelector('#headToHeadDetail .h2h-course-elevation svg'),placement:!!document.querySelector('#headToHeadDetail .h2h-placement svg'),warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length};
         }""", h2h["id"])
+        page.wait_for_selector("#headToHeadDetail .c2-geometry-warning", timeout=4000)
+        blocked = page.evaluate("""() => ({
+          map:!!document.querySelector('#headToHeadDetail .c2-map.leaflet-container'),
+          elevation:!!document.querySelector('#headToHeadDetail .c2-elevation'),
+          placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
+          warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length
+        })""")
         check(not blocked["map"] and not blocked["elevation"] and not blocked["placement"] and blocked["warnings"] > 0,
-              f"incompatible CourseVersion H2H was not blocked: {blocked}")
+              f"incompatible CourseVersion Comparison 2.0 was not blocked: {blocked}")
 
         # Real Playwright viewport changes (not emulated through CDP), no horizontal overflow.
         for width, height in ((390, 844), (900, 900), (1536, 1024)):
