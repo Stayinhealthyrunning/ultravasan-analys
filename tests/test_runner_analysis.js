@@ -98,6 +98,14 @@ assert.deepStrictEqual(cpMangs.entries.map(row=>[row.result_id,row.gap_seconds,r
 const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
+assert.strictEqual(sameCourse.comparison_contract_version,'2.0');
+assert.strictEqual(cpSmagan.pair_gap_seconds,-50,'negativt pargap betyder att B passerade före A');
+assert.strictEqual(sharedSegment.pair_delta_seconds,-50,'negativt segmentdelta betyder att B vann segmentet');
+assert.strictEqual(sameCourse.pairwise_insights.leaders.b,3);
+assert.strictEqual(sameCourse.pairwise_insights.lead_changes,0);
+assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_reference_n,2);
+assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_median_pace_seconds_per_km,null,'fältmedian kräver minst fem säkra referenser');
+
 assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
@@ -112,6 +120,11 @@ const mixed=analysis.headToHead(dataset,[102,105]);
 assert.strictEqual(mixed.available,false);
 assert.strictEqual(mixed.reason,'mixed-race-family');
 
+const tooMany=analysis.headToHead(dataset,[101,102,103]);
+assert.strictEqual(tooMany.available,false);
+assert.strictEqual(tooMany.reason,'need-exactly-two-runners','Comparison 2.0 ska vara strikt tvåpersonersanalys');
+
+
 const race2024=real.races.find(race=>race.race_key==='ultravasan90-2024');
 const race2025=real.races.find(race=>race.race_key==='ultravasan90-2025');
 const finisher2024=real.results.find(result=>result.race_id===race2024?.id&&result.status==='FINISHED');
@@ -122,4 +135,4 @@ assert.strictEqual(evidencedWholeCourse.same_course_version,true);
 assert.strictEqual(evidencedWholeCourse.finish_ranking.length,2,'verifierad helbaneserie ska öppna finish-gap mellan 2024 och 2025');
 assert.ok(evidencedWholeCourse.finish_ranking.every(row=>Number.isFinite(row.gap_seconds)));
 
-console.log('OK: U5 RunnerAnalysis bygger Journey, verifierad profilhistorik och CourseVersion-säker head-to-head');
+console.log('OK: RunnerAnalysis bygger Journey och Comparison 2.0 med CourseVersion-säkra parvisa gap');
