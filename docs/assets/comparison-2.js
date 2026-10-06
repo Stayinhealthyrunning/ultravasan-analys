@@ -188,7 +188,7 @@
     let musicEnabled=true,audioVolume=DEFAULT_VOLUME,lastAudibleVolume=DEFAULT_VOLUME;
     if(slider){slider.max=String(Math.ceil(maxTime));clockMax.textContent='av '+duration(maxTime)}
     try{
-      const storedVolume=Number(localStorage.getItem('ultravasan-music-volume'));
+      const rawVolume=localStorage.getItem('ultravasan-music-volume'),storedVolume=rawVolume===null||rawVolume===''?null:Number(rawVolume);
       if(finite(storedVolume)&&storedVolume>=0)audioVolume=clamp(storedVolume,0,1);
       musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false';
     }catch{}
