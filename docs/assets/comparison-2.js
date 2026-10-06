@@ -30,6 +30,10 @@
   }
   function percent(value){return finite(value)?(Number(value)>0?'+':'')+Number(value).toLocaleString('sv-SE',{maximumFractionDigits:1})+' %':'–'}
   function resultName(participant,index){return participant?.name||participant?.label||('Löpare '+(index+1))}
+  function resultLabel(participants,index){
+    const participant=participants?.[index]||{},name=resultName(participant,index),duplicate=(participants||[]).some((other,otherIndex)=>otherIndex!==index&&resultName(other,otherIndex)===name);
+    return duplicate&&participant?.year?name+' · '+participant.year:name;
+  }
   function checkpointName(model,key){
     const cp=(model?.checkpoints||[]).find(row=>String(row.checkpoint_key)===String(key));
     if(cp?.checkpoint_name)return cp.checkpoint_name;
@@ -41,7 +45,7 @@
     if(!model?.available||model.results?.length!==2)return{available:false,reason:model?.reason||'need-exactly-two-runners'};
     const insights=model.pairwise_insights||{},a=participants[0]||{},b=participants[1]||{};
     const final=finite(insights.final_gap_seconds)
-      ?(Number(insights.final_gap_seconds)===0?'Samma sluttid':(Number(insights.final_gap_seconds)>0?resultName(a,0):resultName(b,1))+' före med '+duration(insights.final_gap_seconds))
+      ?(Number(insights.final_gap_seconds)===0?'Samma sluttid':(Number(insights.final_gap_seconds)>0?resultLabel(participants,0):resultLabel(participants,1))+' före med '+duration(insights.final_gap_seconds))
       :'Ej helbanejämförbart';
     return{
       available:true,
@@ -67,11 +71,11 @@
     }
     const path=rows.map((row,index)=>(index?'L':'M')+x(row.entries[0].distance_km).toFixed(1)+' '+y(row.pair_gap_seconds).toFixed(1)).join(' ');
     const dots=rows.map((row,index)=>{
-      const title=row.checkpoint_name+' · '+(Number(row.pair_gap_seconds)>0?resultName(participants[0],0):Number(row.pair_gap_seconds)<0?resultName(participants[1],1):'Lika')+(Number(row.pair_gap_seconds)===0?'':(' före '+duration(row.pair_gap_seconds)));
+      const title=row.checkpoint_name+' · '+(Number(row.pair_gap_seconds)>0?resultLabel(participants,0):Number(row.pair_gap_seconds)<0?resultLabel(participants,1):'Lika')+(Number(row.pair_gap_seconds)===0?'':(' före '+duration(row.pair_gap_seconds)));
       return'<circle class="c2-gap-point" data-c2-checkpoint="'+esc(row.checkpoint_key)+'" data-c2-time="'+esc(row.action_time_seconds??'')+'" cx="'+x(row.entries[0].distance_km).toFixed(1)+'" cy="'+y(row.pair_gap_seconds).toFixed(1)+'" r="6" tabindex="0" role="button" aria-label="'+esc(title)+'"><title>'+esc(title)+'</title></circle>';
     }).join('');
     const labels=rows.map((row,index)=>'<text class="c2-x-label" x="'+x(row.entries[0].distance_km).toFixed(1)+'" y="'+(H-20-(index%2)*13)+'" text-anchor="'+(index===rows.length-1?'end':index===0?'start':'middle')+'">'+esc(row.checkpoint_name)+'</text>').join('');
-    return'<svg class="c2-gap-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Observerad tidslucka mellan de två löparna"><line class="c2-zero" x1="'+p.l+'" x2="'+(W-p.r)+'" y1="'+y(0)+'" y2="'+y(0)+'"/><path class="c2-gap-line" d="'+path+'"/>'+dots+labels+'<text class="c2-gap-positive" x="'+(W-p.r)+'" y="18" text-anchor="end">+ = '+esc(resultName(participants[0],0))+' före</text><text class="c2-gap-negative" x="'+p.l+'" y="18">− = '+esc(resultName(participants[1],1))+' före</text></svg>';
+    return'<svg class="c2-gap-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Observerad tidslucka mellan de två löparna"><line class="c2-zero" x1="'+p.l+'" x2="'+(W-p.r)+'" y1="'+y(0)+'" y2="'+y(0)+'"/><path class="c2-gap-line" d="'+path+'"/>'+dots+labels+'<text class="c2-gap-positive" x="'+(W-p.r)+'" y="18" text-anchor="end">+ = '+esc(resultLabel(participants,0))+' före</text><text class="c2-gap-negative" x="'+p.l+'" y="18">− = '+esc(resultLabel(participants,1))+' före</text></svg>';
   }
   function placementChart(model,participants){
     const rows=(model.checkpoints||[]).filter(row=>row.comparable);
@@ -83,7 +87,7 @@
     for(let tick=0;tick<=4;tick++){const place=Math.max(1,Math.round(1+(maxPlace-1)*tick/4)),yy=y(place);marks+='<line class="c2-grid" x1="'+p.l+'" x2="'+(W-p.r)+'" y1="'+yy+'" y2="'+yy+'"/><text class="c2-axis-label" x="'+(p.l-8)+'" y="'+(yy+4)+'" text-anchor="end">'+place+'</text>'}
     series.forEach((items,runnerIndex)=>{
       let path='',open=false;
-      items.forEach((value,index)=>{if(!finite(value)){open=false;return}path+=(open?'L':'M')+x(index).toFixed(1)+' '+y(value).toFixed(1)+' ';open=true;marks+='<circle class="c2-placement-point" cx="'+x(index).toFixed(1)+'" cy="'+y(value).toFixed(1)+'" r="5" style="--runner:'+COLORS[runnerIndex]+'"><title>'+esc(resultName(participants[runnerIndex],runnerIndex)+' · '+rows[index].checkpoint_name+' · plats '+value)+'</title></circle>'});
+      items.forEach((value,index)=>{if(!finite(value)){open=false;return}path+=(open?'L':'M')+x(index).toFixed(1)+' '+y(value).toFixed(1)+' ';open=true;marks+='<circle class="c2-placement-point" cx="'+x(index).toFixed(1)+'" cy="'+y(value).toFixed(1)+'" r="5" style="--runner:'+COLORS[runnerIndex]+'"><title>'+esc(resultLabel(participants,runnerIndex)+' · '+rows[index].checkpoint_name+' · plats '+value)+'</title></circle>'});
       marks+='<path class="c2-placement-line" d="'+path+'" style="--runner:'+COLORS[runnerIndex]+'"/>';
     });
     const labels=rows.map((row,index)=>'<text class="c2-x-label" x="'+x(index).toFixed(1)+'" y="'+(H-19-(index%2)*13)+'" text-anchor="'+(index===rows.length-1?'end':index===0?'start':'middle')+'">'+esc(row.checkpoint_name)+'</text>').join('');
@@ -102,7 +106,7 @@
         const entry=segment.entries[runnerIndex],value=entry?.performance_vs_field_percent;
         if(!finite(value)){open=false;return}
         path+=(open?'L':'M')+x(index).toFixed(1)+' '+y(value).toFixed(1)+' ';open=true;
-        const title=segmentName(model,segment)+' · '+resultName(participants[runnerIndex],runnerIndex)+' '+percent(value)+' mot '+(participants[runnerIndex]?.year||'eget år')+'-fältets median · n='+entry.field_reference_n;
+        const title=segmentName(model,segment)+' · '+resultLabel(participants,runnerIndex)+' '+percent(value)+' mot '+(participants[runnerIndex]?.year||'eget år')+'-fältets median · n='+entry.field_reference_n;
         body+='<circle class="c2-field-point" cx="'+x(index).toFixed(1)+'" cy="'+y(value).toFixed(1)+'" r="5" style="--runner:'+COLORS[runnerIndex]+'"><title>'+esc(title)+'</title></circle>';
       });
       body+='<path class="c2-field-line" d="'+path+'" style="--runner:'+COLORS[runnerIndex]+'"/>';
@@ -116,7 +120,7 @@
     const projection=replay.elevationProjection(first,920),path=profile.map((point,index)=>(index?'L':'M')+projection.x(point[0]).toFixed(1)+' '+projection.y(point[1]).toFixed(1)).join(' '),base=projection.height-projection.pad.b;
     const area=path+' L'+projection.x(profile.at(-1)[0]).toFixed(1)+' '+base+' L'+projection.x(profile[0][0]).toFixed(1)+' '+base+' Z';
     const segment=(model.segments||[])[0],from=segment?first.checkpoints.find(cp=>String(cp.key)===String(segment.from))?.distance:0,to=segment?first.checkpoints.find(cp=>String(cp.key)===String(segment.to))?.distance:0;
-    return'<svg class="c2-elevation" viewBox="0 0 '+projection.width+' '+projection.height+'" role="img" aria-label="Synkroniserad höjdprofil"><path class="c2-elev-area" d="'+area+'"/><path class="c2-elev-line" d="'+path+'"/><rect data-c2-elev-segment class="c2-elev-segment" x="'+projection.x(from||0)+'" y="'+projection.pad.t+'" width="'+Math.max(0,projection.x(to||0)-projection.x(from||0))+'" height="'+(base-projection.pad.t)+'"/>'+replayModels.map((runner,index)=>'<line data-c2-elev-marker="'+index+'" class="c2-elev-marker" style="--runner:'+COLORS[index]+'" x1="'+projection.x(0)+'" x2="'+projection.x(0)+'" y1="'+projection.pad.t+'" y2="'+base+'"/><circle data-c2-elev-dot="'+index+'" class="c2-elev-dot" style="--runner:'+COLORS[index]+'" cx="'+projection.x(0)+'" cy="'+projection.y(profile[0][1])+'" r="7"><title>'+esc(resultName(participants[index],index))+'</title></circle>').join('')+'<rect class="c2-elev-hit" data-c2-elev-hit x="'+projection.pad.l+'" y="'+projection.pad.t+'" width="'+(projection.width-projection.pad.l-projection.pad.r)+'" height="'+(base-projection.pad.t)+'" tabindex="0" role="slider" aria-label="Sök i jämförelsen via höjdprofilen"/></svg>';
+    return'<svg class="c2-elevation" viewBox="0 0 '+projection.width+' '+projection.height+'" role="img" aria-label="Synkroniserad höjdprofil"><path class="c2-elev-area" d="'+area+'"/><path class="c2-elev-line" d="'+path+'"/><rect data-c2-elev-segment class="c2-elev-segment" x="'+projection.x(from||0)+'" y="'+projection.pad.t+'" width="'+Math.max(0,projection.x(to||0)-projection.x(from||0))+'" height="'+(base-projection.pad.t)+'"/>'+replayModels.map((runner,index)=>'<line data-c2-elev-marker="'+index+'" class="c2-elev-marker" style="--runner:'+COLORS[index]+'" x1="'+projection.x(0)+'" x2="'+projection.x(0)+'" y1="'+projection.pad.t+'" y2="'+base+'"/><circle data-c2-elev-dot="'+index+'" class="c2-elev-dot" style="--runner:'+COLORS[index]+'" cx="'+projection.x(0)+'" cy="'+projection.y(profile[0][1])+'" r="7"><title>'+esc(resultLabel(participants,index))+'</title></circle>').join('')+'<rect class="c2-elev-hit" data-c2-elev-hit x="'+projection.pad.l+'" y="'+projection.pad.t+'" width="'+(projection.width-projection.pad.l-projection.pad.r)+'" height="'+(base-projection.pad.t)+'" tabindex="0" role="slider" aria-label="Sök i jämförelsen via höjdprofilen"/></svg>';
   }
   function latestAnchor(model,time){
     return (model?.anchors||[]).filter(anchor=>Number(anchor.time)<=Number(time)+.5).at(-1)||model?.anchors?.[0]||null;
@@ -130,14 +134,14 @@
     }
     const p0=participants[0]||{},p1=participants[1]||{},insights=model.pairwise_insights||{},segmentButtons=(model.segments||[]).map((segment,index)=>{
       const a=segment.entries?.[0],b=segment.entries?.[1],delta=segment.pair_delta_seconds;
-      return'<button type="button" class="c2-segment" data-c2-segment="'+index+'" aria-pressed="'+String(index===0)+'"><span class="c2-segment-name"><b>'+(index+1)+'</b><strong>'+esc(segmentName(model,segment))+'</strong></span><span style="--runner:'+COLORS[0]+'"><small>'+esc(resultName(p0,0))+'</small><strong>'+duration(a?.segment_seconds)+'</strong><em>'+pace(a?.pace_seconds_per_km)+'</em></span><span style="--runner:'+COLORS[1]+'"><small>'+esc(resultName(p1,1))+'</small><strong>'+duration(b?.segment_seconds)+'</strong><em>'+pace(b?.pace_seconds_per_km)+'</em></span><span class="c2-segment-verdict"><strong>'+(!segment.comparable?'Ej jämförbart':!finite(delta)?'Säker tid saknas':Number(delta)===0?'Lika':esc((Number(delta)>0?resultName(p0,0):resultName(p1,1))+' vann '+duration(delta)))+'</strong><small>'+(segment.comparable?'fältindex '+percent(a?.performance_vs_field_percent)+' / '+percent(b?.performance_vs_field_percent):'banversionskontraktet blockerar direkt gap')+'</small></span></button>';
+      return'<button type="button" class="c2-segment" data-c2-segment="'+index+'" aria-pressed="'+String(index===0)+'"><span class="c2-segment-name"><b>'+(index+1)+'</b><strong>'+esc(segmentName(model,segment))+'</strong></span><span style="--runner:'+COLORS[0]+'"><small>'+esc(resultLabel(participants,0))+'</small><strong>'+duration(a?.segment_seconds)+'</strong><em>'+pace(a?.pace_seconds_per_km)+'</em></span><span style="--runner:'+COLORS[1]+'"><small>'+esc(resultLabel(participants,1))+'</small><strong>'+duration(b?.segment_seconds)+'</strong><em>'+pace(b?.pace_seconds_per_km)+'</em></span><span class="c2-segment-verdict"><strong>'+(!segment.comparable?'Ej jämförbart':!finite(delta)?'Säker tid saknas':Number(delta)===0?'Lika':esc((Number(delta)>0?resultLabel(participants,0):resultLabel(participants,1))+' vann '+duration(delta)))+'</strong><small>'+(segment.comparable?'fältindex '+percent(a?.performance_vs_field_percent)+' / '+percent(b?.performance_vs_field_percent):'banversionskontraktet blockerar direkt gap')+'</small></span></button>';
     }).join('');
     const kpi=(label,value,copy)=>'<article><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong><small>'+esc(copy||'')+'</small></article>';
-    const gapWords=row=>row&&finite(row.pair_gap_seconds)?(Number(row.pair_gap_seconds)===0?'Lika':(Number(row.pair_gap_seconds)>0?resultName(p0,0):resultName(p1,1))+' före '+duration(row.pair_gap_seconds)):'Underlag saknas';
+    const gapWords=row=>row&&finite(row.pair_gap_seconds)?(Number(row.pair_gap_seconds)===0?'Lika':(Number(row.pair_gap_seconds)>0?resultLabel(participants,0):resultLabel(participants,1))+' före '+duration(row.pair_gap_seconds)):'Underlag saknas';
     root.innerHTML='<div class="c2-shell"><header class="c2-hero"><div><p class="eyebrow">DIREKTJÄMFÖRELSE 2.0</p><h2>Två lopp. Ett gemensamt analysflöde.</h2><p>Officiella passager är fasta observationer. Rörelse mellan dem är en tydligt märkt rekonstruktion längs verifierad banreferens.</p></div><span class="pill">'+esc(model.same_course_version?'Samma CourseVersion':'Begränsad geometri')+'</span></header>'+
       '<section class="c2-people">'+[p0,p1].map((p,index)=>'<article style="--runner:'+COLORS[index]+'"><span>'+(index?'B':'A')+'</span><div><p>'+esc((p.year||'–')+(p.bib?' · #'+p.bib:''))+'</p><h3>'+esc(resultName(p,index))+'</h3><small>'+esc(p.className||p.status||'')+'</small></div><strong>'+duration(p.finishSeconds)+'</strong></article>').join('')+'</section>'+
       '<div class="c2-actions"><button type="button" class="secondary" data-c2-share>↗ Dela jämförelsen</button><button type="button" data-c2-map-duel>Öppna i Kartduell</button><span data-c2-feedback aria-live="polite"></span></div>'+
-      '<section class="c2-kpis">'+kpi('SLUTLIG SKILLNAD',view.final,model.whole_course_comparable?'Verifierad helbaneserie':'Ingen direkt helbaneranking')+kpi('PASSAGER FÖRE','A: '+view.leaders.a+' · B: '+view.leaders.b+' · lika: '+view.leaders.equal,'Endast gemensamma exakta passager')+kpi('LEDNINGSVÄXLINGAR',String(view.leadChanges),'Observerade skiften mellan passager')+kpi('NÄRMAST',gapWords(view.nearest),view.nearest?.checkpoint_name||'–')+kpi('STÖRSTA LUCKA',gapWords(view.largestGap),view.largestGap?.checkpoint_name||'–')+kpi('A VANN MEST TID',view.mostA?duration(view.mostA.pair_delta_seconds):'–',view.mostA?segmentName(model,view.mostA):resultName(p0,0))+kpi('B VANN MEST TID',view.mostB?duration(view.mostB.pair_delta_seconds):'–',view.mostB?segmentName(model,view.mostB):resultName(p1,1))+'</section>'+
+      '<section class="c2-kpis">'+kpi('SLUTLIG SKILLNAD',view.final,model.whole_course_comparable?'Verifierad helbaneserie':'Ingen direkt helbaneranking')+kpi('PASSAGER FÖRE','A: '+view.leaders.a+' · B: '+view.leaders.b+' · lika: '+view.leaders.equal,'Endast gemensamma exakta passager')+kpi('LEDNINGSVÄXLINGAR',String(view.leadChanges),'Observerade skiften mellan passager')+kpi('NÄRMAST',gapWords(view.nearest),view.nearest?.checkpoint_name||'–')+kpi('STÖRSTA LUCKA',gapWords(view.largestGap),view.largestGap?.checkpoint_name||'–')+kpi('A VANN MEST TID',view.mostA?duration(view.mostA.pair_delta_seconds):'–',view.mostA?segmentName(model,view.mostA):resultLabel(participants,0))+kpi('B VANN MEST TID',view.mostB?duration(view.mostB.pair_delta_seconds):'–',view.mostB?segmentName(model,view.mostB):resultLabel(participants,1))+'</section>'+
       '<section class="c2-grid-two"><article class="c2-panel"><h3>Tidslucka genom loppet</h3><p>Klicka en verklig passage för att flytta tävlingsklockan till när den ledande löparen nådde kontrollen.</p>'+gapChart(model,participants)+'</article><article class="c2-panel"><h3>Officiell placeringsresa</h3><p>Publicerad totalplacering vid gemensamma exakta passager.</p>'+placementChart(model,participants)+'</article></section>'+
       '<section class="c2-panel"><h3>Segmentduellen</h3><p>Välj en delsträcka. Valet synkas med bana och höjdprofil där gemensam geometri är verifierad.</p><div class="c2-segments">'+segmentButtons+'</div></section>'+
       '<section class="c2-panel"><h3>Pacing mot respektive års fält</h3><p>Varje löpare normaliseras mot medianfarten i sitt eget loppår. Positivt betyder snabbare än det årets segmentmedian. Referens kräver minst fem säkra fullföljare.</p>'+fieldChart(model,participants)+'</section>'+
@@ -205,9 +209,9 @@
       if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>650)){lastCamera=now;updateCamera(states)}
       const sorted=states.slice().sort((a,b)=>b.distance-a.distance),leader=sorted[0],gap=states[0]&&states[1]?states[0].distance-states[1].distance:0;
       const cards=root.querySelector('[data-c2-live-cards]');
-      if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultName(participants[index],index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
+      if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultLabel(participants,index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
       const readout=root.querySelector('[data-c2-readout]');
-      if(readout)readout.innerHTML='<strong>'+duration(time)+'</strong> · '+esc(resultName(participants[0],0))+' '+states[0].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · '+esc(resultName(participants[1],1))+' '+states[1].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · positionsskillnad '+(gap>=0?'+':'')+gap.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km. <span>Mellan officiella passager är positionerna rekonstruerade.</span>';
+      if(readout)readout.innerHTML='<strong>'+duration(time)+'</strong> · '+esc(resultLabel(participants,0))+' '+states[0].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · '+esc(resultLabel(participants,1))+' '+states[1].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · positionsskillnad '+(gap>=0?'+':'')+gap.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km. <span>Mellan officiella passager är positionerna rekonstruerade.</span>';
     }
     function stop(){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;if(play)play.textContent=time>=maxTime?'▶ Spela igen':'▶ Spela'}
     function tick(now){
@@ -230,7 +234,7 @@
       const route=models[0].route.points.map(point=>[Number(point[0]),Number(point[1])]);
       try{window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map)}catch{}
       window.L.polyline(route,{weight:5,opacity:.72}).addTo(map);map.fitBounds(window.L.latLngBounds(route).pad(.08));
-      markers=models.map((runner,index)=>window.L.circleMarker(route[0],{radius:9,weight:3,fillOpacity:.95,color:'#fff',fillColor:COLORS[index]}).bindTooltip(resultName(participants[index],index),{permanent:false}).addTo(map));
+      markers=models.map((runner,index)=>window.L.circleMarker(route[0],{radius:9,weight:3,fillOpacity:.95,color:'#fff',fillColor:COLORS[index]}).bindTooltip(resultLabel(participants,index),{permanent:false}).addTo(map));
       updateSegment(selectedSegment,false);setTime(time,false);
     }
     root.querySelectorAll('[data-c2-segment]').forEach(node=>node.addEventListener('click',()=>updateSegment(node.dataset.c2Segment,true)));
