@@ -95,6 +95,8 @@ const cpMangs=sameCourse.checkpoints.find(row=>row.checkpoint_key==='mangsbodarn
 assert.strictEqual(cpSmagan.comparable,true,'samma CourseVersion ska tillåta checkpointgap');
 assert.deepStrictEqual(cpSmagan.entries.map(row=>[row.result_id,row.gap_seconds,row.place_overall]),[[102,0,50],[103,50,60]]);
 assert.deepStrictEqual(cpMangs.entries.map(row=>[row.result_id,row.gap_seconds,row.placement_change]),[[102,0,10],[103,100,15]],'checkpoint-H2H ska visa kumulativt gap och officiell placeringsrörelse');
+const firstSegment=sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan');
+assert.ok(firstSegment?.comparable,'identisk CourseVersion ska göra startsegmentet jämförbart från gemensam tidsnoll');
 const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
