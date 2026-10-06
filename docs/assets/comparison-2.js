@@ -332,8 +332,8 @@
       map.attributionControl?.setPrefix(false);
       const route=models[0].route.points.map(point=>[Number(point[0]),Number(point[1])]);
       try{window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map)}catch{}
-      window.L.polyline(route,{weight:5,opacity:.72}).addTo(map);map.fitBounds(window.L.latLngBounds(route).pad(.08));
-      markers=models.map((runner,index)=>window.L.circleMarker(route[0],{radius:9,weight:3,fillOpacity:.95,color:'#fff',fillColor:COLORS[index]}).bindTooltip(resultLabel(participants,index),{permanent:false}).addTo(map));
+      window.L.polyline(route,{weight:5,opacity:.72,className:'c2-route-line'}).addTo(map);map.fitBounds(window.L.latLngBounds(route).pad(.08));
+      markers=models.map((runner,index)=>window.L.circleMarker(route[0],{radius:9,weight:3,fillOpacity:.95,color:'#fff',fillColor:COLORS[index],className:'c2-runner-marker c2-runner-marker-'+index}).bindTooltip(resultLabel(participants,index),{permanent:false}).addTo(map));
       updateSegment(selectedSegment,false);setTime(time,false);
     }
     root.querySelectorAll('[data-c2-segment]').forEach(node=>node.addEventListener('click',()=>updateSegment(node.dataset.c2Segment,true)));
