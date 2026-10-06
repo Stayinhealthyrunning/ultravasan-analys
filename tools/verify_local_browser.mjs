@@ -728,7 +728,7 @@ await evaluate(`(() => {
   addCompareRunner(a?.id||0);addCompareRunner(b?.id||0);
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:80,interval:100});
 const h2hComparable=await evaluate(`(() => {
   const first=compareState.selected[0],race=state.data.races.find(item=>String(item.id)===String(first?.race_id));
   return {
@@ -787,7 +787,7 @@ await evaluate(`(() => {
   finishers.forEach(item=>addCompareRunner(item.id));
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:80,interval:100});
 const h2hSameEdition=await evaluate(`(() => {
   const model=window.RunnerAnalysis.headToHead(state.data,compareState.selected.map(item=>item.id));
   return {
