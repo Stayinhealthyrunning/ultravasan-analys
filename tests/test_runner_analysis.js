@@ -96,7 +96,7 @@ assert.strictEqual(cpSmagan.comparable,true,'samma CourseVersion ska tillåta ch
 assert.deepStrictEqual(cpSmagan.entries.map(row=>[row.result_id,row.gap_seconds,row.place_overall]),[[102,0,50],[103,50,60]]);
 assert.deepStrictEqual(cpMangs.entries.map(row=>[row.result_id,row.gap_seconds,row.placement_change]),[[102,0,10],[103,100,15]],'checkpoint-H2H ska visa kumulativt gap och officiell placeringsrörelse');
 const firstSegment=sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan');
-assert.ok(firstSegment?.comparable,'identisk CourseVersion ska göra startsegmentet jämförbart från gemensam tidsnoll');
+assert.strictEqual(firstSegment?.comparable,false,'startsegmentet får inte bli direkt jämförbart utan uttryckligt segmentkontrakt');
 const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
@@ -138,9 +138,6 @@ assert.strictEqual(normalizedA.field_median_pace_seconds_per_km,355);
 assert.ok(Math.abs(normalizedA.performance_vs_field_percent-(355/353-1)*100)<1e-9,'A ska normaliseras mot sitt eget loppårs segmentmedian');
 assert.ok(Math.abs(normalizedB.performance_vs_field_percent-(355/357-1)*100)<1e-9,'B ska använda samma års kohort men sin egen segmentfart');
 assert.ok(normalizedA.performance_vs_field_percent>0&&normalizedB.performance_vs_field_percent<0,'normaliseringen ska skilja snabbare och långsammare än årsmedianen');
-
-
-assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
 assert.strictEqual(changedCourse.available,true);
