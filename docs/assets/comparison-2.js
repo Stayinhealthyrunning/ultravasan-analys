@@ -10,6 +10,7 @@
   if(root)root.UltravasanComparison2=api;
 })(typeof window!=='undefined'?window:globalThis,function(replay,mapEngine,playback,media){
   const COLORS=Object.freeze(['#0b6671','#b85b24']);
+  const CAMERA_UPDATE_MS=50,CAMERA_ZOOM_MS=450;
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -280,7 +281,7 @@
       if(coords.length===1){map.panTo(coords[0],{animate:false});return}
       const bounds=window.L.latLngBounds(coords),center=bounds.getCenter();
       map.panTo(center,{animate:false});
-      if(forceZoom||now-lastCameraZoom>450){
+      if(forceZoom||now-lastCameraZoom>CAMERA_ZOOM_MS){
         const padded=bounds.pad(.9),padding=window.L.point?window.L.point(90,90):undefined;
         const target=Math.min(14,map.getBoundsZoom(padded,false,padding));
         const current=map.getZoom();
@@ -296,7 +297,7 @@
       markers.forEach((marker,index)=>{const coord=states[index]?.state.coordinate;if(coord)marker.setLatLng(coord)});
       updateElevation(states);
       const now=typeof performance!=='undefined'?performance.now():Date.now();
-      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>50)){lastCamera=now;updateCamera(states,forceCamera)}
+      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>CAMERA_UPDATE_MS)){lastCamera=now;updateCamera(states,forceCamera)}
       const sorted=states.slice().sort((a,b)=>b.distance-a.distance),leader=sorted[0],gap=states[0]&&states[1]?states[0].distance-states[1].distance:0;
       const cards=root.querySelector('[data-c2-live-cards]');
       if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultLabel(participants,index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
