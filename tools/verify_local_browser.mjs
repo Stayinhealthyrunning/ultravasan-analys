@@ -724,15 +724,31 @@ await evaluate(`(() => {
 await delay(250);
 const h2hComparable=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
-  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
-  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
-  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
-  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
-  elevation:Boolean(document.querySelector('#headToHeadDetail .h2h-course-elevation svg')),
-  segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
-  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
+  elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
+  segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
+  warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
   text:document.querySelector('#headToHeadDetail')?.innerText||'',
 }))()`);
+const h2hInteraction=await evaluate(`(() => {
+  const slider=document.querySelector('#headToHeadDetail [data-c2-time]'),segments=[...document.querySelectorAll('#headToHeadDetail [data-c2-segment]')];
+  if(!slider)return {available:false};
+  const before=document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'';
+  slider.value=String(Math.max(1,Math.round(Number(slider.max||1)/2)));
+  slider.dispatchEvent(new Event('input',{bubbles:true}));
+  if(segments[1])segments[1].click();
+  return {
+    available:true,
+    before,
+    after:document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'',
+    readout:document.querySelector('#headToHeadDetail [data-c2-readout]')?.textContent||'',
+    selected:segments[1]?.getAttribute('aria-pressed')||segments[0]?.getAttribute('aria-pressed')||null,
+    max:Number(slider.max||0),
+  };
+})()`);
 
 await evaluate(`(() => {
   const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
@@ -745,13 +761,13 @@ await evaluate(`(() => {
 await delay(250);
 const h2hSameEdition=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
-  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
-  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
-  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
-  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
-  elevation:Boolean(document.querySelector('#headToHeadDetail .h2h-course-elevation svg')),
-  segmentCards:document.querySelectorAll('#headToHeadDetail .h2h-segment').length,
-  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
+  elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
+  segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
+  warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
   text:document.querySelector('#headToHeadDetail')?.innerText||'',
 }))()`);
 
@@ -772,11 +788,11 @@ await evaluate(`(() => {
 await delay(250);
 const h2hChangedCourse=await evaluate(`(() => ({
   open:document.querySelector('#headToHeadDialog')?.open||false,
-  finishCards:document.querySelectorAll('#headToHeadDetail .h2h-finish-grid article').length,
-  checkpointRows:document.querySelectorAll('#headToHeadDetail [data-h2h-checkpoint]').length,
-  placement:Boolean(document.querySelector('#headToHeadDetail .h2h-placement svg')),
-  courseMap:Boolean(document.querySelector('#headToHeadDetail .h2h-course-map svg')),
-  warnings:document.querySelectorAll('#headToHeadDetail .h2h-warning').length,
+  finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+  checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+  placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
+  courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
+  warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
   text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,1800),
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
@@ -921,13 +937,14 @@ const checks = {
     sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('Sluttid och gap') && h2hComparable.text.includes('PASSAGEGAP') && h2hComparable.text.includes('PLACERINGSRESA') && h2hComparable.text.includes('BANA OCH HÖJD'),
-  h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Sluttid och gap'),
-  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===0 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings>=2 && h2hChangedCourse.text.includes('Sluttider jämförs inte direkt') && h2hChangedCourse.text.includes('Passagegap och placeringsresa visas inte'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Pacing mot respektive års fält') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
+  h2hInteraction: h2hInteraction.available && h2hInteraction.max>0 && h2hInteraction.after!==h2hInteraction.before && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
+  h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
+  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.text.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hInteraction,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;
