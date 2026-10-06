@@ -1017,7 +1017,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .c2-panel{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
 .c2-panel h3{margin:0;font-size:1.05rem;letter-spacing:-.02em}
 .c2-panel>p{margin:5px 0 12px;color:var(--muted);font-size:.66rem;line-height:1.48}
-.c2-panel svg{display:block;width:100%;height:auto}
+.c2-panel svg:not(.leaflet-zoom-animated){display:block;width:100%;height:auto}
 .c2-grid{stroke:#e6ebe5;stroke-width:1}
 .c2-zero{stroke:#6f7c76;stroke-width:1.5;stroke-dasharray:5 4}
 .c2-axis-label,.c2-x-label,.c2-field-label{fill:#65746d;font-size:10px;font-family:inherit}
