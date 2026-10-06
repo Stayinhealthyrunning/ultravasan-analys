@@ -1114,3 +1114,30 @@ html,body{max-width:100%;overflow-x:hidden}
 @media(prefers-reduced-motion:reduce){
   .c2-gap-point,.c2-segment{transition:none!important}
 }
+
+
+/* Comparison 2.0 visual polish */
+.c2-chart-key{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 6px;padding:7px 9px;border-radius:10px;background:#f7f9f5;color:var(--muted);font-size:.62rem;line-height:1.35}
+.c2-chart-key span{display:inline-flex;align-items:center;gap:6px}
+.c2-chart-key i{display:inline-block;width:18px;height:3px;border-radius:99px;background:var(--runner)}
+.c2-chart-key .c2-zero-key{font-weight:800;color:#596861}
+.c2-field-key small{flex-basis:100%;font-size:.58rem;color:var(--muted)}
+.c2-axis-label{font-size:12px!important;font-weight:700}
+.c2-axis-title{fill:#44584e;font-size:12px;font-weight:800;font-family:inherit}
+.c2-zero-label{fill:#596861;font-size:11px;font-weight:850;font-family:inherit}
+.c2-grid-vertical{stroke-opacity:.58}
+.c2-checkpoint-label{font-weight:700}
+.c2-gap-zone{pointer-events:none}
+.c2-gap-zone-a{fill:rgba(11,102,113,.045)}
+.c2-gap-zone-b{fill:rgba(184,91,36,.045)}
+.c2-map .leaflet-attribution-flag{display:none!important}
+.c2-playback{grid-template-columns:auto auto minmax(190px,1fr) 140px auto minmax(130px,.7fr);align-items:end}
+.c2-playback .c2-timeline{grid-column:1/-1}
+.c2-mute{min-width:44px}
+.c2-volume input{width:100%;padding:0;border:0;box-shadow:none;accent-color:var(--green);height:34px}
+.c2-audio-note{margin-top:7px;padding:8px 10px;border-radius:9px;background:#fff7d9;border:1px solid #ebd986;color:#6c5710;font-size:.62rem}
+.c2-audio-note[hidden]{display:none}
+@media(max-width:900px){
+  .c2-playback{grid-template-columns:1fr 1fr}
+  .c2-playback .c2-timeline,.c2-playback .c2-volume{grid-column:1/-1}
+}
