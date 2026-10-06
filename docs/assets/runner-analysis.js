@@ -257,11 +257,9 @@
     const segmentRows=[];
     for(let index=1;index<commonKeys.length;index++){
       const from=commonKeys[index-1],to=commonKeys[index];
-      const comparable=from==='start'
-        ?sameCourseVersion
-        :pairwiseEvery(selected,(a,b)=>
-          history.segmentComparable(courseVersionId(a.race),courseVersionId(b.race),from,to,contracts.catalog.courses)
-        );
+      const comparable=pairwiseEvery(selected,(a,b)=>
+        history.segmentComparable(courseVersionId(a.race),courseVersionId(b.race),from,to,contracts.catalog.courses)
+      );
       const entries=selected.map(item=>{
         const row=item.journey.rows.find(value=>value.checkpoint_key===to);
         const field=fieldReference(item.race,to);
