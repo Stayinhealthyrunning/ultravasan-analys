@@ -4,7 +4,7 @@ const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const mapPlayback=typeof module==='object'&&module.exports?require('./playback.js'):window.UltravasanPlayback;
 const DUEL_PLAYBACK_DURATIONS=mapPlayback.DURATIONS;
-const DUEL_CAMERA_UPDATE_MS=50,DUEL_CAMERA_ZOOM_MS=450;
+const DUEL_CAMERA_CENTER_EASE=.38,DUEL_CAMERA_ZOOM_MS=450;
 const DUEL_ELEVATION_VIEW={width:1200,height:94,left:30,right:30,top:10,bottom:19};
 const mapStateApi=typeof module==='object'&&module.exports?require('./app-state.js'):window.UltravasanAppState;
 const app=mapStateApi.createMap();
@@ -36,7 +36,7 @@ function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_k
 function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
 const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?.elevation_profile,distance);
 
-if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,DUEL_CAMERA_UPDATE_MS,DUEL_CAMERA_ZOOM_MS,duelPlaybackRate,elevationAtDistance};
+if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,DUEL_CAMERA_CENTER_EASE,DUEL_CAMERA_ZOOM_MS,duelPlaybackRate,elevationAtDistance};
 const hydrateData=d=>mapDataAdapter.hydrate(d);
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
@@ -127,7 +127,7 @@ function initMap(){
     const validCoords=app.allCoords.filter(validLatLng).map(c=>[Number(c[0]),Number(c[1])]);
     if(validCoords.length<2)throw new Error('Banan saknar giltiga GPS-koordinater.');
 
-    app.map=L.map('map',{zoomControl:true,preferCanvas:true,attributionControl:true});
+    app.map=L.map('map',{zoomControl:true,preferCanvas:false,attributionControl:true});
 
     // VIKTIGT: kartan måste få en vy innan ett GridLayer/tileLayer läggs till.
     // Annars kan Leaflet 1.9 kasta "Cannot read properties of undefined (reading min)".
@@ -258,24 +258,30 @@ function update(forceUi=false){
   const states=app.models.map(m=>({model:m,...statusAt(m,app.time)})).sort((a,b)=>b.progress-a.progress||(a.model.endTime-b.model.endTime)),leader=states[0];
   for(const s of states){const pos=routePosition(s.model.route,s.distance);if(app.leafletReady&&s.model.marker){s.model.marker.setLatLng(pos);s.model.tail.setLatLngs(routeSlice(s.model.route,Math.max(0,s.distance-2.4),s.distance));const el=s.model.marker.getElement()?.querySelector('.runner-marker');if(el)el.classList.toggle('finished',s.finished)}const c=$(`#fallbackRunner${s.model.result.id}`);if(c&&app.project){const q=app.project(pos);c.setAttribute('cx',q[0]);c.setAttribute('cy',q[1])}if(s.model.strip)s.model.strip.style.left=`${s.progress*100}%`}
   updateDuelElevation(states);
-  $('#timeline').value=Math.round(app.time);$('#elapsedLabel').textContent=fmtTime(app.time);$('#raceClock').textContent=fmtTime(app.time);const now=performance.now();if(forceUi||now-app.lastUi>120){renderBoard(states,leader);app.lastUi=now}if(app.leafletReady&&!app.routeOnly&&(forceUi||now-(Number(app.lastCamera)||0)>DUEL_CAMERA_UPDATE_MS)){updateCamera(states,leader,forceUi);app.lastCamera=now}
+  $('#timeline').value=Math.round(app.time);$('#elapsedLabel').textContent=fmtTime(app.time);$('#raceClock').textContent=fmtTime(app.time);const now=performance.now();if(forceUi||now-app.lastUi>120){renderBoard(states,leader);app.lastUi=now}if(app.leafletReady&&!app.routeOnly&&(forceUi||app.playing))updateCamera(states,leader,forceUi)
 }
 function renderBoard(states,leader){
   const leadModel=leader.model;$('#runnerBoard').innerHTML=states.map((s,i)=>{const gap=i===0?0:Math.max(0,app.time-timeAtProgress(leadModel,s.progress)),stateText=s.finished?'MÅL':s.stopped?'BRUTIT':`${s.distance.toFixed(1)} km`;return `<button class="runner-card ${app.focused===s.model?'focused':''}" data-runner="${s.model.result.id}"><span class="rank-badge" style="background:${s.model.color}">${i+1}</span><span class="runner-main"><strong>${esc(s.model.result.name_as_published)} <em>${s.model.race.year}</em></strong><small>${s.model.result.bib?'#'+esc(s.model.result.bib)+' · ':''}${esc(s.segment)} <span class="quality-badge">${esc(s.model.quality)}</span></small></span><span class="runner-numbers"><strong>${stateText}</strong><small>${i===0?(s.finished?fmtTime(s.model.endTime):fmtPace(s.pace)):fmtGap(gap)}</small></span></button>`}).join('');document.querySelectorAll('.runner-card').forEach(el=>el.onclick=()=>focusRunner(app.models.find(m=>m.result.id===Number(el.dataset.runner))));$('#leaderName').textContent=`${leader.model.result.name_as_published} (${leader.model.race.year})`;const spread=(states[0].progress-states.at(-1).progress)*100;$('#fieldSpread').textContent=`${spread.toFixed(1)} %-enheter`;$('#currentSection').textContent=leader.segment;$('#stripLeader').textContent=`${leader.model.result.name_as_published} · ${(leader.progress*100).toFixed(1)} %`}
+function panMapToward(target,snap=false){
+  if(!app.map||!target)return;
+  const point=app.map.latLngToContainerPoint(target),size=app.map.getSize(),dx=point.x-size.x/2,dy=point.y-size.y/2;
+  if(Math.abs(dx)+Math.abs(dy)<.35)return;
+  const factor=snap?1:DUEL_CAMERA_CENTER_EASE;
+  app.map.panBy([dx*factor,dy*factor],{animate:false});
+}
 function updateCamera(states,leader,forceZoom=false){
   const mode=$('#cameraMode').value;if(mode==='overview'||!app.map)return;
   const now=performance.now();
-  if(mode==='leader'){
-    const pos=routePosition(leader.model.route,leader.distance);
-    app.map.panTo(pos,{animate:false});
-    return;
+  let targetCenter=null,bounds=null;
+  if(mode==='leader')targetCenter=routePosition(leader.model.route,leader.distance);
+  else{
+    const active=states.filter(s=>!s.finished&&!s.stopped).map(s=>routePosition(s.model.route,s.distance)),coords=active.length?active:states.map(s=>routePosition(s.model.route,s.distance));
+    if(!coords.length)return;
+    if(coords.length===1)targetCenter=coords[0];
+    else{bounds=L.latLngBounds(coords);targetCenter=bounds.getCenter()}
   }
-  const active=states.filter(s=>!s.finished&&!s.stopped).map(s=>routePosition(s.model.route,s.distance)),coords=active.length?active:states.map(s=>routePosition(s.model.route,s.distance));
-  if(!coords.length)return;
-  if(coords.length===1){app.map.panTo(coords[0],{animate:false});return}
-  const bounds=L.latLngBounds(coords),center=bounds.getCenter();
-  app.map.panTo(center,{animate:false});
-  if(forceZoom||now-(Number(app.lastCameraZoom)||0)>DUEL_CAMERA_ZOOM_MS){
+  panMapToward(targetCenter,forceZoom);
+  if(bounds&&(forceZoom||now-(Number(app.lastCameraZoom)||0)>DUEL_CAMERA_ZOOM_MS)){
     const target=Math.min(13,app.map.getBoundsZoom(bounds.pad(.9),false,L.point(100,100))),current=app.map.getZoom();
     if(Number.isFinite(target)&&Number.isFinite(current)&&Math.abs(target-current)>=1){
       app.map.setZoom(current+(target>current?1:-1),{animate:false});

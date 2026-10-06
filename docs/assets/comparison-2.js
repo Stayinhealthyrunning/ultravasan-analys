@@ -10,7 +10,7 @@
   if(root)root.UltravasanComparison2=api;
 })(typeof window!=='undefined'?window:globalThis,function(replay,mapEngine,playback,media){
   const COLORS=Object.freeze(['#0b6671','#b85b24']);
-  const CAMERA_UPDATE_MS=50,CAMERA_ZOOM_MS=450;
+  const CAMERA_CENTER_EASE=.38,CAMERA_ZOOM_MS=450;
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -183,8 +183,8 @@
   }
   function bind(root,options){
     const model=options.model,participants=options.participants||[],models=options.replayModels||[];
-    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCamera=0,lastCameraZoom=0,map=null,markers=[],highlight=null,destroyed=false;
-    const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]'),audio=root.querySelector('[data-c2-audio]'),mute=root.querySelector('[data-c2-mute]'),volumeSlider=root.querySelector('[data-c2-volume]'),audioNote=root.querySelector('[data-c2-audio-note]');
+    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCameraZoom=0,map=null,markers=[],highlight=null,destroyed=false;
+    const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('input[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]'),audio=root.querySelector('[data-c2-audio]'),mute=root.querySelector('[data-c2-mute]'),volumeSlider=root.querySelector('[data-c2-volume]'),audioNote=root.querySelector('[data-c2-audio-note]');
     let musicEnabled=true,audioVolume=DEFAULT_VOLUME,lastAudibleVolume=DEFAULT_VOLUME;
     if(slider){slider.max=String(Math.ceil(maxTime));clockMax.textContent='av '+duration(maxTime)}
     try{
@@ -268,20 +268,28 @@
         if(dot){dot.setAttribute('cx',p.x(item.distance));dot.setAttribute('cy',p.y(finite(elevation)?Number(elevation):models[0].elevationProfile[0][1]))}
       });
     }
+    function panMapToward(target,snap=false){
+      if(!map||!target)return;
+      const point=map.latLngToContainerPoint(target),size=map.getSize(),dx=point.x-size.x/2,dy=point.y-size.y/2;
+      if(Math.abs(dx)+Math.abs(dy)<.35)return;
+      const factor=snap?1:CAMERA_CENTER_EASE;
+      map.panBy([dx*factor,dy*factor],{animate:false});
+    }
     function updateCamera(states,forceZoom=false){
       if(!map||!window.L||camera?.value==='course')return;
       const now=typeof performance!=='undefined'?performance.now():Date.now();
+      let targetCenter=null,bounds=null;
       if(camera?.value==='leader'){
         const leader=states.slice().sort((a,b)=>b.distance-a.distance)[0];
-        if(leader?.state.coordinate)map.panTo(leader.state.coordinate,{animate:false});
-        return;
+        targetCenter=leader?.state.coordinate||null;
+      }else{
+        const coords=states.map(item=>item.state.coordinate).filter(Boolean);
+        if(!coords.length)return;
+        if(coords.length===1)targetCenter=coords[0];
+        else{bounds=window.L.latLngBounds(coords);targetCenter=bounds.getCenter()}
       }
-      const coords=states.map(item=>item.state.coordinate).filter(Boolean);
-      if(!coords.length)return;
-      if(coords.length===1){map.panTo(coords[0],{animate:false});return}
-      const bounds=window.L.latLngBounds(coords),center=bounds.getCenter();
-      map.panTo(center,{animate:false});
-      if(forceZoom||now-lastCameraZoom>CAMERA_ZOOM_MS){
+      panMapToward(targetCenter,forceZoom);
+      if(bounds&&(forceZoom||now-lastCameraZoom>CAMERA_ZOOM_MS)){
         const padded=bounds.pad(.9),padding=window.L.point?window.L.point(90,90):undefined;
         const target=Math.min(14,map.getBoundsZoom(padded,false,padding));
         const current=map.getZoom();
@@ -296,8 +304,7 @@
       const states=models.map((runner,index)=>({...stateAtTime(runner,time),index}));
       markers.forEach((marker,index)=>{const coord=states[index]?.state.coordinate;if(coord)marker.setLatLng(coord)});
       updateElevation(states);
-      const now=typeof performance!=='undefined'?performance.now():Date.now();
-      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>CAMERA_UPDATE_MS)){lastCamera=now;updateCamera(states,forceCamera)}
+      if(forceCamera||(playing&&camera?.value!=='course'))updateCamera(states,forceCamera)
       const sorted=states.slice().sort((a,b)=>b.distance-a.distance),leader=sorted[0],gap=states[0]&&states[1]?states[0].distance-states[1].distance:0;
       const cards=root.querySelector('[data-c2-live-cards]');
       if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultLabel(participants,index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
@@ -321,7 +328,7 @@
       const host=root.querySelector('[data-c2-map]');if(!host||!models[0]?.route?.points?.length)return;
       const ok=await mapEngine.ensureLeaflet({onStatus:text=>{const fallback=host.querySelector('.c2-map-fallback');if(fallback)fallback.textContent=text}});
       if(destroyed||!ok||!window.L)return;
-      host.innerHTML='';map=window.L.map(host,{zoomControl:true,attributionControl:true,preferCanvas:true});
+      host.innerHTML='';map=window.L.map(host,{zoomControl:true,attributionControl:true,preferCanvas:false});
       map.attributionControl?.setPrefix(false);
       const route=models[0].route.points.map(point=>[Number(point[0]),Number(point[1])]);
       try{window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map)}catch{}
