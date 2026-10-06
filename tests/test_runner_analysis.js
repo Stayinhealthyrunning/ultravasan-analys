@@ -106,6 +106,38 @@ assert.strictEqual(sameCourse.pairwise_insights.lead_changes,0);
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_reference_n,2);
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_median_pace_seconds_per_km,null,'fältmedian kräver minst fem säkra referenser');
 
+const fieldDataset={
+  ...dataset,
+  results:[
+    ...dataset.results,
+    {id:108,race_id:2,person_key:'p8',status:'FINISHED',finish_seconds:35900},
+    {id:109,race_id:2,person_key:'p9',status:'FINISHED',finish_seconds:36100},
+    {id:110,race_id:2,person_key:'p10',status:'FINISHED',finish_seconds:36300},
+  ],
+  splits:[
+    ...dataset.splits,
+    {result_id:108,checkpoint_key:'smagan',elapsed_seconds:3520,segment_seconds:3520,pace_seconds_per_km:352},
+    {result_id:108,checkpoint_key:'mangsbodarna',elapsed_seconds:8770,segment_seconds:5250,pace_seconds_per_km:350},
+    {result_id:108,checkpoint_key:'mora',elapsed_seconds:35900,segment_seconds:27130,pace_seconds_per_km:405},
+    {result_id:109,checkpoint_key:'smagan',elapsed_seconds:3540,segment_seconds:3540,pace_seconds_per_km:354},
+    {result_id:109,checkpoint_key:'mangsbodarna',elapsed_seconds:8940,segment_seconds:5400,pace_seconds_per_km:360},
+    {result_id:109,checkpoint_key:'mora',elapsed_seconds:36100,segment_seconds:27160,pace_seconds_per_km:405},
+    {result_id:110,checkpoint_key:'smagan',elapsed_seconds:3530,segment_seconds:3530,pace_seconds_per_km:353},
+    {result_id:110,checkpoint_key:'mangsbodarna',elapsed_seconds:8855,segment_seconds:5325,pace_seconds_per_km:355},
+    {result_id:110,checkpoint_key:'mora',elapsed_seconds:36300,segment_seconds:27445,pace_seconds_per_km:410},
+  ],
+};
+const normalized=analysis.headToHead(fieldDataset,[102,103]);
+const normalizedSegment=normalized.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
+const normalizedA=normalizedSegment.entries.find(row=>row.result_id===102);
+const normalizedB=normalizedSegment.entries.find(row=>row.result_id===103);
+assert.strictEqual(normalizedA.field_reference_n,5);
+assert.strictEqual(normalizedA.field_median_pace_seconds_per_km,355);
+assert.ok(Math.abs(normalizedA.performance_vs_field_percent-(355/353-1)*100)<1e-9,'A ska normaliseras mot sitt eget loppårs segmentmedian');
+assert.ok(Math.abs(normalizedB.performance_vs_field_percent-(355/357-1)*100)<1e-9,'B ska använda samma års kohort men sin egen segmentfart');
+assert.ok(normalizedA.performance_vs_field_percent>0&&normalizedB.performance_vs_field_percent<0,'normaliseringen ska skilja snabbare och långsammare än årsmedianen');
+
+
 assert.strictEqual(sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'icke-kontrakterad genväg får inte jämföras');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
