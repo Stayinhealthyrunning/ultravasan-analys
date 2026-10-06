@@ -4,6 +4,7 @@ const COLORS=['#ff5f5f','#2f80ed','#a855f7','#00a878','#ff9f1c'];
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const mapPlayback=typeof module==='object'&&module.exports?require('./playback.js'):window.UltravasanPlayback;
 const DUEL_PLAYBACK_DURATIONS=mapPlayback.DURATIONS;
+const DUEL_CAMERA_UPDATE_MS=50,DUEL_CAMERA_ZOOM_MS=450;
 const DUEL_ELEVATION_VIEW={width:1200,height:94,left:30,right:30,top:10,bottom:19};
 const mapStateApi=typeof module==='object'&&module.exports?require('./app-state.js'):window.UltravasanAppState;
 const app=mapStateApi.createMap();
@@ -35,7 +36,7 @@ function splitRouteDistance(split,routeCheckpoint){const value=split?.distance_k
 function duelPlaybackRate(maxTime,mode){return mapPlayback.rateFor(maxTime,mode)}
 const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?.elevation_profile,distance);
 
-if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,duelPlaybackRate,elevationAtDistance};
+if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,DUEL_CAMERA_UPDATE_MS,DUEL_CAMERA_ZOOM_MS,duelPlaybackRate,elevationAtDistance};
 const hydrateData=d=>mapDataAdapter.hydrate(d);
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
 function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
@@ -257,20 +258,40 @@ function update(forceUi=false){
   const states=app.models.map(m=>({model:m,...statusAt(m,app.time)})).sort((a,b)=>b.progress-a.progress||(a.model.endTime-b.model.endTime)),leader=states[0];
   for(const s of states){const pos=routePosition(s.model.route,s.distance);if(app.leafletReady&&s.model.marker){s.model.marker.setLatLng(pos);s.model.tail.setLatLngs(routeSlice(s.model.route,Math.max(0,s.distance-2.4),s.distance));const el=s.model.marker.getElement()?.querySelector('.runner-marker');if(el)el.classList.toggle('finished',s.finished)}const c=$(`#fallbackRunner${s.model.result.id}`);if(c&&app.project){const q=app.project(pos);c.setAttribute('cx',q[0]);c.setAttribute('cy',q[1])}if(s.model.strip)s.model.strip.style.left=`${s.progress*100}%`}
   updateDuelElevation(states);
-  $('#timeline').value=Math.round(app.time);$('#elapsedLabel').textContent=fmtTime(app.time);$('#raceClock').textContent=fmtTime(app.time);const now=performance.now();if(forceUi||now-app.lastUi>120){renderBoard(states,leader);app.lastUi=now}if(app.leafletReady&&!app.routeOnly&&now-app.lastCamera>900){updateCamera(states,leader);app.lastCamera=now}
+  $('#timeline').value=Math.round(app.time);$('#elapsedLabel').textContent=fmtTime(app.time);$('#raceClock').textContent=fmtTime(app.time);const now=performance.now();if(forceUi||now-app.lastUi>120){renderBoard(states,leader);app.lastUi=now}if(app.leafletReady&&!app.routeOnly&&(forceUi||now-(Number(app.lastCamera)||0)>DUEL_CAMERA_UPDATE_MS)){updateCamera(states,leader,forceUi);app.lastCamera=now}
 }
 function renderBoard(states,leader){
   const leadModel=leader.model;$('#runnerBoard').innerHTML=states.map((s,i)=>{const gap=i===0?0:Math.max(0,app.time-timeAtProgress(leadModel,s.progress)),stateText=s.finished?'MÅL':s.stopped?'BRUTIT':`${s.distance.toFixed(1)} km`;return `<button class="runner-card ${app.focused===s.model?'focused':''}" data-runner="${s.model.result.id}"><span class="rank-badge" style="background:${s.model.color}">${i+1}</span><span class="runner-main"><strong>${esc(s.model.result.name_as_published)} <em>${s.model.race.year}</em></strong><small>${s.model.result.bib?'#'+esc(s.model.result.bib)+' · ':''}${esc(s.segment)} <span class="quality-badge">${esc(s.model.quality)}</span></small></span><span class="runner-numbers"><strong>${stateText}</strong><small>${i===0?(s.finished?fmtTime(s.model.endTime):fmtPace(s.pace)):fmtGap(gap)}</small></span></button>`}).join('');document.querySelectorAll('.runner-card').forEach(el=>el.onclick=()=>focusRunner(app.models.find(m=>m.result.id===Number(el.dataset.runner))));$('#leaderName').textContent=`${leader.model.result.name_as_published} (${leader.model.race.year})`;const spread=(states[0].progress-states.at(-1).progress)*100;$('#fieldSpread').textContent=`${spread.toFixed(1)} %-enheter`;$('#currentSection').textContent=leader.segment;$('#stripLeader').textContent=`${leader.model.result.name_as_published} · ${(leader.progress*100).toFixed(1)} %`}
-function updateCamera(states,leader){const mode=$('#cameraMode').value;if(mode==='overview')return;if(mode==='leader'){app.map.panTo(routePosition(leader.model.route,leader.distance),{animate:true,duration:.6});return}const active=states.filter(s=>!s.finished&&!s.stopped).map(s=>routePosition(s.model.route,s.distance)),coords=active.length?active:states.map(s=>routePosition(s.model.route,s.distance));if(coords.length===1)app.map.panTo(coords[0],{animate:true,duration:.6});else app.map.fitBounds(L.latLngBounds(coords),{padding:[100,100],maxZoom:13,animate:true,duration:.6})}
+function updateCamera(states,leader,forceZoom=false){
+  const mode=$('#cameraMode').value;if(mode==='overview'||!app.map)return;
+  const now=performance.now();
+  if(mode==='leader'){
+    const pos=routePosition(leader.model.route,leader.distance);
+    app.map.panTo(pos,{animate:false});
+    return;
+  }
+  const active=states.filter(s=>!s.finished&&!s.stopped).map(s=>routePosition(s.model.route,s.distance)),coords=active.length?active:states.map(s=>routePosition(s.model.route,s.distance));
+  if(!coords.length)return;
+  if(coords.length===1){app.map.panTo(coords[0],{animate:false});return}
+  const bounds=L.latLngBounds(coords),center=bounds.getCenter();
+  app.map.panTo(center,{animate:false});
+  if(forceZoom||now-(Number(app.lastCameraZoom)||0)>DUEL_CAMERA_ZOOM_MS){
+    const target=Math.min(13,app.map.getBoundsZoom(bounds.pad(.9),false,L.point(100,100))),current=app.map.getZoom();
+    if(Number.isFinite(target)&&Number.isFinite(current)&&Math.abs(target-current)>=1){
+      app.map.setZoom(current+(target>current?1:-1),{animate:false});
+    }
+    app.lastCameraZoom=now;
+  }
+}
 function focusRunner(model){app.focused=model;const s=statusAt(model,app.time),pos=routePosition(model.route,s.distance);if(app.leafletReady&&!app.routeOnly)app.map.flyTo(pos,14,{duration:.7});setEvent(`${model.result.name_as_published} ${model.race.year}: ${s.distance.toFixed(1)} km · ${s.finished?'Mål':fmtPace(s.pace)} · ${model.quality}`);update(true)}
 
 function bindControls(){
   $('#playBtn').onclick=togglePlay;$('#restartBtn').onclick=restartRace;$('#backBtn').onclick=()=>seek(app.time-600);$('#forwardBtn').onclick=()=>seek(app.time+600);$('#timeline').oninput=e=>seek(Number(e.target.value),true);$('#speedSelect').onchange=e=>app.speed=e.target.value;
   const musicBtn=$('#musicBtn'),musicVolume=$('#musicVolume');if(musicBtn)musicBtn.onclick=toggleMusic;if(musicVolume)musicVolume.oninput=e=>setMusicVolume(Number(e.target.value));
   $('#checkpointJump').onchange=e=>{const key=e.target.value;if(!key)return;const times=app.models.map(m=>{const cp=m.route.checkpoints.find(c=>c.key===key);return cp?timeAtDistance(m,cp.distance_km):null}).filter(Number.isFinite);seek(median(times)||0);e.target.value=''};
-  $('#cameraMode').onchange=()=>{if($('#cameraMode').value==='overview'&&app.leafletReady)app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]})};$('#collapseBoard').onclick=()=>{const p=$('#leaderboardPanel');p.classList.toggle('collapsed');$('#collapseBoard').textContent=p.classList.contains('collapsed')?'+':'−'};$('#mapModeBtn').onclick=toggleMapMode;$('#shareBtn').onclick=shareView;$('#fullscreenBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay()}else if(e.key==='ArrowLeft')seek(app.time-600);else if(e.key==='ArrowRight')seek(app.time+600);else if(/^[1-5]$/.test(e.key)&&app.models[Number(e.key)-1])focusRunner(app.models[Number(e.key)-1])})
+  $('#cameraMode').onchange=()=>{if(!app.leafletReady)return;if($('#cameraMode').value==='overview')app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50],animate:false});else update(true)};$('#collapseBoard').onclick=()=>{const p=$('#leaderboardPanel');p.classList.toggle('collapsed');$('#collapseBoard').textContent=p.classList.contains('collapsed')?'+':'−'};$('#mapModeBtn').onclick=toggleMapMode;$('#shareBtn').onclick=shareView;$('#fullscreenBtn').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay()}else if(e.key==='ArrowLeft')seek(app.time-600);else if(e.key==='ArrowRight')seek(app.time+600);else if(/^[1-5]$/.test(e.key)&&app.models[Number(e.key)-1])focusRunner(app.models[Number(e.key)-1])})
 }
-function initAudio(){app.audio=$('#raceSoundtrack');if(!app.audio)return;let volume=.65;try{const saved=Number(localStorage.getItem('ultravasan-music-volume'));if(Number.isFinite(saved))volume=clamp(saved,0,1);app.musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false'}catch{}app.audio.volume=volume;const slider=$('#musicVolume');if(slider)slider.value=String(volume);updateMusicButton();app.audio.addEventListener('error',()=>{app.musicEnabled=false;updateMusicButton();setEvent('Musikfilen kunde inte spelas, men kartduellen fungerar ändå.')})}
+function initAudio(){app.audio=$('#raceSoundtrack');if(!app.audio)return;let volume=.30;try{const raw=localStorage.getItem('ultravasan-music-volume'),saved=raw===null||raw===''?null:Number(raw);if(Number.isFinite(saved))volume=clamp(saved,0,1);app.musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false'}catch{}app.audio.volume=volume;const slider=$('#musicVolume');if(slider)slider.value=String(volume);updateMusicButton();app.audio.addEventListener('error',()=>{app.musicEnabled=false;updateMusicButton();setEvent('Musikfilen kunde inte spelas, men kartduellen fungerar ändå.')})}
 function updateMusicButton(){const btn=$('#musicBtn');if(!btn)return;btn.classList.toggle('active',app.musicEnabled);btn.innerHTML=app.musicEnabled?'♫ <span>Musik</span>':'♪ <span>Musik av</span>';btn.setAttribute('aria-pressed',String(app.musicEnabled))}
 function setMusicVolume(value){if(app.audio)app.audio.volume=clamp(value,0,1);try{localStorage.setItem('ultravasan-music-volume',String(clamp(value,0,1)))}catch{}}
 function toggleMusic(){app.musicEnabled=!app.musicEnabled;try{localStorage.setItem('ultravasan-music-enabled',String(app.musicEnabled))}catch{}updateMusicButton();if(!app.audio)return;if(app.musicEnabled&&app.playing){app.audio.play().catch(()=>setEvent('Tryck på start en gång till om webbläsaren blockerade musiken.'))}else app.audio.pause()}
@@ -284,7 +305,7 @@ function checkEvents(from,to){if(to<=from)return;const events=[];for(const m of 
 function setEvent(text){$('#eventText').textContent=text}
 function finishBurst(color){const root=$('#finishBurst'),palette=[color,'#dbe75a','#ff7a3d','#fff','#2f80ed'];for(let i=0;i<45;i++){const s=document.createElement('i');s.className='confetti';s.style.left=`${Math.random()*100}%`;s.style.background=palette[i%palette.length];s.style.setProperty('--drift',`${(Math.random()-.5)*260}px`);s.style.animationDelay=`${Math.random()*.25}s`;root.appendChild(s);setTimeout(()=>s.remove(),2600)}}
 function toggleMapMode(){if(!app.leafletReady)return;app.routeOnly=!app.routeOnly;$('#map').style.display=app.routeOnly?'none':'block';$('#fallbackMap').classList.toggle('visible',app.routeOnly);$('#mapModeBtn').innerHTML=app.routeOnly?'⌖ <span>Karta</span>':'◫ <span>Banvy</span>';if(!app.routeOnly)setTimeout(()=>{app.map.invalidateSize();app.map.fitBounds(L.latLngBounds(app.allCoords),{padding:[50,50]})},50)}
-async function shareView(){const url=new URL(location.href);url.searchParams.delete('year');url.searchParams.set('runners',app.models.map(m=>m.result.id).join(','));url.searchParams.set('t',Math.round(app.time));try{await navigator.clipboard.writeText(url.href);setEvent('Länken till kartvyn och tidpunkten har kopierats.')}catch{prompt('Kopiera länken:',url.href)}}
+async function shareView(){const url=new URL(location.href);url.searchParams.delete('year');url.searchParams.delete('embedded');url.searchParams.delete('payload');url.searchParams.set('runners',app.models.map(m=>m.result.id).join(','));url.searchParams.set('t',Math.round(app.time));try{await navigator.clipboard.writeText(url.href);setEvent('Länken till kartvyn och tidpunkten har kopierats.')}catch{prompt('Kopiera länken:',url.href)}}
 
 let booted=false;
 async function startApplication(){if(booted)return;booted=true;try{if(!window.ULTRAVASAN_ROUTES)throw new Error('Banlagret ultravasan-routes.js saknas.');app.registry=window.ULTRAVASAN_ROUTES;const [data]=await Promise.all([ensureRaceData(),ensureLeaflet()]);app.data=hydrateData(data);setLoading('Bygger löparnas positioner…');boot()}catch(e){console.error(e);showFatal(e?.message||String(e))}}

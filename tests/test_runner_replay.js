@@ -237,10 +237,10 @@ assert.strictEqual(replay.distanceAtTime(uv90Dnf,999999),46.15);
 assert.strictEqual(media.musicForRace(uv90New.race),'assets/Eldspar-till-Mora.mp3?v=20260713-multirace1');
 assert.strictEqual(media.musicForRace(uv45Current.race),'assets/Ultravasan-45.mp3?v=20260713-multirace1');
 assert.strictEqual(media.musicForRace(null),null,'Saknad loppidentitet får inte gissa musik');
-assert.strictEqual(replay.DEFAULT_VOLUME,.35,'Neutral standardvolym ska vara 35 procent');
-assert.ok(renderedOld.includes('value="0.35"'),'Volymreglaget ska starta på 35 procent när ingen sparad nivå finns');
-assert.ok(replaySource.includes('this.setVolume(DEFAULT_VOLUME)'),'Återställning ska återställa musikvolymen till 35 procent');
-assert.ok(replaySource.includes('this.lastAudibleVolume||DEFAULT_VOLUME'),'Avmutning ska återgå till senast hörbara nivå eller 35 procent, aldrig 100 procent');
+assert.strictEqual(replay.DEFAULT_VOLUME,.30,'Neutral standardvolym ska vara 30 procent');
+assert.ok(renderedOld.includes('value="0.3"'),'Volymreglaget ska starta på 30 procent när ingen sparad nivå finns');
+assert.ok(replaySource.includes('this.setVolume(DEFAULT_VOLUME)'),'Återställning ska återställa musikvolymen till 30 procent');
+assert.ok(replaySource.includes('this.lastAudibleVolume||DEFAULT_VOLUME'),'Avmutning ska återgå till senast hörbara nivå eller 30 procent, aldrig 100 procent');
 assert.ok(replaySource.includes('if(userGesture)this.playAudio()'),'Musiken får starta först efter användarens play-interaktion');
 assert.ok(replaySource.includes("else this.showAudioNote('Musik saknas för loppet. Replay fungerar utan ljud.')"),'Saknad musik ska degradera utan JavaScript-fel');
 
@@ -264,6 +264,13 @@ assert.ok(renderedOld.includes('data-replay-scrubber')&&renderedOld.includes('ar
 const mapHtml=fs.readFileSync(require.resolve('../docs/karta.html'),'utf8'),mapCss=fs.readFileSync(require.resolve('../docs/assets/map.css'),'utf8'),mapSource=fs.readFileSync(require.resolve('../docs/assets/map.js'),'utf8'),appStateSource=fs.readFileSync(require.resolve('../docs/assets/app-state.js'),'utf8'),speedBlock=mapHtml.match(/<select id="speedSelect">([\s\S]*?)<\/select>/)?.[1]||'',duelSpeedOptions=[...speedBlock.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/g)].map(match=>[match[1],match[2].trim()]);
 assert.deepStrictEqual(duelSpeedOptions,[['30s','Hela loppet på 30 sekunder'],['60s','Hela loppet på 1 minut'],['120s','Hela loppet på 2 minuter'],['180s','Hela loppet på 3 minuter']],'Kartduellen ska ha exakt samma fyra uppspelningstider');
 assert.ok(/<option value="120s" selected>Hela loppet på 2 minuter<\/option>/.test(speedBlock),'Kartduellen ska öppnas med två minuter som standard');
+assert.ok(mapHtml.includes('id="musicVolume"')&&mapHtml.includes('value="0.30"'),'Kartduellen ska ha 30 procent som neutral startvolym');
+assert.ok(mapHtml.includes('embedded-map')&&mapCss.includes('.embedded-map .back-link'),'Kartduellen ska kunna bäddas in utan separat tillbaka-/helskärmschrome');
+assert.ok(appSource.includes("karta.html?embedded=1")&&appSource.includes("$('#mapDuelDialog')")&&!appSource.includes("window.open(url,'_blank')"),'Kartduellen ska öppnas i popup på samma sida, inte nytt fönster');
+assert.strictEqual(mapDuel.DUEL_CAMERA_UPDATE_MS,50,'Kartduellens följkamera ska uppdateras tätt för mjuk rörelse');
+assert.strictEqual(mapDuel.DUEL_CAMERA_ZOOM_MS,450,'Kartduellens zoom ska ändras mer sällan än kameracentrum');
+const comparisonSource=fs.readFileSync(require.resolve('../docs/assets/comparison-2.js'),'utf8');
+assert.ok(comparisonSource.includes('CAMERA_UPDATE_MS=50')&&comparisonSource.includes('CAMERA_ZOOM_MS=450'),'Direktjämförelsens kartkamera ska använda samma mjuka uppdateringsprincip');
 assert.ok(appStateSource.includes('speed:playback.DEFAULT_MODE')&&mapSource.includes('mapPlayback.rateFor'),'Kartduellen ska använda gemensam Playback-standard och rate-beräkning');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');

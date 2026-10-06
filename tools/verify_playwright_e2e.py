@@ -302,6 +302,30 @@ def run(base_url: str) -> None:
               and same_edition["dialogWidth"] >= 1450 and same_edition["innerOverflow"] <= 2,
               f"same-RaceEdition Comparison 2.0 must use the wide desktop dialog without horizontal scrolling: {same_edition}")
 
+        # Kartduell now opens as an in-page modal rather than a second browser window.
+        page.evaluate("""() => {
+          const dialog=document.querySelector('#headToHeadDialog');if(dialog?.open)dialog.close();
+          document.querySelector('#compareMapButton')?.click();
+        }""")
+        page.wait_for_selector("#mapDuelDialog[open]", timeout=10_000)
+        duel_frame = page.frame_locator("#mapDuelFrame")
+        duel_frame.locator("#mapLoading.hidden").wait_for(timeout=30_000)
+        duel_modal = page.evaluate("""() => ({
+          open:document.querySelector('#mapDuelDialog')?.open||false,
+          src:document.querySelector('#mapDuelFrame')?.getAttribute('src')||'',
+          width:document.querySelector('#mapDuelDialog')?.getBoundingClientRect().width||0,
+          height:document.querySelector('#mapDuelDialog')?.getBoundingClientRect().height||0
+        })""")
+        duel_embedded_class = duel_frame.locator("html").get_attribute("class") or ""
+        duel_volume = duel_frame.locator("#musicVolume").input_value()
+        check(duel_modal["open"] and "embedded=1" in duel_modal["src"] and duel_modal["width"] > 1200 and duel_modal["height"] > 700,
+              f"Kartduell modal did not open at useful desktop size: {duel_modal}")
+        check("embedded-map" in duel_embedded_class and abs(float(duel_volume) - 0.30) < 1e-9,
+              f"Kartduell embedded mode/default volume failed: class={duel_embedded_class}, volume={duel_volume}")
+        check(len(context.pages) == 1, f"Kartduell unexpectedly opened a second browser page: {len(context.pages)}")
+        page.locator("#mapDuelDialog .dialog-close").click()
+        page.wait_for_function("() => !document.querySelector('#mapDuelDialog')?.open", timeout=5000)
+
         page.evaluate("""id => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           const first=compareState.selected[0];compareState.selected=[];if(first)addCompareRunner(first.id);if(id)addCompareRunner(id);document.querySelector('#compareH2HButton')?.click();

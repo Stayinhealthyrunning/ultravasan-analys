@@ -8,7 +8,7 @@
   if(root)root.RunnerReplay=api;
 })(typeof window!=='undefined'?window:globalThis,function(contracts,mapEngine,playback){
   const SVG_W=920,SVG_H=430,MAP_PAD=42;
-  const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.35;
+  const ELEV_W=920,ELEV_H=190,ELEV_PAD={l:28,r:8,t:18,b:48},DEFAULT_VOLUME=.30;
   const MIN_REFERENCE_SIZE=5,MEDAL_MIN_SIZE=20,MEDAL_SIDE_SIZE=40;
   const overallPlacementCache=new WeakMap();
   const classPlacementCache=new WeakMap();

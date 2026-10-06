@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Animerad kartjämförelse av 1–5 löpare i Ultravasan 90 eller Ultravasan 45.">
   <title>Kartduell – Ultravasan</title>
-  <link rel="stylesheet" href="assets/map.css?v=20260715-elevation1">
+  <script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map")</script>
+  <link rel="stylesheet" href="assets/map.css?v=20261006-modal1">
   <link rel="icon" href="data:,">
 </head>
 <body class="map-page">
@@ -76,7 +77,7 @@
         <option value="overview">Hela banan</option><option value="group" selected>Löpargruppen</option><option value="leader">Ledaren</option>
       </select></label>
       <label>Hoppa<select id="checkpointJump"><option value="">Kontroll…</option></select></label>
-      <label class="volume-option">Volym<input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.65" aria-label="Musikvolym"></label>
+      <label class="volume-option">Volym<input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.30" aria-label="Musikvolym"></label>
     </div>
   </footer>
 
@@ -98,7 +99,7 @@
   <script src="assets/data-adapter.js?v=20260923-u4"></script>
 <script src="assets/app-state.js?v=20260923-u4"></script>
 <script src="assets/charts.js?v=20260923-u4"></script>
-  <script src="assets/map.js?v=20260924-route-evidence1"></script>
+  <script src="assets/map.js?v=20261006-smooth1"></script>
 
   <!-- Cloudflare Web Analytics: production hostname only -->
   <script>

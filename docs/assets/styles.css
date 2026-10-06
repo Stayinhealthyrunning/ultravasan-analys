@@ -1141,3 +1141,13 @@ html,body{max-width:100%;overflow-x:hidden}
   .c2-playback{grid-template-columns:1fr 1fr}
   .c2-playback .c2-timeline,.c2-playback .c2-volume{grid-column:1/-1}
 }
+
+
+/* Kartduell modal */
+.map-duel-dialog{width:min(1600px,calc(100vw - 18px));height:min(96vh,1100px);max-width:none;max-height:none;overflow:hidden;border-radius:20px;background:#dfe7df}
+.map-duel-dialog .dialog-close{right:22px;top:18px;z-index:1005;background:rgba(11,61,48,.94);color:#fff;border:1px solid rgba(255,255,255,.35);box-shadow:0 5px 18px rgba(0,0,0,.22)}
+.map-duel-frame{display:block;width:100%;height:100%;border:0;background:#dfe7df}
+@media(max-width:720px){
+  .map-duel-dialog{width:100vw;height:100vh;max-height:none;border-radius:0}
+  .map-duel-dialog .dialog-close{right:10px;top:10px}
+}

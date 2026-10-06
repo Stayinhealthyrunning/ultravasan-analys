@@ -31,3 +31,8 @@
 .fallback-map{background:radial-gradient(circle at 22% 18%,#f2f7ef,#d4e0d4 55%,#bfd1c2)}
 .fallback-cp-label{font-size:13px;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 .fallback-runner{r:12}
+
+
+/* Embedded Kartduell inside Loppanalys modal */
+.embedded-map .back-link,.embedded-map #fullscreenBtn{display:none!important}
+.embedded-map .map-topbar{padding-right:58px}
