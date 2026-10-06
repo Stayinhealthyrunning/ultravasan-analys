@@ -147,9 +147,11 @@
   }
 
   function headToHead(dataset,resultIds){
-    const ids=[...new Set((resultIds||[]).map(String))].slice(0,5);
+    const ids=[...new Set((resultIds||[]).map(String))];
     const results=ids.map(id=>(dataset?.results||[]).find(row=>String(row.id)===id)).filter(Boolean);
-    if(results.length<2)return Object.freeze({available:false,reason:'need-two-runners',results:Object.freeze(results)});
+    if(ids.length!==2||results.length!==2){
+      return Object.freeze({available:false,reason:'need-exactly-two-runners',results:Object.freeze(results)});
+    }
 
     const races=historyRaces(dataset);
     const raceById=new Map(races.map(race=>[String(race.id),race]));
@@ -170,13 +172,40 @@
     const versionIds=selected.map(item=>courseVersionId(item.race));
     const sameCourseVersion=versionIds.every(id=>id&&id===versionIds[0]);
     const comparableWhole=pairwiseEvery(selected,(a,b)=>history.wholeCourseComparable(a.result,b.result,races,contracts.catalog.courses));
-
-    const finishers=selected.filter(item=>{
-      if(!finite(item.result.finish_seconds))return false;
+    const resultFinished=result=>{
+      if(!finite(result?.finish_seconds))return false;
       if(!statusApi?.classify)return true;
-      const hasSplit=dataIndex.splitsForResult(dataset,item.result.id).length>0;
-      return statusApi.classify(item.result,{hasSplit}).finished===true;
-    });
+      const hasSplit=dataIndex.splitsForResult(dataset,result.id).length>0;
+      return statusApi.classify(result,{hasSplit}).finished===true;
+    };
+    const median=values=>{
+      const sorted=(values||[]).filter(finite).map(Number).sort((a,b)=>a-b);
+      if(!sorted.length)return null;
+      const middle=Math.floor(sorted.length/2);
+      return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;
+    };
+    const fieldCache=new Map();
+    const fieldReference=(race,toKey)=>{
+      const cacheKey=String(race.id)+'|'+String(toKey).toLowerCase();
+      if(fieldCache.has(cacheKey))return fieldCache.get(cacheKey);
+      const paces=[];
+      for(const candidate of dataset?.results||[]){
+        if(String(candidate.race_id)!==String(race.id)||!resultFinished(candidate))continue;
+        const split=dataIndex.splitsForResult(dataset,candidate.id).find(row=>String(row.checkpoint_key||'').toLowerCase()===String(toKey).toLowerCase());
+        const estimated=Boolean(split&&(split.is_estimated===true||Number(split.is_estimated)===1||String(split.is_estimated).toLowerCase()==='true'));
+        if(!split||estimated||!finite(split.pace_seconds_per_km)||Number(split.pace_seconds_per_km)<=0)continue;
+        paces.push(Number(split.pace_seconds_per_km));
+      }
+      const reference=Object.freeze({
+        count:paces.length,
+        median_pace_seconds_per_km:paces.length>=5?median(paces):null,
+        minimum_reference_size:5,
+      });
+      fieldCache.set(cacheKey,reference);
+      return reference;
+    };
+
+    const finishers=selected.filter(item=>resultFinished(item.result));
     const finishRanking=comparableWhole
       ?finishers.slice().sort((a,b)=>Number(a.result.finish_seconds)-Number(b.result.finish_seconds)).map((item,index,array)=>Object.freeze({
         result_id:item.result.id,
@@ -204,10 +233,15 @@
       });
       const exactTimes=sameCourseVersion?entries.filter(entry=>entry.exact&&finite(entry.elapsed_seconds)).map(entry=>Number(entry.elapsed_seconds)):[];
       const best=exactTimes.length?Math.min(...exactTimes):null;
+      const pairGap=sameCourseVersion&&entries.length===2&&entries.every(entry=>entry.exact&&finite(entry.elapsed_seconds))
+        ?Number(entries[1].elapsed_seconds)-Number(entries[0].elapsed_seconds)
+        :null;
       return Object.freeze({
         checkpoint_key:key,
         checkpoint_name:selected[0].journey.rows.find(row=>row.checkpoint_key===key)?.checkpoint_name||key,
         comparable:sameCourseVersion,
+        pair_gap_seconds:pairGap,
+        action_time_seconds:pairGap===null?null:Math.min(Number(entries[0].elapsed_seconds),Number(entries[1].elapsed_seconds)),
         entries:Object.freeze(entries.map((entry,itemIndex)=>{
           const previousKey=commonKeys[Math.max(0,commonKeys.indexOf(key)-1)],previous=journeyMaps[itemIndex].get(previousKey);
           const placement_change=entry.exact&&finite(entry.place_overall)&&previous?.exact&&finite(previous.place_overall)?Number(previous.place_overall)-Number(entry.place_overall):null;
@@ -228,19 +262,33 @@
       );
       const entries=selected.map(item=>{
         const row=item.journey.rows.find(value=>value.checkpoint_key===to);
+        const field=fieldReference(item.race,to);
+        const ownPace=row?.pace_seconds_per_km??null;
+        const relative=finite(ownPace)&&Number(ownPace)>0&&finite(field.median_pace_seconds_per_km)
+          ?(Number(field.median_pace_seconds_per_km)/Number(ownPace)-1)*100
+          :null;
         return Object.freeze({
           result_id:item.result.id,
           segment_seconds:row?.segment_seconds??null,
-          pace_seconds_per_km:row?.pace_seconds_per_km??null,
+          pace_seconds_per_km:ownPace,
           exact:Boolean(row?.exact),
+          field_median_pace_seconds_per_km:field.median_pace_seconds_per_km,
+          field_reference_n:field.count,
+          performance_vs_field_percent:relative,
         });
       });
       const valid=comparable?entries.filter(entry=>finite(entry.segment_seconds)&&entry.exact):[];
       const best=valid.length?Math.min(...valid.map(entry=>Number(entry.segment_seconds))):null;
+      const pairDelta=comparable&&entries.length===2&&entries.every(entry=>entry.exact&&finite(entry.segment_seconds))
+        ?Number(entries[1].segment_seconds)-Number(entries[0].segment_seconds)
+        :null;
       segmentRows.push(Object.freeze({
+        index:index-1,
         from,
         to,
         comparable,
+        pair_delta_seconds:pairDelta,
+        winner_result_id:pairDelta===null||pairDelta===0?null:(pairDelta>0?selected[0].result.id:selected[1].result.id),
         entries:Object.freeze(entries.map(entry=>Object.freeze({
           ...entry,
           gap_seconds:best===null||!finite(entry.segment_seconds)||!entry.exact?null:Number(entry.segment_seconds)-best,
@@ -248,8 +296,27 @@
       }));
     }
 
+    const shared=checkpointRows.filter(row=>finite(row.pair_gap_seconds));
+    const leaders={a:0,b:0,equal:0};
+    let previousSign=0,leadChanges=0;
+    for(const row of shared){
+      const sign=Math.sign(Number(row.pair_gap_seconds));
+      leaders[sign>0?'a':sign<0?'b':'equal']++;
+      if(sign){
+        if(previousSign&&previousSign!==sign)leadChanges++;
+        previousSign=sign;
+      }
+    }
+    const sortedByGap=shared.slice().sort((a,b)=>Math.abs(Number(a.pair_gap_seconds))-Math.abs(Number(b.pair_gap_seconds)));
+    const wonA=segmentRows.filter(row=>finite(row.pair_delta_seconds)&&Number(row.pair_delta_seconds)>0).sort((a,b)=>Number(b.pair_delta_seconds)-Number(a.pair_delta_seconds))[0]||null;
+    const wonB=segmentRows.filter(row=>finite(row.pair_delta_seconds)&&Number(row.pair_delta_seconds)<0).sort((a,b)=>Number(a.pair_delta_seconds)-Number(b.pair_delta_seconds))[0]||null;
+    const finalGap=comparableWhole&&selected.every(item=>resultFinished(item.result))
+      ?Number(selected[1].result.finish_seconds)-Number(selected[0].result.finish_seconds)
+      :null;
+
     return Object.freeze({
       available:true,
+      comparison_contract_version:'2.0',
       family:families[0],
       same_course_version:sameCourseVersion,
       whole_course_comparable:comparableWhole,
@@ -258,6 +325,15 @@
       finish_ranking:Object.freeze(finishRanking),
       checkpoints:Object.freeze(checkpointRows),
       segments:Object.freeze(segmentRows),
+      pairwise_insights:Object.freeze({
+        final_gap_seconds:finalGap,
+        leaders:Object.freeze(leaders),
+        lead_changes:leadChanges,
+        nearest:sortedByGap[0]||null,
+        largest_gap:sortedByGap.at(-1)||null,
+        most_time_won_a:wonA,
+        most_time_won_b:wonB,
+      }),
     });
   }
 
