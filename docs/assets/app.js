@@ -560,9 +560,17 @@ async function openMapWithRunners(selected){
     localStorage.setItem(MAP_LOCAL_PREFIX+token,JSON.stringify(payload));
     localStorage.setItem(MAP_LOCAL_PREFIX+token+':created',String(Date.now()));
   }catch(e){console.warn('Kunde inte spara snabb kartdata',e)}
-  const url=`karta.html?runners=${ids}&payload=${encodeURIComponent(token)}`;
-  const win=window.open(url,'_blank');
-  if(win){try{win.opener=null}catch{}}else location.href=url;
+  const url=`karta.html?embedded=1&runners=${ids}&payload=${encodeURIComponent(token)}`;
+  const dialog=$('#mapDuelDialog'),frame=$('#mapDuelFrame'),close=$('#mapDuelDialog .dialog-close');
+  if(!dialog||!frame){location.href=url.replace('embedded=1&','');return}
+  if(!dialog.dataset.bound){
+    dialog.dataset.bound='1';
+    const shutdown=()=>{try{frame.src='about:blank'}catch{}};
+    close?.addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('close',shutdown);
+  }
+  frame.src=url;
+  if(!dialog.open)dialog.showModal();
 }
 window.openUltravasanMap=openMapWithRunners;
 function h2hCourseContext(model){
