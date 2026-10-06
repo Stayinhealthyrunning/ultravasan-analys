@@ -122,13 +122,12 @@
     return (model?.anchors||[]).filter(anchor=>Number(anchor.time)<=Number(time)+.5).at(-1)||model?.anchors?.[0]||null;
   }
   function render(root,options){
-    const model=options.model,participants=options.participants||[],view=createViewModel(model,participants);
+    const sourceModel=options.model,participants=options.participants||[],model=sourceModel?{...sourceModel,_replayModels:options.replayModels||[]}:sourceModel,view=createViewModel(model,participants);
     if(!view.available){
       const reason=view.reason==='need-exactly-two-runners'?'Direktjämförelse kräver exakt två löpare.':'Jämförelsen saknar tillräckligt verifierat underlag.';
       root.innerHTML='<div class="c2-shell"><header class="c2-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE 2.0</p><h2>Jämförelsen kan inte visas</h2><p>'+esc(reason)+'</p></header></div>';
       return null;
     }
-    model._replayModels=options.replayModels||[];
     const p0=participants[0]||{},p1=participants[1]||{},insights=model.pairwise_insights||{},segmentButtons=(model.segments||[]).map((segment,index)=>{
       const a=segment.entries?.[0],b=segment.entries?.[1],delta=segment.pair_delta_seconds;
       return'<button type="button" class="c2-segment" data-c2-segment="'+index+'" aria-pressed="'+String(index===0)+'"><span class="c2-segment-name"><b>'+(index+1)+'</b><strong>'+esc(segmentName(model,segment))+'</strong></span><span style="--runner:'+COLORS[0]+'"><small>'+esc(resultName(p0,0))+'</small><strong>'+duration(a?.segment_seconds)+'</strong><em>'+pace(a?.pace_seconds_per_km)+'</em></span><span style="--runner:'+COLORS[1]+'"><small>'+esc(resultName(p1,1))+'</small><strong>'+duration(b?.segment_seconds)+'</strong><em>'+pace(b?.pace_seconds_per_km)+'</em></span><span class="c2-segment-verdict"><strong>'+(!segment.comparable?'Ej jämförbart':!finite(delta)?'Säker tid saknas':Number(delta)===0?'Lika':esc((Number(delta)>0?resultName(p0,0):resultName(p1,1))+' vann '+duration(delta)))+'</strong><small>'+(segment.comparable?'fältindex '+percent(a?.performance_vs_field_percent)+' / '+percent(b?.performance_vs_field_percent):'banversionskontraktet blockerar direkt gap')+'</small></span></button>';
@@ -145,7 +144,7 @@
       '<section class="c2-panel c2-course"><div class="c2-course-head"><div><h3>Interaktiv kartjämförelse</h3><p>Gemensam tävlingsklocka, två rekonstruerade positioner och synkad höjdprofil.</p></div><span>'+esc(options.courseLabel||'')+'</span></div>'+
       (model.same_course_version&&model._replayModels.length===2?'<div class="c2-live"><div class="c2-map" data-c2-map><div class="c2-map-fallback">Förbereder interaktiv karta…</div></div><div class="c2-live-side"><div class="c2-clock"><span>TÄVLINGSKLOCKA</span><strong data-c2-clock>0:00</strong><small data-c2-clock-max></small></div><div class="c2-live-cards" data-c2-live-cards></div></div></div><div class="c2-playback"><button type="button" data-c2-play>▶ Spela</button><button type="button" class="secondary" data-c2-reset>↺ Börja om</button><label>Uppspelning<select data-c2-duration><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">120 s</option></select></label><label>Kamera<select data-c2-camera><option value="course">Hela banan</option><option value="both">Följ båda</option><option value="leader">Följ ledaren</option></select></label><label class="c2-timeline">Tid<input data-c2-time type="range" min="0" max="1" value="0" step="1" aria-label="Gemensam tävlingsklocka"></label></div><div class="c2-elevation-wrap">'+elevationChart(model,participants)+'</div><p class="c2-readout" data-c2-readout></p>':'<div class="c2-geometry-warning"><strong>Gemensam animerad karta visas inte.</strong><span>De valda resultaten saknar samma CourseVersion eller verifierad gemensam banreferens. Segment och sluttid följer fortfarande sina egna jämförbarhetskontrakt.</span></div>')+
       '</section><details class="c2-method"><summary>Metod och datakvalitet</summary><p>Tidsluckor och placeringsskiften bygger endast på verkliga, ej estimerade passager. Segmenttider kräver verifierat segmentkontrakt. Pacing mot fältet använder respektive upplagas egen FINISHED-kohort och minst fem säkra segmentobservationer. Kartpositioner mellan passager är linjärt rekonstruerade längs banreferensen och är inte individuell GPS.</p></details></div>';
-    return bind(root,options);
+    return bind(root,{...options,model});
   }
   function bind(root,options){
     const model=options.model,participants=options.participants||[],models=options.replayModels||[];
