@@ -99,9 +99,9 @@ const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&s
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
 assert.strictEqual(sameCourse.comparison_contract_version,'2.0');
-assert.strictEqual(cpSmagan.pair_gap_seconds,-50,'negativt pargap betyder att B passerade före A');
-assert.strictEqual(sharedSegment.pair_delta_seconds,-50,'negativt segmentdelta betyder att B vann segmentet');
-assert.strictEqual(sameCourse.pairwise_insights.leaders.b,3);
+assert.strictEqual(cpSmagan.pair_gap_seconds,50,'positivt pargap betyder att A passerade före B');
+assert.strictEqual(sharedSegment.pair_delta_seconds,50,'positivt segmentdelta betyder att A vann segmentet');
+assert.strictEqual(sameCourse.pairwise_insights.leaders.a,3);
 assert.strictEqual(sameCourse.pairwise_insights.lead_changes,0);
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_reference_n,2);
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===102).field_median_pace_seconds_per_km,null,'fältmedian kräver minst fem säkra referenser');
