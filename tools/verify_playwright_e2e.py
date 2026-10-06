@@ -274,6 +274,16 @@ def run(base_url: str) -> None:
               and h2h["cameraDefault"] == "both" and h2h["audio"] == h2h["expectedAudio"] and h2h["leafletFlag"] == 0,
               f"verified 2024-2025 cross-edition Comparison 2.0 must expose scaled charts and aligned replay: {h2h}")
 
+        timeline = page.locator("#headToHeadDetail input[data-c2-time]")
+        timeline_max = int(float(timeline.get_attribute("max") or "0"))
+        timeline_target = max(1, timeline_max // 2)
+        clock_before = page.locator("#headToHeadDetail [data-c2-clock]").inner_text()
+        timeline.evaluate("(el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}))}", timeline_target)
+        clock_after = page.locator("#headToHeadDetail [data-c2-clock]").inner_text()
+        timeline_value = int(float(timeline.input_value()))
+        check(timeline_max > 0 and timeline_value == timeline_target and clock_after != clock_before,
+              f"Comparison 2.0 timeline scrubber is not bound to the actual range input: max={timeline_max}, target={timeline_target}, value={timeline_value}, before={clock_before}, after={clock_after}")
+
         same_edition_count = page.evaluate("""() => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
           const data=window.ULTRAVASAN_ACTIVE_DATA,r25=data.races.find(r=>r.race_key==='ultravasan90-2025');
