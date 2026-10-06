@@ -93,7 +93,7 @@
     const labels=rows.map((row,index)=>'<text class="c2-x-label c2-checkpoint-label" x="'+x(row.entries[0].distance_km).toFixed(1)+'" y="'+(H-18-(index%2)*13)+'" text-anchor="'+(index===rows.length-1?'end':index===0?'start':'middle')+'">'+esc(row.checkpoint_name)+'</text>').join('');
     const axisTitles='<text class="c2-axis-title" x="'+((p.l+W-p.r)/2)+'" y="'+(H-2)+'" text-anchor="middle">Distans</text><text class="c2-axis-title" x="20" y="'+((p.t+H-p.b)/2)+'" text-anchor="middle" transform="rotate(-90 20 '+((p.t+H-p.b)/2)+')">Tidslucka</text>';
     const key='<div class="c2-chart-key"><span style="--runner:'+COLORS[0]+'"><i></i>Över 0 = '+esc(resultLabel(participants,0))+' före</span><span class="c2-zero-key">Streckad linje = lika</span><span style="--runner:'+COLORS[1]+'"><i></i>Under 0 = '+esc(resultLabel(participants,1))+' före</span></div>';
-    return key+'<svg class="c2-gap-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Observerad tidslucka mellan de två löparna"><line class="c2-zero" x1="'+p.l+'" x2="'+(W-p.r)+'" y1="'+y(0)+'" y2="'+y(0)+'"/><text class="c2-zero-label" x="'+(W-p.r-4)+'" y="'+(y(0)-7)+'" text-anchor="end">0 = lika</text>'+marks+'<path class="c2-gap-line" d="'+path+'"/>'+dots+labels+axisTitles+'</svg>';
+    return key+'<svg class="c2-gap-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Observerad tidslucka mellan de två löparna">'+marks+'<line class="c2-zero" x1="'+p.l+'" x2="'+(W-p.r)+'" y1="'+y(0)+'" y2="'+y(0)+'"/><text class="c2-zero-label" x="'+(W-p.r-4)+'" y="'+(y(0)-7)+'" text-anchor="end">0 = lika</text><path class="c2-gap-line" d="'+path+'"/>'+dots+labels+axisTitles+'</svg>';
   }
   function placementChart(model,participants){
     const rows=(model.checkpoints||[]).filter(row=>row.comparable);
