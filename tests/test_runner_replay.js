@@ -273,6 +273,7 @@ assert.ok(mapSource.includes('app.playing))updateCamera(states,leader,forceUi)')
 const comparisonSource=fs.readFileSync(require.resolve('../docs/assets/comparison-2.js'),'utf8');
 assert.ok(comparisonSource.includes('CAMERA_CENTER_EASE=.38')&&comparisonSource.includes('CAMERA_ZOOM_MS=450')&&comparisonSource.includes('map.panBy([dx*factor,dy*factor]'),'Direktjämförelsens kartkamera ska flytta centrum mjukt varje animationsframe');
 assert.ok(comparisonSource.includes("root.querySelector('input[data-c2-time]')"),'Direktjämförelsens tidsreglage måste bindas till range-inputen, inte checkpointpunkternas data-c2-time-attribut');
+assert.ok(comparisonSource.includes('preferCanvas:false')&&mapSource.includes('preferCanvas:false'),'Comparison och Kartduell ska använda SVG-renderer för mjuk följning utan Leaflet Canvas teardown-race');
 assert.ok(appStateSource.includes('speed:playback.DEFAULT_MODE')&&mapSource.includes('mapPlayback.rateFor'),'Kartduellen ska använda gemensam Playback-standard och rate-beräkning');
 assert.deepStrictEqual(mapDuel.DUEL_PLAYBACK_DURATIONS,[30,60,120,180]);
 assert.strictEqual(mapDuel.duelPlaybackRate(7200,'30s'),240,'30-sekundersvalet ska skala hela duellen till exakt 30 sekunder');
