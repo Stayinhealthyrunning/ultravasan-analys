@@ -729,17 +729,28 @@ await evaluate(`(() => {
   document.querySelector('#compareH2HButton')?.click();
 })()`);
 await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
-const h2hComparable=await evaluate(`(() => ({
-  open:document.querySelector('#headToHeadDialog')?.open||false,
-  finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
-  checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
-  placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
-  courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
-  elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
-  segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
-  warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
-  text:document.querySelector('#headToHeadDetail')?.innerText||'',
-}))()`);
+const h2hComparable=await evaluate(`(() => {
+  const first=compareState.selected[0],race=state.data.races.find(item=>String(item.id)===String(first?.race_id));
+  return {
+    open:document.querySelector('#headToHeadDialog')?.open||false,
+    finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+    checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+    placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
+    courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
+    elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
+    segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
+    warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
+    gapAxisLabels:document.querySelectorAll('#headToHeadDetail .c2-gap-chart .c2-axis-label').length,
+    fieldAxisLabels:document.querySelectorAll('#headToHeadDetail .c2-field-chart .c2-axis-label').length,
+    zeroKeys:[...document.querySelectorAll('#headToHeadDetail .c2-zero-key')].map(node=>node.textContent),
+    playbackDefault:document.querySelector('#headToHeadDetail [data-c2-duration]')?.value||null,
+    cameraDefault:document.querySelector('#headToHeadDetail [data-c2-camera]')?.value||null,
+    audio:document.querySelector('#headToHeadDetail [data-c2-audio]')?.getAttribute('src')||null,
+    expectedAudio:window.RaceMedia.musicForRace(race),
+    leafletFlag:document.querySelectorAll('#headToHeadDetail .leaflet-attribution-flag').length,
+    text:document.querySelector('#headToHeadDetail')?.innerText||'',
+  };
+})()`);
 const h2hInteraction=await evaluate(`(() => {
   const slider=document.querySelector('#headToHeadDetail [data-c2-time]'),segments=[...document.querySelectorAll('#headToHeadDetail [data-c2-segment]')];
   if(!slider)return {available:false};
@@ -777,17 +788,23 @@ await evaluate(`(() => {
   document.querySelector('#compareH2HButton')?.click();
 })()`);
 await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:35,interval:100});
-const h2hSameEdition=await evaluate(`(() => ({
-  open:document.querySelector('#headToHeadDialog')?.open||false,
-  finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
-  checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
-  placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
-  courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
-  elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
-  segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
-  warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
-  text:document.querySelector('#headToHeadDetail')?.innerText||'',
-}))()`);
+const h2hSameEdition=await evaluate(`(() => {
+  const model=window.RunnerAnalysis.headToHead(state.data,compareState.selected.map(item=>item.id));
+  return {
+    open:document.querySelector('#headToHeadDialog')?.open||false,
+    finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+    checkpointRows:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+    placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
+    courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
+    elevation:Boolean(document.querySelector('#headToHeadDetail .c2-elevation')),
+    segmentCards:document.querySelectorAll('#headToHeadDetail .c2-segment').length,
+    warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
+    sameRaceEdition:model.same_race_edition,
+    allSegmentsComparable:model.segments.every(segment=>segment.comparable),
+    hasBlockedCopy:(document.querySelector('#headToHeadDetail')?.innerText||'').includes('Ej jämförbart'),
+    text:document.querySelector('#headToHeadDetail')?.innerText||'',
+  };
+})()`);
 
 const changedCourseId=await evaluate(`(() => {
   const data=window.ULTRAVASAN_ACTIVE_DATA;
@@ -956,10 +973,10 @@ const checks = {
     sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
-  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Pacing mot respektive års fält') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
+  h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.gapAxisLabels>=9 && h2hComparable.fieldAxisLabels>=6 && h2hComparable.zeroKeys.some(text=>text.includes('Streckad linje = lika')) && h2hComparable.zeroKeys.some(text=>text.includes('fältmedian')) && h2hComparable.playbackDefault==='120s' && h2hComparable.cameraDefault==='both' && h2hComparable.audio===h2hComparable.expectedAudio && h2hComparable.leafletFlag===0 && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Fart per delsträcka mot respektive års fältmedian') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
   h2hInteraction: h2hInteraction.available && h2hInteraction.max>0 && h2hInteraction.after!==h2hInteraction.before && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
   h2hShareState: h2hShareState.race==='uv90' && h2hShareState.compare.split(',').length===2 && h2hShareState.ct>0 && h2hShareState.cs===1,
-  h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
+  h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.sameRaceEdition && h2hSameEdition.allSegmentsComparable && !h2hSameEdition.hasBlockedCopy && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.warningText.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
