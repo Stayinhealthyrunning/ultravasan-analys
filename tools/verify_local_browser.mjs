@@ -811,6 +811,7 @@ const h2hChangedCourse=await evaluate(`(() => ({
   placement:Boolean(document.querySelector('#headToHeadDetail .c2-placement-chart')),
   courseMap:Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container')),
   warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
+  warningText:document.querySelector('#headToHeadDetail .c2-geometry-warning')?.innerText||'',
   text:(document.querySelector('#headToHeadDetail')?.innerText||'').slice(0,1800),
 }))()`);
 await evaluate("document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close()");
@@ -959,7 +960,7 @@ const checks = {
   h2hInteraction: h2hInteraction.available && h2hInteraction.max>0 && h2hInteraction.after!==h2hInteraction.before && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
   h2hShareState: h2hShareState.race==='uv90' && h2hShareState.compare.split(',').length===2 && h2hShareState.ct>0 && h2hShareState.cs===1,
   h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
-  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.text.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
+  h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.warningText.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
