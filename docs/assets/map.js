@@ -127,7 +127,7 @@ function initMap(){
     const validCoords=app.allCoords.filter(validLatLng).map(c=>[Number(c[0]),Number(c[1])]);
     if(validCoords.length<2)throw new Error('Banan saknar giltiga GPS-koordinater.');
 
-    app.map=L.map('map',{zoomControl:true,preferCanvas:true,attributionControl:true});
+    app.map=L.map('map',{zoomControl:true,preferCanvas:false,attributionControl:true});
 
     // VIKTIGT: kartan måste få en vy innan ett GridLayer/tileLayer läggs till.
     // Annars kan Leaflet 1.9 kasta "Cannot read properties of undefined (reading min)".
