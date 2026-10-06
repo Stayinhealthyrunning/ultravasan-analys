@@ -328,7 +328,7 @@
       const host=root.querySelector('[data-c2-map]');if(!host||!models[0]?.route?.points?.length)return;
       const ok=await mapEngine.ensureLeaflet({onStatus:text=>{const fallback=host.querySelector('.c2-map-fallback');if(fallback)fallback.textContent=text}});
       if(destroyed||!ok||!window.L)return;
-      host.innerHTML='';map=window.L.map(host,{zoomControl:true,attributionControl:true,preferCanvas:true});
+      host.innerHTML='';map=window.L.map(host,{zoomControl:true,attributionControl:true,preferCanvas:false});
       map.attributionControl?.setPrefix(false);
       const route=models[0].route.points.map(point=>[Number(point[0]),Number(point[1])]);
       try{window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map)}catch{}
