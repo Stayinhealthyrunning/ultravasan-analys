@@ -170,6 +170,7 @@
     }
 
     const versionIds=selected.map(item=>courseVersionId(item.race));
+    const sameRaceEdition=selected.every(item=>String(item.race.id)===String(selected[0].race.id));
     const sameCourseVersion=versionIds.every(id=>id&&id===versionIds[0]);
     const comparableWhole=pairwiseEvery(selected,(a,b)=>history.wholeCourseComparable(a.result,b.result,races,contracts.catalog.courses));
     const resultFinished=result=>{
@@ -257,7 +258,7 @@
     const segmentRows=[];
     for(let index=1;index<commonKeys.length;index++){
       const from=commonKeys[index-1],to=commonKeys[index];
-      const comparable=pairwiseEvery(selected,(a,b)=>
+      const comparable=sameRaceEdition||pairwiseEvery(selected,(a,b)=>
         history.segmentComparable(courseVersionId(a.race),courseVersionId(b.race),from,to,contracts.catalog.courses)
       );
       const entries=selected.map(item=>{
@@ -318,6 +319,7 @@
       available:true,
       comparison_contract_version:'2.0',
       family:families[0],
+      same_race_edition:sameRaceEdition,
       same_course_version:sameCourseVersion,
       whole_course_comparable:comparableWhole,
       course_version_ids:Object.freeze(versionIds),
