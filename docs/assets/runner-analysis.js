@@ -147,9 +147,9 @@
   }
 
   function headToHead(dataset,resultIds){
-    const ids=[...new Set((resultIds||[]).map(String))].slice(0,5);
+    const ids=[...new Set((resultIds||[]).map(String))].slice(0,3);
     const results=ids.map(id=>(dataset?.results||[]).find(row=>String(row.id)===id)).filter(Boolean);
-    if(results.length<2)return Object.freeze({available:false,reason:'need-two-runners',results:Object.freeze(results)});
+    if(results.length!==2)return Object.freeze({available:false,reason:results.length<2?'need-two-runners':'exactly-two-runners',results:Object.freeze(results)});
 
     const races=historyRaces(dataset);
     const raceById=new Map(races.map(race=>[String(race.id),race]));
@@ -248,6 +248,42 @@
       }));
     }
 
+    const signedCheckpoints=sameCourseVersion?checkpointRows.map(row=>{
+      const a=row.entries[0],b=row.entries[1];
+      return a?.exact&&b?.exact&&finite(a.elapsed_seconds)&&finite(b.elapsed_seconds)
+        ?Object.freeze({checkpoint_key:row.checkpoint_key,checkpoint_name:row.checkpoint_name,distance_km:a.distance_km??b.distance_km??null,gap_seconds:Number(b.elapsed_seconds)-Number(a.elapsed_seconds)})
+        :null;
+    }).filter(Boolean):[];
+    let previousSign=0,leadChanges=0;
+    const leaders={a:0,b:0,equal:0};
+    for(const row of signedCheckpoints){
+      const sign=Math.sign(row.gap_seconds);
+      leaders[sign>0?'a':sign<0?'b':'equal']++;
+      if(sign){if(previousSign&&previousSign!==sign)leadChanges++;previousSign=sign}
+    }
+    const comparableSignedSegments=segmentRows.map(row=>{
+      if(!row.comparable)return null;
+      const a=row.entries[0],b=row.entries[1];
+      if(!a?.exact||!b?.exact||!finite(a.segment_seconds)||!finite(b.segment_seconds))return null;
+      return Object.freeze({from:row.from,to:row.to,delta_seconds:Number(b.segment_seconds)-Number(a.segment_seconds)});
+    }).filter(Boolean);
+    const mostA=comparableSignedSegments.filter(row=>row.delta_seconds>0).sort((a,b)=>b.delta_seconds-a.delta_seconds)[0]||null;
+    const mostB=comparableSignedSegments.filter(row=>row.delta_seconds<0).sort((a,b)=>a.delta_seconds-b.delta_seconds)[0]||null;
+    const byAbsoluteGap=signedCheckpoints.slice().sort((a,b)=>Math.abs(a.gap_seconds)-Math.abs(b.gap_seconds));
+    const finalGap=comparableWhole&&finishers.length===2
+      ?Number(selected[1].result.finish_seconds)-Number(selected[0].result.finish_seconds)
+      :null;
+    const insights=Object.freeze({
+      signed_checkpoints:Object.freeze(signedCheckpoints),
+      final_gap_seconds:finalGap,
+      leaders:Object.freeze(leaders),
+      lead_changes:leadChanges,
+      nearest:byAbsoluteGap[0]||null,
+      largest_gap:byAbsoluteGap.at(-1)||null,
+      most_time_won_a:mostA,
+      most_time_won_b:mostB,
+    });
+
     return Object.freeze({
       available:true,
       family:families[0],
@@ -258,6 +294,7 @@
       finish_ranking:Object.freeze(finishRanking),
       checkpoints:Object.freeze(checkpointRows),
       segments:Object.freeze(segmentRows),
+      insights,
     });
   }
 
