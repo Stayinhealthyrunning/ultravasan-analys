@@ -183,8 +183,54 @@
   function bind(root,options){
     const model=options.model,participants=options.participants||[],models=options.replayModels||[];
     let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCamera=0,map=null,markers=[],highlight=null,destroyed=false;
-    const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]');
+    const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]'),audio=root.querySelector('[data-c2-audio]'),mute=root.querySelector('[data-c2-mute]'),volumeSlider=root.querySelector('[data-c2-volume]'),audioNote=root.querySelector('[data-c2-audio-note]');
+    let musicEnabled=true,audioVolume=DEFAULT_VOLUME,lastAudibleVolume=DEFAULT_VOLUME;
     if(slider){slider.max=String(Math.ceil(maxTime));clockMax.textContent='av '+duration(maxTime)}
+    try{
+      const storedVolume=Number(localStorage.getItem('ultravasan-music-volume'));
+      if(finite(storedVolume)&&storedVolume>=0)audioVolume=clamp(storedVolume,0,1);
+      musicEnabled=localStorage.getItem('ultravasan-music-enabled')!=='false';
+    }catch{}
+    lastAudibleVolume=audioVolume>0?audioVolume:DEFAULT_VOLUME;
+    if(volumeSlider)volumeSlider.value=String(audioVolume);
+    if(audio){
+      const source=media?.musicForRace?.(models[0]?.race)||null;
+      if(source)audio.src=source;
+      else if(audioNote){audioNote.hidden=false;audioNote.textContent='Musik saknas för loppet. Kartjämförelsen fungerar utan ljud.'}
+      audio.volume=audioVolume;
+      audio.addEventListener('error',()=>{if(audioNote){audioNote.hidden=false;audioNote.textContent='Musiken kunde inte laddas. Kartjämförelsen fungerar ändå.'}});
+    }
+    function updateMuteButton(){
+      if(!mute)return;
+      mute.setAttribute('aria-pressed',String(musicEnabled));
+      mute.textContent=musicEnabled?'♫':'♪';
+      mute.title=musicEnabled?'Stäng av musik':'Slå på musik';
+    }
+    function setVolume(value){
+      audioVolume=clamp(value,0,1);
+      if(audioVolume>0)lastAudibleVolume=audioVolume;
+      if(audio)audio.volume=audioVolume;
+      if(volumeSlider)volumeSlider.value=String(audioVolume);
+      try{localStorage.setItem('ultravasan-music-volume',String(audioVolume))}catch{}
+    }
+    function playAudio(){
+      if(!audio||!audio.src||!musicEnabled)return;
+      audio.volume=audioVolume;
+      audio.play().catch(()=>{if(audioNote){audioNote.hidden=false;audioNote.textContent='Webbläsaren väntar med musiken. Tryck på Spela igen.'}});
+    }
+    function pauseAudio(reset=false){
+      if(!audio)return;
+      audio.pause();
+      if(reset)try{audio.currentTime=0}catch{}
+    }
+    function toggleMute(){
+      musicEnabled=!musicEnabled;
+      if(musicEnabled&&audioVolume<=0)setVolume(lastAudibleVolume||DEFAULT_VOLUME);
+      try{localStorage.setItem('ultravasan-music-enabled',String(musicEnabled))}catch{}
+      updateMuteButton();
+      if(musicEnabled&&playing)playAudio();else pauseAudio(false);
+    }
+    updateMuteButton();
     const stateAtTime=(runner,t)=>{
       const distance=replay.distanceAtTime(runner,t),state=replay.stateAt(runner,distance);
       return{distance,state};
@@ -243,24 +289,25 @@
       const readout=root.querySelector('[data-c2-readout]');
       if(readout)readout.innerHTML='<strong>'+duration(time)+'</strong> · '+esc(resultLabel(participants,0))+' '+states[0].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · '+esc(resultLabel(participants,1))+' '+states[1].distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km · positionsskillnad '+(gap>=0?'+':'')+gap.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km. <span>Mellan officiella passager är positionerna rekonstruerade.</span>';
     }
-    function stop(){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;if(play)play.textContent=time>=maxTime?'▶ Spela igen':'▶ Spela'}
+    function stop(pauseMusic=true){playing=false;if(frame)cancelAnimationFrame(frame);frame=null;if(play)play.innerHTML=time>=maxTime?'▶ <span>Spela igen</span>':'▶ <span>Spela</span>';if(pauseMusic)pauseAudio(false)}
     function tick(now){
       if(!playing||destroyed)return;
       const delta=Math.min(.12,(now-lastFrame)/1000);lastFrame=now;
-      const playbackSeconds=Math.max(10,Number(durationSelect?.value)||60),next=time+maxTime/playbackSeconds*delta;
+      const rate=playback?.rateFor?playback.rateFor(maxTime,durationSelect?.value||playback.DEFAULT_MODE):maxTime/DEFAULT_PLAYBACK_SECONDS,next=time+rate*delta;
       setTime(Math.min(maxTime,next),false);
       if(time>=maxTime)stop();else frame=requestAnimationFrame(tick);
     }
     function toggle(){
       if(playing){stop();return}
       if(time>=maxTime-.5)setTime(0,true);
-      playing=true;if(play)play.textContent='Ⅱ Pausa';lastFrame=performance.now();frame=requestAnimationFrame(tick);
+      playing=true;if(play)play.innerHTML='❚❚ <span>Pausa</span>';playAudio();lastFrame=performance.now();frame=requestAnimationFrame(tick);
     }
     async function mountMap(){
       const host=root.querySelector('[data-c2-map]');if(!host||!models[0]?.route?.points?.length)return;
       const ok=await mapEngine.ensureLeaflet({onStatus:text=>{const fallback=host.querySelector('.c2-map-fallback');if(fallback)fallback.textContent=text}});
       if(destroyed||!ok||!window.L)return;
       host.innerHTML='';map=window.L.map(host,{zoomControl:true,attributionControl:true,preferCanvas:true});
+      map.attributionControl?.setPrefix(false);
       const route=models[0].route.points.map(point=>[Number(point[0]),Number(point[1])]);
       try{window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map)}catch{}
       window.L.polyline(route,{weight:5,opacity:.72}).addTo(map);map.fitBounds(window.L.latLngBounds(route).pad(.08));
@@ -274,7 +321,9 @@
     });
     if(slider)slider.addEventListener('input',event=>{stop();setTime(event.target.value,true)});
     if(play)play.addEventListener('click',toggle);
-    root.querySelector('[data-c2-reset]')?.addEventListener('click',()=>{stop();setTime(0,true)});
+    mute?.addEventListener('click',toggleMute);
+    volumeSlider?.addEventListener('input',event=>setVolume(event.target.value));
+    root.querySelector('[data-c2-reset]')?.addEventListener('click',()=>{stop();if(durationSelect)durationSelect.value=(playback?.DEFAULT_MODE||DEFAULT_PLAYBACK_SECONDS+'s');if(camera)camera.value='both';setVolume(DEFAULT_VOLUME);pauseAudio(true);setTime(0,true)});
     camera?.addEventListener('change',()=>{const states=models.map((runner,index)=>({...stateAtTime(runner,time),index}));if(camera.value==='course'&&map)map.fitBounds(window.L.latLngBounds(models[0].route.points.map(point=>[point[0],point[1]])).pad(.08));else updateCamera(states)});
     const elevationHit=root.querySelector('[data-c2-elev-hit]');
     if(elevationHit&&models[0]?.elevationProfile?.length){
@@ -288,7 +337,7 @@
       try{await navigator.clipboard.writeText(url);if(feedback)feedback.textContent='Länk kopierad'}catch{if(feedback)feedback.textContent='Kopiera adressen i webbläsaren för att dela jämförelsen.'}
     });
     if(models.length===2){setTime(0,false);updateSegment(0,false);mountMap()}
-    return{destroy(){destroyed=true;stop();if(highlight)highlight.remove();if(map)map.remove();map=null;markers=[]},setTime,selectSegment:updateSegment,getTime:()=>time,getSelectedSegment:()=>selectedSegment};
+    return{destroy(){destroyed=true;stop();pauseAudio(true);if(highlight)highlight.remove();if(map)map.remove();map=null;markers=[]},setTime,selectSegment:updateSegment,getTime:()=>time,getSelectedSegment:()=>selectedSegment};
   }
   function mount(root,options){
     if(!root)return null;
