@@ -752,16 +752,23 @@ const h2hComparable=await evaluate(`(() => {
   };
 })()`);
 const h2hInteraction=await evaluate(`(() => {
-  const slider=document.querySelector('#headToHeadDetail [data-c2-time]'),segments=[...document.querySelectorAll('#headToHeadDetail [data-c2-segment]')];
+  const slider=document.querySelector('#headToHeadDetail input[data-c2-time]'),segments=[...document.querySelectorAll('#headToHeadDetail [data-c2-segment]')];
   if(!slider)return {available:false};
-  const before=document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'';
-  slider.value=String(Math.max(1,Math.round(Number(slider.max||1)/2)));
+  const before=document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'',target=Math.max(1,Math.round(Number(slider.max||1)/2));
+  slider.value=String(target);
   slider.dispatchEvent(new Event('input',{bubbles:true}));
+  const afterScrub=document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'',sliderAfterScrub=Number(slider.value||0);
   if(segments[1])segments[1].click();
   return {
     available:true,
+    tag:slider.tagName,
+    type:slider.type,
     before,
-    after:document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'',
+    afterScrub,
+    afterSegment:document.querySelector('#headToHeadDetail [data-c2-clock]')?.textContent||'',
+    sliderAfterScrub,
+    target,
+    sliderAfterSegment:Number(slider.value||0),
     readout:document.querySelector('#headToHeadDetail [data-c2-readout]')?.textContent||'',
     selected:segments[1]?.getAttribute('aria-pressed')||segments[0]?.getAttribute('aria-pressed')||null,
     max:Number(slider.max||0),
@@ -974,7 +981,7 @@ const checks = {
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.gapAxisLabels>=9 && h2hComparable.fieldAxisLabels>=6 && h2hComparable.zeroKeys.some(text=>text.includes('Streckad linje = lika')) && h2hComparable.zeroKeys.some(text=>text.includes('fältmedian')) && h2hComparable.playbackDefault==='120s' && h2hComparable.cameraDefault==='both' && h2hComparable.audio===h2hComparable.expectedAudio && h2hComparable.leafletFlag===0 && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Fart per delsträcka mot respektive års fältmedian') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
-  h2hInteraction: h2hInteraction.available && h2hInteraction.max>0 && h2hInteraction.after!==h2hInteraction.before && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
+  h2hInteraction: h2hInteraction.available && h2hInteraction.tag==='INPUT' && h2hInteraction.type==='range' && h2hInteraction.max>0 && h2hInteraction.afterScrub!==h2hInteraction.before && h2hInteraction.sliderAfterScrub===h2hInteraction.target && h2hInteraction.sliderAfterSegment>0 && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
   h2hShareState: h2hShareState.race==='uv90' && h2hShareState.compare.split(',').length===2 && h2hShareState.ct>0 && h2hShareState.cs===1,
   h2hSameEdition: uv90Reloaded && h2hSameEdition.open && h2hSameEdition.finishCards===2 && h2hSameEdition.checkpointRows>0 && h2hSameEdition.placement && h2hSameEdition.courseMap && h2hSameEdition.elevation && h2hSameEdition.segmentCards>0 && h2hSameEdition.sameRaceEdition && h2hSameEdition.allSegmentsComparable && !h2hSameEdition.hasBlockedCopy && h2hSameEdition.text.includes('Två lopp. Ett gemensamt analysflöde.'),
   h2hChangedCourse: Boolean(changedCourseId) && h2hChangedCourse.open && h2hChangedCourse.finishCards===2 && h2hChangedCourse.checkpointRows===0 && !h2hChangedCourse.placement && !h2hChangedCourse.courseMap && h2hChangedCourse.warnings===1 && h2hChangedCourse.warningText.includes('Gemensam animerad karta visas inte') && h2hChangedCourse.text.includes('Begränsad geometri'),
