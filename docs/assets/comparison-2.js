@@ -182,7 +182,7 @@
   }
   function bind(root,options){
     const model=options.model,participants=options.participants||[],models=options.replayModels||[];
-    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCamera=0,map=null,markers=[],highlight=null,destroyed=false;
+    let selectedSegment=0,time=0,playing=false,frame=null,lastFrame=0,lastCamera=0,lastCameraZoom=0,map=null,markers=[],highlight=null,destroyed=false;
     const maxTime=Math.max(1,...models.map(item=>Number(item.maxTime)||0)),slider=root.querySelector('[data-c2-time]'),clock=root.querySelector('[data-c2-clock]'),clockMax=root.querySelector('[data-c2-clock-max]'),play=root.querySelector('[data-c2-play]'),durationSelect=root.querySelector('[data-c2-duration]'),camera=root.querySelector('[data-c2-camera]'),audio=root.querySelector('[data-c2-audio]'),mute=root.querySelector('[data-c2-mute]'),volumeSlider=root.querySelector('[data-c2-volume]'),audioNote=root.querySelector('[data-c2-audio-note]');
     let musicEnabled=true,audioVolume=DEFAULT_VOLUME,lastAudibleVolume=DEFAULT_VOLUME;
     if(slider){slider.max=String(Math.ceil(maxTime));clockMax.textContent='av '+duration(maxTime)}
@@ -267,13 +267,27 @@
         if(dot){dot.setAttribute('cx',p.x(item.distance));dot.setAttribute('cy',p.y(finite(elevation)?Number(elevation):models[0].elevationProfile[0][1]))}
       });
     }
-    function updateCamera(states){
-      if(!map||!window.L)return;
-      if(camera?.value==='course')return;
+    function updateCamera(states,forceZoom=false){
+      if(!map||!window.L||camera?.value==='course')return;
+      const now=typeof performance!=='undefined'?performance.now():Date.now();
       if(camera?.value==='leader'){
-        const leader=states.slice().sort((a,b)=>b.distance-a.distance)[0];if(leader?.state.coordinate)map.panTo(leader.state.coordinate,{animate:false});
-      }else{
-        const coords=states.map(item=>item.state.coordinate).filter(Boolean);if(coords.length>1)map.fitBounds(window.L.latLngBounds(coords).pad(.8),{animate:false,maxZoom:14});
+        const leader=states.slice().sort((a,b)=>b.distance-a.distance)[0];
+        if(leader?.state.coordinate)map.panTo(leader.state.coordinate,{animate:false});
+        return;
+      }
+      const coords=states.map(item=>item.state.coordinate).filter(Boolean);
+      if(!coords.length)return;
+      if(coords.length===1){map.panTo(coords[0],{animate:false});return}
+      const bounds=window.L.latLngBounds(coords),center=bounds.getCenter();
+      map.panTo(center,{animate:false});
+      if(forceZoom||now-lastCameraZoom>450){
+        const padded=bounds.pad(.9),padding=window.L.point?window.L.point(90,90):undefined;
+        const target=Math.min(14,map.getBoundsZoom(padded,false,padding));
+        const current=map.getZoom();
+        if(Number.isFinite(target)&&Number.isFinite(current)&&Math.abs(target-current)>=1){
+          map.setZoom(current+(target>current?1:-1),{animate:false});
+        }
+        lastCameraZoom=now;
       }
     }
     function setTime(value,forceCamera=false){
@@ -282,7 +296,7 @@
       markers.forEach((marker,index)=>{const coord=states[index]?.state.coordinate;if(coord)marker.setLatLng(coord)});
       updateElevation(states);
       const now=typeof performance!=='undefined'?performance.now():Date.now();
-      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>650)){lastCamera=now;updateCamera(states)}
+      if(forceCamera||(playing&&camera?.value!=='course'&&now-lastCamera>50)){lastCamera=now;updateCamera(states,forceCamera)}
       const sorted=states.slice().sort((a,b)=>b.distance-a.distance),leader=sorted[0],gap=states[0]&&states[1]?states[0].distance-states[1].distance:0;
       const cards=root.querySelector('[data-c2-live-cards]');
       if(cards)cards.innerHTML=states.map((item,index)=>{const last=latestAnchor(models[index],time),status=item.state.finished?'Mål':last?.name||'Start';return'<article style="--runner:'+COLORS[index]+'"><i></i><span><strong>'+esc(resultLabel(participants,index))+'</strong><small>'+esc(status)+'</small></span><b>'+item.distance.toLocaleString('sv-SE',{maximumFractionDigits:1})+' km</b></article>'}).join('');
@@ -324,7 +338,7 @@
     mute?.addEventListener('click',toggleMute);
     volumeSlider?.addEventListener('input',event=>setVolume(event.target.value));
     root.querySelector('[data-c2-reset]')?.addEventListener('click',()=>{stop();if(durationSelect)durationSelect.value=(playback?.DEFAULT_MODE||DEFAULT_PLAYBACK_SECONDS+'s');if(camera)camera.value='both';setVolume(DEFAULT_VOLUME);pauseAudio(true);setTime(0,true)});
-    camera?.addEventListener('change',()=>{const states=models.map((runner,index)=>({...stateAtTime(runner,time),index}));if(camera.value==='course'&&map)map.fitBounds(window.L.latLngBounds(models[0].route.points.map(point=>[point[0],point[1]])).pad(.08));else updateCamera(states)});
+    camera?.addEventListener('change',()=>{const states=models.map((runner,index)=>({...stateAtTime(runner,time),index}));if(camera.value==='course'&&map)map.fitBounds(window.L.latLngBounds(models[0].route.points.map(point=>[point[0],point[1]])).pad(.08),{animate:false});else updateCamera(states,true)});
     const elevationHit=root.querySelector('[data-c2-elev-hit]');
     if(elevationHit&&models[0]?.elevationProfile?.length){
       const seek=event=>{const svg=elevationHit.ownerSVGElement,rect=svg.getBoundingClientRect(),p=replay.elevationProjection(models[0],920),logicalX=(event.clientX-rect.left)*p.width/(rect.width||1),distance=clamp((logicalX-p.pad.l)/(p.width-p.pad.l-p.pad.r)*models[0].totalDistance,0,models[0].maxDistance);stop();setTime(replay.timeAtDistance(models[0],distance),true)};
