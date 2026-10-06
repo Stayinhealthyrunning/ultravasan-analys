@@ -96,10 +96,15 @@ assert.strictEqual(cpSmagan.comparable,true,'samma CourseVersion ska tillåta ch
 assert.deepStrictEqual(cpSmagan.entries.map(row=>[row.result_id,row.gap_seconds,row.place_overall]),[[102,0,50],[103,50,60]]);
 assert.deepStrictEqual(cpMangs.entries.map(row=>[row.result_id,row.gap_seconds,row.placement_change]),[[102,0,10],[103,100,15]],'checkpoint-H2H ska visa kumulativt gap och officiell placeringsrörelse');
 const firstSegment=sameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan');
-assert.strictEqual(firstSegment?.comparable,false,'startsegmentet får inte bli direkt jämförbart utan uttryckligt segmentkontrakt');
+assert.strictEqual(sameCourse.same_race_edition,true);
+assert.strictEqual(firstSegment?.comparable,true,'samma RaceEdition ska göra exakta officiella startsegment direkt jämförbara');
+assert.strictEqual(firstSegment?.pair_delta_seconds,50);
 const sharedSegment=sameCourse.segments.find(segment=>segment.from==='smagan'&&segment.to==='mangsbodarna');
 assert.ok(sharedSegment?.comparable,'explicit CourseVersion-segment ska vara jämförbart');
 assert.strictEqual(sharedSegment.entries.find(row=>row.result_id===103).gap_seconds,50);
+const finishSegment=sameCourse.segments.find(segment=>segment.from==='mangsbodarna'&&segment.to==='mora');
+assert.strictEqual(finishSegment?.comparable,true,'samma RaceEdition ska även jämföra sista officiella segmentet till mål');
+assert.strictEqual(finishSegment?.pair_delta_seconds,1100);
 assert.strictEqual(sameCourse.comparison_contract_version,'2.0');
 assert.strictEqual(cpSmagan.pair_gap_seconds,50,'positivt pargap betyder att A passerade före B');
 assert.strictEqual(sharedSegment.pair_delta_seconds,50,'positivt segmentdelta betyder att A vann segmentet');
@@ -138,6 +143,11 @@ assert.strictEqual(normalizedA.field_median_pace_seconds_per_km,355);
 assert.ok(Math.abs(normalizedA.performance_vs_field_percent-(355/353-1)*100)<1e-9,'A ska normaliseras mot sitt eget loppårs segmentmedian');
 assert.ok(Math.abs(normalizedB.performance_vs_field_percent-(355/357-1)*100)<1e-9,'B ska använda samma års kohort men sin egen segmentfart');
 assert.ok(normalizedA.performance_vs_field_percent>0&&normalizedB.performance_vs_field_percent<0,'normaliseringen ska skilja snabbare och långsammare än årsmedianen');
+
+const crossYearSameCourse=analysis.headToHead(dataset,[101,102]);
+assert.strictEqual(crossYearSameCourse.same_race_edition,false);
+assert.strictEqual(crossYearSameCourse.same_course_version,true);
+assert.strictEqual(crossYearSameCourse.segments.find(segment=>segment.from==='start'&&segment.to==='smagan')?.comparable,false,'cross-year får fortsatt kräva uttryckligt segmentkontrakt även med samma CourseVersion');
 
 const changedCourse=analysis.headToHead(dataset,[101,104]);
 assert.strictEqual(changedCourse.available,true);

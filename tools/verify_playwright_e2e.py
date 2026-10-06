@@ -250,17 +250,29 @@ def run(base_url: str) -> None:
         }""")
         page.wait_for_selector("#headToHeadDetail .c2-shell", timeout=4000)
         page.wait_for_selector("#headToHeadDetail .c2-map.leaflet-container", timeout=5000)
-        h2h = page.evaluate("""seed => ({
-          ...seed,
-          course:!!document.querySelector('#headToHeadDetail .c2-map.leaflet-container'),
-          elevation:!!document.querySelector('#headToHeadDetail .c2-elevation'),
-          placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
-          checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
-          finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
-          warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length
-        })""", h2h_seed)
-        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 2,
-              f"verified 2024-2025 cross-edition Comparison 2.0 must expose finish and checkpoint comparison: {h2h}")
+        h2h = page.evaluate("""seed => {
+          const first=compareState.selected[0],race=state.data.races.find(item=>String(item.id)===String(first?.race_id));
+          return {
+            ...seed,
+            course:!!document.querySelector('#headToHeadDetail .c2-map.leaflet-container'),
+            elevation:!!document.querySelector('#headToHeadDetail .c2-elevation'),
+            placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
+            checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+            finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+            warnings:document.querySelectorAll('#headToHeadDetail .c2-geometry-warning').length,
+            gapAxisLabels:document.querySelectorAll('#headToHeadDetail .c2-gap-chart .c2-axis-label').length,
+            fieldAxisLabels:document.querySelectorAll('#headToHeadDetail .c2-field-chart .c2-axis-label').length,
+            playbackDefault:document.querySelector('#headToHeadDetail [data-c2-duration]')?.value||null,
+            cameraDefault:document.querySelector('#headToHeadDetail [data-c2-camera]')?.value||null,
+            audio:document.querySelector('#headToHeadDetail [data-c2-audio]')?.getAttribute('src')||null,
+            expectedAudio:window.RaceMedia.musicForRace(race),
+            leafletFlag:document.querySelectorAll('#headToHeadDetail .leaflet-attribution-flag').length
+          };
+        }""", h2h_seed)
+        check(h2h["same"] and h2h["course"] and h2h["elevation"] and h2h["placement"] and h2h["checkpoints"] > 0 and h2h["finishCards"] == 2
+              and h2h["gapAxisLabels"] >= 9 and h2h["fieldAxisLabels"] >= 6 and h2h["playbackDefault"] == "120s"
+              and h2h["cameraDefault"] == "both" and h2h["audio"] == h2h["expectedAudio"] and h2h["leafletFlag"] == 0,
+              f"verified 2024-2025 cross-edition Comparison 2.0 must expose scaled charts and aligned replay: {h2h}")
 
         same_edition_count = page.evaluate("""() => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();
@@ -271,14 +283,21 @@ def run(base_url: str) -> None:
         }""")
         page.wait_for_selector("#headToHeadDetail .c2-shell", timeout=4000)
         page.wait_for_selector("#headToHeadDetail .c2-map.leaflet-container", timeout=5000)
-        same_edition = page.evaluate("""count => ({
-          count,
-          finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
-          checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
-          placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart')
-        })""", same_edition_count)
-        check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0 and same_edition["placement"],
-              f"same-RaceEdition Comparison 2.0 must allow direct comparison: {same_edition}")
+        same_edition = page.evaluate("""count => {
+          const model=window.RunnerAnalysis.headToHead(state.data,compareState.selected.map(item=>item.id));
+          return {
+            count,
+            finishCards:document.querySelectorAll('#headToHeadDetail .c2-people article').length,
+            checkpoints:document.querySelectorAll('#headToHeadDetail .c2-gap-point').length,
+            placement:!!document.querySelector('#headToHeadDetail .c2-placement-chart'),
+            sameRaceEdition:model.same_race_edition,
+            allSegmentsComparable:model.segments.every(segment=>segment.comparable),
+            blockedCopy:(document.querySelector('#headToHeadDetail')?.innerText||'').includes('Ej jämförbart')
+          };
+        }""", same_edition_count)
+        check(same_edition["count"] == 2 and same_edition["finishCards"] == 2 and same_edition["checkpoints"] > 0 and same_edition["placement"]
+              and same_edition["sameRaceEdition"] and same_edition["allSegmentsComparable"] and not same_edition["blockedCopy"],
+              f"same-RaceEdition Comparison 2.0 must compare every exact official segment: {same_edition}")
 
         page.evaluate("""id => {
           document.querySelector('#headToHeadDialog')?.open&&document.querySelector('#headToHeadDialog').close();

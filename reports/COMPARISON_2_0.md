@@ -39,7 +39,9 @@ No missing passage is filled to create a checkpoint gap.
 
 ### Segment comparison
 
-A segment is directly compared only when the course contract explicitly allows that segment between the two CourseVersions and both participants have exact segment evidence.
+Within the **same RaceEdition**, an official adjacent segment is directly comparable when both participants have exact segment evidence. This includes the first official start segment and the final official segment to the finish.
+
+Across different RaceEditions, a segment is directly compared only when the course contract explicitly allows that segment between the two CourseVersions and both participants have exact segment evidence. Sharing a CourseVersion alone does not create a cross-year segment comparison.
 
 ### Field normalization
 
@@ -47,7 +49,7 @@ A segment is directly compared only when the course contract explicitly allows t
 
 `edition segment median pace / participant segment pace - 1`
 
-Positive values mean faster than the participant's own edition median. The reference requires at least five FINISHED participants with exact, non-estimated positive segment pace observations. Below that threshold the value is unavailable.
+Positive values mean faster than the participant's own edition median. The chart's dashed 0% line is the field median reference, not either runner. When both runners are from the same RaceEdition they therefore share the same edition median; across years each runner is normalized against that runner's own edition. The reference requires at least five FINISHED participants with exact, non-estimated positive segment pace observations. Below that threshold the value is unavailable.
 
 This makes cross-year performance context possible without pretending that weather, field strength or other edition effects are identical.
 
@@ -63,9 +65,11 @@ The two markers use:
 
 The markers are **not individual GPS tracks**. A DNF or otherwise incomplete result stops at its last source-supported anchor.
 
-The shared clock, map and elevation profile are synchronized. The interaction model supports:
+The shared clock, map and elevation profile are synchronized. Playback follows the same defaults and media preferences as individual Runner Replay: two-minute default playback, the same supported duration choices, persisted music on/off and volume preferences, and a follow camera by default (two-runner comparison uses "Följ båda").
 
-- play/pause,
+The interaction model supports:
+
+- play/pause with the race-family soundtrack when available,
 - race-clock scrubbing,
 - selecting an observed checkpoint from the gap chart,
 - selecting a segment,
