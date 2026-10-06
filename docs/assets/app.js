@@ -181,7 +181,7 @@ async function load(){
     $('#loading').innerHTML=`<p><strong>Databasen kunde inte läsas.</strong><br>Kontrollera datakatalogen och datafilerna i <code>data/</code>.<br><small>${esc(e.message)}</small></p>`;
   }
 }
-function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();setupRunnerFavorites();const year=$('#yearFilter');year.onchange=async()=>{const family=state.raceFamily,target=Number(year.value);if(state.dataPhase==='active'&&!state.data.results.some(r=>r.race_id===target)){try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för årbyte',error);return}if(state.raceFamily!==family)return}state.raceId=target;['sprintWomenClass','sprintMenClass'].forEach(id=>{const select=$('#'+id);if(select){select.value='';delete select.dataset.race}});state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase!=='full')requestAnimationFrame(()=>{if(state.dataPhase!=='full')startFamilyCompletion(state.raceFamily)})}
+function setup(){installInfoTooltips();if(state.data.meta.coverage_note){const n=$('#dataNotice');n.hidden=false;n.textContent=state.data.meta.coverage_note}setupSpeedUnitControls();setupRaceSwitch();setupRunnerFavorites();const year=$('#yearFilter');year.onchange=async()=>{const family=state.raceFamily,target=Number(year.value);if(state.dataPhase==='active'&&!state.data.results.some(r=>r.race_id===target)){try{await ensureActiveFamilyCore(family,false)}catch(error){console.error('Historikdata kunde inte laddas för årbyte',error);return}if(state.raceFamily!==family)return}state.raceId=target;['sprintWomenClass','sprintMenClass'].forEach(id=>{const select=$('#'+id);if(select){select.value='';delete select.dataset.race}});state.page=1;refreshFilters();applyFilters()};['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',()=>{state.page=1;applyFilters()}));$('#resetFilters').onclick=()=>{['sexFilter','classFilter','statusFilter'].forEach(id=>$('#'+id).value='');const search=$('#nameFilter');if(search)search.value='';state.page=1;applyFilters()};$('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderTable()}};$('#nextPage').onclick=()=>{if(state.page<Math.ceil(state.filtered.length/state.pageSize)){state.page++;renderTable()}};$$('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;state.sortDir=state.sortKey===k?-state.sortDir:1;state.sortKey=k;applyFilters()});const runnerDialog=$('#runnerDialog');$('#runnerDialog .dialog-close').onclick=()=>runnerDialog.close();runnerDialog.addEventListener('close',()=>window.RunnerReplay?.stopActive());setupStatsControls();setupInfoInteractions();$('#generatedAt').textContent=new Date(state.data.meta.generated_at).toLocaleString('sv-SE');const totals=window.UltravasanDataLoader?.totals?.();$('#databaseSize').textContent=(totals?.results??state.data.results.length).toLocaleString('sv-SE');$('#splitCount').textContent=(totals?.splits??state.data.splits.length).toLocaleString('sv-SE');$('#loading').classList.add('hidden');if(state.dataPhase!=='full')requestAnimationFrame(()=>{if(state.dataPhase!=='full')startFamilyCompletion(state.raceFamily)});if(new URLSearchParams(location.search).has('compare'))requestAnimationFrame(()=>restoreComparisonFromUrl().catch(error=>console.error('Kunde inte återställa delad Direktjämförelse',error)))
 let speedUnitControlsReady=false;
 function syncSpeedUnitControls(unit=speedUnit()){
   const select=$('#speedUnitFilter');if(select)select.value=unit;
@@ -537,6 +537,7 @@ function renderTargetSimulator(){
 
 
 const compareState={raceId:null,selected:[]};
+let comparison2Controller=null;
 const MAP_SESSION_KEY='ultravasan-map-data-v2';
 const MAP_LOCAL_PREFIX='ultravasan-map-data-v3:';
 function createMapPayload(selected){
@@ -663,19 +664,85 @@ function renderHeadToHead(model){
 
   return `<div class="head-to-head-shell"><header class="h2h-hero"><p class="eyebrow">DIREKTJÄMFÖRELSE</p><h2>${model.results.length} löpare sida vid sida</h2><p>Sluttid, checkpoints och segment följer separata jämförbarhetskontrakt. Inga gap skapas där respektive jämförbarhetskontrakt saknar verifierad evidens.</p><p class="h2h-method"><strong>Metod:</strong> Sluttid jämförs bara för fullföljare inom samma uttryckligen verifierade bansträckningsserie. Kontrolltid och officiell placeringsrörelse använder exakta, ej estimerade registrerade passager; geometri och höjd kräver samma bansträckning och verifierad rutt. Saknade observationer lämnas tomma och banversionsbrott blockerar checkpoint-, placerings-, kart- och höjddimensionerna.</p></header>${finish}${renderH2HCheckpoints(model)}${renderH2HPlacementJourney(model)}${segments}${renderH2HCourseContext(model)}</div>`;
 }
+function comparisonParticipants(model){
+  return (model?.results||[]).map(result=>{
+    const race=state.data.races.find(item=>String(item.id)===String(result.race_id));
+    return {
+      id:result.id,
+      name:result.name_as_published||'Okänd löpare',
+      bib:result.bib||'',
+      year:race?.year||null,
+      className:result.age_class||result.class_name||'',
+      status:result.status||'',
+      finishSeconds:result.finish_seconds,
+    };
+  });
+}
+function comparisonReplayModels(model){
+  if(!model?.same_course_version||model.results?.length!==2)return[];
+  const firstRace=state.data.races.find(item=>String(item.id)===String(model.results[0].race_id));
+  const commonRoute=runnerRouteForRace(firstRace);
+  if(!commonRoute?.points?.length)return[];
+  return model.results.map(result=>{
+    const race=state.data.races.find(item=>String(item.id)===String(result.race_id));
+    if(!race)return null;
+    const raceCheckpoints=state.data.checkpoints.filter(item=>String(item.race_id)===String(race.id)).sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
+    const splits=splitsForResult(result.id).slice().sort((a,b)=>Number(a.sequence_no||0)-Number(b.sequence_no||0));
+    return window.RunnerReplay?.createModel({race,result,route:commonRoute,raceCheckpoints,splits,dataset:state.data,statusApi:window.ResultStatus})||null;
+  }).filter(Boolean);
+}
+function headToHeadShareUrl(model){
+  const url=new URL(location.href);
+  url.hash='';
+  url.searchParams.set('race',state.raceFamily);
+  url.searchParams.set('compare',(model?.results||[]).map(result=>result.id).join(','));
+  return url.href;
+}
+async function restoreComparisonFromUrl(){
+  const raw=new URLSearchParams(location.search).get('compare');
+  if(!raw)return;
+  const ids=raw.split(',').map(value=>value.trim()).filter(Boolean);
+  if(ids.length!==2||ids[0]===ids[1])return;
+  const family=state.raceFamily;
+  if(state.dataPhase!=='full'){
+    try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Delad Direktjämförelse kunde inte ladda mellantider',error);return}
+    if(state.raceFamily!==family)return;
+  }
+  const selected=ids.map(id=>state.data.results.find(result=>String(result.id)===String(id))).filter(Boolean);
+  if(selected.length!==2)return;
+  const raceFamilies=new Set(selected.map(result=>raceFamilyOf(state.data.races.find(race=>String(race.id)===String(result.race_id)))));
+  if(raceFamilies.size!==1||!raceFamilies.has(state.raceFamily))return;
+  compareState.selected=selected;
+  renderCompareSelection();
+  await openHeadToHead();
+}
 async function openHeadToHead(){
-  if(compareState.selected.length<2)return;
+  if(compareState.selected.length!==2)return;
   const family=state.raceFamily,dialog=$('#headToHeadDialog'),detail=$('#headToHeadDetail');
   if(!dialog||!detail)return;
   if(state.dataPhase!=='full'){
-    detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Laddar mellantider för head-to-head…</div></div>';
+    detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Laddar mellantider för Direktjämförelse 2.0…</div></div>';
     if(!dialog.open)dialog.showModal();
     try{await ensureActiveFamilyFull(family,true)}catch(error){console.error('Direktjämförelse kunde inte ladda mellantider',error);detail.innerHTML='<div class="head-to-head-shell"><div class="empty">Mellantiderna kunde inte laddas. Försök igen.</div></div>';return}
     if(state.raceFamily!==family)return;
   }
   const ids=compareState.selected.map(result=>result.id);
   const model=window.RunnerAnalysis?.headToHead(state.data,ids);
-  detail.innerHTML=renderHeadToHead(model);
+  comparison2Controller?.destroy?.();comparison2Controller=null;
+  if(window.UltravasanComparison2&&model?.available){
+    const replayModels=comparisonReplayModels(model);
+    detail.innerHTML='';
+    comparison2Controller=window.UltravasanComparison2.mount(detail,{
+      model,
+      participants:comparisonParticipants(model),
+      replayModels,
+      courseLabel:model.same_course_version?(model.course_version_ids?.[0]||'Gemensam CourseVersion'):'Olika banversioner',
+      shareUrl:()=>headToHeadShareUrl(model),
+      onOpenMapDuel:()=>{if(dialog.open)dialog.close();openMapWithRunners(compareState.selected)},
+    });
+  }else{
+    detail.innerHTML=renderHeadToHead(model);
+  }
   if(!dialog.open)dialog.showModal();
 }
 function setupMapCompare(rebuild=false){
@@ -687,7 +754,7 @@ function setupMapCompare(rebuild=false){
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
-  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;const h2hDialog=$('#headToHeadDialog'),h2hClose=$('#headToHeadDialog .dialog-close');if(h2hDialog&&h2hClose)h2hClose.onclick=()=>h2hDialog.close();
+  const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;const h2hDialog=$('#headToHeadDialog'),h2hClose=$('#headToHeadDialog .dialog-close');if(h2hDialog&&h2hClose){h2hClose.onclick=()=>h2hDialog.close();if(!h2hDialog.dataset.comparison2Bound){h2hDialog.dataset.comparison2Bound='1';h2hDialog.addEventListener('close',()=>{comparison2Controller?.destroy?.();comparison2Controller=null})}}
   renderCompareSelection();
 }
 function compareRaceResults(){return compareState.raceId==='all'?familyResults():state.data.results.filter(r=>r.race_id===compareState.raceId)}
@@ -713,7 +780,7 @@ function removeCompareRunner(id){compareState.selected=compareState.selected.fil
 function hideCompareSuggestions(){const box=$('#runnerSuggestions');if(box)box.hidden=true}
 function renderCompareSelection(){
   const box=$('#selectedCompareRunners');box.innerHTML=compareState.selected.length?compareState.selected.map((r,i)=>`<button class="runner-chip" data-id="${r.id}" title="Ta bort ${esc(r.name_as_published)}"><span>${i+1}. ${esc(r.name_as_published)} · ${state.data.races.find(x=>x.id===r.race_id)?.year||''}${r.bib?' #'+esc(r.bib):''}</span><span>×</span></button>`).join(''):'<span class="selection-empty">Inga löpare valda ännu · välj upp till fem</span>';
-  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h)h2h.disabled=compareState.selected.length<2;const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
+  $('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h){h2h.disabled=compareState.selected.length!==2;h2h.textContent=compareState.selected.length===2?'Direktjämförelse 2.0':compareState.selected.length<2?'Välj exakt två för Direktjämförelse':'Direktjämförelse kräver exakt två'}const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
   const routeIds=compareState.selected.map(r=>window.RaceContracts.routeForRace(window.ULTRAVASAN_ROUTES,state.data.races.find(x=>x.id===r.race_id))?.id).filter(Boolean),mixed=new Set(routeIds).size>1,warning=$('#courseComparisonWarning');if(warning)warning.hidden=!mixed;
 }
 
