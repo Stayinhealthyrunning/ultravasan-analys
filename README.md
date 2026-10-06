@@ -83,6 +83,8 @@ mellan whole-course-jämförbarhet och CourseVersion-bundna checkpoint/segment-
 jämförelser. Favoriter sparas endast lokalt som referenser till
 specifika publicerade resultat och skapar ingen egen personmatchning.
 
+**Comparison 2.0** vidareutvecklar U5:s Head-to-head till Ultravasans referensimplementation för tvåresultatsjämförelse. Direktjämförelse kräver exakt två resultat och kombinerar observerad tidslucka, officiell placeringsresa, segmentduell, normalisering mot respektive upplagas egen fältmedian samt en gemensam interaktiv tävlingsklocka med karta och höjdprofil när CourseVersion- och ruttevidensen medger det. Kartpositioner mellan officiella passager är rekonstruerade och märks som sådana; inga nya resultatsplits skapas. Kontrakt och portningsregler finns i [`reports/COMPARISON_2_0.md`](reports/COMPARISON_2_0.md).
+
 U6:s Course Intelligence beskrivs i
 [`reports/U6_COURSE_INTELLIGENCE.md`](reports/U6_COURSE_INTELLIGENCE.md).
 Course Intelligence skiljer tävlings-/timingdistans från display-ruttens
