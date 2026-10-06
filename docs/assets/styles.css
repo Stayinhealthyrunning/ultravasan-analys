@@ -1007,7 +1007,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .c2-people article>strong{font-size:1.18rem;color:var(--forest);font-variant-numeric:tabular-nums}
 .c2-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .c2-actions [data-c2-feedback]{font-size:.68rem;color:var(--muted)}
-.c2-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.c2-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}
 .c2-kpis article{min-width:0;padding:12px;border:1px solid var(--line);border-radius:13px;background:#eef3ec}
 .c2-kpis span,.c2-kpis strong,.c2-kpis small{display:block}
 .c2-kpis span{font-size:.55rem;font-weight:850;letter-spacing:.08em;color:var(--muted)}
