@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "contract_id": "loppanalys-comparison-2.0",
+  "status": "reference-contract",
+  "reference_implementation": {
+    "repository": "Stayinhealthyrunning/ultravasan-analys",
+    "report": "reports/COMPARISON_2_0.md",
+    "implementation": "docs/assets/comparison-2.js"
+  },
+  "scope": {
+    "direct_comparison": {
+      "selection": {
+        "min": 2,
+        "max": 2
+      },
+      "purpose": "analytical_depth"
+    },
+    "map_duel": {
+      "selection": {
+        "min": 2,
+        "max": 5
+      },
+      "purpose": "multi_participant_replay"
+    }
+  },
+  "participant_contract": {
+    "entity_values": [
+      "person",
+      "team"
+    ],
+    "rule": "The comparison layer must use the edition adapter's participant entity and must not infer person/team from labels.",
+    "team_membership_rule": "Team membership does not imply verified leg assignment."
+  },
+  "evidence_rules": {
+    "observations": {
+      "official_finish": "source observation",
+      "official_checkpoint_time": "source observation",
+      "official_checkpoint_place": "source observation",
+      "reconstructed_position": "derived display state only",
+      "reconstructed_route_motion": "derived display state only"
+    },
+    "no_fabrication": [
+      "Do not impute missing official checkpoint observations for gap, placement, segment or ranking analytics.",
+      "Do not synthesize a finish for DNF or incomplete results.",
+      "Do not present reconstructed route position as measured participant GPS."
+    ],
+    "same_race_edition_segment_rule": "An official adjacent segment may be compared when both selected results have exact segment evidence.",
+    "cross_edition_segment_rule": "A cross-edition segment may be compared only when the event course/comparison contract explicitly permits that segment and both selected results have exact segment evidence.",
+    "checkpoint_gap_rule": "Checkpoint gaps require a common analytically comparable checkpoint and exact published passages for both selected results.",
+    "whole_course_rule": "Finish ranking/gap across different RaceEditions requires explicit whole-course comparability.",
+    "geometry_rule": "Shared animated geometry requires a route/course contract that permits the two selected results to share display geometry."
+  },
+  "capabilities": {
+    "finish_comparison": {
+      "kind": "analysis",
+      "description": "Compare finish status/time/gap where finish evidence and whole-course comparability permit."
+    },
+    "checkpoint_gap": {
+      "kind": "analysis",
+      "description": "Signed gap journey from common exact official checkpoint observations."
+    },
+    "placement_journey": {
+      "kind": "analysis",
+      "description": "Official placement journey from source-supported checkpoint placements."
+    },
+    "segment_comparison": {
+      "kind": "analysis",
+      "description": "Clickable segment duel using exact adjacent observations and event comparability rules."
+    },
+    "edition_field_normalization": {
+      "kind": "analysis",
+      "description": "Participant segment performance relative to the stable field reference for that participant's own RaceEdition.",
+      "default_min_reference_n": 5
+    },
+    "shared_course_context": {
+      "kind": "geometry",
+      "description": "Shared map/elevation context for a verified/common course geometry."
+    },
+    "animated_two_result_comparison": {
+      "kind": "interaction",
+      "description": "Two reconstructed participant positions on a shared race clock inside Direct Comparison.",
+      "depends_on": [
+        "shared_course_context"
+      ]
+    },
+    "elevation_seek": {
+      "kind": "interaction",
+      "description": "Seek the shared race clock from the elevation profile.",
+      "depends_on": [
+        "shared_course_context"
+      ]
+    },
+    "shareable_comparison_state": {
+      "kind": "interaction",
+      "description": "Share the two selected results and supported comparison state via URL."
+    },
+    "cross_edition_comparison": {
+      "kind": "history",
+      "description": "Compare results from different RaceEditions while independently gating finish/checkpoint/segment/geometry dimensions."
+    },
+    "sparse_comparison_fallback": {
+      "kind": "fallback",
+      "description": "Purpose-built simplified comparison when only sparse official timing observations exist."
+    },
+    "team_entity": {
+      "kind": "event-extension",
+      "description": "Direct Comparison and Map Duel can compare teams without coercing them into person semantics."
+    },
+    "audio": {
+      "kind": "interaction",
+      "description": "Race-family soundtrack during replay when event media exists."
+    }
+  },
+  "ui_contract": {
+    "direct_comparison_surface": "modal_or_dialog_in_same_page",
+    "required_sections_order": [
+      "participant_context",
+      "duel_kpis",
+      "checkpoint_gap_if_supported",
+      "placement_journey_if_supported",
+      "segment_duel_if_supported",
+      "field_normalization_if_supported",
+      "interactive_course_if_supported",
+      "method_and_data_quality"
+    ],
+    "interaction_rules": [
+      "Primary actions must work by click/tap; hover is supplementary.",
+      "Selecting a checkpoint/segment should synchronize other supported comparison views.",
+      "Observed values and reconstructed motion must be visually/methodologically distinguishable.",
+      "Unavailable capabilities must be omitted or replaced by an explicit evidence-aware fallback, never fake data."
+    ],
+    "a_b_semantics": {
+      "signed_checkpoint_gap": "B elapsed - A elapsed; positive means A ahead.",
+      "signed_segment_delta": "B segment - A segment; positive means A won time.",
+      "color_rule": "A/B colors are comparison-role colors, not sex colors; event themes may map tokens but must preserve distinction and contrast."
+    },
+    "chart_rules": {
+      "gap_chart": "Show signed y-axis scale, zero/equal reference, distance/checkpoint context and explanatory legend.",
+      "field_chart": "Show percent y-axis scale and explicit 0% field-median reference.",
+      "placement_chart": "Show official placement only; missing placement breaks the series."
+    }
+  },
+  "replay_defaults": {
+    "duration_seconds": 120,
+    "duration_options_seconds": [
+      30,
+      60,
+      120,
+      180
+    ],
+    "default_camera_two_result": "follow_both",
+    "camera_modes": [
+      "whole_course",
+      "follow_both",
+      "follow_leader"
+    ],
+    "default_audio_volume": 0.3,
+    "persist_audio_preference": true,
+    "race_clock_scrubbing": true,
+    "smooth_follow_camera": true,
+    "reduced_motion_supported": true
+  },
+  "sparse_mode": {
+    "intent": "Preserve usefulness when the edition has too few real timing anchors for the full comparison surface.",
+    "activation": "Adapter/capability driven; typically when the normal checkpoint/segment journey cannot be supported by at least two meaningful common intermediate observations.",
+    "required_behavior": [
+      "Keep finish/status comparison when supported.",
+      "Show the real observed timing anchors in a simplified START -> observed checkpoint(s) -> FINISH journey.",
+      "Do not invent extra segments or interpolate analytical observations.",
+      "Allow shared map/replay independently if route and timing-anchor evidence supports it."
+    ]
+  },
+  "event_extensions": {
+    "gotaleden": [
+      "participant.entity may be team",
+      "relay class/ranking semantics remain source-driven",
+      "member rows do not create leg assignments"
+    ],
+    "osterlen_spring_trail": [
+      "sparse comparison fallback is first-class",
+      "Duo/team semantics remain event-defined",
+      "short-course editions without splits must not receive synthetic segment analytics"
+    ],
+    "satila": [
+      "physical pace must remain gated where timing-distance metadata is not trustworthy",
+      "existing map/elevation interaction should be preserved while analytical panels converge"
+    ],
+    "ultravasan": [
+      "cross-edition comparison is independently gated by whole-course, checkpoint, segment and geometry contracts",
+      "verified identity history remains separate from comparison evidence"
+    ]
+  },
+  "non_goals": [
+    "Do not require identical DOM/CSS or a shared physical JavaScript runtime.",
+    "Do not erase event-specific participant, course, timing or evidence semantics.",
+    "Do not force every capability to be present for every RaceEdition.",
+    "Do not downgrade existing stronger event-specific functionality solely for visual uniformity."
+  ]
+}
