@@ -719,6 +719,15 @@ const uv90SwitchAwaited=await evaluate(`(async()=>{
   return state.raceFamily==='uv90'&&state.dataPhase==='full';
 })()`);
 const uv90Reloaded=uv90SwitchAwaited&&await waitForActiveFamily('uv90');
+const thereseIdentity=await evaluate(`(() => {
+  const data=window.ULTRAVASAN_ACTIVE_DATA,key='uvp_f913aed6732c797a9c9ce924',
+        raceById=new Map(data.races.map(race=>[String(race.id),race]));
+  const rows=data.results.filter(row=>row.person_key===key).map(row=>{
+    const race=raceById.get(String(row.race_id));
+    return {id:row.id,year:race?.year,race_key:race?.race_key,status:row.status,match:row.athlete_match_status,bib:row.bib};
+  }).sort((a,b)=>a.year-b.year);
+  return {rows,years:rows.map(row=>row.year),statuses:rows.map(row=>row.status),manual2026:rows.find(row=>row.year===2026)?.match||null};
+})()`);
 await evaluate(`(() => {
   const year=document.querySelector('#compareYear');
   if(year){year.value='all';year.dispatchEvent(new Event('change',{bubbles:true}))}
@@ -982,6 +991,7 @@ const checks = {
     sourceStringSecurity.checkpointTexts.includes(sourceStringSecurity.payloads.checkpointPayload),
   favorites: favoriteBefore.pressed==='false' && favoriteBefore.count===0 && favoriteSaved.pressed==='true' && favoriteSaved.count===1 && favoriteSaved.listText.includes('Hermansson, Andreas') && favoriteSaved.stored.length===1 && favoriteReopened.open && favoriteReopened.text.includes('Hermansson, Andreas') && favoriteReopened.pressed==='true' && favoriteRemoved.count===0 && favoriteRemoved.stored.length===0,
   additionalCases: caseResults.length === 5 && caseResults.every(item=>item.verified),
+  manualIdentity: uv90Reloaded && thereseIdentity.rows.length===4 && thereseIdentity.years.join(',')==='2019,2022,2025,2026' && thereseIdentity.statuses.join(',')==='FINISHED,FINISHED,DNS,FINISHED' && thereseIdentity.manual2026==='manual-verified',
   h2hComparable: uv90Reloaded && h2hComparable.open && h2hComparable.finishCards===2 && h2hComparable.checkpointRows>0 && h2hComparable.placement && h2hComparable.courseMap && h2hComparable.elevation && h2hComparable.segmentCards>0 && h2hComparable.gapAxisLabels>=9 && h2hComparable.fieldAxisLabels>=6 && h2hComparable.zeroKeys.some(text=>text.includes('Streckad linje = lika')) && h2hComparable.zeroKeys.some(text=>text.includes('fältmedian')) && h2hComparable.playbackDefault==='120s' && h2hComparable.cameraDefault==='both' && h2hComparable.audio===h2hComparable.expectedAudio && h2hComparable.leafletFlag===0 && h2hComparable.routeVector?.width>20 && h2hComparable.routeVector?.height>20 && h2hComparable.runnerVectors.length===2 && h2hComparable.runnerVectors.every(item=>item.width>5&&item.height>5&&item.display!=='none'&&Number(item.opacity)>0) && h2hComparable.text.includes('DIREKTJÄMFÖRELSE 2.0') && h2hComparable.text.includes('Tidslucka genom loppet') && h2hComparable.text.includes('Fart per delsträcka mot respektive års fältmedian') && h2hComparable.text.includes('Interaktiv kartjämförelse'),
   h2hInteraction: h2hInteraction.available && h2hInteraction.tag==='INPUT' && h2hInteraction.type==='range' && h2hInteraction.max>0 && h2hInteraction.afterScrub!==h2hInteraction.before && h2hInteraction.sliderAfterScrub===h2hInteraction.target && h2hInteraction.sliderAfterSegment>0 && h2hInteraction.readout.includes('positionsskillnad') && h2hInteraction.selected==='true',
   h2hShareState: h2hShareState.race==='uv90' && h2hShareState.compare.split(',').length===2 && h2hShareState.ct>0 && h2hShareState.cs===1,
@@ -990,7 +1000,7 @@ const checks = {
   console: browserErrors.length === 0,
   network: networkErrors.length === 0,
 };
-const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hInteraction,h2hShareState,h2hSameEdition,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
+const output = {sprintInitial,sprint2025,browserHistoryBaseline,browserHistoryFilterForward,browserHistoryFilterBack,browserHistoryFilterForwardAgain,browserHistoryUv45,browserHistoryRaceBack,browserHistoryRaceForward,browserHistoryState,sourceStringSecurity,clubHistoryCourseVersion,finishProgression,finishProgressionFemaleHidden,progressiveLoad,uv45SwitchAwaited,uv45Progressive,moduleChecks,u6Initial,u6Synced,u6Plan,u7Switch,u7History,u8Ux,u8Keyboard,u9Viewports,contractChecks,developmentBefore,developmentSeek,favoriteBefore,favoriteSaved,favoriteReopened,favoriteRemoved,uv90SwitchAwaited,uv90Reloaded,h2hComparable,h2hInteraction,h2hShareState,h2hSameEdition,thereseIdentity,h2hChangedCourse,changedCourseId,mapCases,verified:Object.values(checks).every(Boolean),checks,initial,suggestion,dialog,replayProgress,caseResults,browserErrors,networkErrors};
 console.log(JSON.stringify(output, null, 2));
 socket.close();
 if (!output.verified) process.exitCode = 1;

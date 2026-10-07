@@ -78,10 +78,15 @@ function setupRaceSwitch(){
   try{localStorage.setItem('ultravasan-race-family',family)}catch{}
 }
 
-const hydrateData=d=>window.UltravasanDataAdapter.hydrate(d,{
-  statusApi:window.ResultStatus,
-  replayApi:window.RunnerReplay
-});
+const hydrateData=d=>{
+  const hydrated=window.UltravasanDataAdapter.hydrate(d,{
+    statusApi:window.ResultStatus,
+    replayApi:window.RunnerReplay
+  });
+  return window.UltravasanManualIdentityLinks?.apply
+    ?window.UltravasanManualIdentityLinks.apply(hydrated,window.ULTRAVASAN_MANUAL_IDENTITY_LINKS)
+    :hydrated;
+};
 const dataPhaseOf=d=>{
   const kind=d?.meta?.data_scope?.kind;
   return kind==='race-family-active-core'?'active':kind==='race-family-core'?'core':'full';

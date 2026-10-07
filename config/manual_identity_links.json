@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "policy": "Admin-verified person links preserve original race results and only add cross-edition identity. Private verification evidence is not stored in the public repository.",
+  "links": [
+    {
+      "link_id": "therese-fredriksson-ultravasan",
+      "decision": "admin-verified",
+      "verified_at": "2026-10-07",
+      "person_key": "uvp_f913aed6732c797a9c9ce924",
+      "members": [
+        {
+          "race_key": "ultravasan90-2019",
+          "source_result_id": "9999991678886F0001C6EF95"
+        },
+        {
+          "race_key": "ultravasan90-2022",
+          "source_result_id": "9999991678886F0001C6EF95"
+        },
+        {
+          "race_key": "ultravasan90-2025",
+          "source_result_id": "9999991678886F0001C6EF95"
+        },
+        {
+          "race_key": "ultravasan90-2026",
+          "source_result_id": "UL90_HCH8NDMR2601:HCH8NDMRA685C8"
+        }
+      ]
+    }
+  ]
+}
