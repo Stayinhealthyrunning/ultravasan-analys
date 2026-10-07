@@ -28,6 +28,9 @@ jobs:
       - name: Installera Python-beroenden
         run: python -m pip install -r requirements-test.txt
 
+      - name: Verifiera admin-identitetslänkar
+        run: python tools/manual_identity_links.py --check
+
       - name: Verifiera aktiv golden master
         shell: bash
         run: |
