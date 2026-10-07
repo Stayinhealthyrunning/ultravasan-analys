@@ -46,6 +46,14 @@ eller ett äldre `athlete_id`. Tidsutveckling i sluttid mellan RaceEditions krä
 dessutom en explicit verifierad whole-course-jämförbarhetsgrupp; CourseVersion
 styr i första hand checkpoint- och segmentkontrakt.
 
+Administratörsverifierade personkopplingar lagras separat i
+`config/manual_identity_links.json`. De ändrar inte originalresultat, tider eller
+status utan tilldelar uttryckligen verifierade resultatrader samma publika
+`person_key` i analyslagret. Privat verifieringsunderlag ska inte lagras i repot.
+Efter en ändring regenereras den publika registry-filen med
+`python tools/manual_identity_links.py --write`; CI kör motsvarande `--check`
+och stoppar motstridiga eller icke entydiga länkar.
+
 Den verifierade legacy-auditen och den reversibla migrationsplanen finns i
 [`reports/U2_LEGACY_IDENTITY_MIGRATION.md`](reports/U2_LEGACY_IDENTITY_MIGRATION.md).
 Före produktionsmigrering verifierar CI den historiska U0-golden mastern och
