@@ -28,6 +28,34 @@ jobs:
       - name: Installera Python-beroenden
         run: python -m pip install -r requirements-test.txt
 
+      - name: Diagnostik Therese-identitet
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, sqlite3, sys
+          sys.path.insert(0, "tools")
+          import u20_identity_review as review
+
+          conn=sqlite3.connect("data/ultravasan.sqlite")
+          conn.row_factory=sqlite3.Row
+          rows=conn.execute("""
+            SELECT r.id result_id,e.race_key,e.year,r.source_result_id,r.bib,r.name_as_published,
+                   r.sex,r.age,r.birth_year,r.age_class,r.club,r.city,r.status,r.finish_seconds,
+                   r.athlete_id,a.person_key,a.athlete_match_status,a.canonical_name
+            FROM results r
+            JOIN races e ON e.id=r.race_id
+            JOIN athletes a ON a.id=r.athlete_id
+            WHERE lower(replace(r.name_as_published, ',', '')) LIKE '%therese%fredriksson%'
+               OR lower(replace(r.name_as_published, ',', '')) LIKE '%fredriksson%therese%'
+            ORDER BY e.year,r.id
+          """).fetchall()
+          print("THERESE_ROWS="+json.dumps([dict(r) for r in rows], ensure_ascii=False, sort_keys=True))
+          report=review.build_candidate_report(conn)
+          cand=[x for x in report["candidates"] if x["normalized_name"]=="therese fredriksson"]
+          print("THERESE_CANDIDATES="+json.dumps(cand, ensure_ascii=False, sort_keys=True))
+          conn.close()
+          PY
+
       - name: Verifiera aktiv golden master
         shell: bash
         run: |
