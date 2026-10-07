@@ -4,6 +4,8 @@
 
 Ultravasan is the reference implementation for **Comparison 2.0**, the two-result comparison surface used by Loppanalys. Engine 1.0 remains the shared semantic foundation; Comparison 2.0 defines the comparison contract and interaction model, not a requirement that every event share one physical JavaScript runtime.
 
+The machine-readable source of truth is `config/comparison-contract-v2.json`. This document explains the contract; sister systems may implement it through their own adapters and UI modules.
+
 The direct comparison is deliberately distinct from Kartduell:
 
 - **Direktjämförelse / Comparison 2.0:** exactly two published results, analytical depth first.
@@ -90,7 +92,7 @@ UI copy should normally express these as human-readable leader/winner statements
 
 ## Comparison 2.0 capabilities
 
-Future event adapters should be able to determine these independently:
+Event adapters should be able to determine these independently:
 
 - `finish_comparison`
 - `checkpoint_gap`
@@ -99,7 +101,12 @@ Future event adapters should be able to determine these independently:
 - `edition_field_normalization`
 - `shared_course_context`
 - `animated_two_result_comparison`
+- `elevation_seek`
 - `shareable_comparison_state`
+- `cross_edition_comparison`
+- `sparse_comparison_fallback`
+- `team_entity`
+- `audio`
 
 Unavailable capabilities must degrade independently. An edition with sparse timing may still support finish comparison; an edition with timing but no verified geometry may support checkpoint/segment analysis without an animated map.
 
@@ -125,6 +132,24 @@ The interaction pattern was informed by public product behavior in established r
 - RACEMAP: participant selection, replay, linked elevation/course context and shareable replay state.
 
 These products were used as product-design references only. No external implementation code is copied into Loppanalys.
+
+## Capability-driven convergence
+
+The contract distinguishes three layers:
+
+1. **Shared core:** exactly two selected results, evidence-preserving comparison, consistent A/B semantics and interaction language.
+2. **Capabilities:** panels/interactions that appear only when the selected RaceEdition(s) support them.
+3. **Event extensions:** event-specific semantics that must survive convergence, such as relay teams, sparse timing, or distance-evidence gates.
+
+A sister system is compatible when it follows the same evidence and interaction semantics for the capabilities it declares. Compatibility does **not** require identical DOM, CSS, file layout or every capability on every edition.
+
+### Sparse comparison
+
+Sparse timing is a supported mode, not a degraded error state. When an edition only has a small number of meaningful official anchors, the comparison should simplify to the real observed journey (for example START → one observed checkpoint → FINISH) instead of manufacturing intermediate analytical segments. Route/replay can remain independently enabled if its own evidence permits it.
+
+### Person and team entities
+
+`participant.entity` is part of the comparison contract. A selected comparison entity may be a person or a team. Team/member data must remain source-driven; the comparison layer may not invent relay-leg assignment from member order.
 
 ## Sister-system adoption
 
