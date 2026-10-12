@@ -21,7 +21,10 @@ socket.addEventListener("message", event => {
     if (message.error) reject(new Error(JSON.stringify(message.error)));
     else resolve(message.result);
   }
-  if (message.method === "Runtime.exceptionThrown") browserErrors.push(message.params.exceptionDetails?.text || "Runtime exception");
+  if (message.method === "Runtime.exceptionThrown") {
+    const details = message.params.exceptionDetails || {};
+    browserErrors.push(details.exception?.description || details.text || "Runtime exception");
+  }
   if (message.method === "Log.entryAdded" && message.params.entry.level === "error") browserErrors.push(message.params.entry.text);
   if (message.method === "Network.responseReceived" && message.params.response.status >= 400) {
     networkErrors.push({status: message.params.response.status, url: message.params.response.url});

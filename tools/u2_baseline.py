@@ -22,19 +22,19 @@ DEFAULT_MANIFEST = ROOT / "docs" / "data" / "manifest.json"
 DEFAULT_BASELINE = ROOT / "reports" / "U2_BASELINE.json"
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def identity_bytes(path: Path) -> bytes:
+    data = path.read_bytes()
+    if path.suffix in {".json", ".js"}:
+        return data.replace(b"\r\n", b"\n")
+    return data
 
 
 def file_identity(path: Path) -> dict[str, Any]:
+    data = identity_bytes(path)
     return {
         "path": path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path),
-        "bytes": path.stat().st_size,
-        "sha256": sha256(path),
+        "bytes": len(data),
+        "sha256": hashlib.sha256(data).hexdigest(),
     }
 
 

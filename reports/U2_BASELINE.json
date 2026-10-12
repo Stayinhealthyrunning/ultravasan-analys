@@ -15,13 +15,13 @@
     },
     "web_javascript": {
       "path": "docs/data/ultravasan-data.js",
-      "bytes": 42596823,
-      "sha256": "ec4de8bd06b227c5a2b17cec6e705a4c7c1277942e61691a636ebf70d9600cb4"
+      "bytes": 42596822,
+      "sha256": "898495c417a33d9229cdc11b0efe84e4a0a8b9a850a02c46d021097ff4931c61"
     },
     "manifest": {
       "path": "docs/data/manifest.json",
-      "bytes": 131,
-      "sha256": "2c340dbf52b63a6af9d37ffb067538d9046406c7817e201bedd2d99d723e535e"
+      "bytes": 125,
+      "sha256": "02ae65e9b94626817d48db1f1a655f911b308d35205e4fb1e682d32107535b30"
     }
   },
   "totals": {
