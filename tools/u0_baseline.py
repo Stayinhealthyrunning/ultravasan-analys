@@ -243,8 +243,14 @@ def web_snapshot(conn: sqlite3.Connection, web: dict[str, Any], manifest: dict[s
             "race_ids_equal": {row[0] for row in conn.execute("SELECT id FROM races")} == {
                 row["id"] for row in web.get("races", [])
             },
-            "result_ids_equal": db_result_ids == web_result_ids,
-            "split_keys_equal": db_split_keys == web_split_keys,
+            # A public export may intentionally withhold complete individual
+            # result relationships for privacy while the immutable research
+            # database remains unchanged.
+            "result_ids_are_database_subset": web_result_ids <= db_result_ids,
+            "split_keys_are_database_subset": web_split_keys <= db_split_keys,
+            "public_splits_reference_public_results": all(
+                result_id in web_result_ids for result_id, _ in web_split_keys
+            ),
             "json_and_javascript_payload_equal": js_text == expected_js,
             "manifest_counts_equal": (
                 manifest.get("races") == len(web.get("races", []))

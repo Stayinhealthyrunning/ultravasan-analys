@@ -174,6 +174,8 @@ def build_snapshot(
             "identity_contract": web.get("meta", {}).get("identity_contract"),
             "results": len(web.get("results", [])),
             "splits": len(web.get("splits", [])),
+            "privacy_withheld_results": totals["results"] - len(web.get("results", [])),
+            "privacy_withheld_splits": totals["splits"] - len(web.get("splits", [])),
             "person_key_rows": len(web_person_keys),
             "distinct_person_keys": len(set(web_person_keys)),
             "person_key_prefixes": dict(sorted(Counter(key[:4] for key in web_person_keys).items())),
@@ -221,9 +223,14 @@ def validate_snapshot(snapshot: dict[str, Any]) -> list[str]:
     web = snapshot["web_export"]
     if web["identity_contract"] != "u2-person-key-v1":
         issues.append(f"web identity contract={web['identity_contract']!r}")
-    if web["results"] != 24422 or web["splits"] != 141429:
-        issues.append(f"web parity results={web['results']} splits={web['splits']}")
-    if web["person_key_rows"] != 13188 or web["distinct_person_keys"] != 9571:
+    if web["results"] != 24318 or web["splits"] != 140693:
+        issues.append(f"privacy-safe web totals results={web['results']} splits={web['splits']}")
+    if web["privacy_withheld_results"] != 104 or web["privacy_withheld_splits"] != 736:
+        issues.append(
+            "privacy withholding="
+            f"{web['privacy_withheld_results']} results/{web['privacy_withheld_splits']} splits"
+        )
+    if web["person_key_rows"] != 13147 or web["distinct_person_keys"] != 9534:
         issues.append(
             f"web person keys rows={web['person_key_rows']} distinct={web['distinct_person_keys']}"
         )

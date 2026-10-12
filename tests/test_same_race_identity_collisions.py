@@ -148,7 +148,9 @@ def test_anna_forslund_2025_and_robert_andersson_2015_are_separate_in_database()
 def test_web_export_keeps_collision_cases_and_status_evidence_separate() -> None:
     payload = json.loads((ROOT / "docs" / "data" / "ultravasan.json").read_text(encoding="utf-8"))
     races = {race["race_key"]: race["id"] for race in payload["races"]}
-    assert len(payload["results"]) == 24_422
+    # The immutable database has 24,422 results. The public export withholds
+    # 104 complete result relationships from mixed 17+ classes.
+    assert len(payload["results"]) == 24_318
 
     anna = [
         row for row in payload["results"]

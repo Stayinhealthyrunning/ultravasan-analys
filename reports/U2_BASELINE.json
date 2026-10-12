@@ -10,18 +10,18 @@
     },
     "web_json": {
       "path": "docs/data/ultravasan.json",
-      "bytes": 42802555,
-      "sha256": "e19e3e6b62804b3ac2231e867538f3b0aefec34e2e87c8e2c71112ceab1bea89"
+      "bytes": 42596797,
+      "sha256": "c3cd0a26ae2e6d2aa7dca7974761262199d06eeefd6f4bf5969ea4e073db56df"
     },
     "web_javascript": {
       "path": "docs/data/ultravasan-data.js",
-      "bytes": 42802580,
-      "sha256": "5700ba8038470eff427ffb7646aafa0cf02fdbaf22ccfe557ee7c5dc8aa576f3"
+      "bytes": 42596823,
+      "sha256": "ec4de8bd06b227c5a2b17cec6e705a4c7c1277942e61691a636ebf70d9600cb4"
     },
     "manifest": {
       "path": "docs/data/manifest.json",
-      "bytes": 125,
-      "sha256": "ca0c7764c0bae3072f1292a2e2eb4f48518750b3067e2fd602d9bb53172f9b8a"
+      "bytes": 131,
+      "sha256": "2c340dbf52b63a6af9d37ffb067538d9046406c7817e201bedd2d99d723e535e"
     }
   },
   "totals": {
@@ -82,12 +82,14 @@
   },
   "web_export": {
     "identity_contract": "u2-person-key-v1",
-    "results": 24422,
-    "splits": 141429,
-    "person_key_rows": 13188,
-    "distinct_person_keys": 9571,
+    "results": 24318,
+    "splits": 140693,
+    "privacy_withheld_results": 104,
+    "privacy_withheld_splits": 736,
+    "person_key_rows": 13147,
+    "distinct_person_keys": 9534,
     "person_key_prefixes": {
-      "uvp_": 13188
+      "uvp_": 13147
     }
   }
 }

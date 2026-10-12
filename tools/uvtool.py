@@ -1693,8 +1693,13 @@ def export_web(args: argparse.Namespace) -> None:
             row["person_key"] = None
 
     # Additional protection for verified under-18 ages and mixed 17+ classes.
-    # Apply BEFORE canonical and modular data are written, including re-imports.
-    protect_payload({"results": results})
+    # Remove complete result relationships BEFORE canonical and modular data are
+    # written, including re-imports; do not publish pseudonymous individual rows.
+    protected_payload = {"races": races, "results": results, "splits": splits, "stats": stats}
+    protect_payload(protected_payload)
+    results = protected_payload["results"]
+    splits = protected_payload["splits"]
+    stats = protected_payload["stats"]
 
     # Keep the public static bundle below GitHub's 25 MiB browser-upload limit.
     # Repeated checkpoint metadata is hydrated in the browser from checkpoints.

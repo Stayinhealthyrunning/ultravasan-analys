@@ -46,25 +46,25 @@ function raceSummary(raceKey,sex,dataset=data){
 
 assert.deepStrictEqual(
   (({starters,finishers,dnf,dns,dsq,rate})=>({starters,finishers,dnf,dns,dsq,rate}))(raceSummary('ultravasan45-2025','M')),
-  {starters:372,finishers:368,dnf:4,dns:69,dsq:0,rate:98.9},
-  'Kontrollfallet 441 poster ska delas i 368 fullföljande, 4 DNF och 69 ej start'
+  {starters:367,finishers:363,dnf:4,dns:68,dsq:0,rate:98.9},
+  'Det integritetsskyddade kontrollfallet ska ha matematiskt förenliga statusantal'
 );
 assert.deepStrictEqual(
   (({starters,finishers,dnf,dns,dsq,rate})=>({starters,finishers,dnf,dns,dsq,rate}))(raceSummary('ultravasan45-2025','M',bundleData)),
-  {starters:372,finishers:368,dnf:4,dns:69,dsq:0,rate:98.9},
+  {starters:367,finishers:363,dnf:4,dns:68,dsq:0,rate:98.9},
   'Webbens JavaScript-bundle ska ge samma verifierade kontrolltal som diagrammet'
 );
 assert.deepStrictEqual(
   (({starters,finishers,dnf,dns,dsq,rate})=>({starters,finishers,dnf,dns,dsq,rate}))(raceSummary('ultravasan45-2025','F')),
-  {starters:386,finishers:381,dnf:5,dns:44,dsq:0,rate:98.7}
+  {starters:378,finishers:373,dnf:5,dns:42,dsq:0,rate:98.7}
 );
 assert.deepStrictEqual(
   (({starters,finishers,dnf,dns,dsq,rate})=>({starters,finishers,dnf,dns,dsq,rate}))(raceSummary('ultravasan90-2025','M')),
-  {starters:1191,finishers:1080,dnf:111,dns:180,dsq:0,rate:90.7}
+  {starters:1170,finishers:1060,dnf:110,dns:179,dsq:0,rate:90.6}
 );
 assert.deepStrictEqual(
   (({starters,finishers,dnf,dns,dsq,rate})=>({starters,finishers,dnf,dns,dsq,rate}))(raceSummary('ultravasan90-2024','F')),
-  {starters:425,finishers:394,dnf:31,dns:47,dsq:0,rate:92.7}
+  {starters:423,finishers:392,dnf:31,dns:47,dsq:0,rate:92.7}
 );
 
 for(const [label,dataset] of [['JSON',data],['JavaScript-bundle',bundleData]]){
