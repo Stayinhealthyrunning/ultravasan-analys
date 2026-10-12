@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 
 import identity_contracts
 from privacy import load_rules, sanitize_identity
+from minor_privacy import protect_payload
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = ROOT / "data" / "ultravasan.sqlite"
@@ -1690,6 +1691,10 @@ def export_web(args: argparse.Namespace) -> None:
             row["source_result_id"] = None
             row["athlete_id"] = None
             row["person_key"] = None
+
+    # Additional protection for verified under-18 ages and mixed 17+ classes.
+    # Apply BEFORE canonical and modular data are written, including re-imports.
+    protect_payload({"results": results})
 
     # Keep the public static bundle below GitHub's 25 MiB browser-upload limit.
     # Repeated checkpoint metadata is hydrated in the browser from checkpoints.
