@@ -33,7 +33,7 @@ import requests
 from bs4 import BeautifulSoup
 
 import identity_contracts
-from privacy import load_rules, sanitize_identity
+from privacy import load_rules, record_is_suppressed
 from minor_privacy import protect_payload
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1682,15 +1682,17 @@ def export_web(args: argparse.Namespace) -> None:
     incomplete_years = [str(r["year"]) for r in races if stats.get(str(r["id"]), {}).get("count", 0) < 100]
     if incomplete_years:
         meta["coverage_note"] = "Ofullständig datatäckning för loppår: " + ", ".join(incomplete_years) + ". Kör onlineimporten eller ladda upp en officiell CSV-fil."
-    # Apply public identity suppression only after statistics and source merging.
-    # Local database IDs/times remain available for analytics; direct identity
-    # fields are removed from the distributed result rows.
+    # Apply the access-controlled publication block after aggregate statistics
+    # are computed. A blocked individual row and all of its split relationships
+    # are omitted entirely because masking a name does not prevent reidentification.
     privacy_rules = load_rules(PRIVACY_CONFIG)
-    for row in results:
-        if sanitize_identity(row, privacy_rules):
-            row["source_result_id"] = None
-            row["athlete_id"] = None
-            row["person_key"] = None
+    blocked_result_ids = {
+        row["id"] for row in results
+        if record_is_suppressed(row, privacy_rules, scope=str(row.get("race_id") or "*"))
+    }
+    if blocked_result_ids:
+        results = [row for row in results if row["id"] not in blocked_result_ids]
+        splits = [row for row in splits if row["result_id"] not in blocked_result_ids]
 
     # Additional protection for verified under-18 ages and mixed 17+ classes.
     # Remove complete result relationships BEFORE canonical and modular data are

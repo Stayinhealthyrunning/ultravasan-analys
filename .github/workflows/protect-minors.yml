@@ -1,4 +1,8 @@
 name: Publish privacy-safe Ultravasan minor protection
+
+env:
+  LOPPANALYS_PRIVACY_REGISTRY_B64: ${{ secrets.LOPPANALYS_PRIVACY_REGISTRY_B64 }}
+  LOPPANALYS_REQUIRE_PRIVATE_REGISTRY: "1"
 on:
   push:
     branches: [main]
@@ -32,6 +36,7 @@ jobs:
         run: python -m pip install -r requirements-test.txt
       - name: Withhold protected rows and rebuild public athlete data
         run: |
+          python tools/uvtool.py export --modular-dir docs/data
           python tools/protect_public_minors.py
           python tools/protect_public_minors.py --check
       - name: Commit and publish protected browser data
