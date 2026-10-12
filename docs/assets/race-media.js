@@ -35,7 +35,9 @@
     const footer=document.querySelector('.site-footer');
     if(!footer||footer.querySelector('.instagram-footer-link'))return;
 
-    const youtubeLink=footer.querySelector('a');
+    // The privacy notice contains a nested link; insertBefore requires the
+    // reference node to be a direct child of the footer.
+    const youtubeLink=Array.from(footer.children).find(child=>child.tagName==='A');
     if(!youtubeLink)return;
 
     footer.classList.add('social-footer');

@@ -133,6 +133,7 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
 
     if modular_report_path is not None:
         modular = read_json(modular_report_path)
+        public_expected = freeze.get("privacy_safe_public_totals", expected)
         budgets = freeze["performance_budgets"]
         performance = {
             "largest_default_first_paint_bytes": modular.get("largest_default_first_paint_bytes"),
@@ -162,16 +163,17 @@ def audit(freeze_path: Path, modular_report_path: Path | None = None) -> dict[st
                 perf_ok = False
                 issues.append(f"Performance reduction regressed: {metric}={value}, min={budgets[budget]}")
         modular_totals_ok = (
-            modular.get("races") == expected["race_editions"]
-            and modular.get("results") == expected["results"]
-            and modular.get("splits") == expected["splits"]
-            and modular.get("editions", {}).get("count") == expected["race_editions"]
+            modular.get("races") == public_expected["race_editions"]
+            and modular.get("results") == public_expected["results"]
+            and modular.get("splits") == public_expected["splits"]
+            and modular.get("editions", {}).get("count") == public_expected["race_editions"]
         )
         if not modular_totals_ok:
             issues.append("Modular export totals differ from frozen release totals")
         checks["modular_performance"] = {
             "values": performance,
             "budgets": budgets,
+            "expected_privacy_safe_totals": public_expected,
             "totals_ok": modular_totals_ok,
             "ok": perf_ok and modular_totals_ok,
         }

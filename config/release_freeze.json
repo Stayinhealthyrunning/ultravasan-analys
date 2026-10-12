@@ -8,6 +8,11 @@
     "results": 24422,
     "splits": 141429
   },
+  "privacy_safe_public_totals": {
+    "race_editions": 22,
+    "results": 24318,
+    "splits": 140693
+  },
   "performance_budgets": {
     "largest_default_first_paint_bytes_max": 1150000,
     "largest_default_first_paint_with_catalog_bytes_max": 1450000,
