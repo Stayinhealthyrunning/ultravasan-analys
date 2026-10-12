@@ -1,0 +1,50 @@
+name: Publish privacy-safe Ultravasan minor protection
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/minor_privacy.py'
+      - 'tools/protect_public_minors.py'
+      - 'tools/uvtool.py'
+      - '.github/workflows/protect-minors.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultravasan-minor-protection
+  cancel-in-progress: false
+
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: python -m pip install -r requirements-test.txt
+      - name: Mask and rebuild all public athlete data
+        run: |
+          python tools/protect_public_minors.py
+          python tools/protect_public_minors.py --check
+      - name: Commit and publish protected browser data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f docs/data
+          if git diff --cached --quiet; then
+            echo "All public outputs are already protected"
+          else
+            git commit -m 'privacy: publish protected youth result bundles'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
