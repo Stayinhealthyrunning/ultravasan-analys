@@ -160,10 +160,14 @@ jobs:
               if not parts:
                   continue
               canonical = "/".join(part for part in parts if part != ".")
+              # Security-sensitive source, workflow, registry and public data
+              # changes require a reviewed PR or the dedicated GDPR-aware
+              # importer; this generic ZIP installer is only for site assets.
+              protected_roots = (".github", "config", "data", "raw", "tools", "tests")
               if (canonical == "docs/data" or canonical.startswith("docs/data/")
-                      or canonical == "data/ultravasan.sqlite"
-                      or canonical == "config/privacy-suppressions.json"):
-                  fail(f"GDPR-skyddad data/policy får inte ändras via generell ZIP-installation: {canonical}")
+                      or canonical in protected_roots
+                      or canonical.startswith(tuple(root + "/" for root in protected_roots))):
+                  fail(f"Skyddad kod/data får inte ändras via generell ZIP-installation: {canonical}")
 
           for rel, source in payload_files.items():
               rel_path = PurePosixPath(rel)
@@ -351,6 +355,9 @@ jobs:
           if not rules.get("_registry_loaded"):
               raise SystemExit("Private registry not loaded; update publication stopped")
           PY
+          # All public individual data must remain free from known young or
+          # pseudonymised entrants even when only visual assets are updated.
+          python tools/protect_public_minors.py --check
 
       - name: Skapa återställningspunkt
         shell: bash
