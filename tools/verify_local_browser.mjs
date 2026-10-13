@@ -740,7 +740,9 @@ await evaluate(`(() => {
   addCompareRunner(a?.id||0);addCompareRunner(b?.id||0);
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:80,interval:100});
+// Wait for actual route and runner layers, not just the dialog placeholder.
+// A missing layer remains a hard failure in the assertions below.
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container .c2-route-line') && document.querySelectorAll('#headToHeadDetail .c2-runner-marker').length===2)",{attempts:300,interval:100});
 const h2hComparable=await evaluate(`(() => {
   const first=compareState.selected[0],race=state.data.races.find(item=>String(item.id)===String(first?.race_id));
   return {
@@ -808,7 +810,9 @@ await evaluate(`(() => {
   finishers.forEach(item=>addCompareRunner(item.id));
   document.querySelector('#compareH2HButton')?.click();
 })()`);
-await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container'))",{attempts:80,interval:100});
+// Wait for actual route and runner layers, not just the dialog placeholder.
+// A missing layer remains a hard failure in the assertions below.
+await waitForBrowser("Boolean(document.querySelector('#headToHeadDetail .c2-map.leaflet-container .c2-route-line') && document.querySelectorAll('#headToHeadDetail .c2-runner-marker').length===2)",{attempts:300,interval:100});
 const h2hSameEdition=await evaluate(`(() => {
   const model=window.RunnerAnalysis.headToHead(state.data,compareState.selected.map(item=>item.id));
   return {
