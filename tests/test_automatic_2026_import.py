@@ -288,6 +288,11 @@ def test_resume_dry_run_refuses_availability_without_complete_pagination(tmp_pat
 def test_full_dry_run_fail_closed_for_negative_fixtures(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failure: str) -> None:
     args = _dry_run_args(tmp_path)
     before = automatic.sha256_file(args.production_db)
+    # Synthetic empty registry: production enforcement remains enabled in this dry run.
+    import base64
+    monkeypatch.setenv('LOPPANALYS_PRIVACY_REGISTRY_B64', base64.b64encode(
+        b'{"schema_version":2,"entries":[]}').decode('ascii'))
+    monkeypatch.delenv('LOPPANALYS_PRIVACY_REGISTRY_PATH', raising=False)
 
     def fake_import(race_key, db, _config, _raw, _report, _delay, **_kwargs):
         with uvtool.connect(db) as conn:
