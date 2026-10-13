@@ -151,6 +151,24 @@ jobs:
               extra = sorted(set(payload_files) - set(expected_hashes))
               fail(f"Payload och manifest stämmer inte. Saknas: {missing}. Extra: {extra}.")
 
+          # The generic ZIP installer cannot update public result data or the
+          # privacy registry policy. These require the audited import/privacy
+          # pipelines, which verify the private registry before publication.
+          protected_paths = set(payload_files) | {str(p) for p in delete_paths}
+          for rel in protected_paths:
+              parts = PurePosixPath(str(rel).replace("\\", "/")).parts
+              if not parts:
+                  continue
+              canonical = "/".join(part for part in parts if part != ".")
+              # Security-sensitive source, workflow, registry and public data
+              # changes require a reviewed PR or the dedicated GDPR-aware
+              # importer; this generic ZIP installer is only for site assets.
+              protected_roots = (".github", "config", "data", "raw", "tools", "tests")
+              if (canonical == "docs/data" or canonical.startswith("docs/data/")
+                      or canonical in protected_roots
+                      or canonical.startswith(tuple(root + "/" for root in protected_roots))):
+                  fail(f"Skyddad kod/data får inte ändras via generell ZIP-installation: {canonical}")
+
           for rel, source in payload_files.items():
               rel_path = PurePosixPath(rel)
               if rel_path.is_absolute() or ".." in rel_path.parts or not rel_path.parts:
@@ -322,6 +340,24 @@ jobs:
 
           print(f"Valideringen lyckades för {len(changed)} installerade filer.")
           PY
+
+      - name: Kontrollera privat GDPR-register före uppdateringspublicering
+        env:
+          LOPPANALYS_PRIVACY_REGISTRY_B64: ${{ secrets.LOPPANALYS_PRIVACY_REGISTRY_B64 }}
+          LOPPANALYS_REQUIRE_PRIVATE_REGISTRY: "1"
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "tools")
+          from privacy import load_rules
+          rules = load_rules(Path("config/privacy-suppressions.json"), require_private=True)
+          if not rules.get("_registry_loaded"):
+              raise SystemExit("Private registry not loaded; update publication stopped")
+          PY
+          # All public individual data must remain free from known young or
+          # pseudonymised entrants even when only visual assets are updated.
+          python tools/protect_public_minors.py --check
 
       - name: Skapa återställningspunkt
         shell: bash

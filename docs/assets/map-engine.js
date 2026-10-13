@@ -94,7 +94,9 @@
     if(!documentRef)return Promise.resolve(false);
     options.onStatus?.('Förbereder karta och banlager…');
     const vendorRoot=options.vendorRoot||LEAFLET_VENDOR_ROOT;
-    const timeoutMs=Number(options.timeoutMs)||2200;
+    // Allow a slower first load without abandoning the initial comparison map.
+    // Browser regression asserts the real route and two markers, not the placeholder.
+    const timeoutMs=Number(options.timeoutMs)||15000;
 
     if(!documentRef.querySelector?.('link[data-ultravasan-leaflet]')){
       const css=documentRef.createElement('link');

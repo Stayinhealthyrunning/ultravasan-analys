@@ -13,8 +13,8 @@ import u9_release_audit as release_audit  # noqa: E402
 def modular_report() -> dict:
     return {
         "races": 22,
-        "results": 24422,
-        "splits": 141429,
+        "results": 24318,
+        "splits": 140693,
         "editions": {"count": 22},
         "largest_default_first_paint_bytes": 1_087_000,
         "largest_default_first_paint_with_catalog_bytes": 1_339_829,
@@ -33,6 +33,11 @@ def test_release_freeze_matches_current_protected_repository(tmp_path: Path) -> 
         "race_editions": 22,
         "results": 24422,
         "splits": 141429,
+    }
+    assert result["checks"]["modular_performance"]["expected_privacy_safe_totals"] == {
+        "race_editions": 22,
+        "results": 24318,
+        "splits": 140693,
     }
     assert result["checks"]["frontend_wiring"]["no_legacy_monolith_script"] is True
     assert result["checks"]["frontend_wiring"]["remediation_cache_generation"] is True
