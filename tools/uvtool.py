@@ -1685,7 +1685,7 @@ def export_web(args: argparse.Namespace) -> None:
     # Apply the access-controlled publication block after aggregate statistics
     # are computed. A blocked individual row and all of its split relationships
     # are omitted entirely because masking a name does not prevent reidentification.
-    privacy_rules = load_rules(PRIVACY_CONFIG)
+    privacy_rules = load_rules(PRIVACY_CONFIG, require_private=True)
     blocked_result_ids = {
         row["id"] for row in results
         if record_is_suppressed(row, privacy_rules, scope=str(row.get("race_id") or "*"))
