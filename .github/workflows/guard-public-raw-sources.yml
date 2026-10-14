@@ -1,0 +1,58 @@
+name: Privacy guard - no public raw source changes
+
+# Public source paths must not be added, modified or deleted in ordinary
+# GitHub PR diffs. This is an early-warning check, not historical data removal.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard-public-raw-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reject public raw-source changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import subprocess
+
+          protected = ["data/ultravasan.sqlite","source/","raw/","data/raw/","data/routes/"]
+          base = os.environ.get("BASE_SHA", "").strip()
+          if not base or base == "0" * 40:
+              base = subprocess.check_output(
+                  ["git", "rev-parse", "HEAD^"], text=True
+              ).strip()
+          subprocess.run(
+              ["git", "cat-file", "-e", f"{base}^{{commit}}"],
+              check=True,
+              stdout=subprocess.DEVNULL,
+          )
+          names = subprocess.check_output(
+              ["git", "diff", "--name-only", "-z", base, "HEAD"]
+          ).decode("utf-8", errors="surrogateescape").split("\0")
+          blocked = sum(
+              1 for path in names
+              if path and any(
+                  path == prefix or path.startswith(prefix)
+                  for prefix in protected
+              )
+          )
+          if blocked:
+              raise SystemExit(
+                  f"PUBLIC RAW-SOURCE GUARD: {blocked} protected path(s) "
+                  "changed. Store originals privately; do not include "
+                  "source additions or deletions in public PR diffs."
+              )
+          print("Public raw-source change guard: PASS")
+          PY
