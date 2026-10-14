@@ -27,13 +27,18 @@ Release-artefakter.
 
 ## Skrivande importer
 
-Befintliga importflöden som committar `data/ultravasan.sqlite` till det publika
-repot får inte användas efter migreringen. De ska ersättas av två separata
+Befintliga import- och migreringsflöden som committar
+`data/ultravasan.sqlite` till det publika repot eller laddar upp rådatabasen
+som artifact är hårt avstängda i denna Draft. De ska ersättas av två separata
 steg: en skrivbegränsad GitHub App skapar först en privat käll-PR; efter merge
 hämtar den publika byggkedjan den godkända databasen med läsappen och committar
 endast GDPR-filtrerade webbexporter. Skrivappen behöver separat `Contents:
 write` och `Pull requests: write` endast på det privata repot. Den får inte
 återanvända läsappens nyckel.
+
+Det publika minderårighetsskyddet får däremot fortsätta först efter att det
+har återställt den verifierade privata källan med läsappen; dess slutprodukt
+är en GDPR-filtrerad webbexport, aldrig rådatabasen.
 
 Den publika borttagnings-PR:n ska vara Draft tills läsappen är konfigurerad och
 full CI har passerat från den privata kopian. Produktionsimporter får inte

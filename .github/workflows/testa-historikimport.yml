@@ -12,6 +12,9 @@ permissions:
 
 jobs:
   testa-import:
+    # This legacy job uploaded a raw identity-bearing database and source files.
+    # Keep it unavailable until diagnostics are aggregate-only.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
