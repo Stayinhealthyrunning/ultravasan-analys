@@ -37,7 +37,7 @@ on:
         type: boolean
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ultravasan-current-results-${{ inputs.race }}
@@ -45,7 +45,8 @@ concurrency:
 
 jobs:
   importera:
-    if: inputs.source_permission_confirmed == true
+    # Disabled until a separate private-source writer App and PR flow exist.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
 

@@ -1,6 +1,12 @@
 # Local source caches and temporary work products
 /raw/
 /tmp/
+/.private-source/
+/data/ultravasan.sqlite
+/data/routes/Ultravasan 90 2022.gpx
+/data/routes/vasaloppet-ultravasan-2024-ultravasan-90.gpx
+/data/routes/vasaloppet-ultravasan-2026-ultravasan-45.gpx
+/source/
 
 # Python and test caches
 __pycache__/

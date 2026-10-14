@@ -21,4 +21,11 @@ jobs:
       - name: Test source identity detector with synthetic names
         run: python -m unittest discover -s tests -p test_tracked_source_privacy.py -v
       - name: Audit source archive without logging any identity
-        run: python tools/audit_tracked_source_privacy.py "data/ultravasan.sqlite"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files --error-unmatch data/ultravasan.sqlite >/dev/null 2>&1; then
+            python tools/audit_tracked_source_privacy.py "data/ultravasan.sqlite"
+          else
+            echo "PASS: no identity-bearing Ultravasan source database is tracked publicly"
+          fi

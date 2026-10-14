@@ -28,6 +28,12 @@ jobs:
       - name: Installera Python-beroenden
         run: python -m pip install -r requirements-test.txt
 
+      - name: Återställ verifierade privata källor
+        uses: ./.github/actions/restore-private-source
+        with:
+          app-id: ${{ secrets.LOPPANALYS_SOURCE_APP_ID }}
+          private-key: ${{ secrets.LOPPANALYS_SOURCE_APP_PRIVATE_KEY }}
+
       - name: Blockera publicering av identifierbara minderåriga
         run: python tools/protect_public_minors.py --check
 

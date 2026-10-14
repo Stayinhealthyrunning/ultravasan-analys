@@ -1,0 +1,5 @@
+# Original source evidence is byte-preserved and must not render as a readable
+# public pull-request diff.
+data/ultravasan.sqlite -text -diff
+data/routes/*.gpx -text -diff
+source/** -text -diff

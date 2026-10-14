@@ -35,6 +35,8 @@ concurrency:
 jobs:
   date-gate:
     name: Kontrollera automatiseringsperiod
+    # Disabled until imports write a reviewed PR to the private source repo.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     outputs:
       active: ${{ steps.window.outputs.active }}
@@ -59,7 +61,8 @@ jobs:
 
   simulate-2025:
     name: Simulera officiell kedja mot 2025
-    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'simulate-2025'
+    # The legacy simulation can package source-derived reports. Keep it closed.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
