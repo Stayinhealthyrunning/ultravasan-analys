@@ -11,17 +11,17 @@
     "web_json": {
       "path": "docs/data/ultravasan.json",
       "bytes": 42596797,
-      "sha256": "3c78fe554a9b4565d70b06a080fd76c97b9c2a43a74bffa99231f3dbf1ecbb02"
+      "sha256": "19965f44fcab4b89a6d8c6cebbb18e9175f3e064e3af12e758e7a5cd6c6a8bd0"
     },
     "web_javascript": {
       "path": "docs/data/ultravasan-data.js",
       "bytes": 42596822,
-      "sha256": "8730af6c39b229f43e901e1f31df9536b98ba3437fa491682c1f87ced5e081a8"
+      "sha256": "435346d45e9835b5f419320eb5b0db2fa26f97b827a0cd23acae623bf7233989"
     },
     "manifest": {
       "path": "docs/data/manifest.json",
       "bytes": 125,
-      "sha256": "05bd4a9fb0f7959ecc14ebf8b8500633d6032dcf86f8bff6cea53f1da355fcb3"
+      "sha256": "5f0be09f4826f0088d801dda068315c97e455b5e038117c1296c801dcfc347c5"
     }
   },
   "totals": {
