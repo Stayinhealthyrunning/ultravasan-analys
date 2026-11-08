@@ -39,7 +39,20 @@ const elevationAtDistance=(route,distance)=>mapEngine.elevationAtDistance(route?
 if(typeof module!=='undefined'&&module.exports)module.exports={mapRaceFamily,mixedRaceFamilyError,activeReferenceRoute,displayGeometryStatus,splitRouteDistance,DUEL_PLAYBACK_DURATIONS,DUEL_CAMERA_CENTER_EASE,DUEL_CAMERA_ZOOM_MS,duelPlaybackRate,elevationAtDistance};
 const hydrateData=d=>mapDataAdapter.hydrate(d);
 function setLoading(text){const p=$('#mapLoading p');if(p)p.textContent=text}
-function readSessionData(){try{const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;const data=JSON.parse(raw);if(data&&Array.isArray(data.results)&&data.results.length)return data}catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}return null}
+function readSessionData(){
+  try{
+    const raw=sessionStorage.getItem(MAP_SESSION_KEY);if(!raw)return null;
+    const data=JSON.parse(raw);
+    if(!data||!Array.isArray(data.results)||!data.results.length)return null;
+    const params=new URLSearchParams(location.search),requested=(params.get('runners')||'').split(',').filter(Boolean);
+    // A shared link MUST load exactly those public result IDs, never stale
+    // same-device ephemeral map data from a different runner selection.
+    if(requested.length&&(requested.length!==data.results.length||
+      requested.some((id,i)=>String(data.results[i].id)!==id)))return null;
+    return data;
+  }catch(e){console.warn('Kunde inte läsa snabb kartdata',e)}
+  return null;
+}
 function loadScript(src,timeout=90000){return new Promise((resolve,reject)=>{const el=document.createElement('script');let done=false;const finish=(err)=>{if(done)return;done=true;clearTimeout(timer);err?reject(err):resolve()};el.src=src;el.async=true;el.onload=()=>finish();el.onerror=()=>finish(new Error(`Kunde inte läsa ${src}`));document.head.appendChild(el);const timer=setTimeout(()=>finish(new Error(`Tidsgränsen överskreds för ${src}`)),timeout)})}
 async function ensureRaceData(){
   const quick=readSessionData();
