@@ -775,6 +775,7 @@ function setupMapCompare(rebuild=false){
   search.addEventListener('keydown',e=>{if(e.key==='Escape')hideCompareSuggestions();if(e.key==='Enter'){const first=$('.runner-suggestion');if(first){e.preventDefault();first.click()}}});
   document.addEventListener('click',e=>{if(!e.target.closest('.runner-picker'))hideCompareSuggestions()});
   $('#compareMapButton').onclick=()=>openMapWithRunners(compareState.selected);
+  $('#shareMapSelection').onclick=shareMapSelection;
   const h2h=$('#compareH2HButton');if(h2h)h2h.onclick=openHeadToHead;const h2hDialog=$('#headToHeadDialog'),h2hClose=$('#headToHeadDialog .dialog-close');if(h2hDialog&&h2hClose){h2hClose.onclick=()=>h2hDialog.close();if(!h2hDialog.dataset.comparison2Bound){h2hDialog.dataset.comparison2Bound='1';h2hDialog.addEventListener('close',()=>{comparison2Controller?.destroy?.();comparison2Controller=null})}}
   renderCompareSelection();
 }
@@ -798,10 +799,23 @@ function addCompareRunner(id){
   compareState.selected.push(r);$('#compareRunnerSearch').value='';hideCompareSuggestions();renderCompareSelection();$('#compareRunnerSearch').focus();
 }
 function removeCompareRunner(id){compareState.selected=compareState.selected.filter(r=>r.id!==id);renderCompareSelection()}
+function mapSelectionShareUrl(){
+  const url=new URL('karta.html',location.href),entries=compareState.selected;
+  url.searchParams.set('race',state.raceFamily);
+  url.searchParams.set('runners',entries.map(r=>r.id).join(','));
+  url.searchParams.set('t','0');
+  return url.href;
+}
+async function shareMapSelection(){
+  if(compareState.selected.length<2||compareState.selected.length>5)return;
+  const url=mapSelectionShareUrl(),note=$('#shareMapSelectionStatus');
+  try{await navigator.clipboard.writeText(url);if(note)note.textContent='Länken är kopierad.'}
+  catch{if(note)note.textContent='Kopiera länken i dialogen.';window.prompt?.('Kopiera länken:',url)}
+}
 function hideCompareSuggestions(){const box=$('#runnerSuggestions');if(box)box.hidden=true}
 function renderCompareSelection(){
   const box=$('#selectedCompareRunners');box.innerHTML=compareState.selected.length?compareState.selected.map((r,i)=>`<button class="runner-chip" data-id="${r.id}" title="Ta bort ${esc(r.name_as_published)}"><span>${i+1}. ${esc(r.name_as_published)} · ${state.data.races.find(x=>x.id===r.race_id)?.year||''}${r.bib?' #'+esc(r.bib):''}</span><span>×</span></button>`).join(''):'<span class="selection-empty">Inga löpare valda ännu · välj upp till fem</span>';
-  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const h2h=$('#compareH2HButton');if(h2h){h2h.disabled=compareState.selected.length!==2;h2h.textContent=compareState.selected.length===2?'Direktjämförelse 2.0':compareState.selected.length<2?'Välj två löpare för direktjämförelse':'Direktjämförelse kräver exakt två'}const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
+  $$('.runner-chip').forEach(b=>b.onclick=()=>removeCompareRunner(Number(b.dataset.id)));$('#compareMapButton').disabled=compareState.selected.length<1;const share=$('#shareMapSelection');if(share)share.disabled=compareState.selected.length<2||compareState.selected.length>5;const h2h=$('#compareH2HButton');if(h2h){h2h.disabled=compareState.selected.length!==2;h2h.textContent=compareState.selected.length===2?'Direktjämförelse 2.0':compareState.selected.length<2?'Välj två löpare för direktjämförelse':'Direktjämförelse kräver exakt två'}const search=$('#compareRunnerSearch');search.disabled=compareState.selected.length>=5;search.placeholder=search.disabled?'Fem löpare är valda':'Skriv namn eller startnummer';
   const routeIds=compareState.selected.map(r=>window.RaceContracts.routeForRace(window.ULTRAVASAN_ROUTES,state.data.races.find(x=>x.id===r.race_id))?.id).filter(Boolean),mixed=new Set(routeIds).size>1,warning=$('#courseComparisonWarning');if(warning)warning.hidden=!mixed;
 }
 
