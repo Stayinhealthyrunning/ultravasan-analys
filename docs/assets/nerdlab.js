@@ -290,12 +290,12 @@ function renderCoursePaceView(model,selected){
 
 function normalizeCourseTargetTime(value){
   const raw=String(value??'').trim();
-  if(/^\\d{1,2}:\\d{1,2}(?::\\d{1,2})?$/.test(raw)){
+  if(/^\d{1,2}:\d{1,2}(?::\d{1,2})?$/.test(raw)){
     const parts=raw.split(':').map(Number);
     if(parts[1]>=60||(parts[2]??0)>=60)return null;
     return [parts[0],parts[1],parts[2]??0].map(n=>String(n).padStart(2,'0')).join(':');
   }
-  if(!/^\\d{1,6}$/.test(raw))return null;
+  if(!/^\d{1,6}$/.test(raw))return null;
   let h=0,m=0,s=0;
   if(raw.length<=2)h=Number(raw);
   else if(raw.length<=4){h=Number(raw.slice(0,-2));m=Number(raw.slice(-2));}
