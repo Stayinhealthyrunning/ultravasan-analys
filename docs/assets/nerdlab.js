@@ -139,8 +139,10 @@ function initNerdLab(){
   n$$('#hallTabs button').forEach(b=>b.onclick=()=>{nerd.hall=b.dataset.hall;n$$('#hallTabs button').forEach(x=>x.classList.toggle('active',x===b));renderHall()});
   const hallDialog=n$('#hallMapDialog');hallDialog?.querySelector('.dialog-close')?.addEventListener('click',()=>hallDialog.close());
   n$('#courseTargetTime')?.addEventListener('change',event=>{
+    const normalized=normalizeCourseTargetTime(event.target.value);
+    if(normalized)event.target.value=normalized;
     const race=activeRace(),family=globalThis.RaceContracts?.familyForRace?.(race);
-    if(family)nerd.coursePlanTargets[family]=event.target.value;
+    if(family&&normalized)nerd.coursePlanTargets[family]=normalized;
     renderCourseRacePlan(currentCourseModel());
   });
   populateSegmentSelectors();renderNerdLab();
@@ -286,6 +288,21 @@ function renderCoursePaceView(model,selected){
   bindCourseSegmentClicks(el);
 }
 
+function normalizeCourseTargetTime(value){
+  const raw=String(value??'').trim();
+  if(/^\\d{1,2}:\\d{1,2}(?::\\d{1,2})?$/.test(raw)){
+    const parts=raw.split(':').map(Number);
+    if(parts[1]>=60||(parts[2]??0)>=60)return null;
+    return [parts[0],parts[1],parts[2]??0].map(n=>String(n).padStart(2,'0')).join(':');
+  }
+  if(!/^\\d{1,6}$/.test(raw))return null;
+  let h=0,m=0,s=0;
+  if(raw.length<=2)h=Number(raw);
+  else if(raw.length<=4){h=Number(raw.slice(0,-2));m=Number(raw.slice(-2));}
+  else{h=Number(raw.slice(0,-4));m=Number(raw.slice(-4,-2));s=Number(raw.slice(-2));}
+  if(m>=60||s>=60||h*3600+m*60+s===0)return null;
+  return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');
+}
 function parseCourseTargetTime(value){
   const parts=String(value||'').trim().split(':');
   if(parts.length<2||parts.length>3)return null;
@@ -304,7 +321,7 @@ function renderCourseRacePlan(existingModel=null){
   const stored=nerd.coursePlanTargets[family]||(family==='uv45'?'5:00:00':'10:00:00');
   if(document.activeElement!==input&&input.value!==stored)input.value=stored;
   const target=parseCourseTargetTime(input.value);
-  if(target===null){status.innerHTML='<strong>Ogiltig måltid</strong><span>Ange HH:MM eller HH:MM:SS.</span>';rowsEl.innerHTML='';return}
+  if(target===null){status.innerHTML='<strong>Ogiltig måltid</strong><span>Ange HH:MM:SS eller bara siffror, t.ex. 1230 för 12:30:00.</span>';rowsEl.innerHTML='';return}
   nerd.coursePlanTargets[family]=input.value;
   let plan;
   try{plan=nCourseIntelligence.buildRacePlan(state.data,race,target,{minSample:5})}
